@@ -34,7 +34,7 @@ NativeTernux does not need to manage the current GPU desktop for you to use it:
 3. In the Debian terminal, run `glxinfo -B` to inspect the current OpenGL renderer. If it reports Zink backed by Turnip, run GPU workloads from that same terminal (for example, `blender` if installed in the guest).
 4. End a session only through the Ternux workflow that started it.
 
-Do not run `nativeternux start` alongside this session. NativeTernux's start command is currently only a readiness stub, and a future native desktop could contend for the same X11/audio services.
+Do not run `nativeternux start` alongside this session. NativeTernux now has initial desktop start/stop source, but it has not been run or qualified; starting another X11 desktop could contend with Ternux's display/audio ownership. The current device instruction remains read-only.
 
 ## Safe integration boundary
 

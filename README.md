@@ -19,7 +19,7 @@ Work is in progress; no completion evidence has been accepted yet.
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
 
-See [my product vision](docs/PRODUCT-VISION.md), [phase status and evidence](docs/PHASE-STATUS.md), the [full roadmap](docs/ROADMAP.md), [current project state](CURRENT_STATE.md), [generated Git/CI status](.repo/STATUS.md), and [security policy](SECURITY.md). GitHub status automation is configured locally but awaits its first CI run. Phase status is generated from the reviewed phase state; no roadmap gate is marked complete without evidence.
+See [my product vision](docs/PRODUCT-VISION.md), [phase status and evidence](docs/PHASE-STATUS.md), the [full roadmap](docs/ROADMAP.md), [current project state](CURRENT_STATE.md), [generated Git/CI status](.repo/STATUS.md), and [security policy](SECURITY.md). GitHub status automation has completed its first validation and state-sync run; build/test remain `unknown` by design. Phase status is generated from the reviewed phase state; no roadmap gate is marked complete without evidence.
 
 ## Planned use
 

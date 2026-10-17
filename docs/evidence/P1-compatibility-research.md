@@ -22,7 +22,7 @@
 
 - `docs/RESEARCH.md` §§8–13: recorded native GPU result, Ternux PRoot evidence boundary, current package index provenance/candidates, dependency simulations, Termux:X11 requirements, Android API boundary, and NPU runtime research.
 - `docs/WINE-NATIVE.md`: per-app Wine/Hangover compatibility, CPU, graphics, NPU, prefix, and fallback gates.
-- `docs/KNOWLEDGE-SYNC.md`: phase docs, generated state, and SKB knowledge return are separate; the status runtime and workflows were added after P1 completion, but CI and registry sync have not run.
+- `docs/KNOWLEDGE-SYNC.md`: phase docs, generated state, and SKB knowledge return are separate. At P1 completion the status runtime and workflows had not yet been added; subsequent CI execution is recorded in the current project status.
 - `docs/INSTALLATION.md`: installation remains unimplemented; exact transaction must be previewed again before consent.
 - Device read-only commands: `apt-cache policy`, `apt-cache show`, `apt-cache depends`, `apt-get -s`, package command lookup, installed package query, and signed local index date inspection.
 - Official primary references recorded in the research file: Termux:X11 guide, Termux:API project and filesystem guidance, Android NNAPI migration guide, Google LiteRT NPU docs, Qualcomm platform and QAIRT docs. WineHQ and Hangover upstream docs plus official Termux package metadata/issues were reviewed for the Windows runtime gate.

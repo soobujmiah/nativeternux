@@ -68,7 +68,7 @@ status:
     - "Existing Ternux PRoot live renderer was not rerun in this review"
     - "Native Wine/Hangover applications and graphics paths are not tested"
     - "Termux process-level NPU access is not established"
-    - "NativeTernux is absent from the observed 2026-10-14 SKB Registry Reader App authorization list; owner-side App selection and a verified registry pull remain outstanding"
+    - "SKB registry entry and first App-backed pull remain outstanding; owner confirms Reader App selection is updated, pending effective-access verification"
   deferred_scope:
     - "Package installation and device mutation until explicitly authorized"
     - "Ternux rootfs cleanup/minimization or launcher modification"

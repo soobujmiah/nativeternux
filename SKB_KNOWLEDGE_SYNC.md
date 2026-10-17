@@ -9,10 +9,10 @@ This project is authorized for internal, evidence-reviewed knowledge return to `
 
 ## Privacy and readiness
 
-This repository is owner-reported private and SKB membership is restricted to internal projection. Do not publish its device-specific evidence or status. Membership eligibility has been recorded. The deterministic state runtime, local `.repo/`, and CI workflow source now exist; the workflow has not run. Registry registration is pending repository classification review, readiness validation, and the explicit pull verification gate. Repository instructions never supply credentials; agents must verify authenticated identity/access independently.
+This repository is owner-reported private and SKB membership is restricted to internal projection. Do not publish its device-specific evidence or status. Membership eligibility and participation approval are recorded; the canonical readiness validator returned READY. NativeTernux's first state-contract and status-sync workflows passed on `735c1aa`, with build/test honestly unknown. Registry registration and first central App-backed pull are next. Repository instructions never supply credentials; agents must verify authenticated identity/access independently.
 
 The local workflow and source boundaries are described in [Documentation, status, and SKB knowledge return](docs/KNOWLEDGE-SYNC.md). SKB is the authority for its protocol; this pointer does not copy or override that policy.
 
-For central mechanical sync, the SKB Registry Reader App must be explicitly configured for this repository with read-only Contents access. The observed authorization receipt does not list `nativeternux` (receipt date 2026-10-14). Follow the owner-side installation steps in `docs/KNOWLEDGE-SYNC.md`; do not add cross-repository credentials to this project.
+For central mechanical sync, the SKB Registry Reader App must be configured for this repository with read-only Contents access. The owner confirmed the selection was updated. The latest successful receipt's minted-token scope predates NativeTernux registration, so a pull after registration is the required effective-access verification. Do not add cross-repository credentials to this project.
 
 Reference review found `ternux` in the receipt's selected repository list. Its locally inspected workflow revision had an optional cross-repository dispatch secret; NativeTernux intentionally omits that legacy pattern and relies on SKB's scheduled/manual pull under the current policy.
