@@ -1,0 +1,54 @@
+schema_version: 1
+standard_version: "1.0.0"
+template_version: "1.0.0"
+
+classification:
+  primary: cli-tool
+  secondary:
+    - automation
+  risk_level: HIGH
+  notes: >-
+    Termux workstation manager with local network services, device lifecycle automation,
+    user-selected file handoff, and optional privileged Android integration. Public
+    capability claims require named device/runtime evidence.
+
+platform:
+  targets:
+    - Android with Termux
+    - Debian PRoot guest managed by the existing Ternux project
+  offline_capable: true
+  physical_device_required: true
+
+data:
+  source_types:
+    - device and package metadata
+    - NativeTernux-owned service and session state
+    - user-selected workspace files
+    - user-managed SSH configuration and credentials (never copied to logs or SKB)
+  sensitive_data: true
+  third_party_data: false
+  authenticated_sources: true
+
+capabilities:
+  network_access: true
+  privileged_android_apis: true
+  automation: true
+  ai_inference: true
+  file_import_export: true
+
+required_reviews:
+  security: true
+  privacy: true
+  legal: true
+  licensing: true
+  safety: true
+
+selected_standards:
+  - standards/repository-types/cli-tool.md
+  - standards/repository-types/automation.md
+  - standards/repository-security-baseline.md
+  - standards/agent-device-testing.md
+  - governance/DETERMINISTIC_STATE_SYNC_POLICY.md
+  - governance/REPO_STATE_PROTOCOL.md
+
+selected_template: "templates/project-repository"

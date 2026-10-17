@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "active_phase": "P2",
+  "phases": [
+    {
+      "id": "P0",
+      "title": "Repository foundation and evidence baseline",
+      "status": "completed",
+      "completed_on": "2026-10-17",
+      "summary": "Foundation documentation, owner scope, safety boundaries, and phase status automation reviewed and recorded.",
+      "evidence": [
+        "docs/evidence/P0-foundation.md"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Requirements and CPU/GPU/NPU compatibility research",
+      "status": "completed",
+      "completed_on": "2026-10-17",
+      "summary": "Official package/runtime research and device compatibility limits documented from current local indexes and primary references.",
+      "evidence": [
+        "docs/evidence/P1-compatibility-research.md"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Safe native desktop lifecycle",
+      "status": "in_progress",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P3",
+      "title": "Doctor, management, and recovery",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P4",
+      "title": "Existing Ternux PRoot feature-parity provider",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P5",
+      "title": "Distro and display compatibility profiles",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P6",
+      "title": "CPU/GPU/NPU capability, optimization, and fallback",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P7",
+      "title": "Native apps and curated software catalog",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P8",
+      "title": "Hybrid workload and accelerator routing",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P9",
+      "title": "Optional isolated PRoot profile",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    },
+    {
+      "id": "P10",
+      "title": "Hardening, release, and support",
+      "status": "planned",
+      "completed_on": null,
+      "summary": "",
+      "evidence": []
+    }
+  ]
+}

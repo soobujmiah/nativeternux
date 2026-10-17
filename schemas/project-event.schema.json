@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repo-Knowledge Event (.repo/events/*.yaml)",
+  "type": "object",
+  "required": [
+    "event_id",
+    "repository",
+    "commit",
+    "kind",
+    "occurred_at"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[^/]+/[^/]+$"
+    },
+    "commit": {
+      "type": "string",
+      "minLength": 7
+    },
+    "kind": {
+      "enum": [
+        "commit",
+        "build",
+        "test",
+        "ci",
+        "workflow_run",
+        "release",
+        "phase",
+        "phase_start",
+        "phase_change",
+        "architecture_change",
+        "device_validation",
+        "documentation_change",
+        "milestone",
+        "sync"
+      ]
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "cancelled",
+        "skipped",
+        "timed_out",
+        "started",
+        "completed",
+        "unknown"
+      ]
+    },
+    "conclusion": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "success",
+        "failure",
+        "cancelled",
+        "skipped",
+        "timed_out",
+        "action_required",
+        "neutral",
+        "stale",
+        "startup_failure",
+        "unknown",
+        null
+      ]
+    },
+    "branch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "started_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "evidence_level": {
+      "enum": [
+        "source",
+        "test",
+        "ci",
+        "emulator",
+        "device",
+        "release"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "verification": {
+      "type": "string"
+    },
+    "source_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "supersedes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "run_attempt": {
+      "type": "string"
+    },
+    "workflow_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workflow_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "event_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "actor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "run_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "state_version": {
+      "type": [
+        "integer",
+        "string",
+        "null"
+      ]
+    },
+    "jobs": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "additionalProperties": false
+}

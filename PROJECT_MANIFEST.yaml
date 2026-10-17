@@ -1,0 +1,76 @@
+schema_version: 1
+standard_version: "1.0.0"
+template_version: "1.0.0"
+
+project:
+  name: "NativeTernux"
+  repository: "soobujmiah/nativeternux"
+  owner: "Sobuj Miah"
+
+product:
+  problem: "A phone should work as a capable mobile workstation by combining Termux-native tools with the owner's existing, independently managed Ternux Debian PRoot environment."
+  primary_users:
+    - "The owner, using an Android phone as the primary workstation"
+  scope:
+    in:
+      - "Native Termux CLI, desktop, and Android-facing workflows"
+      - "An additive adapter for selected workloads in the existing Ternux PRoot environment"
+      - "Safe native, PRoot, and hybrid session profiles with one desktop owner per display"
+      - "Doctor, service/SSH management, recovery, and workload-scoped optimization"
+      - "Optional native Wine/Hangover application support, gated per app and backend"
+      - "Evidence-based CPU/GPU/NPU capability reporting and explicit fallback"
+      - "Termux:Boot and Termux:API integration where installed, supported, and authorized"
+      - "Automatic repository state plus evidence-reviewed SKB knowledge return"
+    out:
+      - "Changing, minimizing, upgrading, cleaning, or replacing the existing Ternux repository/rootfs/launcher"
+      - "Root-only Android control or bypassing Android permissions and thermal protections"
+      - "Claiming generic Windows app, GPU, NPU, performance, or device support without named workload evidence"
+      - "Enabling SSH or Wireless ADB listeners without explicit provider, bind, port, and authentication choices"
+      - "Scanning shared storage or managing unselected personal files"
+
+architecture:
+  style: "Layered provider architecture: native Termux host, existing Debian PRoot provider, and explicit hybrid orchestration"
+  language: "Bash for the initial Termux CLI; additional languages only when justified by a verified platform need"
+  framework: "Termux packages, Termux:X11, and opt-in Termux/Android integrations"
+  source_of_truth: "GitHub"
+
+constraints:
+  offline_first: true
+  privacy_first: true
+  low_connectivity: true
+  phone_first: true
+  explicit_consent: true
+
+quality:
+  tests_required: true
+  ci_required: true
+  device_validation_required: true
+  evidence_required_for_claims: true
+
+security:
+  sensitive_data: true
+  credentials_in_repo: false
+  privileged_automation: true
+
+ai:
+  instructions: "AI_ASSISTANT.md"
+  current_state: "CURRENT_STATE.md"
+  classification: "PROJECT_CLASSIFICATION.yaml"
+  handoff: "docs/handoff/"
+  decisions: "docs/architecture/decisions/"
+  source_of_truth: "GitHub"
+
+status:
+  phase: "P2 — Safe native desktop lifecycle"
+  next_milestone: "Resolve owned desktop process-tree shutdown design, then validate the native lifecycle when authorized"
+  known_unknowns:
+    - "Native XFCE package transaction and live X11 session are not validated"
+    - "Existing Ternux PRoot live renderer was not rerun in this review"
+    - "Native Wine/Hangover applications and graphics paths are not tested"
+    - "Termux process-level NPU access is not established"
+    - "NativeTernux is absent from the observed 2026-10-14 SKB Registry Reader App authorization list; owner-side App selection and a verified registry pull remain outstanding"
+  deferred_scope:
+    - "Package installation and device mutation until explicitly authorized"
+    - "Ternux rootfs cleanup/minimization or launcher modification"
+    - "Default-on Shizuku or Wireless ADB automation"
+    - "Native DXVK support until native Vulkan and a real workload pass"

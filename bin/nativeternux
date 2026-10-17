@@ -7,8 +7,7 @@
 #  termux-x11 repository, running natively on the device.
 #
 #  Copyright (c) 2026 Sobuj Miah (@soobujmiah)
-#  Licensed under PolyForm Noncommercial 1.0.0 plus the Ternux commercial-use
-#  addendum; see LICENSE-SCOPE.md and LICENSE-COMMERCIAL-ADDENDUM.md.
+#  License: not yet selected; see README.md.
 #  https://github.com/soobujmiah/nativeternux
 # =============================================================================
 set -u

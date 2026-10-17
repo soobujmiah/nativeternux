@@ -1,144 +1,59 @@
 # Architecture
 
-NativeTernux architecture: three tiers, each more capable but more complex.
+This design follows [what I want NativeTernux to become](PRODUCT-VISION.md): a mobile workstation where native Termux and my existing PRoot setup work together. CPU is the baseline; GPU and NPU are enabled only for verified device/runtime/workload combinations. The design has two complementary first-class layers: Termux-native processes for compatible tools and permitted Android/Termux integrations, and the existing Ternux Debian PRoot for its Linux userland, desktop, configured graphics path, and demonstrated workloads. Hybrid mode joins useful workflows across them with scoped handoffs. It preserves the existing Ternux capabilities and ownership. The `soobujmiah/ternux` project and Debian rootfs remain independently owned.
 
----
+## Native Termux desktop
 
-## Tier 1 — Native (Current Focus)
+Termux:X11 provides the display server. Native XFCE components and applications run as Termux processes. Whether graphics acceleration works depends on the native Termux Mesa/driver combination and the Android device; the Adreno 825 test recorded in [Research](RESEARCH.md) showed native Termux Turnip rejecting that GPU at the tested package version. Do not advertise native GPU acceleration for that configuration until a live renderer check passes.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ Android                                                  │
-│                                                          │
-│  Termux:X11 app  ◄──── X11 display ────┐               │
-│                                          │               │
-│  Termux (native)                         │               │
-│  ├── xfce4-session                      │               │
-│  ├── xfce4-panel                        │               │
-│  ├── xfwm4                              │               │
-│  ├── thunar                             │               │
-│  ├── xfce4-terminal                     │               │
-│  ├── pulseaudio                         │               │
-│  ├── dbus-daemon                        │               │
-│  ├── mesa (Zink + Turnip)               │               │
-│  └── chromium (optional)                │               │
-│                                          │               │
-│  Adreno 825 (SM8735) ◄── Zink/Turnip path│              │
-└─────────────────────────────────────────────────────────┘
-```
+Native mode runs compatible Termux packages directly, without entering the Debian guest, and can use Termux APIs for Android-facing actions when the companion app, Android permissions, and API support them. These are potential advantages to validate per workflow, not universal guarantees. It has Termux's package/runtime compatibility limits and no systemd. Package names, API behavior, and support must be verified against current Termux repositories before implementation.
 
-**Key difference from ternux:** No PRoot, no Debian, no proot-distro. Everything runs in the Termux app sandbox directly.
+## Existing Ternux PRoot provider
 
-**Advantages:**
-- No 19 GB proot rootfs overhead
-- No ptrace-based compatibility layer
-- Direct access to Android hardware (KGSL, DRM)
-- Faster startup (no container init)
-- Simpler uninstall (just `pkg uninstall` + delete `~/.local/share/nativeternux`)
+The existing Ternux project documents an Adreno Zink/Turnip path inside Debian PRoot and labels it a measured route. This NativeTernux review did not rerun its live renderer check. It binds the KGSL and DRM device nodes, sets the guest Mesa environment, and connects guest applications to Termux:X11. This gives the workstation a Linux userland for compatible Linux applications and the configured graphics path. NativeTernux can integrate this as an opt-in provider while the existing Ternux project retains lifecycle ownership. See [Reusing Ternux's GPU-Accelerated PRoot](PROOT-GPU.md).
 
-**Limitations:**
-- musl libc (not glibc) — some Linux-only binaries won't run
-- No systemd — service management is manual
-- Package ecosystem smaller than Debian
-- Some apps compiled for glibc won't work
+This route is not native rendering. The application must execute inside the Debian guest. Native Termux applications continue to use the native graphics libraries. Also, the Ternux launcher owns its display and audio lifecycle and may perform broad cleanup; NativeTernux may start a PRoot session only through the opt-in adapter and may stop only processes that adapter recorded as its own. It must not invoke Ternux cleanup, edit `~/x.sh`, or start two desktop sessions on one display.
 
----
+NativeTernux must not modify, minimize, upgrade, remove, prune, or silently reinstall the existing `debian` rootfs. Any future isolated rootfs is supplementary and cannot replace or reduce existing Ternux features. A separate NativeTernux-owned rootfs may be considered only for a demonstrated workload gap and requires explicit owner choice.
 
-## Tier 2 — Proot (Future)
+## End-to-end Native/PRoot integration
 
-Lightweight Debian container for glibc-only workloads.
+Native and PRoot should be two providers in one workstation flow: Termux:Boot selects the profile; NativeTernux manages the X11/session owner; the app registry routes a task; a scoped workspace carries selected inputs/outputs; Doctor, logs, and recovery report which provider handled each step. `native`, `proot`, and `hybrid` profiles are distinct. Hybrid uses one desktop owner and launches selected Debian GUI/CLI workloads into that display; it does not start a second XFCE session on the same display.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ Tier 1 (Native) +                                      │
-│                                                          │
-│  proot-distro (separate named rootfs)                  │
-│  ├── debian userland (glibc)                          │
-│  ├── blender (if needed)                               │
-│  └── dev toolchains (llvm, rust, etc.)                 │
-│                                                          │
-│  Shared: /sdcard, network, display (:0)                │
-└─────────────────────────────────────────────────────────┘
-```
+The host-to-guest command bridge passes argv as discrete arguments, with a defined work directory and environment allowlist. File access uses a selected workspace, not a broad mount of Termux home or shared storage. Guest-to-host operations are limited to a documented host API (for example, a user-selected share request); the Debian guest does not receive arbitrary host shell access. Host and guest package managers, D-Bus sessions, and accelerator contexts remain separate.
 
-**When to use:** Only when a specific app requires glibc or a Linux-specific binary.
+The existing Ternux Debian PRoot remains a first-class provider. A NativeTernux adapter can preserve its reviewed session and Zink/Turnip environment while tracking only the processes it starts. It must not use `~/x.sh` as a lifecycle hook: the inspected launcher runs broad process termination and wildcard socket deletion before startup. It must not rewrite that launcher, perform package operations, or prune the rootfs. See [Native/PRoot end-to-end integration](HYBRID-INTEGRATION.md) for the boundary matrix and delivery sequence.
 
-**Rootfs:** Named `nativeternux-debian` (separate from existing `debian` proot). Minimal package manifest — only what's needed, not the full 1511-package current setup.
+## Display and audio
 
-**Target size:** ~3-4 GB (vs current 19 GB).
+Termux:X11 is the Android-facing X server. Both Termux-native clients and PRoot clients can connect to an X display when configured, but each client uses the libraries and graphics driver in its own process environment. In Ternux's documented PRoot route, PulseAudio is hosted by Termux and exposed to guest clients; native and guest session startup must not compete for the same audio service lifecycle.
 
----
+## Termux host integrations
 
-## Tier 3 — Hybrid (Future)
+Termux:Boot, Termux:API, and Termux service supervision are optional integrations owned by the Android/Termux host. A runit-based service manager can supervise Termux-side workstation processes with fewer dependencies; it cannot grant Android shell privileges or enable protected debugging settings. Shizuku is a separate, optional elevated provider and is not needed for desktop or boot management. Boot profiles cover native, PRoot, and hybrid sessions: native starts Termux XFCE; PRoot starts the existing Ternux Debian desktop through a separate NativeTernux-owned adapter; hybrid starts one native XFCE session and routes selected Debian workloads to its display. The PRoot adapter must not use the inspected `~/x.sh` boot path because it broadly kills X11/PulseAudio processes and deletes wildcard sockets. Each profile starts only its declared provider and requests the Termux:X11 activity. Server readiness and visible GUI readiness are reported separately, because Android may restrict bringing an activity to the foreground from a boot task. API features require the matching companion app, supported commands, compatible signing, and any Android permissions. NativeTernux should offer explicit, inspectable opt-ins and keep its base desktop usable when these integrations are absent. Dependency checks choose a named, lower-capability fallback (manual boot, one-shot startup without runit, CLI-only without X11, or unprivileged mode without Shizuku); they never claim a missing APK/package is available or silently switch providers. See [Doctor, management, and recovery](OPERATIONS.md).
 
-Smart dispatch between native and proot based on app requirements.
+## State ownership
 
-```
-nativeternux start --hybrid
-        │
-        ├──→ Native path (Termux packages)
-        │      ├── terminal (alacritty/kitty/xfce4-terminal)
-        │      ├── file manager (thunar)
-        │      ├── browser (chromium)
-        │      ├── CLI tools (git, python, node, cargo)
-        │      └── AI agents (codex, claude, hermes)
-        │
-        └──→ Proot path (lightweight debian)
-               ├── blender
-               ├── ffmpeg (if native build fails)
-               └── any glibc-only workload
-```
+NativeTernux state belongs under its own application state/config directories. Existing Ternux files, process state, display sockets, PulseAudio sockets, and its PRoot rootfs are outside NativeTernux's cleanup authority unless a future explicit integration contract grants narrowly scoped ownership.
 
-**Dispatch logic:**
-- Check if package exists in Termux → use native
-- Check if app requires glibc → route to proot
-- Shared `/sdcard`, shared display, shared network
-- Explicit per-path file sharing (no blanket `~/.ssh` or `~/.config` mount)
+## CPU, GPU, and NPU tiers
 
----
+- **CPU:** baseline execution path. Record architecture, thread limits, memory use, thermal behavior, and workload performance before recommending settings.
+- **GPU:** report native Termux and Debian PRoot as separate process contexts. The existing Ternux PRoot Zink/Turnip configuration remains an important supported route; live renderer proof must come from the actual guest workload. Native Termux GPU failure does not invalidate that separate route.
+- **NPU:** optional backend behind a feasibility gate. Verify exact SoC/device, supported vendor runtime or delegate, Android/API integration, ABI, model/operator coverage, and actual delegate selection. An NPU in a product specification is not proof of access from Termux or PRoot.
+- **Workstation claims:** performance claims require reproducible workload evidence including output correctness, selected backend, cold/warm latency, throughput, memory, and thermal/power behavior. Do not claim acceleration based on the presence of hardware or libraries.
 
-## Display & Audio Pipeline
+Android's NNAPI is deprecated as of Android 15, so new NPU research should evaluate current vendor runtimes and framework delegates rather than making NNAPI the architectural foundation. See [Research & Evidence](RESEARCH.md#11-cpu-gpu-and-npu-runtime-research).
 
-Both tiers share the same display/audio path:
 
-```
-Application (OpenGL/Vulkan)
-       │
-       ▼
-    Mesa (Zink or Turnip)
-       │
-       ▼
-    X11 protocol
-       │
-       ▼
-    Termux:X11 app  ◄─── socket :N
-       │
-       ▼
-    Android SurfaceFlinger  (Adreno 825)
-```
+## SSH access from both providers
 
-```
-Application (PulseAudio)
-       │
-       ▼
-    pulseaudio (Termux-native)
-       │
-       ▼
-    Android audio HAL
-```
+The Termux host and Debian PRoot guest may each run an independently managed OpenSSH service. The CLI and GUI are clients of the same host-side service manager, while the PRoot-local CLI is scoped to guest services. Provider-specific identity, credentials, config, logs, listener, and boot profile stay separate. PRoot shares the host network namespace, so each service needs a distinct port and explicit bind scope. SSH is an optional access path and is not required for desktop startup. See [Native/PRoot end-to-end integration](HYBRID-INTEGRATION.md).
 
----
+## Native Windows compatibility runtime
 
-## Filesystem Layout
+Wine/Hangover is an optional native Termux application provider, managed independently from Debian PRoot. The package index shows a Hangover 11.16 candidate set, but nothing is installed or app-qualified. The initial scope is a preview-first package plan, per-app Wine prefixes, and architecture-aware compatibility checks. x86 translation, Windows GUI/input/audio, OpenGL, and Vulkan each need workload evidence. Native DXVK remains blocked by the recorded native Vulkan incompatibility; the existing PRoot Zink/Turnip route does not transfer to native Wine. NPU is not part of Wine/Hangover by default and requires a separate Android runtime bridge with a proven inference workload. See [Native Wine and Hangover](WINE-NATIVE.md).
 
-```
-~/nativeternux/           ← This repository (source of truth)
-~/bin/nativeternux        ← CLI symlink (future: after install)
-~/.local/share/nativeternux/
-  ├── lib/                ← Runtime libraries (copied from repo)
-  ├── state/              ← Session state (pids, display number)
-  └── logs/               ← Runtime logs
-~/.config/nativeternux/   ← User config (future)
-```
+## Workload optimization
 
-No shared paths with existing ternux/debian by default.
+Optimization is workload-scoped and evidence-based. Native and PRoot profiles remain separate; controls are limited to settings the chosen app/runtime supports, such as worker count, memory/batch limits, render quality, and concurrency. Thermal and battery telemetry is consumed only from a supported Android/Termux source, otherwise shown as unavailable. NativeTernux does not force CPU/GPU clocks, disable thermal protections, or clean the existing Ternux rootfs. See [Workload optimization](OPTIMIZATION.md).

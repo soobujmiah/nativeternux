@@ -4,18 +4,15 @@
 #  Every other library sources this first.
 #
 #  Copyright (c) 2026 Sobuj Miah (@soobujmiah)
-#  Licensed under PolyForm Noncommercial 1.0.0 plus the Ternux commercial-use
-#  addendum; see LICENSE-SCOPE.md and LICENSE-COMMERCIAL-ADDENDUM.md.
+#  License: not yet selected; see README.md.
 #  https://github.com/soobujmiah/nativeternux
 # =============================================================================
 
 # --- Logging ------------------------------------------------------------
 nt_log() {
-  local level="$1"; shift
-  local ts; ts="$(date '+%Y-%m-%dT%H:%M:%S%z')"
-  local msg="$*"
-  mkdir -p "$NATIVERNUX_LOG_DIR" 2>/dev/null || true
-  printf '[%s] [%s] %s\n' "$ts" "$level" "$msg" >> "$NATIVERNUX_LOG_FILE" 2>/dev/null || true
+  # Logging is disabled in the read-only scaffold. A future mutating command
+  # must opt into a scoped log policy before this starts writing files.
+  return 0
 }
 
 nt_debug()  { [ "$NATIVERNUX_VERBOSE" = "1" ] && nt_log "DEBUG" "$@" || true; }
@@ -62,7 +59,7 @@ nt_json_array() {
 
 # --- State file ---------------------------------------------------------
 _nt_state_file() {
-  mkdir -p "$NATIVERNUX_STATE_DIR" 2>/dev/null || true
+  # Resolve only. Readers must not create the state directory as a side effect.
   echo "$NATIVERNUX_STATE_DIR/state.json"
 }
 

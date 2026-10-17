@@ -1,0 +1,73 @@
+name: Repository Knowledge Sync
+
+# This workflow writes deterministic status only to this repository.
+# SKB pulls registered project state; this workflow has no SKB token or dispatch credential.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['.repo/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repo-state-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - run: python -m pip install --quiet -r requirements-dev.txt
+      - run: python3 -m tools.repo_knowledge verify
+      - run: python3 tools/doc_bridge.py check --strict --project-id nativeternux README.md
+
+  sync:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - run: python -m pip install --quiet -r requirements-dev.txt
+      - name: Record honest build/test state
+        run: |
+          python3 -m tools.repo_knowledge sync --ci \
+            --build-status unknown \
+            --build-run-id "${GITHUB_RUN_ID}" \
+            --test-status unknown \
+            --test-run-id "${GITHUB_RUN_ID}" \
+            --workflow-name "${GITHUB_WORKFLOW}" \
+            --event-type "${GITHUB_EVENT_NAME}" \
+            --actor "${GITHUB_ACTOR}" \
+            --run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+      - name: Validate generated state
+        run: python3 -m tools.repo_knowledge verify
+      - name: Commit state to this repository
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .repo
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "chore(repo-knowledge): sync deterministic state"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

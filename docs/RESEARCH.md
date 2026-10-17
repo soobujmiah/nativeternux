@@ -61,34 +61,15 @@ PRoot rootfs lives under `$PREFIX/var/lib/proot-distro/`. This is the existing T
 
 ---
 
-## 4. Mesa Zink / Turnip — Native vs PRoot
+## 4. Mesa Zink / Turnip — evidence boundary
 
-**Observation date:** 2026-10-17
-**Confidence:** mixed
+The device has Adreno 825 / SM8735 and exposes KGSL/DRM nodes in the observed ADB context. The existing Ternux project source configures a separate Zink/Turnip route inside Debian PRoot; details and lifecycle limits are recorded in §9 and [PRoot GPU reuse](PROOT-GPU.md).
 
-**What we KNOW works (Proot):**
-- `libvulkan_freedreno.so` exists in Debian proot at `/usr/lib/aarch64-linux-gnu/`
-- `.cache/mesa_shader_cache_sf/` contains `zink` subdirectory — proof of prior Zink usage
-- Blender renders successfully inside the proot session
+The presence of `libvulkan_freedreno.so`, a Vulkan loader response, or a Zink-named shader-cache directory does not prove that a current GUI process renders on the Adreno GPU. The strongest runtime check for the OpenGL desktop path is the live guest renderer string from `glxinfo -B` while the relevant display session is active. `llvmpipe` is software rendering.
 
-**What we DON'T yet know (Native):**
-- Whether `/data/data/com.termux/files/usr/lib/libvulkan_freedreno.so` in Termux is the same driver
-- Whether `MESA_LOADER_DRIVER_OVERRIDE=zink` works without proot
-- Whether Turnip ICD is properly registered in native Termux
-- Whether glxinfo/vulkaninfo produce valid output in native Termux
+Native Termux and Debian PRoot load different userspace Mesa packages. Therefore the native Termux Turnip rejection in §8 does not by itself invalidate the PRoot route, and the PRoot route does not establish that native Termux graphics work.
 
-**Evidence classification:** zink cache = observed; native acceleration = untested.
-
-**Action required before claiming native GPU support:**
-```bash
-# Must run IN native Termux process (not proot):
-export MESA_LOADER_DRIVER_OVERRIDE=zink
-export GALLIUM_DRIVER=zink
-glxinfo -B   # if available
-vulkaninfo --summary  # already available in Termux
-```
-
----
+**Evidence classification:** Ternux PRoot setup is source-verified and documented; its live renderer was not rerun during this NativeTernux review. Native Turnip rejection is directly observed for the recorded package/process.
 
 ## 5. Available Termux Packages (Read-Only Survey)
 
@@ -116,7 +97,7 @@ vulkaninfo --summary  # already available in Termux
 | termux-api | termux-stable | Already installed (v0.53.0) |
 | termux-share | termux-api | Available (`/usr/bin/termux-share`) |
 
-**Evidence classification:** verified — all from `pkg search` output against active mirrors.
+**Evidence classification:** historical read-only package survey. Package indexes change; re-query before using these names in an installation command.
 
 ---
 
@@ -162,12 +143,167 @@ Read-only inspection of:
 
 ---
 
-## Unresolved Questions
+## 8. Native Termux GPU test
 
-| Question | Why it matters | How to resolve |
-|----------|---------------|----------------|
-| Does `libvulkan_freedreno.so` in Termux work natively? | Core GPU question | Run `vulkaninfo` in native Termux with `GALLIUM_DRIVER=zink` |
-| Is `/dev/kgsl-3d0` accessible from Termux app sandbox? | Zink needs KGSL | Check `ls -la /dev/kgsl-3d0` from native Termux |
-| Will XFCE4 from termux-x11 repo work with Termux:X11 display? | Desktop viability | Install + launch test (milestone 2) |
-| Does pulseaudio work without proot? | Audio viability | Test `pulseaudio --start` in native Termux |
-| Is TUR blender safe to recommend? | Optional workload | Verify signature, version, provenance |
+**Observed:** 2026-10-17, on device `25053RT47C` / `onyx`, Android 16, Adreno 825 (SM8735). The read-only native Termux invocation of `vulkaninfo --summary` returned:
+
+```text
+TU: error: ../src/src/freedreno/vulkan/tu_device.cc:1686: device (chip_id = 44030000, gpu_id = 6830) is unsupported (VK_ERROR_INCOMPATIBLE_DRIVER)
+ERROR: [Loader Message] Code 0 : setup_loader_term_phys_devs: Failed to detect any valid GPUs in the current config
+```
+
+At the time of the observation, `mesa-vulkan-icd-freedreno` was reported as Termux version `26.2.4`. This is evidence that the tested native ICD rejected the device. It is not a claim that every native Mesa build rejects it, or that all native graphics must use software rendering; a live native OpenGL renderer check was not available (`glxinfo` was absent).
+
+**Classification:** directly observed native command output; package version reported by the native package survey. Recheck both when package versions change.
+
+## 9. Existing Ternux PRoot graphics path
+
+**Reference project:** https://github.com/soobujmiah/ternux
+**Local source inspected:** `/home/sbj/ternux-tools`, commit `ef65cb4` (`2026-10-17`)
+**Relevant files:** `lib/phases.sh`, `lib/desktop.sh`, `docs/INSTALLATION.md`, `docs/MANUAL.md`, `docs/CONFIGURATION.md`
+
+The launcher source for the Zink backend enters the configured PRoot-Distro guest with shared temporary storage; binds `/dev/kgsl-3d0` to guest `/dev/kgsl` and `/dev/dri`; sets `DISPLAY`, `MESA_LOADER_DRIVER_OVERRIDE=zink`, `GALLIUM_DRIVER=zink`, and other Mesa/Turnip variables; then starts XFCE. The installation guide describes Adreno 825 / Zink as a measured route. The manual identifies the live guest `glxinfo` renderer string as the runtime check and distinguishes Zink/Turnip from `llvmpipe`.
+
+This source and its documentation support the conclusion that the **existing Ternux PRoot route is designed and documented for GPU acceleration**, independently from native Termux's packaged Turnip ICD. This review did not execute a new desktop session or renderer check, so current live device behavior remains unverified by this project. A Zink cache directory or a successful Vulkan instance query is not, by itself, proof that a current OpenGL process is using the Adreno GPU.
+
+**Lifecycle risk observed in source:** Ternux `start` runs `~/x.sh`; the launcher and stop path manage Termux:X11/PulseAudio and clean shared socket paths. Its existing desktop lifecycle must therefore remain under Ternux's control. NativeTernux must not invoke Ternux cleanup, rewrite its launcher, or start a concurrent desktop on the same display without an explicit ownership-aware integration.
+
+**Classification:** source behavior and documentation reviewed; live PRoot renderer not rerun in this review.
+
+## 10. NativeTernux scope and evidence limits
+
+NativeTernux is a separate repository and currently has no PRoot provider adapter. The supported near-term statement is: an owner can continue using Ternux's existing PRoot desktop for guest GPU workloads; NativeTernux may later provide an opt-in integration. There is not yet a `--mode proot` or `--mode hybrid` implementation.
+
+Do not infer current package availability from an old `pkg search` snapshot. Before implementing native installation, query the official active Termux repositories and record package names, versions, and date. Do not install packages as part of read-only research.
+
+## Evidence ledger
+
+| Claim | Evidence | Status |
+|---|---|---|
+| Adreno 825 / SM8735 and relevant device nodes exist | Read-only ADB observation | Verified at observation time |
+| Native Termux Turnip rejected the device | Captured `vulkaninfo --summary` output | Verified for tested native package/process |
+| Ternux PRoot launcher passes through KGSL/DRM and selects Zink | Ternux source at local commit `ef65cb4` | Source verified; runtime not rerun |
+| Current Ternux guest renderer is Zink/Turnip | Ternux documentation and owner's prior report | Not independently rerun in this review |
+| NativeTernux can reuse that rootfs automatically | No adapter exists | Not implemented |
+| Shader cache alone proves current hardware acceleration | Insufficient evidence | Rejected |
+
+
+## 11. CPU, GPU, and NPU runtime research
+
+**Research date:** 2026-10-17
+
+The product goal is a pocket mobile workstation with CPU, GPU, and NPU acceleration. This is a target, not a claim that all accelerators are currently accessible to NativeTernux. CPU is the baseline. GPU and NPU support must be demonstrated for the exact workload and process context.
+
+### Android NPU / AI runtime evidence
+
+- Android's [NNAPI migration guide](https://developer.android.com/ndk/guides/neuralnetworks/migration-guide) states NNAPI was deprecated in Android 15 and recommends migration to alternatives. NativeTernux should not make NNAPI its future foundation.
+- Google AI Edge documents a [LiteRT NPU delegate for Qualcomm devices](https://ai.google.dev/edge/litert/android/npu). That page describes the Qualcomm delegate as backed by NNAPI, which Android has deprecated. Treat this page as a research lead only: confirm a currently supported non-NNAPI path and supported device/model before considering implementation. It does not prove the SDK/runtime is callable from a Termux shell or Debian PRoot.
+- Qualcomm documents [Qualcomm AI Engine Direct / AI Runtime](https://docs.qualcomm.com/nav/home/QNN_general_overview.html?product=924033590759186372) as a vendor runtime with accelerator backends. The exact device SKU, supported Android integration, runtime distribution, ABI, licensing, and process access need confirmation before implementation.
+- The inspected device is recorded as Adreno 825 / SM8735. Qualcomm's [Snapdragon 8s Gen 4 page](https://www.qualcomm.com/smartphones/products/8-series/snapdragon-8s-gen-4-mobile-platform) lists a Hexagon NPU for that platform family, but the live device SKU-to-platform mapping and usable runtime still need confirmation. The current [QAIRT supported-target overview](https://docs.qualcomm.com/nav/home/QNN_general_overview.html?product=924033590759186372) lists Snapdragon 8s Gen 3 (SM8635) among Android targets; this research did not find an explicit SM8735 / 8s Gen 4 target entry. So silicon capability is plausible, while SDK support on this exact phone and access from Termux/PRoot remain unverified. Do not install or claim an NPU path based on the product spec alone.
+
+### Required proof before an NPU feature claim
+
+1. Identify the exact device/SoC and Android build.
+2. Identify an official, currently supported runtime/delegate for that SKU and its distribution/license constraints.
+3. Show that the runtime is accessible in the intended execution context (native Termux process, dedicated Android app, or PRoot guest); do not extrapolate between contexts.
+4. Run a representative model and record that the NPU delegate was actually selected, supported operators, correctness, latency/throughput, memory, and thermal behavior.
+5. Record CPU and GPU fallback behavior. A model that silently falls back to CPU is not evidence of NPU acceleration.
+
+**Evidence classification:** official vendor/framework documentation verified as research references; NativeTernux device NPU access and runtime execution are untested.
+
+### CPU/GPU/NPU claims policy
+
+- CPU is the baseline, not an accelerator claim. Report actual execution backend and workload measurements.
+- Native Termux GPU and Ternux Debian PRoot GPU are separate capability records. Existing Ternux PRoot GPU functionality is preserved as a first-class opt-in route and must not be weakened to make native mode simpler.
+- Do not claim “world-class”, faster, GPU accelerated, or NPU accelerated as a measured result until comparable workloads have correctness, throughput/latency, memory, and thermal/power evidence. “World-class mobile workstation” describes the product vision.
+
+
+## 12. Native Termux desktop packages and host integrations
+
+**Observed on device:** 2026-10-17, read-only SSH session. **This is a dated package-index snapshot, not a promise about later installs.**
+
+### Environment and repository provenance
+
+- Termux app: `0.119.0-beta.3`; Android: 16; ABI: `aarch64` (from the earlier read-only device inventory for this project).
+- Installed Termux X11 companion package: `termux-x11-nightly 1.03.01-6`; installed native packages include `termux-api 0.60.0`, `pulseaudio 17.0-4`, and `dbus 1.16.2-3`. `termux-x11`, `dbus-launch`, `xauth`, `pulseaudio`, and `termux-share` commands were present. XFCE itself was not installed.
+- Current signed local package indexes showed official Termux main index dated `2026-10-17 06:48 UTC` and official Termux:X11 index dated `2026-10-17 01:12 UTC`. Configured sources also included TUR and a Hermes canary repository; NativeTernux package choices below use the official Termux main/X11 indexes only. No third-party repository is enabled by NativeTernux.
+- These checks did not update indexes or install/remove packages. Before any real package transaction, refresh/verify the index under the user's chosen package-management workflow, then show the exact package plan and ask for explicit consent.
+
+### Official Termux:X11 setup requirements
+
+The [upstream Termux:X11 instructions](https://github.com/termux/termux-x11) say Android 8 or later is required and both the Android app and companion Termux package are needed. The guide uses the graphical repository and `termux-x11-nightly`; it suggests XFCE for a first desktop. It also notes Android may give less CPU time to backgrounded Termux processes; its shared-UID APK variant is restricted to matching GitHub-signed Termux installs. Do not recommend that APK variant until this device's Termux signing source is verified. The inspected device is Android 16 and already has the companion command/package, but this review did not launch a session or re-check the Android app package/signature.
+
+### Package candidates in official local indexes
+
+`apt-cache policy` reported the following candidates from `https://grimler.se/termux/termux-x11` (`x11/main`, `aarch64`):
+
+| Package | Candidate | Intended use |
+|---|---:|---|
+| `xfce4` | 4.20 | Complete XFCE metapackage |
+| `xfce4-session` | 4.20.4-1 | Session manager |
+| `xfce4-panel` | 4.20.8 | Panel |
+| `xfwm4` | 4.20.0-3 | Window manager |
+| `thunar` | 4.20.10 | File manager |
+| `xfce4-terminal` | 1.2.0 | Terminal |
+| `chromium` | 155.0.8059.79 | Optional browser |
+| `alacritty` | 0.17.0 | Optional terminal |
+| `kitty` | 0.49.2 | Optional terminal |
+
+`xfce4` metadata describes a small metapackage whose dependencies include the XFCE settings, notification, power-management and terminal components. An `apt-get -s install xfce4` simulation showed a broader transaction, including recommended/related packages such as WebKitGTK and archive utilities. A separate `apt-get -s --no-install-recommends install xfce4-session xfce4-panel xfwm4 thunar xfce4-terminal` still resolved a substantial GTK/X11 dependency closure. Both commands were simulations; no package transaction occurred. Use a preview of the exact chosen plan and measured package sizes before implementation offers installation. Do not repeat the earlier unmeasured 2 GB estimate as fact.
+
+### Termux/Android-facing workflows
+
+The device has the `termux-api` command package and `termux-share`; the package alone does not prove the Termux:API Android add-on is installed or that each Android permission is granted. The official [Termux:API project](https://github.com/termux/termux-api) describes Android device functions exposed to scripts, while Termux's [filesystem/API guidance](https://github.com/termux/termux-packages/wiki/Termux-file-system-layout) documents explicit permission boundaries for external command access. Treat API actions and file sharing as opt-in, user-triggered workflows; do not scan shared storage or assume broad access.
+
+### Native desktop candidate flow (not implemented)
+
+The upstream X11 guide's session example is `termux-x11 :1 -xstartup "dbus-launch --exit-with-session xfce4-session"`. The device already has the command prerequisites noted above. NativeTernux still needs to implement ownership-aware display allocation and lifecycle management, then obtain an owner-authorized physical-device run before claiming XFCE starts reliably. It must not start a second session while Ternux owns its current display/audio lifecycle.
+
+**Evidence classification:** package names, versions, source priority, and dependency plans were observed from the device's signed local APT indexes on the date above; install simulations were read-only. Upstream setup/API requirements were checked against official documentation. Native XFCE launch, application compatibility, Android add-on state, API permissions, and package-size totals remain untested.
+
+
+## Termux:Boot and Termux:API
+
+Official upstream references checked 2026-10-17:
+
+- [Termux:Boot](https://github.com/termux/termux-boot) runs user scripts from `~/.termux/boot/` after device boot. Its setup requires opening the add-on once; documentation notes optional wake-lock use. Treat this as an opt-in background service hook, not proof that a graphical session can appear unattended. Device-vendor background limits still need per-device verification.
+- [Termux:API](https://github.com/termux/termux-api) exposes Android functions through Termux command-line clients and a companion app. Upstream states the add-on must use the same signing key as Termux for permissions to work. NativeTernux must check the installed command and app capability at runtime and leave Android permission decisions to Android.
+
+These references establish available integration mechanisms, not that every API works on every Android version or device.
+
+
+## Wireless ADB, Shizuku, and watchdog boundary
+
+Research checked 2026-10-17:
+
+- [Upstream Shizuku API requirements](https://github.com/RikkaApps/Shizuku-API#requirements) say non-root Shizuku must be restarted with ADB after each reboot; Android 11+ lets the user start it on-device through Wireless debugging. Therefore, boot auto-start/watchdog is not assumed for the standard upstream installation.
+- Owner's ADT documentation records a device-tested custom Shizuku build with a boot receiver, WorkManager dispatch, and foreground `WatchdogService`, including a dated observation of recovery after force-stop. This is a snapshot for that custom build, not a claim about upstream Shizuku or NativeTernux. Re-check the exact installed build and boot behavior before depending on it.
+- [Termux services](https://github.com/termux/termux-services) provides runit-based process supervision in Termux. Combined with [Termux:Boot](https://github.com/termux/termux-boot), this is the lower-dependency path for starting and supervising Termux-owned workstation processes. It does not grant Android shell privileges or turn on protected Wireless debugging settings.
+- Keep standard paired Wireless debugging separate from a fixed TCP `adbd` listener such as port 5555. They have different discovery, pairing, authorization, and network-exposure behavior. A setting/property, open port, Shizuku process, or watchdog message alone does not prove an authorized working ADB transport.
+- Any NativeTernux ADB-over-Wi-Fi automation remains off by default and requires explicit consent, transport-specific verification, bounded recovery, and a clear disable path. No device setting was changed during this research.
+
+
+## Sustainable workload optimization
+
+Official Android performance guidance checked 2026-10-17:
+
+- [Android Dynamic Performance Framework](https://developer.android.com/games/optimize/adpf) and [Thermal API](https://developer.android.com/games/optimize/adpf/thermal) recommend responding to changing thermal conditions and reducing workload to sustainable levels. These are Android application APIs, not proof that a Termux shell can read all thermal signals. A NativeTernux Android companion or another supported host API would need separate implementation and permission review before thermal automation is advertised.
+- [PowerManager thermal status](https://developer.android.com/reference/android/os/PowerManager) exposes thermal-status callbacks to Android apps on supported API levels. NativeTernux reports unavailable when no supported bridge exists; it does not read guessed vendor sysfs paths as a portable substitute.
+- [Termux services](https://github.com/termux/termux-services) supplies process supervision but not CPU/GPU clock control or Android thermal APIs.
+
+For this project, sustainable per-workload adaptation is the target: lower parallelism, model batch/context, render quality, or pause when measured pressure requires it. Device-specific tuning and performance claims require a comparable baseline and longer-duration workload evidence.
+
+
+## 13. Native Wine/Hangover and accelerator boundary
+
+**Sources:** [Hangover upstream](https://github.com/AndreRH/hangover); [Android NNAPI migration guide](https://developer.android.com/ndk/guides/neuralnetworks/migration-guide)
+**Accessed:** 2026-10-17
+**Confidence:** upstream architecture verified; device package index observed; application and accelerator behavior unverified
+
+A read-only `apt-cache policy` on the device's configured Termux indexes found `hangover`, `hangover-wine`, `hangover-libarm64ecfex`, `hangover-libwow64fex`, and `hangover-wowbox64`, each uninstalled with candidate 11.16 from the official Termux:X11 index. The configured TUR index also had older 10.0-1 package candidates. This confirms current index visibility only; show source/version and avoid mixing repositories. It does not confirm runtime health, app compatibility, or successful x86 translation. No packages were installed.
+
+Hangover upstream describes x86/x86-64 Windows application execution on ARM64 Wine using emulator DLLs (FEX/Box64 paths) and documents a Vulkan 1.3 plus feature requirement for DXVK. The recorded native Termux Vulkan probe on this device failed with `VK_ERROR_INCOMPATIBLE_DRIVER`; therefore native DXVK is currently unverified/unavailable for the tested configuration. This is separate from the existing Ternux guest configuration and its shader cache.
+
+Android's official migration guide states NNAPI was deprecated in Android 15. Any NPU route needs an explicit Android-side inference runtime and bridge; Wine/Hangover and PRoot do not grant NPU access by themselves. Official Termux package issues include version-specific reports of x86/x86-64 launch failure and package build/update failure. These are not evidence that the current 11.16 candidate fails, but they require an actual architecture/runtime smoke test before compatibility claims.
+
+Detailed support gate: [Native Wine and Hangover](WINE-NATIVE.md). Sources: [Termux launch report](https://github.com/termux/termux-packages/issues/27663), [Termux package update report](https://github.com/termux/termux-packages/issues/29816), and [Termux X11 package source tree](https://github.com/termux/termux-packages/tree/master/x11-packages).

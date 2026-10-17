@@ -1,72 +1,34 @@
 # NativeTernux — বাংলা
 
-**NativeTernux** হলো একটি Termux-নেটিভ ডেস্কটপ প্রজেক্ট। PRoot বা Debian container ছাড়াই, সরাসরি Termux-এর প্যাকেজ থেকে XFCE ডেস্কটপ চালানো যায়। কোনো root প্রয়োজন নেই।
+আমার phone-টাই pocket-er workstation হবে। Native Termux-er direct সুবিধা আর আমার Ternux PRoot-er Linux/GPU setup—দুটো একসাথে কাজে লাগাতে চাই। [আমার কথা](../docs/PRODUCT-VISION.md)। CPU baseline; GPU/NPU support actual workload-e verify korte hobe।
 
-## কী এটা?
+## GPU ও PRoot সম্পর্কে
 
-[ternux](https://github.com/soobujmiah/ternux) থেকে ভিন্ন — এখানে PRoot + Debian বাদ। সব কিছু Termux-এর নিজস্ব প্যাকেজ রিপোজিটরি থেকে চলে:
+এই ডিভাইসে native Termux-এর পরীক্ষিত Turnip package Adreno 825-কে `VK_ERROR_INCOMPATIBLE_DRIVER` দিয়ে প্রত্যাখ্যান করেছে। এই ফল শুধু পরীক্ষিত native package/process-এর জন্য প্রযোজ্য। Existing Ternux-এর Debian PRoot-এ আলাদা Zink/Turnip graphics path আছে—সেটি NativeTernux থেকে নিয়ন্ত্রিত বা পুনরায় যাচাই করা হয়নি। বিস্তারিত: [PRoot GPU reuse](../docs/PROOT-GPU.md) এবং [Research & Evidence](../docs/RESEARCH.md)।
 
-- **XFCE4 ডেস্কটপ** — `termux-x11` রিপো থেকে
-- **Chromium ব্রাউজার** — `termux-x11` রিপো থেকে
-- **GPU এক্সিলারেশন** — Mesa Zink + Turnip (Adreno Vulkan ড্রাইভার ইতিমধ্যে Termux-এ আছে)
-- **PulseAudio** — সাউন্ডের জন্য (ইতিমধ্যে ইনস্টল করা আছে)
-- **Termux:X11** — ডিসপ্লে সার্ভার হিসেবে
+Shader cache folder থাকা একা GPU renderer প্রমাণ করে না। চলমান desktop-এ `glxinfo -B` থেকে Zink/Turnip renderer দেখা দরকার; `llvmpipe` হলে সেটি software rendering।
 
-## বর্তমান অবস্থা: মাইলস্টোন ১ — স্কাফোল্ড
+NativeTernux কোনো অবস্থাতেই নিজে থেকে Ternux-এর `~/x.sh`, Debian rootfs, display/audio lifecycle বা cleanup পরিবর্তন/trim করবে না। ভবিষ্যৎ PRoot integration opt-in হবে, existing Ternux capability parity বজায় রাখবে এবং ownership-aware lifecycle না হওয়া পর্যন্ত আলাদা NativeTernux desktop একই display-তে চালানো হবে না। CPU baseline; GPU/NPU কেবল actual workload backend evidence থাকলেই supported বলা হবে।
 
-| আইটেম | অবস্থা |
-|--------|--------|
-| CLI skeleton | ✅ সম্পন্ন |
-| `check` কমান্ড | ✅ ইমপ্লিমেন্টেড |
-| `info` কমান্ড | ✅ ইমপ্লিমেন্টেড |
-| `doctor` কমান্ড | ✅ ইমপ্লিমেন্টেড |
-| `help` / `guides` | ✅ ইমপ্লিমেন্টেড |
-| প্যাকেজ ইনস্টলেশন | ⏳ মাইলস্টোন ২ (`--yes` কনসেন্ট লাগবে) |
-| ডেস্কটপ লঞ্চ | ⏳ মাইলস্টোন ২ (প্যাকেজ লাগবে) |
-| GPU বেনচমার্কিং | ⏳ মাইলস্টোন ৩ |
-| হাইব্রিড মোড (Proot fallback) | ⏳ মাইলস্টোন ৪ |
+## বর্তমান অবস্থা
 
-## দ্রুত শুরু (মাইলস্টোন ২-এর পর)
+| সক্ষমতা | অবস্থা |
+|---|---|
+| Read-only CLI scaffold | আছে |
+| Native package installation | পরিকল্পিত; implement করা হয়নি |
+| Native XFCE lifecycle | পরিকল্পিত; implement করা হয়নি |
+| পরীক্ষিত Adreno 825-এ native Turnip | পর্যবেক্ষিত package-এ ব্যর্থ |
+| Existing Ternux PRoot reuse | নকশা ও documentation আছে; adapter নেই |
+| CPU/GPU/NPU capability verification | পরিকল্পিত; NPU access এখনো প্রমাণিত নয় |
+| Hybrid workflow | ভবিষ্যৎ কাজ; Native ও PRoot-এর শক্তি safe handoff-এ একত্র করা |
 
-```bash
-# কী রেডি আছে দেখুন
-nativeternux check
-
-# সিস্টেম ইনফো
-nativeternux info
-
-# প্রয়োজনীয় প্যাকেজ ইনস্টল (একবার, --yes লাগবে)
-nativeternux install --yes
-
-# ডেস্কটপ চালু
-nativeternux start
-
-# বন্ধ
-nativeternux stop
-```
-
-## আর্কিটেকচার
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
-
-**Tier 1 — Native (বর্তমান ফোকাস):**
-```
-Android → Termux packages → XFCE4 + Chromium + Zink/Turnip → Termux:X11
-```
-
-**Tier 2 — Proot (ভবিষ্যত):** হালকা Debian container glibc-only টুলসের জন্য (blender, ffmpeg, dev toolchains)।
-
-**Tier 3 — Hybrid (ভবিষ্যত):** স্মার্ট ডিসপ্যাচ — নেটিভ অ্যাপস Termux-এ, Linux-only অ্যাপস Proot-এ।
+আরও দেখুন: [আমার vision](../docs/PRODUCT-VISION.md), [Architecture](../docs/ARCHITECTURE.md), [Roadmap](../docs/ROADMAP.md), [Installation status](../docs/INSTALLATION.md)।
 
 ## লাইসেন্স
 
-PolyForm Noncommercial 1.0.0 plus the Ternux commercial-use addendum.
-See [LICENSE](LICENSE) and [LICENSE-SCOPE.md](LICENSE-SCOPE.md).
+এই repository-তে license এখনো নির্ধারিত/যোগ করা হয়নি। আগের draft-এর license দাবি ও অনুপস্থিত license file-এর link-কে কার্যকর license হিসেবে ধরবেন না। Public release বা contribution নেওয়ার আগে owner-কে license নির্বাচন করে file যোগ করতে হবে।
 
-NativeTernux হলো [soobujmiah/ternux](https://github.com/soobujmiah/ternux) থেকে আলাদা প্রজেক্ট। উভয়ের একই লাইসেন্স কিন্তু আলাদা কোডবেস ও উদ্দেশ্য।
+## Repository
 
-## রিপোজিটরি
-
-- **সোর্স:** https://github.com/soobujmiah/nativeternux
-- **ডক্স:** https://soobujmiah.github.io/nativeternux/ (ভবিষ্যতে)
-- **ইস্যু:** https://github.com/soobujmiah/nativeternux/issues
+- Source: https://github.com/soobujmiah/nativeternux
+- Existing Ternux (independent): https://github.com/soobujmiah/ternux

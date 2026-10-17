@@ -1,0 +1,49 @@
+name: Repository State Contract
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  state-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - name: Install state-tool dependency
+        run: python -m pip install --quiet -r requirements-dev.txt
+      - name: Validate deterministic state
+        run: python3 -m tools.repo_knowledge verify
+      - name: Validate README knowledge bridge
+        run: python3 tools/doc_bridge.py check --strict --project-id nativeternux README.md
+      - name: Validate repository classification
+        run: |
+          python3 - <<'PY'
+          import yaml
+          from scripts.repository_types import is_valid_type
+          with open("PROJECT_CLASSIFICATION.yaml", encoding="utf-8") as stream:
+              value = yaml.safe_load(stream)["classification"]["primary"]
+          if not is_valid_type(value):
+              raise SystemExit(f"Unsupported repository type: {value!r}")
+          print(f"Repository type: {value}")
+          PY
+      - name: Validate required project documents
+        run: |
+          test -f AI_ASSISTANT.md
+          test -f CURRENT_STATE.md
+          test -f PROJECT_MANIFEST.yaml
+          test -f PROJECT_CLASSIFICATION.yaml
+          test -f SECURITY.md
+          test -f SKB_KNOWLEDGE_SYNC.md

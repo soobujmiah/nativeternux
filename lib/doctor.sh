@@ -83,9 +83,9 @@ nt_cmd_check() {
   # --- Summary ----------------------------------------------------------
   echo ""
   if [ $rc -eq 0 ]; then
-    nt_ok "All checks passed. Ready to start."
+    nt_ok "Required checks passed; desktop launch is not implemented yet."
   else
-    nt_warn "$((${#missing[@]})) item(s) missing. Run 'nativeternux install --yes' to fix."
+    nt_warn "$((${#missing[@]})) item(s) missing. Package installation is not implemented yet."
   fi
 
   if [ "$NATIVERNUX_JSON" = "1" ]; then

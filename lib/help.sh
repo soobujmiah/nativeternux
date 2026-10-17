@@ -17,12 +17,12 @@ Usage:
 Commands:
   check     Inspect device, report what's installed and what's missing
   info      Show system information (renderer, Vulkan, packages)
-  start     Launch native XFCE desktop via Termux:X11
-  stop      Stop the native desktop session
-  restart   Stop then start
-  status    Show current session state
+  start     Check readiness (desktop launch not implemented)
+  stop      Stop stub (process teardown not implemented)
+  restart   Restart stub (desktop lifecycle not implemented)
+  status    Inspect related process status (ownership not tracked)
   doctor    Comprehensive diagnosis
-  install   Install required packages (explicit consent required)
+  install   Preview package requirements (no install yet)
   guides    Show documentation links
   help      Show this help
   --version Show version
@@ -36,16 +36,16 @@ Options:
 Examples:
   nativeternux check          # See what's ready
   nativeternux info           # Renderer + Vulkan details
-  nativeternux start          # Launch desktop
-  nativeternux stop           # Clean up
-  nativeternux install --yes  # Install packages (requires consent)
+  nativeternux start          # Check readiness only
+  nativeternux stop           # Stop stub; no processes are killed
+  nativeternux install --yes  # Preview only; no packages are installed
 EOF
       ;;
     start)
       cat <<'EOF'
-nativeternux start — Launch native XFCE desktop
+nativeternux start — Native XFCE readiness stub
 
-Uses Termux:X11 + native XFCE packages (no PRoot).
+This milestone does not launch Termux:X11 or XFCE. It only checks prerequisites.
 
 Prerequisites checked:
   - Termux:X11 app is installed
@@ -53,36 +53,26 @@ Prerequisites checked:
   - dbus-launch is available
   - pulseaudio is available
 
-The command will:
-  1. Find a free X11 display number
-  2. Start Termux:X11 on that display
-  3. Wait for the X11 socket
-  4. Start dbus and xfce4-session
-  5. Track all PIDs for clean stop
-
-Display number is allocated dynamically; :0 is tried first,
-then :1, :2, etc. No existing session is clobbered.
+The command currently checks whether prerequisites exist and reports readiness.
+No processes, sockets, or package state are changed.
 EOF
       ;;
     stop)
       cat <<'EOF'
-nativeternux stop — Stop the native desktop session
+nativeternux stop — Stop stub
 
-Kills only the processes that nativeternux started
-(Termux:X11, dbus-launch, xfce4-session, pulseaudio).
-Does not use blanket pkill. Removes only its own socket files.
+Process tracking and session teardown are not implemented. This command does
+not kill processes or remove socket files.
 EOF
       ;;
     install)
       cat <<'EOF'
-nativeternux install — Install required packages
+nativeternux install — Package preview stub
 
-Requires explicit --yes flag. Installs:
-  - xfce4-session xfce4-panel xfwm4 thunar xfce4-terminal
-  - pulseaudio (if not present)
-  - dbus-x11 (if not present)
+Requires explicit --yes to show the preview. No packages are installed.
+  - The planned package set is not yet verified or installed.
 
-No PRoot packages are touched. No system files are modified.
+This command makes no package or system-file changes.
 EOF
       ;;
     check)
@@ -91,7 +81,7 @@ nativeternux check — Inspect device readiness
 
 Reports which required packages are installed, which commands
 are available, and whether Termux:X11 is present.
-Does NOT install or modify anything.
+Does NOT install packages or modify files. Diagnostic tools may query device interfaces.
 EOF
       ;;
     doctor)
