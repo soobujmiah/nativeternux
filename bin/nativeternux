@@ -1,0 +1,147 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# =============================================================================
+#  nativeternux — Native Termux desktop CLI
+#
+#  Desktop for Android using Termux packages + Termux:X11 directly.
+#  No PRoot. No Debian container.XFCE4, Chromium, and tools from the
+#  termux-x11 repository, running natively on the device.
+#
+#  Copyright (c) 2026 Sobuj Miah (@soobujmiah)
+#  Licensed under PolyForm Noncommercial 1.0.0 plus the Ternux commercial-use
+#  addendum; see LICENSE-SCOPE.md and LICENSE-COMMERCIAL-ADDENDUM.md.
+#  https://github.com/soobujmiah/nativeternux
+# =============================================================================
+set -u
+
+# --- Version ------------------------------------------------------------
+NATIVERNUX_VERSION="0.1.0"
+NATIVERNUX_NAME="nativeternux"
+NATIVERNUX_REPO="https://github.com/soobujmiah/nativeternux"
+NATIVERNUX_LIB_DIR=""
+NATIVERNUX_STATE_DIR="${NATIVERNUX_STATE_DIR:-$HOME/.local/share/nativeternux}"
+NATIVERNUX_LOG_DIR="${NATIVERNUX_LOG_DIR:-${TMPDIR:-/data/data/com.termux/files/usr/tmp}/nativeternux}"
+NATIVERNUX_LOG_FILE="$NATIVERNUX_LOG_DIR/nativeternux.log"
+NATIVERNUX_JSON=0
+NATIVERNUX_VERBOSE=0
+NATIVERNUX_QUIET=0
+
+# --- Locate libraries ---------------------------------------------------
+_NT_BIN_DIR=""
+_NT_SRC_DIR=""
+_TN_LIB_DIR=""
+
+# When run from a checkout: bin/nativeternux + lib/*.sh
+# When installed: $PREFIX/bin/nativeternux + $PREFIX/lib/nativeternux/*.sh
+_NT_BIN_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd -P)" || _NT_BIN_DIR=""
+
+for _try in \
+  "${NATIVERNUX_LIB_DIR:-}" \
+  "${_NT_BIN_DIR}/../lib/nativeternux" \
+  "${_NT_BIN_DIR}/../lib" \
+  "${PREFIX:-/data/data/com.termux/files/usr}/lib/nativeternux" \
+  "$HOME/.local/share/nativeternux/lib"; do
+  [ -n "$_try" ] || continue
+  if [ -f "$_try/core.sh" ]; then
+    _TN_LIB_DIR="$(CDPATH= cd -- "$_try" 2>/dev/null && pwd -P)"
+    break
+  fi
+done
+unset _try
+
+if [ -z "$_TN_LIB_DIR" ]; then
+  echo "[FATAL] Cannot locate nativeternux libraries. Clone or reinstall." >&2
+  exit 1
+fi
+
+. "$_TN_LIB_DIR/core.sh"
+
+# --- Lazy-load a library module ----------------------------------------
+_nt_use() {
+  local lib="$1"
+  [ -n "${_NT_LOADED[$lib]:-}" ] && return 0
+  local f="$_TN_LIB_DIR/${lib}.sh"
+  if [ -f "$f" ]; then
+    . "$f"
+    _NT_LOADED["$lib"]=1
+    return 0
+  fi
+  nt_die "Internal error: library '$lib' not found at $f" 99
+}
+declare -A _NT_LOADED
+
+# --- Command registry --------------------------------------------------
+_nt_dispatch() {
+  local cmd="$1"; shift
+
+  if declare -F "nt_cmd_${cmd}" >/dev/null 2>&1; then
+    "nt_cmd_${cmd}" "$@"
+    return $?
+  fi
+
+  local lib_map=""
+  case "$cmd" in
+    guides)
+      printf '%s\n' \
+        'NativeTernux guides:' \
+        '  Installation: https://soobujmiah.github.io/nativeternux/docs/INSTALLATION.html' \
+        '  Architecture: https://soobujmiah.github.io/nativeternux/docs/ARCHITECTURE.html' \
+        '' 'Open these links in a browser. This command does not install anything.'
+      return 0 ;;
+    start|stop|restart|status) lib_map="desktop" ;;
+    check|doctor)             lib_map="doctor" ;;
+    info)                     lib_map="info" ;;
+    install)                  lib_map="phases" ;;
+    *)                        lib_map="$cmd" ;;
+  esac
+
+  if [ -f "$_TN_LIB_DIR/${lib_map}.sh" ]; then
+    _nt_use "$lib_map" 2>/dev/null || true
+  fi
+
+  if declare -F "nt_cmd_${cmd}" >/dev/null 2>&1; then
+    "nt_cmd_${cmd}" "$@"
+    return $?
+  fi
+
+  if [ "$NATIVERNUX_JSON" = "1" ]; then
+    nt_json_object "error" "fatal" \
+      "message" "Unknown command: $cmd" \
+      "requested_command" "$cmd"
+  else
+    nt_fail "Unknown command: $cmd"
+    echo "Run 'nativeternux --help' for usage." >&2
+  fi
+  return 1
+}
+
+# --- Parse global flags ------------------------------------------------
+_NT_ARGS=()
+_HELP_REQUESTED=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json)      NATIVERNUX_JSON=1; shift ;;
+    --verbose)   NATIVERNUX_VERBOSE=1; shift ;;
+    --quiet)     NATIVERNUX_QUIET=1; shift ;;
+    --help|-h)   _HELP_REQUESTED=1; shift ;;
+    --version|-V) echo "nativeternux v${NATIVERNUX_VERSION}"; echo "${NATIVERNUX_REPO}"; exit 0 ;;
+    *) _NT_ARGS+=("$1"); shift ;;
+  esac
+done
+
+set -- "${_NT_ARGS[@]}"
+
+if [ "$_HELP_REQUESTED" -eq 1 ]; then
+  if [ $# -eq 0 ]; then
+    _nt_use "help" && nt_help ""; exit 0
+  fi
+  _nt_use "help" && nt_help "$1"; exit 0
+fi
+unset _HELP_REQUESTED
+
+# --- Dispatch ----------------------------------------------------------
+if [ $# -eq 0 ]; then
+  _nt_use "help" && nt_help ""; exit 0
+fi
+
+COMMAND="$1"; shift
+_nt_dispatch "$COMMAND" "$@"

@@ -1,0 +1,13 @@
+#!/bin/bash
+# =============================================================================
+#  nativeternux — minimal CLI entry point for testing
+#  This is a standalone version that works without the lib/ directory.
+#  After clone, use: bin/nativeternux (which loads lib/*)
+# =============================================================================
+set -u
+
+echo "nativeternux v0.1.0 — Native Termux desktop"
+echo "https://github.com/soobujmiah/nativeternux"
+echo ""
+echo "Run 'bin/nativeternux check' to inspect your device."
+echo "Run 'bin/nativeternux help' for full usage."

@@ -1,0 +1,17 @@
+# State and logs (runtime, not source)
+.state/
+logs/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Editor temps
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
