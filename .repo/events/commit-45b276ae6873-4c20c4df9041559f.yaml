@@ -1,0 +1,7 @@
+event_id: commit-45b276ae6873-4c20c4df9041559f
+repository: soobujmiah/ternuxx
+commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+kind: commit
+occurred_at: '2026-10-18T14:14:30Z'
+status: completed
+summary: 'docs: clarify managed listener evidence limit'
