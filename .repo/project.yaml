@@ -1,13 +1,13 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-18T16:11:50Z'
+generated_at: '2026-10-18T19:43:13Z'
 generated_by: tools/repo_knowledge collect
-version: 45b276a
+version: 69e378e
 head:
-  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
   branch: main
-  committed_at: '2026-10-18T14:14:30Z'
+  committed_at: '2026-10-18T19:42:15Z'
 phases:
   source: not_configured
   completed: []
@@ -15,23 +15,30 @@ phases:
   next: null
 build:
   status: unknown
-  run_id: null
-  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+  run_id: '39159994930'
+  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
   run_attempt: '1'
-  at: '2026-10-18T14:14:30Z'
-  timestamp_source: commit
+  at: '2026-10-18T19:43:13Z'
+  timestamp_source: observed
+  workflow_name: Repository Knowledge Sync
+  event_type: push
+  actor: soobujmiah
+  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39159994930
 test:
-  status: passed
-  run_id: null
-  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+  status: failed
+  run_id: '39159994930'
+  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
   run_attempt: '1'
-  at: '2026-10-18T14:14:30Z'
-  timestamp_source: commit
-  summary: 'Native Termux full suite: 324/324 passed in 67.025 seconds on dirty working
-    tree based at HEAD 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a; see docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md.'
+  at: '2026-10-18T19:43:13Z'
+  timestamp_source: observed
+  workflow_name: Repository Knowledge Sync
+  event_type: push
+  actor: soobujmiah
+  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39159994930
+  summary: null
 last_successful_build: null
 last_failed_build: null
 sync:
   status: ok
-  last_synced_at: '2026-10-18T16:11:50Z'
-  source: local
+  last_synced_at: '2026-10-18T19:43:13Z'
+  source: ci
