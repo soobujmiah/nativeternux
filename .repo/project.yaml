@@ -1,7 +1,7 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-18T14:10:47Z'
+generated_at: '2026-10-18T14:12:26Z'
 generated_by: tools/repo_knowledge collect
 version: '7558251'
 head:
@@ -26,16 +26,16 @@ build:
   run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39134525690
 test:
   status: passed
-  run_id: native-8022-20261018-308
+  run_id: native-8022-20261018-final308
   commit: 75582514640c8506b18608bbd849269160654cb0
   run_attempt: '1'
-  at: '2026-10-18T14:10:47Z'
+  at: '2026-10-18T14:12:26Z'
   timestamp_source: observed
-  summary: 308/308 Native Termux tests via owner-started SSH 8022; device lifecycle
+  summary: 308/308 Native Termux tests; final synchronized source, device lifecycle
     and reboot not tested
 last_successful_build: null
 last_failed_build: null
 sync:
   status: ok
-  last_synced_at: '2026-10-18T14:10:47Z'
+  last_synced_at: '2026-10-18T14:12:26Z'
   source: local
