@@ -242,6 +242,7 @@ nt_cmd_start() {
 }
 
 nt_cmd_stop() {
+  nt_require_termux || return 1
   local file status supervisor_pid supervisor_ticks lock operation_id
   file="$(_nt_session_file)"
   if [ ! -f "$file" ]; then
@@ -333,6 +334,7 @@ PY
 }
 
 nt_cmd_restart() {
+  nt_require_termux || return 1
   nt_cmd_stop || return $?
   nt_cmd_start "$@"
 }

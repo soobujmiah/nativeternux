@@ -90,8 +90,8 @@ nt_cmd_check() {
 
   if [ "$TERNUXX_JSON" = "1" ]; then
     local missing_json; missing_json="$(nt_json_array "${missing[@]+"${missing[@]}"}")"
-    nt_json_object \
-      "check" "$([ $rc -eq 0 ] && echo 'pass' || echo 'fail')" \
+    nt_json_object_typed \
+      "check" "\"$([ $rc -eq 0 ] && echo 'pass' || echo 'fail')\"" \
       "missing_count" "${#missing[@]}" \
       "missing" "$missing_json"
   fi

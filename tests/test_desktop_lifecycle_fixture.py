@@ -224,6 +224,30 @@ while True:
         self.assertEqual(self._state()["status"], "running")
         self.assertFalse((self.state / ".session.lock").exists())
 
+    def test_stop_and_restart_refuse_proot_before_any_mutation(self) -> None:
+        started = self._run("start", "--display", "7")
+        self.assertEqual(started.returncode, 0, started.stderr)
+        state_before = (self.state / "session.json").read_bytes()
+        journal_before = sorted(path.name for path in (self.state / "operations").glob("*.json"))
+
+        env = self.env.copy()
+        env.pop("TERMUX_VERSION", None)
+        env.pop("PREFIX", None)
+        for command in ("stop", "restart"):
+            result = subprocess.run(
+                ["bash", str(ROOT / "bin/ternuxx"), command],
+                env=env, text=True, capture_output=True, timeout=5, check=False,
+            )
+            self.assertNotEqual(result.returncode, 0, command)
+            self.assertIn("requires the native Termux shell", result.stderr, command)
+            self.assertEqual((self.state / "session.json").read_bytes(), state_before, command)
+            self.assertEqual(
+                sorted(path.name for path in (self.state / "operations").glob("*.json")),
+                journal_before,
+                command,
+            )
+            self.assertFalse((self.state / ".session.lock").exists(), command)
+
     def test_native_lifecycle_refuses_proot_environment(self) -> None:
         env = self.env.copy()
         env.pop("TERMUX_VERSION", None)

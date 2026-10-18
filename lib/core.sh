@@ -31,30 +31,37 @@ nt_die() {
 
 # --- JSON output helper -------------------------------------------------
 nt_json_object() {
-  # nt_json_object <key1> <val1> [key2 val2 ...]
-  local pairs=("$@")
-  local out="{"
-  local first=1
-  for ((i=0; i<${#pairs[@]}; i+=2)); do
-    [ $first -eq 0 ] && out+=", "
-    out+="\"${pairs[$i]}\":\"${pairs[$((i+1))]}\""
-    first=0
-  done
-  out+="}"
-  echo "$out"
+  # nt_json_object <key1> <val1> [key2 val2 ...]; all values are JSON strings.
+  python3 - "$@" <<'PYJSON'
+import json, sys
+args=sys.argv[1:]
+if len(args) % 2:
+    raise SystemExit("nt_json_object requires key/value pairs")
+print(json.dumps(dict(zip(args[::2], args[1::2])), ensure_ascii=False))
+PYJSON
 }
 
 nt_json_array() {
-  # nt_json_array <item1> <item2> ...
-  local out="["
-  local first=1
-  for item in "$@"; do
-    [ $first -eq 0 ] && out+=", "
-    out+="\"$item\""
-    first=0
-  done
-  out+="]"
-  echo "$out"
+  # nt_json_array <item1> <item2> ...; items are JSON strings.
+  python3 - "$@" <<'PYJSON'
+import json, sys
+print(json.dumps(sys.argv[1:], ensure_ascii=False))
+PYJSON
+}
+
+nt_json_object_typed() {
+  # nt_json_object_typed <key1> <json-value1> [key2 json-value2 ...]
+  # Use only for internal callers that already hold validated JSON values.
+  python3 - "$@" <<'PYJSON'
+import json, sys
+args=sys.argv[1:]
+if len(args) % 2:
+    raise SystemExit("nt_json_object_typed requires key/value pairs")
+result={}
+for key, raw in zip(args[::2], args[1::2]):
+    result[key]=json.loads(raw)
+print(json.dumps(result, ensure_ascii=False))
+PYJSON
 }
 
 # --- State file ---------------------------------------------------------
@@ -67,28 +74,60 @@ nt_state_get() {
   local key="$1"
   local f; f="$(_nt_state_file)"
   [ -f "$f" ] || return 1
-  python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('$key',''))" 2>/dev/null || true
+  python3 - "$f" "$key" <<'PYSTATE'
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as stream:
+    data=json.load(stream)
+value=data.get(sys.argv[2], "")
+if isinstance(value, str):
+    sys.stdout.write(value + "\n")
+else:
+    print(json.dumps(value, ensure_ascii=False))
+PYSTATE
 }
 
 nt_state_set() {
   local key="$1" value="$2"
   local f; f="$(_nt_state_file)"
-  mkdir -p "$TERNUXX_STATE_DIR" 2>/dev/null || true
-  if [ -f "$f" ]; then
-    python3 -c "
-import json,sys
-d=json.load(open('$f'))
-d['$key']='$value'
-json.dump(d,open('$f','w'),indent=2)
-" 2>/dev/null || true
-  else
-    printf '{\n  "%s": "%s"\n}\n' "$key" "$value" > "$f"
-  fi
+  python3 - "$f" "$key" "$value" <<'PYSTATE'
+import json, os, sys, tempfile
+path, key, value=sys.argv[1:]
+parent=os.path.dirname(path)
+os.makedirs(parent, mode=0o700, exist_ok=True)
+try:
+    with open(path, encoding="utf-8") as stream:
+        data=json.load(stream)
+    if not isinstance(data, dict):
+        raise ValueError("state root must be a JSON object")
+except FileNotFoundError:
+    data={}
+data[key]=value
+fd, temporary=tempfile.mkstemp(prefix=".state.", dir=parent)
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as stream:
+        json.dump(data, stream, ensure_ascii=False, indent=2)
+        stream.write("\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+    try:
+        mode=os.stat(path).st_mode & 0o777
+    except FileNotFoundError:
+        mode=0o600
+    os.chmod(temporary, mode)
+    os.replace(temporary, path)
+    dir_fd=os.open(parent, os.O_RDONLY)
+    try: os.fsync(dir_fd)
+    finally: os.close(dir_fd)
+except BaseException:
+    try: os.unlink(temporary)
+    except FileNotFoundError: pass
+    raise
+PYSTATE
 }
 
 nt_state_has() {
   local key="$1"
-  local val; val="$(nt_state_get "$key")"
+  local val; val="$(nt_state_get "$key")" || return 1
   [ -n "$val" ]
 }
 
