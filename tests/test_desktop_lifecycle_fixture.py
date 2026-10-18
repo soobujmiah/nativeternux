@@ -80,8 +80,8 @@ while True:
                 "TMPDIR": str(self.tmp),
                 "TERMUX_VERSION": "fixture",
                 "PREFIX": "/data/data/com.termux/files/usr",
-                "NATIVERNUX_STATE_DIR": str(self.state),
-                "NATIVERNUX_LIB_DIR": str(self.lib_dir),
+                "TERNUXX_STATE_DIR": str(self.state),
+                "TERNUXX_LIB_DIR": str(self.lib_dir),
                 "PATH": f"{self.bin_dir}{os.pathsep}{os.environ['PATH']}",
             }
         )

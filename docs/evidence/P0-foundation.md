@@ -3,7 +3,7 @@
 - Phase: `P0`
 - Date: `2026-10-17`
 - Commit: `2a06523a40acbaa451f97a44630646ef6ef0d430` (worktree contains the reviewed, uncommitted project changes)
-- Device/runtime: Termux on the owner's Android device, inspected over SSH using read-only commands; repository documentation and generated files edited only inside `~/nativeternux`.
+- Device/runtime: Termux on the owner's Android device, inspected over SSH using read-only commands; repository documentation and generated files edited only inside `~/ternuxx`.
 - Gate: PASS
 
 ## Acceptance criteria
@@ -12,7 +12,7 @@
 - [x] `AI_ASSISTANT.md`, architecture, installation status, research, README, and roadmap distinguish implemented scaffold behavior from future work, and distinguish native Termux GPU evidence from the separately configured PRoot route.
 - [x] `python3 tools/phase_docs.py refresh` regenerated README, roadmap phase status, and `docs/PHASE-STATUS.md` from `project/phase-state.json`.
 - [x] Completion is recorded only through the phase tool and requires a repository-local evidence document with the phase ID, passing gate, acceptance criteria, and evidence sections.
-- [x] Changes are confined to NativeTernux documentation/scaffold files. No original Ternux files, device packages, Android settings, rootfs contents, or desktop processes were changed.
+- [x] Changes are confined to Ternuxx documentation/scaffold files. No original Ternux files, device packages, Android settings, rootfs contents, or desktop processes were changed.
 
 ## Evidence
 

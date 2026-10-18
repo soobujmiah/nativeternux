@@ -1,6 +1,6 @@
 schema_version: 1
 product: Ternuxx
-repository_at_audit: soobujmiah/nativeternux
+repository_at_audit: soobujmiah/ternuxx
 audit_commit: 1a891fa
 audit_date: 2026-10-17
 classification_values:
@@ -24,8 +24,8 @@ features:
     security_constraints: [preview_first_package_install, ownership_scoped_process_control]
     evidence: [../../lib/desktop.sh, ../../lib/phases.sh, ../../tests/test_desktop_lifecycle_fixture.py, ../../tests/test_desktop_supervisor.py, ../evidence/P2-phase-completion-2026-10-18.md]
     release_qualified: false
-    limitations: [P2 target lifecycle and approved installer transaction passed; original install preview capture gap remains documented; GUI visibility was owner-confirmed; installed CLI name migration remains pending]
-    next_action: Finish the P3 management/recovery gates and preserve backward compatibility during installed CLI migration.
+    limitations: [P2 target lifecycle and approved installer transaction passed; original install preview capture gap remains documented; GUI visibility was owner-confirmed; target-device rollout of current CLI and paths remains pending]
+    next_action: Finish P3 management/recovery gates and deploy the canonical CLI/state paths to the target environment.
     owner_decision_required: false
 
   - id: inference.cpu

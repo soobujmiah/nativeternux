@@ -1,5 +1,5 @@
 # =============================================================================
-#  Ternuxx CLI help (the ternuxx command name is retained for compatibility)
+#  Ternuxx CLI help
 # =============================================================================
 # shellcheck source=lib/core.sh
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
@@ -13,8 +13,6 @@ Ternuxx — native Termux desktop management
 
 Usage:
   ternuxx <command> [options]
-
-Legacy compatibility alias: nativeternux <command> [options]
 
 Commands:
   check     Inspect device and package readiness (read-only)

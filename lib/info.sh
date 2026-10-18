@@ -63,7 +63,7 @@ nt_cmd_info() {
   echo "Renderer: $renderer"
   echo ""
 
-  if [ "$NATIVERNUX_JSON" = "1" ]; then
+  if [ "$TERNUXX_JSON" = "1" ]; then
     nt_json_object \
       "model" "$(getprop ro.product.model 2>/dev/null)" \
       "android_version" "$(getprop ro.build.version.release 2>/dev/null)" \

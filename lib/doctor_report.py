@@ -215,7 +215,7 @@ def check_session(state_root: Path) -> None:
         if root == home or home not in root.parents:
             add("NTX-SESSION-001", "error", "native-session",
                 "configured state path is outside Termux HOME",
-                "Review NATIVERNUX_STATE_DIR; do not move or delete data automatically.")
+                "Review TERNUXX_STATE_DIR; do not move or delete data automatically.")
             return
     except OSError:
         add("NTX-SESSION-001", "error", "native-session",
@@ -238,7 +238,7 @@ def check_session(state_root: Path) -> None:
         add("NTX-SESSION-011", "error", "native-session", "session record is unreadable or invalid JSON",
             "Keep the record and log; inspect them before using recovery commands.")
         return
-    if not isinstance(state, dict) or state.get("owner") not in ("ternuxx", "nativeternux"):
+    if not isinstance(state, dict) or state.get("owner") != "ternuxx":
         add("NTX-SESSION-012", "error", "native-session", "record owner is not Ternuxx",
             "Do not manage this record as a Ternuxx session.")
         return
@@ -278,7 +278,7 @@ def check_process_inventory(state_root: Path, proc_root: Path = Path("/proc")) -
         if root == home or home not in root.parents:
             raise OSError("state path is outside HOME")
         state = json.loads((root / "session.json").read_text(encoding="utf-8"))
-        if isinstance(state, dict) and state.get("owner") in ("ternuxx", "nativeternux") and state.get("schema") == 2:
+        if isinstance(state, dict) and state.get("owner") == "ternuxx" and state.get("schema") == 2:
             for role in ("supervisor", "x11", "desktop"):
                 record = state.get(role)
                 if isinstance(record, dict):
@@ -345,7 +345,7 @@ def check_operations(state_root: Path) -> None:
         root = state_root.resolve()
         if root == home or home not in root.parents:
             add("NTX-OP-004", "error", "native-operations", "configured operation journal path is outside Termux HOME",
-                "Review NATIVERNUX_STATE_DIR; Doctor does not read or change external paths.")
+                "Review TERNUXX_STATE_DIR; Doctor does not read or change external paths.")
             return
     except OSError:
         add("NTX-OP-004", "warning", "native-operations", "configured operation journal path cannot be resolved",

@@ -46,7 +46,7 @@ class RebootRecoveryTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(prefix="ternuxx-reboot-test-")
         self.home = Path(self.tmp.name) / "home"
         self.home.mkdir(mode=0o700)
-        self.state = self.home / ".local/share/nativeternux"
+        self.state = self.home / ".local/share/ternuxx"
 
     def tearDown(self) -> None:
         self.tmp.cleanup()

@@ -88,7 +88,7 @@ class SshDiagnosticsTests(unittest.TestCase):
         installed = run_dir / "run"
         installed.write_bytes(source.read_bytes())
         installed.chmod(0o700)
-        installed_module = self.prefix / "lib/nativeternux/ssh_diagnostics.py"
+        installed_module = self.prefix / "lib/ternuxx/ssh_diagnostics.py"
         with patch.object(ssh_diagnostics, "__file__", str(installed_module)), \
              patch("pathlib.Path.home", return_value=home):
             identity = ssh_diagnostics._managed_service_definition_identity(self.prefix)

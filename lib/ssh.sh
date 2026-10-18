@@ -7,7 +7,7 @@ nt_cmd_ssh() {
       nt_require_termux || return 1
       nt_require_command python3 || return 1
       local format_args=()
-      [ "$NATIVERNUX_JSON" = "1" ] && format_args+=(--json)
+      [ "$TERNUXX_JSON" = "1" ] && format_args+=(--json)
       local operation="ssh.inspect"
       [ "$action" != "inspect" ] && operation="ssh.service.$action"
       python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" "${format_args[@]}" "$@"

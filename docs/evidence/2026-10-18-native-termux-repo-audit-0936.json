@@ -290,7 +290,7 @@
     },
     {
       "status": " M",
-      "path": "bin/nativeternux",
+      "path": "bin/ternuxx",
       "category": "cross-phase-product-source",
       "first_seen": "included in 2026-10-18 08:14 snapshot",
       "disposition": "product implementation/contract test; must retain ownership and preview-first boundaries"
@@ -1823,7 +1823,7 @@
     },
     {
       "status": " M",
-      "path": "nativeternux",
+      "path": "ternuxx",
       "category": "P0-brand-compatibility",
       "first_seen": "included in 2026-10-18 08:14 snapshot",
       "disposition": "legacy compatibility entrypoint; project-scoped repository identity work"

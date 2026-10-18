@@ -3,7 +3,7 @@
   "captured_at": "2026-10-17T17:12:00Z",
   "repository": {
     "id": "soobujmiah/ternuxx",
-    "path": "$HOME/nativeternux",
+    "path": "$HOME/ternuxx",
     "branch": "main",
     "head": "1a891faabc925136c1801f40194b0969d28041df",
     "working_tree": "dirty; 38 modified and 48 untracked paths at report time; existing work preserved; no commit or push"
@@ -11,7 +11,7 @@
   "readiness": "READY FOR OWNER-OPERATED REBOOT",
   "test_id": "TERN-20261017-RB03",
   "checkpoint": {
-    "path": "$HOME/.local/share/nativeternux/continuity/reboot-tests/TERN-20261017-RB03.json",
+    "path": "$HOME/.local/share/ternuxx/continuity/reboot-tests/TERN-20261017-RB03.json",
     "state": "prepared",
     "readiness": "NOT_READY (checkpoint schema initializes this field; human-readable gate is READY)",
     "mode": "0600",
@@ -40,7 +40,7 @@
       "effective_policy": "sshd -T reported AddressFamily inet and ListenAddress 127.0.0.1:8023",
       "daemon_log": "Server listening on 127.0.0.1 port 8023",
       "same_device_authenticated_connection": "PASS before and after old daemon stop",
-      "native_repository_access": "PASS; path $HOME/nativeternux, branch main, commit 1a891faabc925136c1801f40194b0969d28041df; 17 modified and 8 untracked paths observed",
+      "native_repository_access": "PASS; path $HOME/ternuxx, branch main, commit 1a891faabc925136c1801f40194b0969d28041df; 17 modified and 8 untracked paths observed",
       "duplicate_managed_daemons": "one exact candidate-config sshd process observed after repeated sv-enable",
       "legacy_8022_daemon": "stopped after candidate validation; original SSH config and keys unchanged",
       "kernel_socket_table": "UNAVAILABLE; Android procfs denied and netstat lacks TCP support; daemon log and authenticated loopback connection are the available bind evidence",
@@ -220,7 +220,7 @@
     "Stopped old unmanaged sshd PID 11957 on port 8022 after candidate authentication and repository-access validation",
     "Changed only Wake Lock acquire/release calls in native-home x.sh after verifying a byte-identical backup",
     "Created private native checkpoint RB02",
-    "Installed private-nonce CLI verification update under $PREFIX/lib/nativeternux after preserving the prior four runtime files under $HOME/.local/state/ternuxx/backups/native-wakelock-20261017/private-verify; checksums matched and SSH service stayed running"
+    "Installed private-nonce CLI verification update under $PREFIX/lib/ternuxx after preserving the prior four runtime files under $HOME/.local/state/ternuxx/backups/native-wakelock-20261017/private-verify; checksums matched and SSH service stayed running"
   ],
   "blockers": [
     "Actual Android reboot, post-boot startup, boot ID transition, and reconnect remain unverified until owner performs reboot.",

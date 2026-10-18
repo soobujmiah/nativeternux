@@ -23,7 +23,7 @@ nt_cmd_remote() {
           nt_require_command python3 || return 1
           local command=(--operation remote.access.preview)
           [ "$policy_stdin" = "1" ] && command+=(--policy-stdin)
-          [ "$NATIVERNUX_JSON" = "1" ] && command+=(--json)
+          [ "$TERNUXX_JSON" = "1" ] && command+=(--json)
           python3 "$_TN_LIB_DIR/management_service.py" "${command[@]}"
           ;;
         --help|-h) nt_help remote; return 0 ;;

@@ -19,7 +19,7 @@ NATIVE_ENV = {
     "TERMUX_VERSION": "test",
     "PREFIX": "/data/data/com.termux/files/usr",
     "HOME": "/tmp/home",
-    "NATIVERNUX_STATE_DIR": "/tmp/home/.local/share/nativeternux",
+    "TERNUXX_STATE_DIR": "/tmp/home/.local/share/ternuxx",
 }
 
 
@@ -163,7 +163,7 @@ class ManagementServiceTests(unittest.TestCase):
 
     def test_ssh_inspection_returns_versioned_envelope_without_checkpoint_state(self) -> None:
         with patch.object(management_service.ssh_diagnostics, "inspect_native", return_value={"read_only": True}) as inspect:
-            response = management_service.dispatch(request("ssh.inspect"), env={**NATIVE_ENV, "NATIVERNUX_STATE_DIR": ""})
+            response = management_service.dispatch(request("ssh.inspect"), env={**NATIVE_ENV, "TERNUXX_STATE_DIR": ""})
         self.assertTrue(response["ok"])
         self.assertEqual(response["api_version"], 1)
         self.assertEqual(response["operation"], "ssh.inspect")
@@ -186,7 +186,7 @@ class ManagementServiceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="ternuxx-boot-profile-api-") as temp:
             home = Path(temp) / "home"
             home.mkdir()
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(home / ".state")}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(home / ".state")}
             status = management_service.dispatch(request("boot.profile.status"), env=env)
             self.assertTrue(status["ok"])
             self.assertEqual(status["data"]["configured_profile"], "cli-only")
@@ -202,7 +202,7 @@ class ManagementServiceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="ternuxx-boot-enable-api-") as temp:
             home = Path(temp) / "home"
             home.mkdir()
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(home / ".state")}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(home / ".state")}
             request_args = {"profile": "native", "confirmed": False}
             with patch.object(management_service.runtime_diagnostics, "inspect_boot", return_value={"app": "installed"}):
                 preview = management_service.dispatch(request("boot.enable", request_args), env=env)
@@ -224,7 +224,7 @@ class ManagementServiceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="ternuxx-boot-disable-api-") as temp:
             home = Path(temp) / "home"
             home.mkdir()
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(home / ".state")}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(home / ".state")}
             response = management_service.dispatch(request("boot.disable", {"confirmed": False}), env=env)
             self.assertTrue(response["ok"])
             self.assertTrue(response["data"]["safety"]["read_only"])
@@ -254,7 +254,7 @@ class ManagementServiceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="ternuxx-management-") as temp:
             home = Path(temp) / "home"
             home.mkdir()
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(home / ".state")}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(home / ".state")}
             prepared = management_service.dispatch(
                 request("continuity.prepare", {"test_id": "api-contract", "commit": "abcdef0", "worktree_state": "dirty"}),
                 env=env,
@@ -269,7 +269,7 @@ class ManagementServiceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="ternuxx-management-reboot-") as temp:
             home = Path(temp) / "home"
             home.mkdir()
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(home / ".state")}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(home / ".state")}
             baseline = {
                 "native": {"termux_version": "test"},
                 "repository": {"id": "soobujmiah/ternuxx", "branch": "main", "commit": "abcdef0",
@@ -303,7 +303,7 @@ class ManagementServiceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="ternuxx-ssh-service-api-") as temp:
             home = Path(temp) / "home"
             home.mkdir()
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(home / ".state")}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(home / ".state")}
             preview_data = {"action": "start", "read_only": True, "requires_confirmation": True}
             with patch.object(management_service.runit_service, "apply", return_value=preview_data) as action:
                 response = management_service.dispatch(
@@ -338,7 +338,7 @@ class ManagementServiceTests(unittest.TestCase):
             home = Path(temp) / "home"
             home.mkdir()
             state = home / ".state"
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(state)}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(state)}
             preview = management_service.dispatch(request("backup.create", {"name": "api-snapshot"}), env=env)
             self.assertTrue(preview["ok"])
             self.assertEqual(preview["data"]["action"], "preview")
@@ -370,7 +370,7 @@ class ManagementServiceTests(unittest.TestCase):
             home = Path(temp) / "home"
             home.mkdir()
             state = home / ".state"
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(state)}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(state)}
             empty = management_service.dispatch(request("recovery.status"), env=env)
             self.assertTrue(empty["ok"])
             self.assertEqual(empty["data"]["operations"], [])
@@ -389,7 +389,7 @@ class ManagementServiceTests(unittest.TestCase):
             home = Path(temp) / "home"
             home.mkdir()
             state = home / ".state"
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(state)}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(state)}
             operation_id = "0123456789abcdef0123456789abcdef"
             with patch.object(management_service.operation_recovery, "resolve", return_value={
                 "operation_id": operation_id, "resolution": "failed", "read_only": True,
@@ -416,7 +416,7 @@ class ManagementServiceTests(unittest.TestCase):
             home = Path(temp) / "home"
             home.mkdir()
             state = home / ".state"
-            env = {**NATIVE_ENV, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(state)}
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(state)}
             operation_id = "0123456789abcdef0123456789abcdef"
             preview_data = {"action": "rollback_preview", "operation_id": operation_id,
                             "plan_id": "f" * 64, "read_only": True}

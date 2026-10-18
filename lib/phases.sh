@@ -151,7 +151,7 @@ PYPLANID
 _nt_reviewed_preview_matches() {
   local plan_id="$1"
   [[ "$plan_id" =~ ^[0-9a-f]{64}$ ]] || return 1
-  python3 - "$NATIVERNUX_STATE_DIR/install-transactions" "$plan_id" "$HOME" "$_NT_PLAN_SIMULATION" "${_NT_PLAN_VERSIONS[@]}" -- "${_NT_PLAN_TRANSACTION[@]}" <<'PYCHECKPREVIEW'
+  python3 - "$TERNUXX_STATE_DIR/install-transactions" "$plan_id" "$HOME" "$_NT_PLAN_SIMULATION" "${_NT_PLAN_VERSIONS[@]}" -- "${_NT_PLAN_TRANSACTION[@]}" <<'PYCHECKPREVIEW'
 import hashlib, json, os, pathlib, stat, sys
 root = pathlib.Path(sys.argv[1])
 plan_id, home, simulation = sys.argv[2:5]
@@ -200,7 +200,7 @@ _nt_apply_install_transaction() {
 }
 
 _nt_install_state_dir_safe() {
-  python3 - "$NATIVERNUX_STATE_DIR" "$HOME" <<'PYSTATEPATH'
+  python3 - "$TERNUXX_STATE_DIR" "$HOME" <<'PYSTATEPATH'
 import pathlib, stat, sys
 state = pathlib.Path(sys.argv[1]).expanduser()
 home = pathlib.Path(sys.argv[2]).expanduser().resolve()
@@ -227,7 +227,7 @@ PYSTATEPATH
 _nt_write_install_record() {
   local outcome="$1" root stamp target
   _nt_install_state_dir_safe || return 1
-  root="${NATIVERNUX_STATE_DIR}/install-transactions"
+  root="${TERNUXX_STATE_DIR}/install-transactions"
   mkdir -p "$root" || return 1
   chmod 700 "$root" || return 1
   stamp="$(date -u +%Y%m%dT%H%M%SZ)" || return 1
@@ -310,7 +310,7 @@ nt_cmd_install() {
 
   if [ ${#_NT_PLAN_PACKAGES[@]} -eq 0 ]; then
     nt_ok "Ternuxx base desktop packages are already installed."
-    if [ "$NATIVERNUX_JSON" = "1" ]; then
+    if [ "$TERNUXX_JSON" = "1" ]; then
       printf '{"install":"already_installed","packages_changed":false}\n'
     fi
     return 0
@@ -325,7 +325,7 @@ nt_cmd_install() {
   nt_info "No upgrades, removals, recommendations, or repository changes are allowed by this plan."
 
   if [ "$apply" != "1" ]; then
-    local record_path="${NATIVERNUX_STATE_DIR}/install-transactions"
+    local record_path="${TERNUXX_STATE_DIR}/install-transactions"
     if _nt_write_install_record preview; then
       nt_info "Full dependency preview recorded under $record_path."
     else
@@ -336,7 +336,7 @@ nt_cmd_install() {
     plan_id="$( _nt_compute_plan_id )" || return 1
     nt_info "Preview ID: $plan_id"
     nt_info "After reviewing this exact transaction, apply with: ternuxx install --yes --plan-id $plan_id"
-    if [ "$NATIVERNUX_JSON" = "1" ]; then
+    if [ "$TERNUXX_JSON" = "1" ]; then
       local package_json
       package_json="$(nt_json_array "${_NT_PLAN_VERSIONS[@]}")"
       local transaction_json
@@ -367,10 +367,10 @@ nt_cmd_install() {
     return 1
   }
   if ! _nt_write_install_record applied; then
-    nt_warn "Packages were installed, but the transaction record could not be persisted under $NATIVERNUX_STATE_DIR/install-transactions."
+    nt_warn "Packages were installed, but the transaction record could not be persisted under $TERNUXX_STATE_DIR/install-transactions."
   fi
   nt_ok "Ternuxx base desktop packages installed. The Termux:X11 Android app still must be installed separately if absent."
-  if [ "$NATIVERNUX_JSON" = "1" ]; then
+  if [ "$TERNUXX_JSON" = "1" ]; then
     local package_json
     package_json="$(nt_json_array "${_NT_PLAN_VERSIONS[@]}")"
     local transaction_json

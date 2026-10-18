@@ -3,7 +3,7 @@
 
 _nt_proot_call() {
   local args=(--operation proot.status)
-  [ "$NATIVERNUX_JSON" = "1" ] && args+=(--json)
+  [ "$TERNUXX_JSON" = "1" ] && args+=(--json)
   python3 "$_TN_LIB_DIR/management_service.py" "${args[@]}"
 }
 
@@ -15,7 +15,7 @@ _nt_proot_verify() {
   else
     args+=(--guest-user "$guest_user")
   fi
-  [ "$NATIVERNUX_JSON" = "1" ] && args+=(--json)
+  [ "$TERNUXX_JSON" = "1" ] && args+=(--json)
   python3 "$_TN_LIB_DIR/management_service.py" "${args[@]}"
 }
 

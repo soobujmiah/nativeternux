@@ -24,7 +24,7 @@ def native_env(home: str) -> dict[str, str]:
         "PREFIX": PREFIX,
         "TERMUX_VERSION": "test-termux",
         "HOME": home,
-        "NATIVERNUX_STATE_DIR": str(Path(home) / ".local/share/nativeternux"),
+        "TERNUXX_STATE_DIR": str(Path(home) / ".local/share/ternuxx"),
         "PATH": f"{PREFIX}/bin:/usr/bin",
     }
 

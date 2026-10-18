@@ -52,4 +52,4 @@ The CLI management service, versioned local API, loopback HTTP server, authoriza
 - [Master Phase 0 audit](../../evidence/PHASE-0-MASTER-AUDIT.md)
 - [Unified workstation proposal](../UNIFIED-WORKSTATION.md)
 - [Management API proposal](../MANAGEMENT-API.md)
-- Current source: `bin/nativeternux`, `lib/desktop.sh`, `lib/phases.sh`; no API/UI implementation exists.
+- Current source: `bin/ternuxx`, `lib/desktop.sh`, `lib/phases.sh`; no API/UI implementation exists.

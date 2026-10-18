@@ -19,8 +19,8 @@
       "expected": "Authenticated access to the native checkout and diagnostics",
       "actual": "An authenticated read-only command reached the native checkout and returned its Git identity/status. The initial BatchMode probe was not a valid password-authentication test.",
       "status": "PASS",
-      "evidence": "Authenticated SSH command reported native checkout /data/data/com.termux/files/home/nativeternux, commit 1a891faabc925136c1801f40194b0969d28041df, and preserved dirty/untracked paths.",
-      "uncertainty": "The native checkout origin still names soobujmiah/nativeternux.git while the PRoot checkout names soobujmiah/ternuxx.git. Both report the same HEAD; their dirty worktrees differ. The initial SSH probe used StrictHostKeyChecking=accept-new and host-key records were not independently pinned before a subsequent authenticated attempt."
+      "evidence": "Authenticated SSH command reported native checkout /data/data/com.termux/files/home/ternuxx, commit 1a891faabc925136c1801f40194b0969d28041df, and preserved dirty/untracked paths.",
+      "uncertainty": "The native checkout origin still names soobujmiah/ternuxx.git while the PRoot checkout names soobujmiah/ternuxx.git. Both report the same HEAD; their dirty worktrees differ. The initial SSH probe used StrictHostKeyChecking=accept-new and host-key records were not independently pinned before a subsequent authenticated attempt."
     },
     {
       "requirement_id": "LIVE-SSH-02",

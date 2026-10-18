@@ -88,7 +88,7 @@ nt_cmd_check() {
   nt_warn "$((${#missing[@]})) required item(s) are missing. Review 'ternuxx install' for the current package plan; --yes applies changes."
   fi
 
-  if [ "$NATIVERNUX_JSON" = "1" ]; then
+  if [ "$TERNUXX_JSON" = "1" ]; then
     local missing_json; missing_json="$(nt_json_array "${missing[@]+"${missing[@]}"}")"
     nt_json_object \
       "check" "$([ $rc -eq 0 ] && echo 'pass' || echo 'fail')" \
@@ -110,5 +110,5 @@ nt_cmd_doctor() {
   done
   nt_require_command python3 "read-only Doctor report" || return 1
   [ -f "$report" ] || { nt_fail "Doctor report module is missing: $report"; return 1; }
-  python3 "$report" "$graphics" "$NATIVERNUX_JSON" "$NATIVERNUX_STATE_DIR"
+  python3 "$report" "$graphics" "$TERNUXX_JSON" "$TERNUXX_STATE_DIR"
 }

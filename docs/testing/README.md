@@ -1,6 +1,6 @@
 # Ternuxx testing and acceleration evidence
 
-**Audit snapshot:** 2026-10-17, repository `soobujmiah/nativeternux` at `1a891fa`, before its owner-authorized rename to [`soobujmiah/ternuxx`](https://github.com/soobujmiah/ternuxx). The canonical CLI entrypoint is `ternuxx`; `nativeternux` remains a compatibility alias. The native checkout directory and private state path retain their historical `nativeternux` names for compatibility; no destructive state migration has been performed.
+**Audit snapshot:** 2026-10-17. Current repository: [`soobujmiah/ternuxx`](https://github.com/soobujmiah/ternuxx). The only CLI entrypoint is `ternuxx`; project metadata, state defaults, and library paths use the same identity.
 
 ## Test state at audit snapshot (2026-10-17)
 

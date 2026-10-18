@@ -100,7 +100,7 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
     if process_env.get("TERMUX_VERSION") is None or process_env.get("PREFIX") != "/data/data/com.termux/files/usr":
         return _error(request_id, "native_termux_required", "operation requires the native Termux shell")
     home = process_env.get("HOME", "")
-    state_dir = process_env.get("NATIVERNUX_STATE_DIR", "")
+    state_dir = process_env.get("TERNUXX_STATE_DIR", "")
     if not home or ((operation.startswith(("continuity.", "wakelock.", "boot.profile.", "backup.", "restore.", "recovery.rollback.", "recovery.service.", "recovery.resolve", "ssh.service."))) and not state_dir):
         return _error(request_id, "configuration_missing", "HOME and the native state directory must be configured")
 

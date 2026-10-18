@@ -15,17 +15,17 @@ nt_log() {
   return 0
 }
 
-nt_debug()  { [ "$NATIVERNUX_VERBOSE" = "1" ] && nt_log "DEBUG" "$@" || true; }
-nt_info()   { nt_log "INFO"  "$@"; [ "$NATIVERNUX_QUIET" != "1" ] && printf '[INFO]  %s\n' "$*" >&2; }
-nt_ok()     { nt_log "OK"    "$@"; [ "$NATIVERNUX_QUIET" != "1" ] && printf '\033[01;32m[OK]    %s\033[0m\n' "$*" >&2; }
-nt_warn()   { nt_log "WARN"  "$@"; [ "$NATIVERNUX_QUIET" != "1" ] && printf '\033[01;33m[WARN]  %s\033[0m\n' "$*" >&2; }
-nt_fail()   { nt_log "FAIL"  "$@"; [ "$NATIVERNUX_QUIET" != "1" ] && printf '\033[01;31m[FAIL]  %s\033[0m\n' "$*" >&2; }
-nt_step()   { nt_log "STEP"  "$@"; [ "$NATIVERNUX_QUIET" != "1" ] && printf '\033[01;34m[STEP]  %s\033[0m\n' "$*" >&2; }
+nt_debug()  { [ "$TERNUXX_VERBOSE" = "1" ] && nt_log "DEBUG" "$@" || true; }
+nt_info()   { nt_log "INFO"  "$@"; [ "$TERNUXX_QUIET" != "1" ] && printf '[INFO]  %s\n' "$*" >&2; }
+nt_ok()     { nt_log "OK"    "$@"; [ "$TERNUXX_QUIET" != "1" ] && printf '\033[01;32m[OK]    %s\033[0m\n' "$*" >&2; }
+nt_warn()   { nt_log "WARN"  "$@"; [ "$TERNUXX_QUIET" != "1" ] && printf '\033[01;33m[WARN]  %s\033[0m\n' "$*" >&2; }
+nt_fail()   { nt_log "FAIL"  "$@"; [ "$TERNUXX_QUIET" != "1" ] && printf '\033[01;31m[FAIL]  %s\033[0m\n' "$*" >&2; }
+nt_step()   { nt_log "STEP"  "$@"; [ "$TERNUXX_QUIET" != "1" ] && printf '\033[01;34m[STEP]  %s\033[0m\n' "$*" >&2; }
 
 nt_die() {
   local msg="$1"; local code="${2:-1}"
   nt_fail "$msg"
-  [ "$NATIVERNUX_JSON" = "1" ] && nt_json_object "error" "fatal" "message" "$msg"
+  [ "$TERNUXX_JSON" = "1" ] && nt_json_object "error" "fatal" "message" "$msg"
   exit "$code"
 }
 
@@ -60,7 +60,7 @@ nt_json_array() {
 # --- State file ---------------------------------------------------------
 _nt_state_file() {
   # Resolve only. Readers must not create the state directory as a side effect.
-  echo "$NATIVERNUX_STATE_DIR/state.json"
+  echo "$TERNUXX_STATE_DIR/state.json"
 }
 
 nt_state_get() {
@@ -73,7 +73,7 @@ nt_state_get() {
 nt_state_set() {
   local key="$1" value="$2"
   local f; f="$(_nt_state_file)"
-  mkdir -p "$NATIVERNUX_STATE_DIR" 2>/dev/null || true
+  mkdir -p "$TERNUXX_STATE_DIR" 2>/dev/null || true
   if [ -f "$f" ]; then
     python3 -c "
 import json,sys
@@ -140,17 +140,17 @@ nt_find_free_display() {
 _nt_track_pid() {
   # Record a PID we started so we can stop it later
   local pid="$1" label="$2"
-  mkdir -p "$NATIVERNUX_STATE_DIR" 2>/dev/null || true
-  echo "$pid $label" >> "$NATIVERNUX_STATE_DIR/pids.log" 2>/dev/null || true
+  mkdir -p "$TERNUXX_STATE_DIR" 2>/dev/null || true
+  echo "$pid $label" >> "$TERNUXX_STATE_DIR/pids.log" 2>/dev/null || true
 }
 
 _nt_get_pids() {
   # Read tracked PIDs
-  cat "$NATIVERNUX_STATE_DIR/pids.log" 2>/dev/null || true
+  cat "$TERNUXX_STATE_DIR/pids.log" 2>/dev/null || true
 }
 
 _nt_clear_pids() {
-  rm -f "$NATIVERNUX_STATE_DIR/pids.log" 2>/dev/null || true
+  rm -f "$TERNUXX_STATE_DIR/pids.log" 2>/dev/null || true
 }
 
 # --- Renderer detection -------------------------------------------------

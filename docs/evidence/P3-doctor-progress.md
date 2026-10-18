@@ -7,7 +7,7 @@
 
 ## Source now present
 
-- `lib/doctor_report.py` collects read-only host, package, Android companion, graphics-node, storage, and NativeTernux session findings.
+- `lib/doctor_report.py` collects read-only host, package, Android companion, graphics-node, storage, and Ternuxx session findings.
 - Findings use stable IDs, severity, scope, observed value, and suggested action. JSON reports declare schema version 1 and are specified by `schemas/doctor-report.schema.json`.
 - `doctor` skips renderer/Vulkan probes by default. `doctor --graphics` explicitly queries tools in the current `DISPLAY`; it does not start a display or workload.
 - Findings distinguish native Termux context from non-Termux/PRoot execution. Device nodes and Vulkan summary output are not reported as proof of workload acceleration.
@@ -17,7 +17,7 @@
 
 ## Read-only target-device observation
 
-On 2026-10-17, `bin/nativeternux doctor --json` ran over the authorized native Termux SSH connection. It reported Termux `0.119.0-beta.3`, Android 16, `arm64-v8a`, Termux:X11 package `1.03.01-6`, D-Bus `1.16.2-3`, Python `3.14.6-1`, and PulseAudio `17.0-4`. The five checked XFCE packages (`xfce4-session`, panel, window manager, Thunar, and terminal) were absent. `/dev/kgsl-3d0` and the `Adreno825` model string were visible; no NativeTernux session record existed; HOME's filesystem had 88.1 GiB free. Doctor returned `overall=warning`, five warnings, and no errors.
+On 2026-10-17, `bin/ternuxx doctor --json` ran over the authorized native Termux SSH connection. It reported Termux `0.119.0-beta.3`, Android 16, `arm64-v8a`, Termux:X11 package `1.03.01-6`, D-Bus `1.16.2-3`, Python `3.14.6-1`, and PulseAudio `17.0-4`. The five checked XFCE packages (`xfce4-session`, panel, window manager, Thunar, and terminal) were absent. `/dev/kgsl-3d0` and the `Adreno825` model string were visible; no Ternuxx session record existed; HOME's filesystem had 88.1 GiB free. Doctor returned `overall=warning`, five warnings, and no errors.
 
 An Android `pm path com.termux.x11` query returned exit 2 because the package service query failed. Doctor now reports companion-app presence as `unknown` on query failure; it does not label the app absent. The owner separately reports that the Termux:X11 GUI is open. The Doctor run did not start or stop a display/session and did not change packages or settings.
 
@@ -42,7 +42,7 @@ An Android `pm path com.termux.x11` query returned exit 2 because the package se
 
 ## 2026-10-18 P3 Doctor integration update
 
-- The stable-finding Python Doctor report is now the implementation behind `ternuxx doctor`; `check` remains the quick prerequisite check. `doctor --graphics` explicitly probes the current `DISPLAY`, and `--json` emits the versioned report contract. The Doctor accepts both current `ternuxx` and legacy `nativeternux` session-owner identifiers during the existing state-path transition.
+- The stable-finding Python Doctor report is now the implementation behind `ternuxx doctor`; `check` remains the quick prerequisite check. `doctor --graphics` explicitly probes the current `DISPLAY`, and `--json` emits the versioned report contract. The Doctor accepts both current `ternuxx` and legacy `ternuxx` session-owner identifiers during the existing state-path transition.
 - The report code remains read-only and a missing/failed Android package-manager query stays `unknown`; it does not start/stop desktop services or infer GUI visibility from process health.
 - On 2026-10-18, the native CLI `doctor --json` returned a structured report on the attached Termux target. The CLI's `DISPLAY=:1 doctor --graphics --json` additionally selected `llvmpipe (LLVM 21.1.8, 128 bits)`; default Doctor skips graphics probes. No package/service/session changes were made by either read-only call.
 - The full native Termux repository suite passed 59/59 after Doctor integration and before operation-journal work. The journal and follow-up changes are recorded in the 2026-10-18 evidence section below. P3 is still incomplete; boot, backup/recovery, and cross-provider ownership gates remain.

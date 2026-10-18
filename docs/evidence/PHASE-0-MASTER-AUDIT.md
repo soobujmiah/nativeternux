@@ -2,7 +2,7 @@
 
 **Audit snapshot:** 2026-10-17 13:50 UTC
 **Launch follow-up:** 2026-10-17 14:10 UTC; read-only Termux SSH session.
-**Ternuxx repository:** `soobujmiah/nativeternux`, `main`, HEAD `1a891faabc925136c1801f40194b0969d28041df`
+**Ternuxx repository:** `soobujmiah/ternuxx`, `main`, HEAD `1a891faabc925136c1801f40194b0969d28041df`
 **Status:** evidence collected; owner review remains the Phase 0 exit gate.
 **Scope:** read-only inspection of the Ternuxx repository, live GitHub metadata/Actions, current Termux/Android facts accessible from this PRoot shell, and the independent Ternux repository's public `main` source/docs. No implementation or device mutation was performed.
 
@@ -22,8 +22,8 @@ The most important reuse finding is that the independent `soobujmiah/ternux` pro
 
 | Item | Status | Verified evidence | Interpretation |
 |---|---|---|---|
-| Live repository | `VERIFIED` | `gh repo view`: `soobujmiah/nativeternux`, `PUBLIC`, default `main`; origin matches | Public source visibility is not an open-source license. |
-| Intended product name | `OWNER_DECIDED` | Owner has fixed Ternuxx | Product branding is approved; repo slug, CLI, package IDs and much active text still say NativeTernux. |
+| Live repository | `VERIFIED` | `gh repo view`: `soobujmiah/ternuxx`, `PUBLIC`, default `main`; origin matches | Public source visibility is not an open-source license. |
+| Intended product name | `OWNER_DECIDED` | Owner has fixed Ternuxx | Product branding is approved; repo slug, CLI, package IDs and much active text still say Ternuxx. |
 | Intended `soobujmiah/ternuxx` slug | `UNKNOWN` | Authenticated `gh repo view` could not resolve a repository at that name on audit date | This does not prove slug availability or reserve it. No rename/repository setting was changed. |
 | Local source snapshot | `VERIFIED` | `main`, HEAD equals `origin/main`, short history is five commits | The worktree already contains uncommitted documentation changes from earlier authorized work; those were preserved. No source-file edits were present. |
 | Branches | `VERIFIED` | Local clone has only `main` and `origin/main` | No feature branch is available in this checkout. |
@@ -43,7 +43,7 @@ The audit did not reset or clean the checkout. At start, the following documenta
 
 | Capability | Status | Source/evidence | Audit finding |
 |---|---|---|---|
-| CLI dispatch/help/version | `PARTIAL` | `bin/nativeternux`, `lib/core.sh`, `lib/help.sh` | Bash lazy-loading CLI exists. Standalone `nativeternux` is only a notice, not the full dispatcher. Help is materially stale. |
+| CLI dispatch/help/version | `PARTIAL` | `bin/ternuxx`, `lib/core.sh`, `lib/help.sh` | Bash lazy-loading CLI exists. Standalone `ternuxx` is only a notice, not the full dispatcher. Help is materially stale. |
 | Native install | `IMPLEMENTED_UNQUALIFIED` | `lib/phases.sh` | Default command previews; `install --yes` can run a constrained APT install. It rechecks official repo candidates and blocks removals/upgrades, but has never been device-qualified. Do not run it during this audit. |
 | Native desktop | `IMPLEMENTED_UNQUALIFIED` | `lib/desktop.sh`, `lib/desktop-supervisor.sh` | Start/stop/restart/status launch Termux:X11 + XFCE, maintain state/logs, and signal recorded PIDs. Not tests/device-qualified; exact X11/DBus/XFCE process-tree cleanup remains open. |
 | Doctor/info | `PARTIAL` | `lib/doctor.sh`, `lib/info.sh` | Readiness and device reporting exist, but this is not a complete recovery system. Some reporting probes may invoke renderer/Vulkan tools; not executed here. |
@@ -198,7 +198,7 @@ The acceptance criteria below are proposals for owner review; they do not author
 
 **Not run:** product CLI commands, test suite, shellcheck, package simulation/install, desktop start/stop, GPU/Vulkan/NPU workload, ADB transport/device query, accessibility settings inspection, Termux:Boot scripts, or website build. There is no product test suite to run. The standard Termux boot directory was checked and absent. No model files, shared storage or personal files were scanned.
 
-**Follow-up launch audit:** read the actual native Termux `~/x.sh` and `.bashrc`, confirmed the installed `ternux` command and its installed `desktop.sh`/alias-writer source, checked Termux package records, and checked the exact `$HOME/.termux/boot` path over the previously authorized read-only SSH session. `x.sh` matches the source-reviewed broad cleanup, uses hard-coded `:0`, starts PulseAudio TCP on loopback port 4713 with anonymous local access, starts the X server, then enters Debian with `DISPLAY=:0`. `.bashrc` defines `x`, `xgo`, `killx`, `db`, and `droot`; `nativeternux` and `ternuxx` commands were absent from Termux PATH. Termux:X11 companion package `termux-x11-nightly` is version `1.03.01-6`; the installed Android app version was not queried. `$HOME/.termux/boot` does not exist at this check. A targeted process/socket query found no Termux:X11/VirGL/PulseAudio process, X socket, or X lock then. No command capable of launching/stopping a desktop or service was run; no display concurrency, Activity routing, or boot timing was tested.
+**Follow-up launch audit:** read the actual native Termux `~/x.sh` and `.bashrc`, confirmed the installed `ternux` command and its installed `desktop.sh`/alias-writer source, checked Termux package records, and checked the exact `$HOME/.termux/boot` path over the previously authorized read-only SSH session. `x.sh` matches the source-reviewed broad cleanup, uses hard-coded `:0`, starts PulseAudio TCP on loopback port 4713 with anonymous local access, starts the X server, then enters Debian with `DISPLAY=:0`. `.bashrc` defines `x`, `xgo`, `killx`, `db`, and `droot`; `ternuxx` and `ternuxx` commands were absent from Termux PATH. Termux:X11 companion package `termux-x11-nightly` is version `1.03.01-6`; the installed Android app version was not queried. `$HOME/.termux/boot` does not exist at this check. A targeted process/socket query found no Termux:X11/VirGL/PulseAudio process, X socket, or X lock then. No command capable of launching/stopping a desktop or service was run; no display concurrency, Activity routing, or boot timing was tested.
 
 **Not changed:** Ternuxx or Ternux source behavior, repository settings/name, license, PRoot rootfs, Ternux launcher, Android settings/permissions, packages, processes, listeners, payment, DNS, website, releases, or production services. No commit/push.
 

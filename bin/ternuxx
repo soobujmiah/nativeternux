@@ -15,26 +15,21 @@ set -u
 # --- Version ------------------------------------------------------------
 TERNUXX_VERSION="0.1.0"
 TERNUXX_REPO="https://github.com/soobujmiah/ternuxx"
-TERNUXX_LIB_DIR="${TERNUXX_LIB_DIR:-${NATIVERNUX_LIB_DIR:-}}"
-# Keep the deployed legacy state path until its separately tested migration.
-TERNUXX_STATE_DIR="${TERNUXX_STATE_DIR:-${NATIVERNUX_STATE_DIR:-$HOME/.local/share/nativeternux}}"
-TERNUXX_LOG_DIR="${TERNUXX_LOG_DIR:-${NATIVERNUX_LOG_DIR:-${TMPDIR:-/data/data/com.termux/files/usr/tmp}/nativeternux}}"
+TERNUXX_LIB_DIR="${TERNUXX_LIB_DIR:-}"
+TERNUXX_STATE_DIR="${TERNUXX_STATE_DIR:-$HOME/.local/share/ternuxx}"
+TERNUXX_LOG_DIR="${TERNUXX_LOG_DIR:-${TMPDIR:-/data/data/com.termux/files/usr/tmp}/ternuxx}"
 TERNUXX_LOG_FILE="$TERNUXX_LOG_DIR/ternuxx.log"
-NATIVERNUX_STATE_DIR="$TERNUXX_STATE_DIR"
-NATIVERNUX_LOG_DIR="$TERNUXX_LOG_DIR"
-NATIVERNUX_LOG_FILE="$TERNUXX_LOG_FILE"
-export NATIVERNUX_STATE_DIR
-NATIVERNUX_JSON=0
-NATIVERNUX_VERBOSE=0
-NATIVERNUX_QUIET=0
+export TERNUXX_STATE_DIR
+TERNUXX_JSON=0
+TERNUXX_VERBOSE=0
+TERNUXX_QUIET=0
 
 # --- Locate libraries ---------------------------------------------------
 _NT_BIN_DIR=""
 _NT_SRC_DIR=""
 _TN_LIB_DIR=""
 
-# Checkout: bin/ternuxx + lib/*.sh. New installs use lib/ternuxx;
-# the existing installed lib/nativeternux path remains supported.
+# Checkout: bin/ternuxx + lib/*.sh, or installed lib under the Ternuxx data prefix.
 _NT_BIN_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd -P)" || _NT_BIN_DIR=""
 
 for _try in \
@@ -42,9 +37,7 @@ for _try in \
   "${_NT_BIN_DIR}/../lib/ternuxx" \
   "${_NT_BIN_DIR}/../lib" \
   "${PREFIX:-/data/data/com.termux/files/usr}/lib/ternuxx" \
-  "${PREFIX:-/data/data/com.termux/files/usr}/lib/nativeternux" \
-  "$HOME/.local/share/ternuxx/lib" \
-  "$HOME/.local/share/nativeternux/lib"; do
+  "$HOME/.local/share/ternuxx/lib"; do
   [ -n "$_try" ] || continue
   if [ -f "$_try/core.sh" ]; then
     _TN_LIB_DIR="$(CDPATH= cd -- "$_try" 2>/dev/null && pwd -P)"
@@ -114,7 +107,7 @@ _nt_dispatch() {
     return $?
   fi
 
-  if [ "$NATIVERNUX_JSON" = "1" ]; then
+  if [ "$TERNUXX_JSON" = "1" ]; then
     nt_json_object "error" "fatal" \
       "message" "Unknown command: $cmd" \
       "requested_command" "$cmd"
@@ -130,9 +123,9 @@ _NT_ARGS=()
 _HELP_REQUESTED=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --json)      NATIVERNUX_JSON=1; shift ;;
-    --verbose)   NATIVERNUX_VERBOSE=1; shift ;;
-    --quiet)     NATIVERNUX_QUIET=1; shift ;;
+    --json)      TERNUXX_JSON=1; shift ;;
+    --verbose)   TERNUXX_VERBOSE=1; shift ;;
+    --quiet)     TERNUXX_QUIET=1; shift ;;
     --help|-h)   _HELP_REQUESTED=1; shift ;;
     --version|-V) echo "Ternuxx v${TERNUXX_VERSION}"; echo "${TERNUXX_REPO}"; exit 0 ;;
     *) _NT_ARGS+=("$1"); shift ;;

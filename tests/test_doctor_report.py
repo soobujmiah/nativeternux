@@ -74,9 +74,9 @@ class DoctorReportTest(unittest.TestCase):
                                  ["/mock/pm", "path", "com.termux.boot"]])
 
     def test_finding_ids_and_json_contract_are_stable(self):
-        with tempfile.TemporaryDirectory(prefix="nativeternux-doctor-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="ternuxx-doctor-") as temporary:
             home = Path(temporary)
-            state = home / ".local" / "share" / "nativeternux"
+            state = home / ".local" / "share" / "ternuxx"
             with (
                 patch.object(doctor_report.Path, "home", return_value=home),
                 patch.object(doctor_report, "native_termux", return_value=True),
@@ -339,7 +339,7 @@ class DoctorReportTest(unittest.TestCase):
     def test_current_ternuxx_session_owner_is_accepted(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-doctor-current-owner-") as temporary:
             home = Path(temporary)
-            state = home / ".local" / "share" / "nativeternux"
+            state = home / ".local" / "share" / "ternuxx"
             state.mkdir(parents=True)
             (state / "session.json").write_text(json.dumps({
                 "schema": 2, "owner": "ternuxx", "status": "failed", "display": ":9",
@@ -351,8 +351,8 @@ class DoctorReportTest(unittest.TestCase):
             self.assertIn("recorded state=failed, display=:9", [finding["observed"] for finding in doctor_report.FINDINGS])
 
     def test_state_outside_home_is_reported_without_reading_it(self):
-        with tempfile.TemporaryDirectory(prefix="nativeternux-doctor-home-") as home, \
-                tempfile.TemporaryDirectory(prefix="nativeternux-doctor-outside-") as outside:
+        with tempfile.TemporaryDirectory(prefix="ternuxx-doctor-home-") as home, \
+                tempfile.TemporaryDirectory(prefix="ternuxx-doctor-outside-") as outside:
             doctor_report.FINDINGS.clear()
             with patch.object(doctor_report.Path, "home", return_value=Path(home)):
                 doctor_report.check_session(Path(outside))

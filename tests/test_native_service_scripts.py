@@ -29,12 +29,12 @@ class NativeServiceScriptTests(unittest.TestCase):
             root = Path(temp)
             prefix = root / "prefix"
             home = root / "home"
-            state = home / ".local/share/nativeternux"
+            state = home / ".local/share/ternuxx"
             events = root / "events.log"
             executable(prefix / "etc/profile.d/start-services.sh", f"echo supervisor-started >> '{events}'\n")
             executable(prefix / "bin/sv", f"#!/bin/sh\necho \"$*\" >> '{events}'\necho 'run: ternuxx-sshd: (pid 123) 5s'\n")
             env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
-                   "TERMUX_VERSION": "fixture", "NATIVERNUX_STATE_DIR": str(state),
+                   "TERMUX_VERSION": "fixture", "TERNUXX_STATE_DIR": str(state),
                    "PATH": f"{prefix / 'bin'}:{os.environ['PATH']}"}
             result = subprocess.run(["bash", str(BOOT_SCRIPT)], env=env, capture_output=True, text=True, timeout=5)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -50,7 +50,7 @@ class NativeServiceScriptTests(unittest.TestCase):
             root = Path(temp)
             prefix = root / "prefix"
             home = root / "home"
-            state = home / ".local/share/nativeternux"
+            state = home / ".local/share/ternuxx"
             config = home / ".config/ternuxx/sshd_recovery.conf"
             config.parent.mkdir(parents=True)
             config.write_text("fixture\n")
@@ -59,7 +59,7 @@ class NativeServiceScriptTests(unittest.TestCase):
             executable(prefix / "bin/sshd", f"#!/bin/sh\nif [ \"$1\" = -t ]; then exit 0; fi\necho daemon-started >> '{events}'\nexec sleep 60\n")
             (prefix / "bin/bash").symlink_to(shutil.which("bash"))
             env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
-                   "TERMUX_VERSION": "fixture", "NATIVERNUX_STATE_DIR": str(state)}
+                   "TERMUX_VERSION": "fixture", "TERNUXX_STATE_DIR": str(state)}
             proc = subprocess.Popen(["bash", str(SERVICE_SCRIPT)], env=env,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             try:

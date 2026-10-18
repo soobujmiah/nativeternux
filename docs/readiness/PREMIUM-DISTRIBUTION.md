@@ -4,7 +4,7 @@
 
 ## Product boundary today
 
-Ternuxx is the owner-approved product and repository name; the public GitHub slug is `soobujmiah/ternuxx`. `ternuxx` is the canonical source-checkout command; the internal project key and legacy `nativeternux` command remain compatibility identifiers. The repository is public but unlicensed, has no release artifacts, and has no approved premium module. Public visibility is not a grant to redistribute code. The historical first-commit PolyForm Noncommercial/addendum statement remains a legal review issue. The owner must decide the source license after counsel reviews the exact history and provenance.
+Ternuxx is the owner-approved product and repository name; the public GitHub slug is `soobujmiah/ternuxx`. `ternuxx` is the only source-checkout command and project key. The repository is public but unlicensed, has no release artifacts, and has no approved premium module. Public visibility is not a grant to redistribute code. The historical first-commit PolyForm Noncommercial/addendum statement remains a legal review issue. The owner must decide the source license after counsel reviews the exact history and provenance.
 
 | Surface | Current state | Distribution/commercial treatment |
 |---|---|---|

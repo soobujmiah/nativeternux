@@ -2,7 +2,7 @@
 
 **RB03 status: reboot observed; automated verification partial. No further reboot is needed to complete RB03.**
 **Prepared test:** `TERN-20261017-RB03`
-**Checkpoint:** native private storage at `$HOME/.local/share/nativeternux/continuity/reboot-tests/TERN-20261017-RB03.json`
+**Checkpoint:** native private storage at `$HOME/.local/share/ternuxx/continuity/reboot-tests/TERN-20261017-RB03.json`
 **Reboot policy:** only the owner may reboot through Android's normal power menu; no agent or shell command may reboot the phone.
 
 The owner-operated reboot took place on 2026-10-18. RB03 records a changed boot
@@ -114,9 +114,9 @@ Open Native Termux locally. Inspect:
 
 ```sh
 sv status ternuxx-sshd
-tail -n 60 "$HOME/.local/share/nativeternux/log/sshd-runit.log"
-tail -n 60 "$HOME/.local/share/nativeternux/continuity/boot-logs/ternuxx-services.log"
-tail -n 60 "$HOME/.local/share/nativeternux/continuity/boot-logs/termux-boot.log"
+tail -n 60 "$HOME/.local/share/ternuxx/log/sshd-runit.log"
+tail -n 60 "$HOME/.local/share/ternuxx/continuity/boot-logs/ternuxx-services.log"
+tail -n 60 "$HOME/.local/share/ternuxx/continuity/boot-logs/termux-boot.log"
 ```
 
 If the candidate service is simply down and its config validates, run

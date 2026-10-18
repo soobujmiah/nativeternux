@@ -14,7 +14,7 @@ PHASES = ROOT / "lib" / "phases.sh"
 
 class PackagePlanTest(unittest.TestCase):
     def _apt_cache_fixture(self, output):
-        temporary = tempfile.TemporaryDirectory(prefix="nativeternux-apt-cache-")
+        temporary = tempfile.TemporaryDirectory(prefix="ternuxx-apt-cache-")
         path = Path(temporary.name) / "apt-cache"
         path.write_text("#!/bin/sh\ncat <<'APT_POLICY'\n" + output + "\nAPT_POLICY\n", encoding="utf-8")
         path.chmod(0o700)
@@ -58,7 +58,7 @@ class PackagePlanTest(unittest.TestCase):
         self.assertEqual(result.stdout.strip(), "4.20.4-1")
 
     def test_signed_index_age_check_uses_shell_tools_without_python(self):
-        with tempfile.TemporaryDirectory(prefix="nativeternux-index-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="ternuxx-index-") as temporary:
             prefix = Path(temporary) / "usr"
             lists = prefix / "var/lib/apt/lists"
             lists.mkdir(parents=True)
@@ -158,7 +158,7 @@ echo 'install ok installed'
             "HOME": str(home),
             "PREFIX": str(prefix),
             "TERMUX_VERSION": "fixture",
-            "NATIVERNUX_STATE_DIR": str(home / ".local/share/ternuxx"),
+            "TERNUXX_STATE_DIR": str(home / ".local/share/ternuxx"),
             "APT_APPLY_CAPTURE": str(capture),
             "PATH": f"{fixture_bin}:{os.environ['PATH']}",
         }
@@ -212,7 +212,7 @@ echo 'install ok installed'
         self.assertIn("APT did not return a complete install transaction", result.stderr)
 
     def test_apply_without_saved_preview_id_is_rejected_before_package_probes(self):
-        command = "source \"$1\"; nt_fail() { :; }; NATIVERNUX_QUIET=1; NATIVERNUX_JSON=0; TERMUX_VERSION=test; PREFIX=/data/data/com.termux/files/usr; nt_cmd_install --yes"
+        command = "source \"$1\"; nt_fail() { :; }; TERNUXX_QUIET=1; TERNUXX_JSON=0; TERMUX_VERSION=test; PREFIX=/data/data/com.termux/files/usr; nt_cmd_install --yes"
         result = subprocess.run(["bash", "-c", command, "bash", str(PHASES)], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
         self.assertEqual(result.returncode, 2)
 
@@ -221,11 +221,11 @@ echo 'install ok installed'
             home = Path(temporary)
             state = home / "state"
             command = 'source "$1"; _nt_install_state_dir_safe'
-            result = subprocess.run(["bash", "-c", command, "bash", str(PHASES)], env={**os.environ, "HOME": str(home), "NATIVERNUX_STATE_DIR": outside}, check=False)
+            result = subprocess.run(["bash", "-c", command, "bash", str(PHASES)], env={**os.environ, "HOME": str(home), "TERNUXX_STATE_DIR": outside}, check=False)
             self.assertNotEqual(result.returncode, 0)
             target = home / "linked"
             target.symlink_to(Path(outside), target_is_directory=True)
-            result = subprocess.run(["bash", "-c", command, "bash", str(PHASES)], env={**os.environ, "HOME": str(home), "NATIVERNUX_STATE_DIR": str(target / "state")}, check=False)
+            result = subprocess.run(["bash", "-c", command, "bash", str(PHASES)], env={**os.environ, "HOME": str(home), "TERNUXX_STATE_DIR": str(target / "state")}, check=False)
             self.assertNotEqual(result.returncode, 0)
 
     def test_transaction_record_persists_exact_preview_and_permissions(self):
@@ -233,7 +233,7 @@ echo 'install ok installed'
             state = Path(temporary) / "state"
             command = "\n".join([
                 'source "$1"',
-                'NATIVERNUX_STATE_DIR="$2"',
+                'TERNUXX_STATE_DIR="$2"',
                 '_NT_PLAN_SIMULATION="$SIMULATION"',
                 '_NT_PLAN_VERSIONS=(xfce4-session=4.20.4-1)',
                 '_NT_PLAN_TRANSACTION=(xfce4-session=4.20.4-1 dep-a=1)',

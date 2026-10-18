@@ -17,7 +17,7 @@
 - An isolated Linux process fixture exposed a lock leak: the old EXIT trap referenced a function-local lock variable after that variable had gone out of scope. `lib/desktop.sh` now stores the acquired lock path at module scope and releases that exact directory from the EXIT trap.
 - `tests/test_desktop_lifecycle_fixture.py` runs a copied library with a Termux shebang adapted only inside the temporary fixture and mock X11/DBus/XFCE processes. Start, repeated start (same process identities), status, stop, owner-checked stale socket/lock cleanup by the supervisor, and repeated stop passed locally.
 - Reproduced the restart lock defect in the same fixture, then verified repeated restart releases the lock and creates a fresh owned session. The mock regression passes; this does not validate Termux process semantics.
-- Added `./ternuxx` and `bin/ternuxx` as canonical source-checkout commands while retaining `nativeternux` as a compatibility entry point. Installed aliases/state paths have not been migrated.
+- The source checkout uses `./ternuxx` and `bin/ternuxx`. Project-owned state and library paths now use the Ternuxx identifier.
 - Added native continuity checkpoint and read-only SSH diagnostic source with host-side fixtures. These are management/evidence foundations; neither Termux:Boot nor SSH service changes are implemented.
 
 ## Not established
@@ -48,8 +48,8 @@ The following gate list predates the 2026-10-18 native-device updates below. Rev
 ## 2026-10-18 Android-side visible GUI confirmation
 
 - Owner confirmed the Termux:X11 screen showed the GUI after the SSH-started Ternuxx session came up on display `:1`.
-- SSH inspection of `~/.local/share/nativeternux/session.json` reported owner `ternuxx`, provider `native`, display `:1`, status `running`, and recorded live supervisor/X11/XFCE process identities. `./ternuxx status --json` agreed: running, supervisor/X11/XFCE yes, audio owner external.
-- The current-session part of `~/.local/share/nativeternux/desktop.log` (01:03:16–01:03:43 local device time) records XFCE startup and desktop activity. It also reports: Freedreno Vulkan `VK_ERROR_INCOMPATIBLE_DRIVER` for GPU id 6830; no system bus; and XFCE could not prepare an ssh-agent socket under `~/.ssh/agent` (directory absent). These warnings did not prevent the owner-confirmed GUI from appearing, but Vulkan acceleration, system-bus features, and agent forwarding are not qualified. The log contains older session output too; only entries matching the current `xfce4-session` PID 439/start time belong to this run.
+- SSH inspection of `~/.local/share/ternuxx/session.json` reported owner `ternuxx`, provider `native`, display `:1`, status `running`, and recorded live supervisor/X11/XFCE process identities. `./ternuxx status --json` agreed: running, supervisor/X11/XFCE yes, audio owner external.
+- The current-session part of `~/.local/share/ternuxx/desktop.log` (01:03:16–01:03:43 local device time) records XFCE startup and desktop activity. It also reports: Freedreno Vulkan `VK_ERROR_INCOMPATIBLE_DRIVER` for GPU id 6830; no system bus; and XFCE could not prepare an ssh-agent socket under `~/.ssh/agent` (directory absent). These warnings did not prevent the owner-confirmed GUI from appearing, but Vulkan acceleration, system-bus features, and agent forwarding are not qualified. The log contains older session output too; only entries matching the current `xfce4-session` PID 439/start time belong to this run.
 - This confirms visible GUI output through owner observation; audio outcome and unrelated-session preservation remain unverified. Keep the session running for the owner's use; do not mark P2 complete yet.
 
 ## 2026-10-18 screenshot and X11 input probe

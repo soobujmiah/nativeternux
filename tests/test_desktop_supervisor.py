@@ -51,7 +51,7 @@ os.execv(sys.argv[2], sys.argv[2:])
 
 class DesktopSupervisorProcessGroupTest(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="nativeternux-p2-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="ternuxx-p2-")
         self.root = Path(self.temporary.name)
         self.state = self.root / "state"
         self.tmp = self.root / "tmp"

@@ -83,7 +83,7 @@ class BackupRecoveryTests(unittest.TestCase):
         operation_id = self.pending()
         env = {
             "HOME": str(self.home),
-            "NATIVERNUX_STATE_DIR": str(self.state),
+            "TERNUXX_STATE_DIR": str(self.state),
             "TERMUX_VERSION": "fixture",
             "PREFIX": "/data/data/com.termux/files/usr",
         }

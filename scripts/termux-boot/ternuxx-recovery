@@ -14,11 +14,11 @@ case "$TERMUX_VERSION" in
   "") exit 2 ;;
 esac
 
-STATE_DIR="${NATIVERNUX_STATE_DIR:-$HOME/.local/share/nativeternux}"
-export NATIVERNUX_STATE_DIR="$STATE_DIR"
+STATE_DIR="${TERNUXX_STATE_DIR:-$HOME/.local/share/ternuxx}"
+export TERNUXX_STATE_DIR="$STATE_DIR"
 LOG_DIR="$STATE_DIR/continuity/boot-logs"
 LOG_FILE="$LOG_DIR/termux-boot.log"
-RECOVERY_MODULE="$PREFIX/lib/nativeternux/reboot_recovery.py"
+RECOVERY_MODULE="$PREFIX/lib/ternuxx/reboot_recovery.py"
 
 mkdir -p "$LOG_DIR" 2>/dev/null || exit 1
 chmod 700 "$STATE_DIR/continuity" "$LOG_DIR" 2>/dev/null || true

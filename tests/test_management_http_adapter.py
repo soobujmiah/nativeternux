@@ -40,7 +40,7 @@ def make_adapter(dispatcher=None, *, caps=None, allow_mutations=False, request_s
         bootstrap_secret=BOOTSTRAP,
         bootstrap_capabilities=caps if caps is not None else {"diagnostics.read", "services.manage"},
         env={"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
-             "HOME": "/tmp/home", "NATIVERNUX_STATE_DIR": "/tmp/home/.state"},
+             "HOME": "/tmp/home", "TERNUXX_STATE_DIR": "/tmp/home/.state"},
         dispatcher=dispatcher or Mock(return_value={"ok": True, "api_version": 1,
                                                      "request_id": "request-1234", "data": {"state": "ready"}}),
         allow_mutations=allow_mutations,

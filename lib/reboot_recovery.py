@@ -503,7 +503,7 @@ def observe_latest_pending(*, home: str | os.PathLike[str], state_dir: str | os.
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ternuxx reboot-recovery")
     parser.add_argument("--home", default=os.environ.get("HOME", ""), help=argparse.SUPPRESS)
-    parser.add_argument("--state-dir", default=os.environ.get("NATIVERNUX_STATE_DIR", ""), help=argparse.SUPPRESS)
+    parser.add_argument("--state-dir", default=os.environ.get("TERNUXX_STATE_DIR", ""), help=argparse.SUPPRESS)
     parser.add_argument("command", choices=("status", "boot-observe"))
     parser.add_argument("--test-id")
     parser.add_argument("--dry-run", action="store_true")

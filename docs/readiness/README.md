@@ -1,22 +1,22 @@
 # Ternuxx product and commercialization readiness
 
-**Audit date:** 2026-10-17
-**Repository audited:** `soobujmiah/nativeternux` before owner-authorized rename; current identity is [`soobujmiah/ternuxx`](https://github.com/soobujmiah/ternuxx), public, `main` at `1a891fa`
-**Canonical product brand:** Ternuxx (owner-fixed spelling)
-**Repository at original audit snapshot:** `soobujmiah/nativeternux` (public). Owner-authorized rename to `soobujmiah/ternuxx` was completed and verified on 2026-10-17.
+**Repository:** [`soobujmiah/ternuxx`](https://github.com/soobujmiah/ternuxx), public, default branch `main`.
+**Product and source identity:** Ternuxx; checkout command `./ternuxx`; deterministic project key `ternuxx`.
+**Audit date:** 2026-10-17; this is a dated planning review.
 **Document status:** internal planning draft; research, not legal/accounting advice
-**Boundary:** the original audit was read-only research. Subsequent owner-approved local work corrected repository identity/help documentation, added rename and CLI-help checks, and updated the repository-contract workflow. It has not selected or added a license, changed external repository settings beyond the already approved rename, built a website, collected data, accepted payment, deployed, or touched the Android/PRoot environment.
+**Document status:** internal planning draft; research, not legal/accounting advice
+**Boundary:** the review did not select or add a license, change repository settings, build a website, collect data, accept payment, deploy, or modify the Android/PRoot environment.
 
 ## Read this first
 
-The repository is public but has no license file or published release. Public visibility does not make the code open source. The first committed README and code headers asserted a noncommercial license plus a separate commercial-use addendum; the referenced files were absent from the initial tree and remain absent. This needs legal review before anyone treats the old statement as either a valid grant or a cleanly superseded draft.
+The repository is public but has no license file or published release. Public visibility does not make the code open source. The license and provenance require legal review before distribution.
 
-The owner-authorized GitHub rename to `soobujmiah/ternuxx` is complete and verified. `ternuxx` is now the canonical source-checkout command; `nativeternux` remains a compatibility entry point. The deterministic repository-knowledge project ID and existing installed state/library paths still use the legacy identifier until a separately validated migration is approved. Historical records keep their captured names. See the [migration inventory and implementation addendum](NAME-MIGRATION-INVENTORY.md).
+Ternuxx is the sole product, repository, command, project-state, and installed-path identity. See the [project identity](PROJECT-IDENTITY.md).
 
 ## Documents
 
 - [Repository and implementation evidence matrix](REPOSITORY-AUDIT.md)
-- [Pre-edit name migration inventory](NAME-MIGRATION-INVENTORY.md)
+- [Ternuxx project identity](PROJECT-IDENTITY.md)
 - [Bangladesh-first legal, IP, and license research](LEGAL-IP.md)
 - [Product positioning, alternatives, business model, service and pricing hypotheses](PRODUCT-MARKET-COMMERCIAL.md)
 - [Website, portfolio integration, SEO, hosting, releases, and maintenance](WEBSITE-SEO-OPERATIONS.md)
@@ -33,15 +33,15 @@ The owner-authorized GitHub rename to `soobujmiah/ternuxx` is complete and verif
 
 | Area | Audit outcome | Remaining gate |
 |---|---|---|
-| Repository visibility/history/releases/license | Verified public repo; no releases/license; historical PolyForm/addendum claim recorded | Counsel review and approved license/provenance decision |
-| Ternuxx naming | GitHub slug is `soobujmiah/ternuxx`; `ternuxx` checkout command is present; `nativeternux` compatibility command retained | Installed path/state migration and SKB internal project ID remain legacy; no migration applied to existing device |
+| Repository visibility/releases/license | Verified public repo; no releases/license; provenance review required | Counsel review and approved license/provenance decision |
+| Ternuxx identity | GitHub slug, checkout command, project key, state path, and installed library use `ternuxx` | Device-installed components require deployment from this source before they use the new defaults |
 | Third-party and source provenance | Initial dependency/runtime inventory and internal SKB code reuse documented | Exact build-resolved SBOM and redistribution matrix require a real release candidate |
 | Core versus premium | No premium SKU exists; free-core intent and no-lock boundary documented | Legal review of public history and any future component before sale |
 | Payment, entitlement, fulfillment | Provider-neutral server-side state machine and secure artifact design specified | No provider, seller, SKU, backend, private artifacts, refund policy or privacy notice approved |
 | Website, portfolio, SEO, downloads | Sitemap, evidence rules, host options, SEO map and portfolio boundary documented | No site exists; portfolio change and preview/production deployment require separate scope |
 | Services, packages, pricing | Hypotheses and unvalidated BDT arithmetic identified | No service is offered; demand, terms, tax, payment and owner capacity unknown |
 | Security/privacy/recovery | Threat boundaries and minimum web/payment controls recorded | No product tests, release signing, staffed disclosure route, or approved customer-data operations |
-| Roadmap/manifest/ADR/SKB | Existing roadmap and deterministic workflow identified | Stable `nativeternux` internal project key must not change until registry migration is approved |
+| Roadmap/manifest/ADR/SKB | Existing roadmap and deterministic workflow identified | Keep repository metadata synchronized with project key `ternuxx` |
 | CPU/GPU/NPU inference and evidence | Current code and dated hardware evidence audited; runtime candidates and test method documented in `docs/testing/` | No backend implementation, report, or measurement; exact hardware/backend acceptance remains owner-operated |
 
 **Readiness result:** the research and planning documents specify a future design, but the commercial-readiness acceptance criteria are not fully met. The repository rename is complete; the compatible CLI/internal state names remain; no license, premium artifact, legal terms, or real offer has been approved. The website, payment, and legal publication gates remain closed. Product-source work is being tracked separately from this commercialization research and must retain its own tests and device-approval gates.

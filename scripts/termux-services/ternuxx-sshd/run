@@ -6,15 +6,15 @@ umask 077
 PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
 HOME="${HOME:?Termux HOME is required}"
 TERMUX_VERSION="${TERMUX_VERSION:-unknown}"
-NATIVERNUX_STATE_DIR="${NATIVERNUX_STATE_DIR:-$HOME/.local/share/nativeternux}"
+TERNUXX_STATE_DIR="${TERNUXX_STATE_DIR:-$HOME/.local/share/ternuxx}"
 CONFIG="$HOME/.config/ternuxx/sshd_recovery.conf"
-LOG_DIR="$NATIVERNUX_STATE_DIR/log"
+LOG_DIR="$TERNUXX_STATE_DIR/log"
 LOG_FILE="$LOG_DIR/sshd-runit.log"
-export PREFIX HOME TERMUX_VERSION NATIVERNUX_STATE_DIR
+export PREFIX HOME TERMUX_VERSION TERNUXX_STATE_DIR
 export PATH="$PREFIX/bin:$PATH"
 
 mkdir -p "$LOG_DIR" || exit 1
-chmod 700 "$NATIVERNUX_STATE_DIR" "$LOG_DIR" 2>/dev/null || true
+chmod 700 "$TERNUXX_STATE_DIR" "$LOG_DIR" 2>/dev/null || true
 exec >>"$LOG_FILE" 2>&1
 printf 'wrapper-started-at=%s pid=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$"
 

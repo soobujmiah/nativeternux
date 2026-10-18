@@ -20,7 +20,7 @@
     "meaning": "changed boot ID is relative to saved pre-reboot ID; does not prove Termux:Boot causality"
   },
   "implementation": {
-    "installed_file": "$PREFIX/lib/nativeternux/ssh_diagnostics.py",
+    "installed_file": "$PREFIX/lib/ternuxx/ssh_diagnostics.py",
     "new_sha256": "1f4d8a8cff335fc10622fb0ab8b4f5cf1c209333a52d1c9391fa651dafe51a76",
     "old_sha256": "a3182e989e099047512c573f86d83bb929f151e3f2af7adae217a75264028b80",
     "resolver": "TERNUXX_REPO_ROOT override; checkout-relative source; fallback $HOME/ternuxx",

@@ -1,5 +1,5 @@
 event_id: test-735c1aa05d77-39031828822-1
-repository: soobujmiah/nativeternux
+repository: soobujmiah/ternuxx
 commit: 735c1aa05d777382f80c160161bf30a1c9721feb
 kind: test
 occurred_at: '2026-10-17T12:16:01Z'
@@ -9,4 +9,4 @@ status: unknown
 workflow_name: Repository Knowledge Sync
 event_type: push
 actor: soobujmiah
-run_url: https://github.com/soobujmiah/nativeternux/actions/runs/39031828822
+run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39031828822

@@ -2,14 +2,14 @@
 # Owns only the supervisor and exact child processes recorded in session.json.
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
-_nt_session_file() { printf '%s/session.json\n' "$NATIVERNUX_STATE_DIR"; }
+_nt_session_file() { printf '%s/session.json\n' "$TERNUXX_STATE_DIR"; }
 _nt_journal_begin() {
-  python3 "$_TN_LIB_DIR/operation_journal.py" begin "$NATIVERNUX_STATE_DIR" "$1" "$2"
+  python3 "$_TN_LIB_DIR/operation_journal.py" begin "$TERNUXX_STATE_DIR" "$1" "$2"
 }
 _nt_journal_update() {
-  python3 "$_TN_LIB_DIR/operation_journal.py" update "$NATIVERNUX_STATE_DIR" "$1" "$2" "$3"
+  python3 "$_TN_LIB_DIR/operation_journal.py" update "$TERNUXX_STATE_DIR" "$1" "$2" "$3"
 }
-_nt_session_lock() { printf '%s/.session.lock\n' "$NATIVERNUX_STATE_DIR"; }
+_nt_session_lock() { printf '%s/.session.lock\n' "$TERNUXX_STATE_DIR"; }
 _NT_ACTIVE_SESSION_LOCK=""
 
 _nt_release_session_lock() {
@@ -112,7 +112,7 @@ _nt_request_termux_x11_activity() {
 }
 
 _nt_state_path_is_private() {
-  python3 - "$HOME" "$NATIVERNUX_STATE_DIR" <<'PY'
+  python3 - "$HOME" "$TERNUXX_STATE_DIR" <<'PY'
 import os, sys
 home = os.path.realpath(sys.argv[1])
 state = os.path.realpath(sys.argv[2])
@@ -148,7 +148,7 @@ nt_cmd_start() {
   [ -x "$supervisor" ] || { nt_fail "Ternuxx session supervisor is missing"; return 1; }
   [ -x "$owned_exec" ] || { nt_fail "Ternuxx owned-process launcher is missing"; return 1; }
 
-  state_root="$NATIVERNUX_STATE_DIR"
+  state_root="$TERNUXX_STATE_DIR"
   _nt_state_path_is_private || { nt_fail "State path must resolve inside Termux HOME"; return 1; }
   mkdir -p "$state_root" || { nt_fail "Cannot create Ternuxx state directory"; return 1; }
   chmod 700 "$state_root" 2>/dev/null || { nt_fail "Cannot protect Ternuxx state directory"; return 1; }
@@ -159,7 +159,7 @@ nt_cmd_start() {
     nt_ok "Ternuxx desktop is already running."
     nt_info "Display: $active_display"
     if _nt_request_termux_x11_activity; then activity_request="accepted"; else activity_request="not_confirmed"; fi
-    if [ "$NATIVERNUX_JSON" = "1" ]; then
+    if [ "$TERNUXX_JSON" = "1" ]; then
       nt_json_object "start" "running" "display" "$active_display" "activity_request" "$activity_request" "gui_visible" "unknown" "audio_owner" "external"
     fi
     return 0
@@ -173,7 +173,7 @@ nt_cmd_start() {
     esac
   fi
 
-  state_root="$NATIVERNUX_STATE_DIR"
+  state_root="$TERNUXX_STATE_DIR"
   local lock
   lock="$(_nt_session_lock)"
   if ! mkdir "$lock" 2>/dev/null; then
@@ -236,7 +236,7 @@ nt_cmd_start() {
   if _nt_request_termux_x11_activity; then activity_request="accepted"; else activity_request="not_confirmed"; fi
   nt_info "GUI visibility remains unknown until the Termux:X11 window is actually visible."
   nt_info "Ternuxx does not start or stop PulseAudio; existing audio services remain independently owned."
-  if [ "$NATIVERNUX_JSON" = "1" ]; then
+  if [ "$TERNUXX_JSON" = "1" ]; then
     nt_json_object "start" "running" "display" ":$display_number" "activity_request" "$activity_request" "gui_visible" "unknown" "audio_owner" "external"
   fi
 }
@@ -321,7 +321,7 @@ PY
   case "$status" in
     stopped)
       nt_ok "Ternuxx-owned desktop processes stopped. Session record and log were retained."
-      [ "$NATIVERNUX_JSON" = "1" ] && nt_json_object "stop" "stopped" "owner" "ternuxx"
+      [ "$TERNUXX_JSON" = "1" ] && nt_json_object "stop" "stopped" "owner" "ternuxx"
       return 0 ;;
     stop_incomplete)
       nt_fail "An owned process did not exit cleanly. State and log are retained; no SIGKILL or broad cleanup was used."
@@ -353,7 +353,7 @@ nt_cmd_status() {
     fi
   fi
 
-  if [ "$NATIVERNUX_JSON" = "1" ]; then
+  if [ "$TERNUXX_JSON" = "1" ]; then
     nt_json_object "status" "$status" "display" "$display" \
       "supervisor" "$supervisor_live" "x11" "$x11_live" \
       "xfce4_session" "$desktop_live" "gui_visible" "unknown" \

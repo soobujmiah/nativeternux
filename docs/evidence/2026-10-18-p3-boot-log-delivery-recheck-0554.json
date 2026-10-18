@@ -42,7 +42,7 @@
   ],
   "logs": [
     {
-      "path": ".local/share/nativeternux/continuity/boot-logs/termux-boot.log",
+      "path": ".local/share/ternuxx/continuity/boot-logs/termux-boot.log",
       "status": "read",
       "mode": "0o600",
       "size_bytes": 1403,
@@ -92,7 +92,7 @@
       "path_chain_has_no_symlinks": true
     },
     {
-      "path": ".local/share/nativeternux/continuity/boot-logs/ternuxx-services.log",
+      "path": ".local/share/ternuxx/continuity/boot-logs/ternuxx-services.log",
       "status": "read",
       "mode": "0o600",
       "size_bytes": 530,
@@ -150,7 +150,7 @@
       "path_chain_has_no_symlinks": true
     },
     {
-      "path": ".local/share/nativeternux/log/sshd-runit.log",
+      "path": ".local/share/ternuxx/log/sshd-runit.log",
       "status": "read",
       "mode": "0o600",
       "size_bytes": 14166,
@@ -284,7 +284,7 @@
       "chain_has_no_symlinks": true
     },
     {
-      "path": ".local/share/nativeternux/continuity/boot-logs/termux-boot.log",
+      "path": ".local/share/ternuxx/continuity/boot-logs/termux-boot.log",
       "parent_chain": [
         {
           "component": ".local",
@@ -303,7 +303,7 @@
           "directory": true
         },
         {
-          "component": "nativeternux",
+          "component": "ternuxx",
           "exists": true,
           "symlink": false,
           "owner_matches": true,
@@ -338,7 +338,7 @@
       "chain_has_no_symlinks": true
     },
     {
-      "path": ".local/share/nativeternux/continuity/boot-logs/ternuxx-services.log",
+      "path": ".local/share/ternuxx/continuity/boot-logs/ternuxx-services.log",
       "parent_chain": [
         {
           "component": ".local",
@@ -357,7 +357,7 @@
           "directory": true
         },
         {
-          "component": "nativeternux",
+          "component": "ternuxx",
           "exists": true,
           "symlink": false,
           "owner_matches": true,
@@ -392,7 +392,7 @@
       "chain_has_no_symlinks": true
     },
     {
-      "path": ".local/share/nativeternux/log/sshd-runit.log",
+      "path": ".local/share/ternuxx/log/sshd-runit.log",
       "parent_chain": [
         {
           "component": ".local",
@@ -411,7 +411,7 @@
           "directory": true
         },
         {
-          "component": "nativeternux",
+          "component": "ternuxx",
           "exists": true,
           "symlink": false,
           "owner_matches": true,

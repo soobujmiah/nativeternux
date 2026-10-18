@@ -13,7 +13,7 @@ nt_cmd_checkpoint() {
     nt_require_command "$tool" || return 1
   done
   local format_args=()
-  [ "$NATIVERNUX_JSON" = "1" ] && format_args+=(--json)
+  [ "$TERNUXX_JSON" = "1" ] && format_args+=(--json)
   python3 "$_TN_LIB_DIR/management_service.py" \
     --operation "continuity.$action" \
     "${format_args[@]}" "$@"

@@ -115,7 +115,7 @@
     },
     {
       "status": " M",
-      "path": "bin/nativeternux",
+      "path": "bin/ternuxx",
       "category": "cross-phase-product-source",
       "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
     },
@@ -265,7 +265,7 @@
     },
     {
       "status": " M",
-      "path": "nativeternux",
+      "path": "ternuxx",
       "category": "P0-brand-compatibility",
       "scope_review": "legacy compatibility entrypoint; project-scoped repository identity work"
     },

@@ -5,7 +5,7 @@
     "id": "soobujmiah/ternuxx",
     "branch": "main",
     "head": "1a891faabc925136c1801f40194b0969d28041df",
-    "native_checkout": "$HOME/nativeternux",
+    "native_checkout": "$HOME/ternuxx",
     "working_tree": "modified and untracked work preserved; no commit or push in this continuation"
   },
   "changes": {

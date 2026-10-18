@@ -4,7 +4,7 @@ _nt_management_call() {
   nt_require_termux || return 1
   nt_require_command python3 || return 1
   local format_args=()
-  [ "$NATIVERNUX_JSON" = "1" ] && format_args+=(--json)
+  [ "$TERNUXX_JSON" = "1" ] && format_args+=(--json)
   TERNUXX_WAKELOCK_CALLER_PID="${PPID:-}" python3 "$_TN_LIB_DIR/management_service.py" "$@" "${format_args[@]}"
 }
 

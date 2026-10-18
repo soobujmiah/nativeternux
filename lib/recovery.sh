@@ -4,7 +4,7 @@
 _nt_recovery_call() {
   local operation="$1"; shift
   local args=("$@")
-  [ "$NATIVERNUX_JSON" = "1" ] && args+=(--json)
+  [ "$TERNUXX_JSON" = "1" ] && args+=(--json)
   python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" "${args[@]}"
 }
 

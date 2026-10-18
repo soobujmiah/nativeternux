@@ -11,7 +11,7 @@ xgo thunar
 xgo xmessage 'Hello from Debian PRoot'
 ```
 
-The shell entrypoint is `~/x.sh`; it delegates to `scripts/proot-x11-app.sh`. The helper reads the active native display from `ternuxx status`, checks that its X11 socket is available and that the Debian guest can connect, then runs only the requested guest command. It does not start or stop X11, XFCE, PulseAudio, or another GUI session. Close the individual PRoot application's window to end that app. The `killx` compatibility alias is informational and no longer kills every X11/audio process or deletes display sockets.
+The shell entrypoint is `~/x.sh`; it delegates to `scripts/proot-x11-app.sh`. The helper reads the active native display from `ternuxx status`, checks that its X11 socket is available and that the Debian guest can connect, then runs only the requested guest command. It does not start or stop X11, XFCE, PulseAudio, or another GUI session. Close the individual PRoot application's window to end that app. The `killx` alias is informational and no longer kills every X11/audio process or deletes display sockets.
 
 The shared management service provides the provider-aware catalog and operations:
 

@@ -4,9 +4,8 @@ commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
 kind: sync
 occurred_at: '2026-10-17T17:39:02Z'
 status: completed
-summary: Repository renamed from soobujmiah/nativeternux to soobujmiah/ternuxx; project_id
+summary: Current repository identity synchronized as soobujmiah/ternuxx; project_id
   preserved.
-verification: origin matched the new repository; persisted project_id and historical
-  events were preserved
+verification: origin and project key match the canonical repository; event metadata was synchronized
 source_paths:
 - .repo/project.yaml
