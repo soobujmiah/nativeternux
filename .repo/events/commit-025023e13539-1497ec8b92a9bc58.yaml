@@ -1,0 +1,7 @@
+event_id: commit-025023e13539-1497ec8b92a9bc58
+repository: soobujmiah/ternuxx
+commit: 025023e135399f993c7e351b91df8445cc2d6599
+kind: commit
+occurred_at: '2026-10-18T12:49:48Z'
+status: completed
+summary: Unify native and PRoot management roadmap

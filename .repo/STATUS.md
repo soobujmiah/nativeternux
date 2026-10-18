@@ -2,14 +2,14 @@
 # nativeternux -- deterministic status
 
 - Repository: `soobujmiah/ternuxx`
-- Generated at: 2026-10-17T17:39:02Z (by `tools/repo_knowledge collect`)
-- Version: `49db2f9`
-- Head: `49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83` on `main` (2026-10-17T12:17:50Z)
+- Generated at: 2026-10-18T12:50:32Z (by `tools/repo_knowledge collect`)
+- Version: `025023e`
+- Head: `025023e135399f993c7e351b91df8445cc2d6599` on `main` (2026-10-18T12:49:48Z)
 
 ## Build / test
 
-- Build: **unknown** (run `39031968284`)
-- Test: **passed** -- Native Termux full suite 158/158 passed in 32.471s; focused recovery and management 47/47 passed in 1.077s. CLI help, compileall, shell syntax, all recovery schemas, JSON, and diff check pass. All supported recovery previews list their single affected journal path. Read-only target: unresolved 0, desktop :1 active, Debian installed/ownership unverified. P2 historical 77-package closure corroborated 77/77 exact current installed versions.
+- Build: **unknown** (run `39128929763`)
+- Test: **passed**
 
 ## Phases
 - Not configured (no `.repo/phases.yaml`).
@@ -17,5 +17,5 @@
 ## Sync
 
 - Status: ok
-- Source: local
-- Last synced at: 2026-10-17T17:39:02Z
+- Source: ci
+- Last synced at: 2026-10-18T12:50:32Z
