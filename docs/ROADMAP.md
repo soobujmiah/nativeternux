@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Continue P3 native ownership/recovery gates and finish the shared management read-only Web/X11 client/session bootstrap. Next PRoot work must adapt and verify installed Debian first; selective distro and desktop lifecycle adapters follow behind preview, explicit confirmation, and recovery gates.
+**Next action:** Resolve the installed 8023 Runit definition drift with an owner-reviewed rollback plan; separately establish listener ownership and preserve the 8022 manual development channel. Continue P3 management/recovery gates; do not claim reboot qualification without an owner-approved reboot.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
