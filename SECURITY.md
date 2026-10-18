@@ -33,3 +33,8 @@ Report suspected vulnerabilities privately through the repository owner's existi
 ## Current limits
 
 No public release, supported device matrix, implemented remote service management, NPU path, or broad app compatibility is claimed. See [research](docs/RESEARCH.md), [operations](docs/OPERATIONS.md), [security decisions](docs/architecture/decisions/), and [current status](CURRENT_STATE.md).
+
+
+### 2026-10-18 managed SSH observation
+
+The 8023 managed service configuration and its startup log showed loopback `127.0.0.1:8023`; its effective configuration has password, public-key and keyboard-interactive authentication enabled, and root key login is not denied. The source/install run-file drift was reconciled without changing SSH configuration or restarting the active service. The Runit process ancestry was visible, but Android denied reads of `/proc/net/tcp` and `/proc/net/tcp6`, so socket-to-process ownership and listener exposure beyond the observed loopback configuration remain `UNVERIFIED`. Configuration text, an SSH banner, and a visible process tree are not listener ownership proof. The separately owner-started 8022 development channel remains a separate manual endpoint; its inspected configuration is wildcard-bound and password/keyboard-interactive enabled, while actual listener ownership and external reachability are unknown. Neither endpoint's exposure or authentication was changed in this gate. See the dated [8023 evidence](docs/evidence/2026-10-18-8023-reconciliation.md).

@@ -17,7 +17,7 @@ ACTIVE = {"starting", "stopping", "needs_recovery"}
 TERMINAL = {"complete", "failed"}
 JOURNAL_KINDS = frozenset({
     "desktop.start", "desktop.stop", "boot.enable", "boot.disable",
-    "service.start", "service.stop", "recovery.backup.create",
+    "service.start", "service.stop", "service.deploy", "service.deploy.rollback", "recovery.backup.create",
     "recovery.restore.apply", "recovery.restore.rollback",
 })
 
@@ -187,6 +187,8 @@ def begin(state_dir: str, kind: str, detail: str, *, home_dir: str | os.PathLike
         "boot.disable": "stopping",
         "service.start": "starting",
         "service.stop": "stopping",
+        "service.deploy": "starting",
+        "service.deploy.rollback": "starting",
         "recovery.backup.create": "starting",
         "recovery.restore.apply": "starting",
         "recovery.restore.rollback": "starting",

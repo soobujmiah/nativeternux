@@ -25,7 +25,7 @@ MAX_TOKEN_LENGTH = 256
 # Every known operation must be explicitly classified. Mutations also require
 # the session-specific CSRF proof in a custom header.
 MUTATING_OPERATIONS = frozenset({
-    "ssh.service.start", "ssh.service.stop", "boot.enable", "boot.disable",
+    "ssh.service.start", "ssh.service.stop", "ssh.service.deploy", "ssh.service.deploy.rollback.apply", "boot.enable", "boot.disable",
     "backup.create", "restore.apply", "recovery.resolve",
     "recovery.rollback.apply", "wakelock.acquire", "wakelock.release",
     "continuity.prepare", "continuity.verify", "continuity.prepare-reboot-test",
@@ -33,7 +33,7 @@ MUTATING_OPERATIONS = frozenset({
 })
 READ_ONLY_OPERATIONS = frozenset({
     "management.catalog", "doctor.report",
-    "ssh.inspect", "native.ssh.status", "proot.status", "proot.guest.verify",
+    "ssh.inspect", "ssh.service.deploy.rollback.preview", "native.ssh.status", "proot.status", "proot.guest.verify",
     "proot.shortcuts.list", "proot.shortcuts.preview",
     "remote.access.preview", "boot.status", "boot.profile.status",
     "boot.profile.preview", "backup.list", "backup.inspect", "restore.preview",

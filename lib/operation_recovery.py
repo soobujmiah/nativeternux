@@ -12,6 +12,7 @@ import backup_recovery
 import desktop_session_recovery
 import operation_journal
 import restore_recovery
+import runit_deployment
 import service_recovery
 
 
@@ -22,6 +23,8 @@ class OperationRecoveryError(RuntimeError):
 _HANDLER_GROUP_BY_KIND = {
     "service.start": "service",
     "service.stop": "service",
+    "service.deploy": "deploy",
+    "service.deploy.rollback": "deploy_rollback",
     "boot.enable": "boot",
     "boot.disable": "boot",
     "desktop.start": "desktop",
@@ -58,6 +61,14 @@ def preview(
     if handler_group == "service":
         return service_recovery.preview(operation_id, prefix=prefix, state_dir=state_dir,
                                         home=home, source=source, runner=runner)
+    if handler_group == "deploy":
+        return runit_deployment.preview_rollback(operation_id, prefix=prefix, state_dir=state_dir,
+                                                  home=home, runner=runner)
+    if handler_group == "deploy_rollback":
+        detail = operation_journal.inspect_record(str(state_dir), operation_id, home_dir=home)["detail"]
+        deployment_id = str(detail).split("rollback of ", 1)[-1].split(" ", 1)[0]
+        return runit_deployment.preview_rollback(deployment_id, prefix=prefix, state_dir=state_dir,
+                home=home, runner=runner, recovery_operation_id=operation_id)
     if handler_group == "boot":
         return boot_profile_recovery.preview(operation_id, home=home, state_dir=state_dir)
     if handler_group == "desktop":
@@ -88,6 +99,17 @@ def resolve(
         return service_recovery.resolve(operation_id, prefix=prefix, state_dir=state_dir,
                                         home=home, confirmed=confirmed, plan_id=plan_id,
                                         source=source, runner=runner)
+    if handler_group in {"deploy", "deploy_rollback"}:
+        deployment_id = operation_id
+        if handler_group == "deploy_rollback":
+            detail = operation_journal.inspect_record(str(state_dir), operation_id, home_dir=home)["detail"]
+            deployment_id = str(detail).split("rollback of ", 1)[-1].split(" ", 1)[0]
+        plan = runit_deployment.preview_rollback(deployment_id, prefix=prefix, state_dir=state_dir,
+                home=home, runner=runner,
+                recovery_operation_id=(operation_id if handler_group == "deploy_rollback" else None))
+        return runit_deployment.apply_rollback(deployment_id, prefix=prefix, state_dir=state_dir,
+                home=home, confirmed=confirmed, plan_id=plan_id, runner=runner,
+                recovery_operation_id=(operation_id if handler_group == "deploy_rollback" else None))
     if handler_group == "boot":
         return boot_profile_recovery.resolve(operation_id, home=home, state_dir=state_dir,
                                              confirmed=confirmed, plan_id=plan_id)

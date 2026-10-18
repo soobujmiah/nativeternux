@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Resolve the installed 8023 Runit definition drift with an owner-reviewed rollback plan; separately establish listener ownership and preserve the 8022 manual development channel. Continue P3 management/recovery gates; do not claim reboot qualification without an owner-approved reboot.
+**Next action:** Continue P3: establish 8023 listener PID/socket ownership with a permitted evidence source, then separately qualify lifecycle start/stop/restart and readiness while preserving 8022; reboot remains UNVERIFIED until explicitly owner-approved post-boot testing.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

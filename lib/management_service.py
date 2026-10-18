@@ -22,6 +22,7 @@ import reboot_recovery
 import runtime_diagnostics
 import ssh_diagnostics
 import runit_service
+import runit_deployment
 import operation_recovery
 import wakelock_manager
 import proot_diagnostics
@@ -45,6 +46,9 @@ OPERATIONS = {
     "remote.access.preview": {"args": {"policy"}},
     "ssh.service.start": {"args": {"confirmed", "plan_id"}},
     "ssh.service.stop": {"args": {"confirmed", "plan_id"}},
+    "ssh.service.deploy": {"args": {"confirmed", "plan_id"}},
+    "ssh.service.deploy.rollback.preview": {"args": {"operation_id"}},
+    "ssh.service.deploy.rollback.apply": {"args": {"operation_id", "confirmed", "plan_id"}},
     "native.ssh.status": {"args": set()},
     "boot.status": {"args": set()},
     "boot.profile.status": {"args": set()},
@@ -174,6 +178,30 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 )
             except ValueError as exc:
                 return _error(request_id, "invalid_arguments", str(exc))
+        elif operation == "ssh.service.deploy":
+            confirmed = args.get("confirmed", False)
+            plan_id = args.get("plan_id")
+            if type(confirmed) is not bool or (plan_id is not None and not isinstance(plan_id, str)):
+                return _error(request_id, "invalid_arguments", "deployment confirmation or plan ID is invalid")
+            data = runit_deployment.apply(
+                prefix=process_env["PREFIX"], home=home, state_dir=state_dir,
+                confirmed=confirmed, plan_id=plan_id,
+            )
+        elif operation in {"ssh.service.deploy.rollback.preview", "ssh.service.deploy.rollback.apply"}:
+            operation_id = args.get("operation_id")
+            confirmed = args.get("confirmed", False)
+            plan_id = args.get("plan_id")
+            if (not isinstance(operation_id, str) or type(confirmed) is not bool
+                    or (plan_id is not None and not isinstance(plan_id, str))):
+                return _error(request_id, "invalid_arguments", "deployment rollback arguments are invalid")
+            rollback_args = {"prefix": process_env["PREFIX"], "home": home,
+                             "state_dir": state_dir, "operation_id": operation_id}
+            if operation.endswith(".preview"):
+                data = runit_deployment.preview_rollback(**rollback_args)
+            else:
+                data = runit_deployment.apply_rollback(
+                    **rollback_args, confirmed=confirmed, plan_id=plan_id,
+                )
         elif operation in {"ssh.service.start", "ssh.service.stop"}:
             confirmed = args.get("confirmed", False)
             plan_id = args.get("plan_id")
@@ -314,6 +342,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                                                   current_boot_id=args.get("current_boot_id"))
         else:
             data = reboot_recovery.resume_info(home=home, state_dir=state_dir, test_id=args["test_id"])
+    except runit_deployment.DeploymentError as exc:
+        return _error(request_id, "deployment_failed", str(exc))
     except proot_shortcuts.ShortcutError as exc:
         return _error(request_id, "shortcut_operation_failed", str(exc))
     except config_recovery.RecoveryError as exc:
@@ -419,7 +449,33 @@ def main(argv: list[str] | None = None) -> int:
             payload["test_id"] = args.test_id
     elif args.operation == "doctor.report":
         payload = {"graphics": bool(args.graphics)}
-    elif args.operation in {"ssh.service.start", "ssh.service.stop"}:
+    elif args.operation in {"ssh.service.deploy.rollback.preview", "ssh.service.deploy.rollback.apply"}:
+        if not args.operation_id:
+            response = _error(request_id, "invalid_arguments", "--operation-id is required")
+            if args.json:
+                print(json.dumps(response, sort_keys=True))
+            else:
+                print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
+            return 1
+        is_preview = args.operation.endswith(".preview")
+        if is_preview and (args.yes or args.plan_id):
+            response = _error(request_id, "invalid_arguments", "rollback preview does not accept apply confirmation")
+            if args.json:
+                print(json.dumps(response, sort_keys=True))
+            else:
+                print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
+            return 1
+        if not is_preview and (not args.yes or not args.plan_id):
+            response = _error(request_id, "invalid_arguments", "rollback apply requires --yes and --plan-id")
+            if args.json:
+                print(json.dumps(response, sort_keys=True))
+            else:
+                print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
+            return 1
+        payload = {"operation_id": args.operation_id}
+        if not is_preview:
+            payload.update({"confirmed": True, "plan_id": args.plan_id})
+    elif args.operation in {"ssh.service.start", "ssh.service.stop", "ssh.service.deploy"}:
         if args.yes != bool(args.plan_id):
             response = _error(request_id, "invalid_arguments", "service apply requires --yes and --plan-id from its exact preview")
             if args.json:

@@ -9,7 +9,7 @@ PROVIDERS = [
 ]
 
 DOMAINS = [
-    {"id":"sshd-servers", "status":"implemented", "providers":["native-termux","runit"], "operations":["ssh.inspect","native.ssh.status","ssh.service.start","ssh.service.stop","remote.access.preview"]},
+    {"id":"sshd-servers", "status":"implemented", "providers":["native-termux","runit"], "operations":["ssh.inspect","native.ssh.status","ssh.service.start","ssh.service.stop","ssh.service.deploy","ssh.service.deploy.rollback.preview","ssh.service.deploy.rollback.apply","remote.access.preview"]},
     {"id":"proot-runtime", "status":"partial-installed-debian-first", "providers":["native-termux","proot-debian"], "operations":["proot.status","proot.guest.verify","proot.app.launch","proot.shortcuts.list","proot.shortcuts.preview","proot.shortcuts.apply"], "planned":["guest.adapt","guest.install","guest.uninstall","guest.distro.select","desktop.install","desktop.select"], "targets":["installed Debian adaptation first","selectable Debian/Ubuntu/other distro adapters","selectable desktop environments including XFCE4 and alternatives"]},
     {"id":"doctor-diagnostics", "status":"implemented", "providers":["native-termux","proot-debian"], "operations":["doctor.report","management.catalog"]},
     {"id":"autoboot-background", "status":"implemented", "providers":["native-termux","runit"], "operations":["boot.status","boot.profile.status","boot.profile.preview","boot.enable","boot.disable","wakelock.status","wakelock.acquire","wakelock.release"]},
