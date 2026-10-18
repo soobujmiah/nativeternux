@@ -38,7 +38,7 @@ OPERATIONS = {
     "doctor.report": {"args": {"graphics"}},
     "ssh.inspect": {"args": set()},
     "proot.status": {"args": set()},
-    "proot.app.launch": {"args": {"app_id"}},
+    "proot.app.launch": {"args": {"app_id", "session_owner", "display"}},
     "proot.shortcuts.list": {"args": set()},
     "proot.shortcuts.preview": {"args": {"action", "app_id"}},
     "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
@@ -126,10 +126,18 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             app_id = args.get("app_id")
             if not isinstance(app_id, str):
                 return _error(request_id, "invalid_arguments", "app ID is required")
+            session_owner = args.get("session_owner", "ternuxx")
+            display = args.get("display")
+            if not isinstance(session_owner, str) or session_owner not in {"ternuxx", "ternux"}:
+                return _error(request_id, "invalid_arguments", "session owner must be ternuxx or ternux")
+            if display is not None and (not isinstance(display, str) or not re.fullmatch(r":[0-9]{1,2}", display)):
+                return _error(request_id, "invalid_arguments", "display must be an X11 display such as :1")
+            if session_owner == "ternux" and display is None:
+                return _error(request_id, "invalid_arguments", "Ternux session selection requires an explicit display")
             data = proot_shortcuts.launch(
                 app_id, prefix=process_env["PREFIX"],
                 repo_root=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                env=process_env,
+                env=process_env, session_owner=session_owner, display=display,
             )
         elif operation == "proot.shortcuts.list":
             data = proot_shortcuts.list_shortcuts(
@@ -392,6 +400,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--operation-id")
     parser.add_argument("--shortcut-action", choices=("add", "remove"))
     parser.add_argument("--app-id")
+    parser.add_argument("--session-owner", choices=("ternuxx", "ternux"))
     parser.add_argument("--plan-id")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--persistent", action="store_true")
@@ -634,6 +643,10 @@ def main(argv: list[str] | None = None) -> int:
                 print("Ternuxx operation failed [invalid_arguments]: --app-id is required", file=sys.stderr)
             return 1
         payload = {"app_id": args.app_id}
+        if args.session_owner is not None:
+            payload["session_owner"] = args.session_owner
+        if args.display is not None:
+            payload["display"] = args.display
     elif args.operation == "proot.shortcuts.list":
         if args.shortcut_action or args.app_id or args.yes or args.plan_id:
             response = _error(request_id, "invalid_arguments", "shortcut list takes no arguments")

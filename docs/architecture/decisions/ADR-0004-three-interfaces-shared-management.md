@@ -6,7 +6,7 @@
 
 ## Context
 
-Ternuxx must serve CLI users and people who prefer graphical workflows. The owner confirmed that CLI, local Web UI, and X11 GUI should perform the same management tasks through shared state and services, so users do not need to know CLI commands for routine setup or configuration. Native Termux and the existing Debian PRoot remain separate providers with distinct homes, permissions, package managers, and ownership. The user experience and Ternuxx-managed configuration should be unified without pretending the underlying environments are one filesystem or security boundary.
+Ternuxx must serve CLI users and people who prefer graphical workflows. The owner confirmed that CLI, interactive Terminal/TUI, local Web UI, and Graphical UI should perform the same management tasks through shared state and services, so users do not need to know CLI commands for routine setup or configuration. Native Termux and the existing Debian PRoot remain separate providers with distinct homes, permissions, package managers, and ownership. The user experience and Ternuxx-managed configuration should be unified without pretending the underlying environments are one filesystem or security boundary.
 
 ## Proposed decision
 
@@ -14,11 +14,12 @@ Create one shared management layer as the authority for configuration, capabilit
 
 - CLI uses the application services directly and remains usable with all graphical services stopped.
 - Web Visualizer is a thin client of a versioned local management API. Start the API on demand, loopback-only, when needed; do not require a permanent daemon for CLI use.
-- X11 Desktop GUI is another thin client of the same application services/API. It does not own system state and must report when X11 is unavailable.
+- Interactive Terminal/TUI is a terminal-native client of the same application services.
+- Graphical UI is a thin client of the same application services/API; it may use the on-demand local API. It does not own system state and must report when X11 is unavailable.
 - Automation uses named application-service operations, never a separate unrestricted shell path.
 - All interfaces use the same schemas, capability registry, authorization rules, operation IDs and evidence records.
 
-The CLI management service, versioned local API, loopback HTTP server, authorization/session primitives, and a read-only foreground runtime now exist. A Web UI and general X11 management client do not yet exist; the recent PRoot shortcut manager is a task-specific X11 dialog and is not the shared interface layer. HTTP mutation dispatch remains disabled. See [shared management implementation plan](../SHARED-MANAGEMENT-PLAN.md) for the staged completion sequence and current gaps.
+The CLI management service, versioned local API, loopback HTTP server, authorization/session primitives, and a read-only foreground runtime now exist. The interactive TUI, Web UI, and general Graphical management client do not yet exist; the recent PRoot shortcut manager is a task-specific X11 dialog and is not the shared interface layer. HTTP mutation dispatch remains disabled. See [shared management implementation plan](../SHARED-MANAGEMENT-PLAN.md) for the staged completion sequence and current gaps.
 
 ## Alternatives considered
 
@@ -42,7 +43,7 @@ The CLI management service, versioned local API, loopback HTTP server, authoriza
 - Threat-review localhost browser access, session bootstrap, CSRF, origin/host validation and cancellation behavior.
 - Measure candidate API/UI dependencies against the approved download, installed-size, RAM and startup budgets.
 - The same shared service operation is callable through CLI and authenticated local API, with matching plan, result, provider, and evidence semantics.
-- The Web UI works in an Android browser and the X11 desktop without separate business rules or direct filesystem/shell access.
+- The TUI, Web UI, and Graphical UI work through the same operation contract without separate business rules or direct filesystem/shell access.
 - Routine setup and configuration can be completed without CLI knowledge, using clear preview, confirmation, progress, and recovery flows.
 - Native Termux and PRoot resources are presented together but remain explicitly provider-scoped; actions cannot silently cross provider boundaries.
 - Browser bootstrap and API mutation remain disabled until their end-to-end security and device acceptance gates pass.

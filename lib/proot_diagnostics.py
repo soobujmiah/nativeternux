@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import errno
 import stat
 from pathlib import Path
 import shutil
@@ -215,8 +216,55 @@ def _installed_names(output: str) -> list[str] | None:
     return sorted(set(names))
 
 
+def inspect_host_proot_processes(*, proc_root: str | os.PathLike[str] = "/proc") -> dict[str, object]:
+    """Observe readable host PRoot executables without inferring guest ownership."""
+    root = Path(proc_root)
+    matches: list[dict[str, object]] = []
+    denied = False
+    try:
+        entries = list(root.iterdir())
+    except OSError:
+        return {"status": "unknown", "processes": [], "visibility": "unavailable",
+                "ownership": "unverified"}
+    for entry in entries:
+        if not entry.name.isdecimal():
+            continue
+        try:
+            comm = (entry / "comm").read_text(errors="replace").strip()
+            raw = (entry / "cmdline").read_bytes()
+        except FileNotFoundError:
+            continue  # Process exited during the bounded snapshot.
+        except PermissionError:
+            denied = True
+            continue
+        except OSError as exc:
+            if exc.errno in {errno.ESRCH, errno.ENOENT}:
+                continue
+            if exc.errno in {errno.EACCES, errno.EPERM}:
+                denied = True
+            continue
+        argv0 = raw.split(b"\0", 1)[0].decode("utf-8", errors="replace")
+        if comm != "proot" and Path(argv0).name != "proot":
+            continue
+        try:
+            status_text = (entry / "status").read_text(errors="replace")
+        except OSError:
+            status_text = ""
+            denied = True
+        parent_match = re.search(r"^PPid:\s*(\d+)$", status_text, re.MULTILINE)
+        matches.append({"pid": int(entry.name),
+                        "parent_pid": int(parent_match.group(1)) if parent_match else None,
+                        "association": "unverified"})
+    visibility = "partial" if denied else "complete"
+    status = "unknown" if denied and not matches else "observed" if matches else "none"
+    return {"status": status, "processes": sorted(matches, key=lambda item: item["pid"]),
+            "visibility": visibility, "ownership": "unverified"}
+
+
 def inspect_installed(*, which: Callable[[str], str | None] = shutil.which,
-                      runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> dict[str, object]:
+                      runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+                      proc_root: str | os.PathLike[str] = "/proc") -> dict[str, object]:
+    process_observation = inspect_host_proot_processes(proc_root=proc_root)
     manager = which("proot-distro")
     if not manager:
         return {
@@ -227,6 +275,7 @@ def inspect_installed(*, which: Callable[[str], str | None] = shutil.which,
             "ownership": "unverified",
             "guest_entered": False,
             "read_only": True,
+            "host_proot_processes": process_observation,
         }
     try:
         result = runner([manager, "list"], stdout=subprocess.PIPE,
@@ -244,6 +293,7 @@ def inspect_installed(*, which: Callable[[str], str | None] = shutil.which,
         "ownership": "unverified",
         "guest_entered": False,
         "read_only": True,
+        "host_proot_processes": process_observation,
     }
 
 

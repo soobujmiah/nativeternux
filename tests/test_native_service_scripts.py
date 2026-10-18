@@ -55,7 +55,7 @@ class NativeServiceScriptTests(unittest.TestCase):
             config.parent.mkdir(parents=True)
             config.write_text("fixture\n")
             events = root / "events.log"
-            executable(prefix / "bin/ternuxx", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{events}'\n")
+            executable(prefix / "bin/ternuxx", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{events}'\nprintf 'state=%s\\n' \"${{TERNUXX_STATE_DIR:-}}\" >> '{events}'\n")
             executable(prefix / "bin/sshd", f"#!/bin/sh\nif [ \"$1\" = -t ]; then exit 0; fi\necho daemon-started >> '{events}'\nexec sleep 60\n")
             (prefix / "bin/bash").symlink_to(shutil.which("bash"))
             env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
@@ -70,6 +70,7 @@ class NativeServiceScriptTests(unittest.TestCase):
                     time.sleep(0.05)
                 self.assertTrue(events.exists())
                 self.assertIn("wakelock acquire native.sshd --persistent", events.read_text())
+                self.assertIn(f"state={state}", events.read_text())
                 self.assertIn("daemon-started", events.read_text())
                 service_log = (state / "log/sshd-runit.log").read_text()
                 self.assertIn("wrapper-started-at=", service_log)

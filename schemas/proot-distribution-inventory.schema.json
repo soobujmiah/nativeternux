@@ -11,7 +11,8 @@
     "installed_distributions",
     "ownership",
     "guest_entered",
-    "read_only"
+    "read_only",
+    "host_proot_processes"
   ],
   "properties": {
     "component": {"const": "proot_distribution_inventory"},
@@ -24,6 +25,29 @@
     },
     "ownership": {"const": "unverified"},
     "guest_entered": {"const": false},
-    "read_only": {"const": true}
+    "read_only": {"const": true},
+    "host_proot_processes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "processes", "visibility", "ownership"],
+      "properties": {
+        "status": {"enum": ["observed", "none", "unknown"]},
+        "visibility": {"enum": ["complete", "partial", "unavailable"]},
+        "ownership": {"const": "unverified"},
+        "processes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pid", "parent_pid", "association"],
+            "properties": {
+              "pid": {"type": "integer", "minimum": 1},
+              "parent_pid": {"type": ["integer", "null"], "minimum": 0},
+              "association": {"const": "unverified"}
+            }
+          }
+        }
+      }
+    }
   }
 }

@@ -1,21 +1,22 @@
 # Ternuxx unified workstation architecture
 
-**Status:** The shared CLI, X11, and Web management requirement is owner-accepted; implementation remains incomplete and is not release-qualified. Optional AI/cloud/runtime aspects remain proposals.
+**Status:** The shared CLI, interactive Terminal/TUI, Web UI, and Graphical UI management requirement is owner-accepted; implementation remains incomplete and is not release-qualified. Optional AI/cloud/runtime aspects remain proposals.
 **Basis:** repository audit at `1a891fa` (2026-10-17), existing architecture/ADRs, and the owner-confirmed shared-management direction on 2026-10-18.
-**Scope:** management architecture for native Termux, the independent existing Ternux Debian PRoot, local AI, optional cloud providers, CLI, Web Visualizer, and X11 Desktop GUI.
+**Scope:** management architecture for native Termux, the independent existing Ternux Debian PRoot, local AI, optional cloud providers, CLI, interactive Terminal/TUI, Web UI, and Graphical UI.
 
 **Decision records:** [ADR-0004: shared management layer](decisions/ADR-0004-three-interfaces-shared-management.md), [ADR-0005: explicit capabilities, permissions, and tasks](decisions/ADR-0005-capability-permission-and-task-model.md), [ADR-0006: narrow existing-Ternux provider](decisions/ADR-0006-adapt-existing-ternux-provider.md), [ADR-0007: Launch Manager and display ownership](decisions/ADR-0007-launch-manager-and-display-ownership.md), [ADR-0008: per-provider shell profiles and managed configuration](decisions/ADR-0008-shell-profiles-and-managed-configuration.md), [ADR-0009: provider-scoped optional software](decisions/ADR-0009-provider-scoped-optional-software.md), [ADR-0010: Native Termux autonomy and bounded PRoot integration](decisions/ADR-0010-native-termux-autonomy.md), [ADR-0011: unified SSH connection and lifecycle management](decisions/ADR-0011-unified-ssh-lifecycle.md), and [ADR-0012: Native-owned shared dependencies and services](decisions/ADR-0012-native-owned-shared-dependencies.md), and [ADR-0013: optional owner-controlled off-home access](decisions/ADR-0013-owner-controlled-remote-access.md). These records define approved owner requirements and draft contracts; they do not imply that the listed runtime services or interfaces exist.
 
-This document is a design proposal. It does not authorize a daemon, dashboard, inference runtime, device change, PRoot modification, license change, production deployment, or paid service. At the audit snapshot, the repository is a Bash desktop-lifecycle manager. It has no inference engine, model library, AI gateway, management API, dashboard, or benchmark harness. Proposed components below remain `PLANNED` unless linked implementation evidence says otherwise.
+This document is a design proposal. It does not authorize a daemon, dashboard, inference runtime, device change, PRoot modification, license change, production deployment, or paid service. At the audit snapshot, Ternuxx has no inference engine, model library, dashboard, or benchmark harness of its own. The independent Ternux repository documents optional CPU/Vulkan llama.cpp and experimental HTP extensions, but their installed/runtime state and Ternuxx integration are unverified. Ternuxx has management API foundations; proposed clients and components below remain `PLANNED` unless linked implementation evidence says otherwise.
 
 ## 1. Product architecture
 
-Use one application/domain layer for every interface. The CLI, Web Visualizer, X11 Desktop GUI, and automation are adapters to the same use cases, configuration, state model, permission rules, diagnostics, and lifecycle services. The interfaces may format results differently; they must not implement their own package, model, provider, or service-management rules.
+Use one application/domain layer for every interface. The CLI, interactive Terminal/TUI, Web UI, Graphical UI, and automation are adapters to the same use cases, configuration, state model, permission rules, diagnostics, and lifecycle services. The interfaces may format results differently; they must not implement their own package, model, provider, or service-management rules.
 
 ```text
-CLI / interactive terminal ─┐
-Local Web Visualizer ─────────┤
-X11 Desktop GUI ──────────────┼── Interface adapters
+CLI ─────────────────────────┐
+Interactive Terminal / TUI ──┤
+Local Web UI ─────────────────┼── Interface adapters
+Graphical UI ─────────────────┤
 Automation clients ──────────┘          │
                               Shared application services
                     config · capability · authorization · tasks
@@ -35,7 +36,7 @@ Every subsystem must have a defined fallback and report when it was used. A fall
 
 | Failure | Safe fallback |
 |---|---|
-| Web Visualizer, X11 GUI, or local API unavailable | Keep the CLI usable against the same local services/state; do not make GUI availability a service dependency. |
+| Web UI, Graphical UI, or local API unavailable | Keep the CLI usable against the same local services/state; do not make GUI availability a service dependency. |
 | Native or PRoot provider unavailable | Mark that provider unavailable and keep the other provider usable for its own operations. Cross-provider rerouting requires an explicit operation plan/selection. |
 | Selected shell missing or unsupported | Preserve the current shell/configuration; offer the detected installed shell or Bash baseline only as an explicit alternative. Do not install/switch shells silently. |
 | Shell migration or target validation fails | Keep the old shell and its last validated configuration selected; retain the staged target diff for diagnosis and offer retry/rollback. |

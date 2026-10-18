@@ -1,0 +1,90 @@
+{
+  "test_id": "P3-STATE-IDENTITY-2026-10-18",
+  "requirement": "Default native status and Doctor identify the existing active session without changing native processes; separately inspect 8022/8023 live bind scope and ownership evidence.",
+  "tested_source": "working tree based on 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a; not committed",
+  "environment": "Native Termux over owner-started SSH 8022; ADB shell observation on Redmi Turbo 4 Pro model 25053RT47C; existing Debian PRoot host process remains active.",
+  "automated_verification": {
+    "command": "bash scripts/repo_test.sh",
+    "result": "PASS",
+    "tests": "315/315",
+    "duration_seconds": 63.523,
+    "additional_checks": [
+      "python3 -m py_compile lib/doctor_report.py lib/desktop_session_discovery.py tests/test_doctor_report.py",
+      "bash -n lib/desktop.sh scripts/*.sh",
+      "git diff --check",
+      "python3 -m tools.repo_knowledge verify (0 findings)"
+    ]
+  },
+  "live_procedure": [
+    "./ternuxx status --json",
+    "./ternuxx doctor --json",
+    "sv status \"$PREFIX/var/service/ternuxx-sshd\"",
+    "ADB shell: toybox netstat -ltnp; ss -ltnp; inspect scoped process list and /proc/13449/fd permissions",
+    "PRoot host: inspect process 16526 without entering or mutating the guest"
+  ],
+  "observed": {
+    "native_status": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown"
+    },
+    "doctor_session": "recorded state=running, display=:1; supervisor PID 28596 verified; X11 PID 28608 verified; XFCE PID 28671 verified; same-session panel/window-manager candidates reported separately.",
+    "doctor_overall": "warning; Doctor verifies the native session and reports the 8022 wildcard/password policy. Its generic service check still labels listener ownership unverified because it does not correlate ADB socket tables with process FDs; this evidence performs that separate correlation and verifies both current PIDs.",
+    "service_8023": {
+      "sv_status": "run",
+      "sv_pid": 13061,
+      "runsv_pid": 13043,
+      "sshd_child_pid": 13449,
+      "bind": "127.0.0.1:8023",
+      "process_uid": "u0_a490",
+      "socket_inode": 117876,
+      "fd_correlation": "PID 13449 FD 6 -> socket:[117876], matching ADB /proc/net/tcp local 127.0.0.1:1F57"
+    },
+    "listener_8022": {
+      "binds": [
+        "0.0.0.0:8022",
+        "[::]:8022"
+      ],
+      "process_uid": "u0_a490",
+      "sshd_parent_pid": 16337,
+      "session_child_pids": [
+        7831,
+        7836
+      ],
+      "ipv4_socket_inode": 135149,
+      "ipv4_fd": "PID 16337 FD 7 -> socket:[135149]",
+      "ipv6_socket_inode": 135147,
+      "ipv6_fd": "PID 16337 FD 6 -> socket:[135147]"
+    },
+    "adb_process_observation": "The :1 Termux:X11 process is present; no temporary desktop-fixture process was present in the scoped final process listing.",
+    "existing_proot": "PID 16526 remains active with the existing Debian rootfs invocation; no guest lifecycle action occurred.",
+    "visual_gui": "ADB screenshot at 2026-10-18 showed Native Termux terminal and floating Termux:X11 XFCE desktop on :1; screenshot was not retained."
+  },
+  "listener_ownership": {
+    "status": "PASS",
+    "method": "Correlated socket inode from ADB-readable /proc/net/tcp and /proc/net/tcp6 with socket symlink targets in same-UID Native Termux process FDs.",
+    "8022": "PID 16337 FD 7 inode 135149 maps to 0.0.0.0:8022; PID 16337 FD 6 inode 135147 maps to [::]:8022.",
+    "8023": "PID 13449 FD 6 inode 117876 maps to 127.0.0.1:8023; PID 13449 is the sshd child of Runit service PID 13061."
+  },
+  "other_limits": [
+    "8022 external/LAN reachability was not tested; its actual wildcard bind is confirmed and remains a security risk.",
+    "Reboot readiness remains UNVERIFIED; no reboot was performed and explicit owner approval is still required.",
+    "8023 start/stop/restart/readiness/duplicate/failure lifecycle qualification was not run on the live service."
+  ],
+  "safety": {
+    "live_gui_or_service_lifecycle": "not performed",
+    "ssh_policy_or_configuration_change": "not performed",
+    "deployment_rollback": "not needed; deployment was not changed in this continuation; existing rollback preview remains historical/read-only evidence",
+    "proot_mutation": "not performed",
+    "reboot": "not performed"
+  },
+  "status": "PASS",
+  "evidence_limitations": [
+    "Reboot readiness UNVERIFIED pending explicit owner approval",
+    "8022 external reachability not tested",
+    "Live 8023 lifecycle qualification not performed"
+  ]
+}

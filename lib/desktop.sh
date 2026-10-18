@@ -3,6 +3,16 @@
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 _nt_session_file() { printf '%s/session.json\n' "$TERNUXX_STATE_DIR"; }
+
+_nt_adopt_live_session_state() {
+  [ -f "$TERNUXX_STATE_DIR/session.json" ] && return 0
+  [ -n "${TERMUX_VERSION:-}" ] && [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] || return 0
+  local discovered
+  discovered="$(python3 "$_TN_LIB_DIR/desktop_session_discovery.py" "$_TN_LIB_DIR/desktop-supervisor.sh" "$HOME" "$TERNUXX_STATE_DIR" 2>/dev/null)" || return 0
+  [ -n "$discovered" ] || return 0
+  TERNUXX_STATE_DIR="$discovered"
+  export TERNUXX_STATE_DIR
+}
 _nt_journal_begin() {
   python3 "$_TN_LIB_DIR/operation_journal.py" begin "$TERNUXX_STATE_DIR" "$1" "$2"
 }
@@ -148,6 +158,7 @@ nt_cmd_start() {
   [ -x "$supervisor" ] || { nt_fail "Ternuxx session supervisor is missing"; return 1; }
   [ -x "$owned_exec" ] || { nt_fail "Ternuxx owned-process launcher is missing"; return 1; }
 
+  _nt_adopt_live_session_state
   state_root="$TERNUXX_STATE_DIR"
   _nt_state_path_is_private || { nt_fail "State path must resolve inside Termux HOME"; return 1; }
   mkdir -p "$state_root" || { nt_fail "Cannot create Ternuxx state directory"; return 1; }
@@ -243,6 +254,7 @@ nt_cmd_start() {
 
 nt_cmd_stop() {
   nt_require_termux || return 1
+  _nt_adopt_live_session_state
   local file status supervisor_pid supervisor_ticks lock operation_id
   file="$(_nt_session_file)"
   if [ ! -f "$file" ]; then
@@ -340,6 +352,7 @@ nt_cmd_restart() {
 }
 
 nt_cmd_status() {
+  _nt_adopt_live_session_state
   local file status display supervisor_live x11_live desktop_live
   file="$(_nt_session_file)"
   if [ ! -f "$file" ]; then

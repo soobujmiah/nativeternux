@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -224,15 +225,30 @@ def apply(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
             "safety": {"read_only": False, "running_apps_stopped": False}}
 
 
-def launch(app_id: str, *, prefix: str, repo_root: str, env: dict[str, str]) -> dict[str, Any]:
+def launch(app_id: str, *, prefix: str, repo_root: str, env: dict[str, str],
+           session_owner: str = "ternuxx", display: str | None = None) -> dict[str, Any]:
     if app_id not in CATALOG:
         raise ShortcutError("unknown PRoot application ID")
+    if not isinstance(session_owner, str) or session_owner not in {"ternuxx", "ternux"}:
+        raise ShortcutError("unknown X11 session owner")
+    if session_owner == "ternux" and (display is None or not re.fullmatch(r":[0-9]{1,2}", display)):
+        raise ShortcutError("Ternux session requires an explicit X11 display")
+    if display is not None and not re.fullmatch(r":[0-9]{1,2}", display):
+        raise ShortcutError("unsupported X11 display")
     if CATALOG[app_id]["program"] == "manager":
+        if session_owner != "ternuxx":
+            raise ShortcutError("the shortcut manager is available only in the Ternuxx desktop")
         script = Path(repo_root) / "scripts" / "proot-x11-shortcut-manager.sh"
         command = [f"{prefix}/bin/bash", str(script)]
     else:
         script = Path(repo_root) / "scripts" / "proot-x11-app.sh"
-        command = [f"{prefix}/bin/bash", str(script), CATALOG[app_id]["program"]]
+        command = [f"{prefix}/bin/bash", str(script)]
+    if session_owner != "ternuxx" or display is not None:
+        command += ["--session", session_owner]
+        if display is not None:
+            command += ["--display", display]
+    if CATALOG[app_id]["program"] != "manager":
+        command += [CATALOG[app_id]["program"]]
     result = subprocess.run(command, env=env, check=False)
     if result.returncode != 0:
         raise ShortcutError("the PRoot GUI application did not complete successfully")

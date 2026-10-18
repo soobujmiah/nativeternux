@@ -60,3 +60,42 @@ A device node, driver library, Vulkan instance, or shader cache is not proof tha
 - Existing Debian PRoot rootfs/packages/workspace and `db`/`droot`, `x`/`x.sh`, `xgo`, `killx` were inspected read-only and left intact. PRoot-to-native SSH auth was unavailable, so tests ran through 8022 in Native Termux.
 - Evidence and procedures: `docs/evidence/2026-10-18-8023-reconciliation.md`, `docs/testing/8023-deployment-and-lifecycle.md`, `docs/architecture/SSH-LIFECYCLE.md`.
 - Next P3 action: establish listener ownership using a permitted source, then run the separate 8023 lifecycle qualification plan while preserving 8022. Reboot remains blocked on explicit owner approval. After P3 ownership gates, continue P4 existing-Debian adapter work without replacing or mutating the workstation.
+
+## Master direction and current preservation baseline (2026-10-18)
+
+- Follow the owner-approved direction: preserve and adapt the existing Debian PRoot; Native Termux is the host control plane. CLI, interactive Terminal/TUI, Web UI, and Graphical UI must share one service and operation contract. See PRODUCT-VISION.md, ARCHITECTURE.md, architecture/UNIFIED-WORKSTATION.md, and the established P0-P10 roadmap.
+- Read-only baseline at commit 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a: Debian 13.7, guest user sbj, existing rootfs at $PREFIX/var/lib/proot-distro/containers/debian/rootfs; pre-existing PID 16526 was left untouched. Full evidence: docs/evidence/2026-10-18-existing-workstation-baseline.md.
+- Ternux GitHub main was pinned at 9fda63162426f77ee575b5f6729d8799a30f51b7. Its docs cover Zink/Turnip, optional CPU/Vulkan llama.cpp, and experimental SM8735 HTP. Live host reports Zink/Vulkan with renderer unknown; installed v1.4.0 lacks the documented extension command. Optional extension source does not prove installation.
+- Owner clarified that Native aliases and ~/x.sh are intentionally customized for the active GUI workflow. Do not label that as stale drift or restore upstream defaults. Never rewrite x.sh, x, xgo, or killx. Ternuxx supports the explicit selected-app handoff described below without taking over session lifecycle.
+- db, droot, x, xgo, and killx semantics were inspected; existing PRoot and GUI workflows remain intact. P3 is active, P4 is planned. 8023 listener PID ownership and reboot readiness remain UNVERIFIED; 8022 remains the separate owner-started development channel.
+
+## Latest continuation — Native Ternux X11 app handoff (2026-10-18)
+
+- Work remains in Native Termux under $HOME/ternuxx, reached through owner-started 8022; soobujmiah/ternux is reference/runtime only.
+- Added optional proot.app.launch args session_owner=ternux and explicit display; CLI: ./ternuxx management app launch files --session ternux --display :1. Native Ternux status/backend and guest X11 reachability are checked read-only; no Ternux lifecycle or Android activity is invoked. Existing Ternuxx default is preserved.
+- Live Debian :1 glxinfo -B reports Mesa 25.0.7, Zink/Vulkan 1.4, Adreno 825 MESA_TURNIP, Accelerated yes. Native Ternux status itself reports renderer unknown. Thunar PID 17894 started on the existing session and remains owner-closeable; GUI visibility is not independently observed.
+- Focused tests 12/12; final full Native Termux suite 312/312; repo knowledge verification 0 findings. Evidence: docs/evidence/2026-10-18-ternux-session-app-handoff.md. P3 stays active and P4 planned; no reboot, session lifecycle action, x.sh/killx edit, or rootfs/package change.
+- Next: after the owner closes the Thunar test window, continue P4 with session selection and shortcut routing through shared interfaces, then bounded existing-Debian inventory. Keep P3 SSH listener ownership/lifecycle as a distinct gate.
+
+## 2026-10-18 live continuation: state path mismatch
+
+At HEAD 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a, default CLI status initially missed an active :1 desktop because the supervisor used a different recorded state directory. Added strict same-checkout state discovery with private HOME path and PID/start-time/command-marker/child validation; status/start/stop use it and ambiguous candidates fail closed. Native status now reports running; desktop lifecycle fixtures passed 12/12 and full suite 313/313. No live process was signaled. Thunar's prior PID is absent; visibility remains unknown. netstat TCP enumeration is unsupported and lsof exposed no listener rows, so 8022/8023 ownership stays UNVERIFIED. Evidence: docs/evidence/2026-10-18-live-session-state-reconciliation.json.
+
+
+## Latest verified continuation — state discovery, Doctor, and SSH binds (2026-10-18)
+
+- Base HEAD: `5232a20b63c5f9f66d8f3e74208ed5bff8c4340a`; native checkout `$HOME/ternuxx`; edits remain uncommitted. Continue implementation only through owner-started SSH 8022.
+- The desktop state discovery helper now reconciles CLI and read-only Doctor. Native status and Doctor verify the existing :1 supervisor, Termux:X11, and XFCE session. The full Native Termux suite passed 315/315 after the Doctor discovery regression test.
+- ADB read-only observation confirms actual 8022 wildcard listeners and 8023 loopback listener. Exact ownership is VERIFIED by matching ADB `/proc/net/tcp*` inodes against same-UID Native Termux FDs: 8022 PID 16337 FDs 6/7 map to IPv6/IPv4 wildcard sockets; 8023 PID 13449 FD 6 maps to `127.0.0.1:8023`, under Runit PID 13061. Keep the 8022 wildcard exposure visible; do not change SSH policy without owner approval.
+- Existing Debian PRoot process 16526 and native GUI :1 remain present. A scoped ADB screenshot visibly confirmed the floating XFCE desktop; the temporary capture was deleted after inspection. No reboot, live GUI/service lifecycle action, PRoot mutation, rollback, commit, or push occurred. Reboot readiness remains UNVERIFIED; 8022 external reachability was not tested.
+- Next: perform the separate 8023 lifecycle qualification without disrupting 8022 and without reboot. Reboot readiness requires explicit owner approval; 8022 external reachability is outside the checks performed so far. Details: `CURRENT_STATE.md` and `docs/evidence/2026-10-18-live-session-state-reconciliation.json`.
+
+
+## Latest verified continuation - 8023 lifecycle and shared state (2026-10-18)
+
+Base HEAD `5232a20b63c5f9f66d8f3e74208ed5bff8c4340a`; Native Termux checkout `$HOME/ternuxx`; changes remain uncommitted. The installed `$PREFIX/bin/ternuxx` shim now invokes the checkout through `$PREFIX/bin/bash`; legacy `$PREFIX/bin/nativeternux` and its library remain preserved. The 8023 run definition is deployed from source; stale lease PID 12951 was removed only after the kernel confirmed it absent. Current Runit service and loopback SSH banner pass; checkout and installed CLI share one active native.sshd lease. A key-only BatchMode attempt was denied, then owner-provided interactive authentication returned `authenticated-loopback-ok`. ADB socket inode 2372520 maps to managed sshd PID 22443 FD 6 and Runit ancestry; current authenticated readiness/listener ownership are VERIFIED. 8022 inode 135149 maps to PID 16337 FD 7 and remained active. Full Native Termux suite passed 324/324; focused entrypoint/service/wakelock tests passed 18/18. No reboot, commit, or push. Reboot remains UNVERIFIED. Evidence: `docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md`.
+
+
+## Current P3 continuation — 2026-10-19
+
+Native implementation is in `$HOME/ternuxx`, accessed through owner-started SSH 8022. Base HEAD is `5232a20b63c5f9f66d8f3e74208ed5bff8c4340a`; working tree includes existing uncommitted edits. Read-only PRoot inventory now adds host process candidates from `/proc`; PIDs are candidates only and do not prove distro/session ownership. Never enter Debian or control/stop a PRoot process as part of this status operation. Focused diagnostics and management tests passed 46/46; live `proot status --json` returned PID 16526 as an unverified host process candidate, and the full Native Termux suite passed 326/326. Continue with phase/docs synchronization and final diff review before selecting next P3 acceptance. Preserve 8022, managed 8023, Debian rootfs, native GUI `:1`, and launcher workflows. Reboot remains unverified and prohibited without explicit approval. Evidence: `docs/evidence/2026-10-19-proot-process-inventory.md`.

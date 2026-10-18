@@ -134,7 +134,7 @@ Planned interface:
 
 ```text
 ternuxx recovery status
-ternuxx proot status                            # inventory only; never enters Debian
+ternuxx proot status                            # distro inventory + readable host PRoot process candidates; never enters Debian
 ternuxx proot verify --distro debian --guest-user USER --display :N --backend zink|virgl
 ternuxx proot verify --distro debian --guest-user-from ternux-state --display :N --backend zink|virgl
 # verification also reports fixed native `ternux --json status` and `ternux --json backend show` fields when available

@@ -207,6 +207,77 @@ while True:
         self.assertFalse((self.tmp / ".X7-lock").exists())
         self.assertEqual(len(list(journal.glob("*.json"))), 3)
 
+    def test_live_session_state_is_discovered_after_default_path_changes(self) -> None:
+        start = self._run("start", "--display", "7")
+        self.assertEqual(start.returncode, 0, start.stderr)
+        original = self._state()
+        env = self.env.copy()
+        env.pop("TERNUXX_STATE_DIR")
+        status = subprocess.run(
+            ["bash", str(ROOT / "bin/ternuxx"), "--json", "status"],
+            env=env, text=True, capture_output=True, timeout=8, check=False,
+        )
+        self.assertEqual(status.returncode, 0, status.stderr)
+        self.assertEqual(json.loads(status.stdout)["status"], "running")
+        self.assertEqual(json.loads(status.stdout)["display"], ":7")
+        repeated = subprocess.run(
+            ["bash", str(ROOT / "bin/ternuxx"), "start", "--display", "7"],
+            env=env, text=True, capture_output=True, timeout=8, check=False,
+        )
+        self.assertEqual(repeated.returncode, 0, repeated.stderr)
+        self.assertEqual(self._state()["supervisor"], original["supervisor"])
+        stopped = subprocess.run(
+            ["bash", str(ROOT / "bin/ternuxx"), "stop"],
+            env=env, text=True, capture_output=True, timeout=8, check=False,
+        )
+        self.assertEqual(stopped.returncode, 0, stopped.stderr)
+        self.assertEqual(self._state()["status"], "stopped")
+
+    def test_ambiguous_live_session_states_are_not_adopted(self) -> None:
+        first = self._run("start", "--display", "7")
+        self.assertEqual(first.returncode, 0, first.stderr)
+        second_state = self.home / ".local/share/ternuxx-second-fixture"
+        second_state.mkdir(parents=True)
+        second_state.chmod(0o700)
+        (second_state / "desktop.log").touch(mode=0o600)
+        supervisor = subprocess.Popen(
+            ["bash", str(self.lib_dir / "desktop-supervisor.sh"), ":8",
+             str(second_state), str(self.tmp), str(self.bin_dir / "termux-x11"),
+             str(self.bin_dir / "dbus-launch"), str(self.bin_dir / "xfce4-session"),
+             str(self.lib_dir / "owned-exec.py")],
+            cwd=ROOT, env=self.env, stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        self.addCleanup(lambda: supervisor.poll() is None and supervisor.send_signal(15))
+        state_file = second_state / "session.json"
+        for _ in range(120):
+            try:
+                if json.loads(state_file.read_text())["status"] == "running":
+                    break
+            except (FileNotFoundError, ValueError, KeyError):
+                pass
+            if supervisor.poll() is not None:
+                self.fail("second isolated supervisor did not become ready")
+            import time
+            time.sleep(0.05)
+        else:
+            self.fail("second isolated supervisor did not report running")
+
+        default_env = self.env.copy()
+        default_env.pop("TERNUXX_STATE_DIR")
+        status = subprocess.run(
+            ["bash", str(ROOT / "bin/ternuxx"), "--json", "status"],
+            env=default_env, text=True, capture_output=True, timeout=8, check=False,
+        )
+        self.assertEqual(status.returncode, 0, status.stderr)
+        self.assertEqual(json.loads(status.stdout)["status"], "stopped")
+        self.assertEqual(self._state()["status"], "running")
+        self.assertEqual(json.loads(state_file.read_text())["status"], "running")
+
+        supervisor.send_signal(15)
+        supervisor.wait(timeout=8)
+        self.assertEqual(self._state()["status"], "running")
+
     def test_restart_releases_stop_lock_and_is_repeatable(self) -> None:
         first_start = self._run("start", "--display", "7")
         self.assertEqual(first_start.returncode, 0, first_start.stderr)

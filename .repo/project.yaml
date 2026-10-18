@@ -1,7 +1,7 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-18T14:14:30Z'
+generated_at: '2026-10-18T16:11:50Z'
 generated_by: tools/repo_knowledge collect
 version: 45b276a
 head:
@@ -15,27 +15,23 @@ phases:
   next: null
 build:
   status: unknown
-  run_id: '39134525690'
-  commit: ec9a6aff58f7ecd945700998da534d17e9c0ee52
+  run_id: null
+  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
   run_attempt: '1'
-  at: '2026-10-18T14:07:27Z'
-  timestamp_source: observed
-  workflow_name: Repository Knowledge Sync
-  event_type: push
-  actor: soobujmiah
-  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39134525690
+  at: '2026-10-18T14:14:30Z'
+  timestamp_source: commit
 test:
   status: passed
-  run_id: native-8022-20261018-final308
-  commit: 75582514640c8506b18608bbd849269160654cb0
+  run_id: null
+  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
   run_attempt: '1'
-  at: '2026-10-18T14:12:26Z'
-  timestamp_source: observed
-  summary: 308/308 Native Termux tests; final synchronized source, device lifecycle
-    and reboot not tested
+  at: '2026-10-18T14:14:30Z'
+  timestamp_source: commit
+  summary: 'Native Termux full suite: 324/324 passed in 67.025 seconds on dirty working
+    tree based at HEAD 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a; see docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md.'
 last_successful_build: null
 last_failed_build: null
 sync:
   status: ok
-  last_synced_at: '2026-10-18T14:14:30Z'
+  last_synced_at: '2026-10-18T16:11:50Z'
   source: local

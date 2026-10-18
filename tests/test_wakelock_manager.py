@@ -95,6 +95,34 @@ class WakeLockManagerTests(unittest.TestCase):
             self.assertEqual(record["boot_id"], new_boot)
             self.assertEqual(set(record["owners"]), {"proot.desktop"})
 
+    def test_acquire_clears_record_only_when_kernel_confirms_pid_absent(self) -> None:
+        with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):
+            root = self.state / "wakelock"
+            root.mkdir(parents=True)
+            record = {"schema_version": 1, "boot_id": self.boot, "last_error": None,
+                      "owners": {"native.sshd": {"pid": 99999999, "process_start": "1",
+                                                   "persistent": True, "reason": "native_sshd"}}}
+            (root / "owners.json").write_text(json.dumps(record))
+            with patch.object(wakelock_manager, "_process_start", side_effect=lambda pid: "caller-start" if pid == self.pid else None), \
+                 patch.object(wakelock_manager, "_pid_is_absent", return_value=True):
+                result = self.acquire("native.sshd", persistent=True)
+            self.assertEqual(result["state"], "acquired")
+            self.assertEqual(len(self.runner.calls), 1)
+
+    def test_acquire_fails_closed_if_unavailable_pid_may_exist(self) -> None:
+        with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):
+            root = self.state / "wakelock"
+            root.mkdir(parents=True)
+            record = {"schema_version": 1, "boot_id": self.boot, "last_error": None,
+                      "owners": {"native.sshd": {"pid": 99999999, "process_start": "1",
+                                                   "persistent": True, "reason": "native_sshd"}}}
+            (root / "owners.json").write_text(json.dumps(record))
+            with patch.object(wakelock_manager, "_process_start", side_effect=lambda pid: "caller-start" if pid == self.pid else None), \
+                 patch.object(wakelock_manager, "_pid_is_absent", return_value=False):
+                with self.assertRaisesRegex(wakelock_manager.WakeLockError, "identity is unavailable"):
+                    self.acquire("native.sshd", persistent=True)
+            self.assertEqual(self.runner.calls, [])
+
     def test_status_outcomes_match_strict_response_schema(self) -> None:
         schema = json.loads((ROOT / "schemas/wakelock-status.schema.json").read_text())
         with patch.object(wakelock_manager, "_boot_id", return_value=None):

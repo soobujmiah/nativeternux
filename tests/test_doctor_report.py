@@ -336,6 +336,24 @@ class DoctorReportTest(unittest.TestCase):
         self.assertFalse(verified)
         self.assertEqual(detail, "recorded process group/session does not match")
 
+    def test_session_report_discovers_one_verified_live_state_when_default_is_missing(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-doctor-discovered-") as temporary:
+            home = Path(temporary)
+            configured = home / ".local" / "share" / "ternuxx"
+            discovered = home / ".local" / "share" / "active-session"
+            discovered.mkdir(parents=True)
+            (discovered / "session.json").write_text(json.dumps({
+                "schema": 2, "owner": "ternuxx", "provider": "native",
+                "status": "running", "display": ":1",
+            }), encoding="utf-8")
+            doctor_report.FINDINGS.clear()
+            with patch.object(doctor_report.Path, "home", return_value=home), \
+                    patch.object(doctor_report, "discover_live_session_state", return_value=discovered):
+                doctor_report.check_session(configured)
+            observed = [finding["observed"] for finding in doctor_report.FINDINGS]
+            self.assertIn("recorded state=running, display=:1", observed)
+            self.assertNotIn("no session record at configured path; no unique verified live session state discovered", observed)
+
     def test_current_ternuxx_session_owner_is_accepted(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-doctor-current-owner-") as temporary:
             home = Path(temporary)

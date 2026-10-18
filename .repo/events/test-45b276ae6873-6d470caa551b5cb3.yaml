@@ -1,0 +1,8 @@
+event_id: test-45b276ae6873-6d470caa551b5cb3
+repository: soobujmiah/ternuxx
+commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+kind: test
+occurred_at: '2026-10-18T14:14:30Z'
+status: passed
+summary: 'Native Termux full suite: 323/323 passed on dirty working tree based at
+  HEAD 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a; see docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md.'

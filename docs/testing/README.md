@@ -51,3 +51,8 @@ CI may validate parser behavior, backend-independent unit logic, report schemas,
 ## Report and release rule
 
 Every future report must identify source commit and release, exact device/runtime/backend/model hashes and licenses, reproducible commands, expected/observed backend selection, correctness verdict, raw data, repeated-run methodology, thermal/memory limitations, and whether a human or CI executed it. Keep failed/incomplete runs. Publish benchmark charts only from the machine-readable raw results for reports with an explicit accepted verdict.
+
+## Native service procedures
+
+- [8023 preview-first deployment, lifecycle and recovery](8023-deployment-and-lifecycle.md)
+- [Current CLI/state reconciliation evidence](../evidence/2026-10-18-cli-entrypoint-state-reconciliation.md)

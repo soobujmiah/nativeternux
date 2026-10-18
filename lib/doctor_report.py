@@ -208,6 +208,24 @@ def proc_identity(role: str, record: object, *, proc_root: Path = Path("/proc"))
     return True, f"verified pid={pid}; process group/session not recorded"
 
 
+def discover_live_session_state(state_root: Path) -> Path | None:
+    """Return one verified live-session state path; never mutate or signal processes."""
+    helper = Path(__file__).with_name("desktop_session_discovery.py")
+    supervisor = Path(__file__).with_name("desktop-supervisor.sh")
+    result = run([sys.executable, str(helper), str(supervisor), str(Path.home()), str(state_root)])
+    if result is None or result.returncode != 0:
+        return None
+    candidate = Path(result.stdout.strip())
+    try:
+        home = Path.home().resolve(strict=True)
+        candidate = candidate.resolve(strict=True)
+        if candidate == home or home not in candidate.parents:
+            return None
+        return candidate
+    except OSError:
+        return None
+
+
 def check_session(state_root: Path) -> None:
     try:
         home = Path.home().resolve()
@@ -226,8 +244,16 @@ def check_session(state_root: Path) -> None:
     state_file = root / "session.json"
     state_presence = path_presence(state_file)
     if state_presence is False:
-        add("NTX-SESSION-010", "info", "native-session", "no session record", "Start a session when ready.")
-        return
+        discovered = discover_live_session_state(root)
+        if discovered is not None:
+            root = discovered
+            state_file = root / "session.json"
+            state_presence = path_presence(state_file)
+        if state_presence is False:
+            add("NTX-SESSION-010", "info", "native-session",
+                "no session record at configured path; no unique verified live session state discovered",
+                "Start a session when ready, or inspect ambiguous/unverifiable supervisor state manually.")
+            return
     if state_presence is None:
         add("NTX-SESSION-011", "warning", "native-session", "session record path is inaccessible",
             "Check access manually; Doctor does not change permissions.")
@@ -277,7 +303,13 @@ def check_process_inventory(state_root: Path, proc_root: Path = Path("/proc")) -
         root = state_root.expanduser().resolve(strict=True)
         if root == home or home not in root.parents:
             raise OSError("state path is outside HOME")
-        state = json.loads((root / "session.json").read_text(encoding="utf-8"))
+        state_file = root / "session.json"
+        if not state_file.is_file():
+            discovered = discover_live_session_state(root)
+            if discovered is not None:
+                root = discovered
+                state_file = root / "session.json"
+        state = json.loads(state_file.read_text(encoding="utf-8"))
         if isinstance(state, dict) and state.get("owner") == "ternuxx" and state.get("schema") == 2:
             for role in ("supervisor", "x11", "desktop"):
                 record = state.get(role)

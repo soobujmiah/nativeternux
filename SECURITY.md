@@ -38,3 +38,13 @@ No public release, supported device matrix, implemented remote service managemen
 ### 2026-10-18 managed SSH observation
 
 The 8023 managed service configuration and its startup log showed loopback `127.0.0.1:8023`; its effective configuration has password, public-key and keyboard-interactive authentication enabled, and root key login is not denied. The source/install run-file drift was reconciled without changing SSH configuration or restarting the active service. The Runit process ancestry was visible, but Android denied reads of `/proc/net/tcp` and `/proc/net/tcp6`, so socket-to-process ownership and listener exposure beyond the observed loopback configuration remain `UNVERIFIED`. Configuration text, an SSH banner, and a visible process tree are not listener ownership proof. The separately owner-started 8022 development channel remains a separate manual endpoint; its inspected configuration is wildcard-bound and password/keyboard-interactive enabled, while actual listener ownership and external reachability are unknown. Neither endpoint's exposure or authentication was changed in this gate. See the dated [8023 evidence](docs/evidence/2026-10-18-8023-reconciliation.md).
+
+
+### 2026-10-18 live bind follow-up
+
+ADB `toybox netstat -ltnp` on device `25053RT47C` observed actual 8022 listeners on `0.0.0.0` and `[::]`, and the managed 8023 listener on `127.0.0.1`. This confirms the bind addresses, not the owning PID. The 8022 wildcard listener is a current exposure risk; its authentication/configuration and active development workflow were not changed. Android shell lists no PID for either socket and denies `/proc/13449/fd`, so socket-to-process ownership remains UNVERIFIED. See the [dated evidence](docs/evidence/2026-10-18-live-session-state-reconciliation.json).
+
+
+### Listener ownership correlation follow-up — 2026-10-18
+
+The previous observation's ownership limitation is superseded for the current listener snapshot. ADB `/proc/net/tcp` and `/proc/net/tcp6` exposed socket inodes and binds; the Native Termux shell (UID 10490) could inspect same-UID process FDs. Inodes `135149` (IPv4 wildcard 8022) and `135147` (IPv6 wildcard 8022) map to sshd PID 16337 FDs 7 and 6. Inode `117876` (`127.0.0.1:8023`) maps to managed sshd PID 13449 FD 6 under Runit PID 13061. Thus listener ownership and binds are verified for this snapshot. The 8022 wildcard/password-enabled posture remains a risk; external reachability was not tested and no policy was changed. See the [live evidence](docs/evidence/2026-10-18-live-session-state-reconciliation.json).

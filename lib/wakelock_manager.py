@@ -42,6 +42,17 @@ def _boot_id() -> str | None:
     return continuity.read_boot_id()
 
 
+def _pid_is_absent(pid: int) -> bool:
+    """Confirm absence through the kernel before pruning an unreadable lease."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return True
+    except OSError:
+        return False
+    return False
+
+
 def _process_start(pid: int) -> str | None:
     try:
         data = Path(f"/proc/{pid}/stat").read_text(encoding="ascii")
@@ -257,19 +268,27 @@ def acquire(
         if existing is not None:
             observed_start = _process_start(existing["pid"])
             if observed_start is None:
-                raise WakeLockError("existing owner process identity is unavailable")
-            existing_alive = observed_start == existing["process_start"]
-            if existing["persistent"] == persistent and existing["pid"] == pid and existing["process_start"] == process_start:
-                return {"owner": owner, "state": "already_acquired", "owner_count": len(owners)}
-            if not existing_alive:
-                del owners[owner]
-            else:
-                raise WakeLockError("owner ID is already leased by another process")
+                if _pid_is_absent(existing["pid"]):
+                    del owners[owner]
+                    existing = None
+                else:
+                    raise WakeLockError("existing owner process identity is unavailable")
+            if existing is not None:
+                existing_alive = observed_start == existing["process_start"]
+                if existing["persistent"] == persistent and existing["pid"] == pid and existing["process_start"] == process_start:
+                    return {"owner": owner, "state": "already_acquired", "owner_count": len(owners)}
+                if not existing_alive:
+                    del owners[owner]
+                else:
+                    raise WakeLockError("owner ID is already leased by another process")
         # Remove dead process leases. Persistent service leases survive process
         # restarts until the service manager explicitly releases them.
         for old_owner, lease in list(owners.items()):
             observed_start = _process_start(lease["pid"])
             if observed_start is None:
+                if _pid_is_absent(lease["pid"]):
+                    del owners[old_owner]
+                    continue
                 raise WakeLockError("an existing owner process could not be inspected")
             if observed_start != lease["process_start"]:
                 del owners[old_owner]

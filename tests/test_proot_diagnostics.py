@@ -94,6 +94,32 @@ class ProotDiagnosticsTests(unittest.TestCase):
                 proot_diagnostics.resolve_ternux_guest_user(
                     home=home, which=lambda *_a, **_kw: "/prefix/bin/ternux", runner=runner)
 
+    def test_host_proot_process_observation_reports_candidate_without_ownership(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-proc-") as temp:
+            root = Path(temp)
+            proc = root / "4242"
+            proc.mkdir()
+            (proc / "comm").write_text("proot\n")
+            (proc / "cmdline").write_bytes(b"/prefix/bin/proot\0--rootfs=.\0/bin/bash\0")
+            (proc / "status").write_text("Name:\tproot\nPPid:\t41\n")
+            other = root / "4243"
+            other.mkdir()
+            (other / "comm").write_text("bash\n")
+            (other / "cmdline").write_bytes(b"/bin/bash\0")
+            report = proot_diagnostics.inspect_host_proot_processes(proc_root=root)
+        self.assertEqual(report, {"status": "observed", "visibility": "complete",
+            "ownership": "unverified", "processes": [
+                {"pid": 4242, "parent_pid": 41, "association": "unverified"}]})
+
+    def test_host_proot_observation_handles_empty_and_unreadable_proc(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-proc-") as temp:
+            root = Path(temp)
+            self.assertEqual(proot_diagnostics.inspect_host_proot_processes(proc_root=root),
+                {"status": "none", "visibility": "complete", "ownership": "unverified", "processes": []})
+        missing = proot_diagnostics.inspect_host_proot_processes(proc_root="/path/not/present")
+        self.assertEqual(missing["status"], "unknown")
+        self.assertEqual(missing["visibility"], "unavailable")
+
     def test_parses_installed_names_and_never_enters_guest(self):
         calls = []
         output = "Installed containers:\n  \x1b[32m* \x1b[0mDebian\nLog in with: proot-distro login <name>\n"
@@ -107,6 +133,7 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertEqual(report["status"], "installed")
         self.assertEqual(report["installed_distributions"], ["debian"])
         self.assertEqual(report["ownership"], "unverified")
+        self.assertEqual(report["host_proot_processes"]["ownership"], "unverified")
         self.assertFalse(report["guest_entered"])
         self.assertTrue(report["read_only"])
         self.assertEqual(calls[0][0], ["/prefix/bin/proot-distro", "list"])

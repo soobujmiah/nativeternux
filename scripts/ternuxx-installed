@@ -1,0 +1,11 @@
+#!/system/bin/sh
+# Thin installed entrypoint: always dispatch to the version-controlled checkout.
+set -u
+checkout="${TERNUXX_CHECKOUT:-$HOME/ternuxx}"
+command="$checkout/ternuxx"
+bash_bin="${PREFIX:-/data/data/com.termux/files/usr}/bin/bash"
+if [ ! -x "$command" ]; then
+  printf 'Ternuxx checkout CLI is unavailable at %s; set TERNUXX_CHECKOUT to its checkout.\n' "$command" >&2
+  exit 127
+fi
+exec "$bash_bin" "$command" "$@"

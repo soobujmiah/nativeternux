@@ -9,10 +9,26 @@ nt_cmd_management() {
       [ "$#" -gt 0 ] && shift
       case "$action" in
         launch)
-          [ "$#" -eq 1 ] || { nt_fail "Usage: ternuxx management app launch APP_ID"; return 2; }
+          [ "$#" -ge 1 ] || { nt_fail "Usage: ternuxx management app launch APP_ID [--session ternuxx|ternux --display :N]"; return 2; }
+          local app_id="$1" session_owner="" display=""
+          shift
+          while [ "$#" -gt 0 ]; do
+            case "$1" in
+              --session)
+                [ "$#" -ge 2 ] || { nt_fail "--session requires ternuxx or ternux"; return 2; }
+                session_owner="$2"; shift 2 ;;
+              --display)
+                [ "$#" -ge 2 ] || { nt_fail "--display requires an X11 display"; return 2; }
+                display="$2"; shift 2 ;;
+              *) nt_fail "Unknown app launch option: $1"; return 2 ;;
+            esac
+          done
           nt_require_termux || return 1
           nt_require_command python3 || return 1
-          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.app.launch --app-id "$1" --json
+          local -a launch_args=(--operation proot.app.launch --app-id "$app_id")
+          [ -z "$session_owner" ] || launch_args+=(--session-owner "$session_owner")
+          [ -z "$display" ] || launch_args+=(--display "$display")
+          python3 "$_TN_LIB_DIR/management_service.py" "${launch_args[@]}" --json
           ;;
         --help|-h|"") nt_help management ;;
         *) nt_fail "Unknown management app action: $action"; return 2 ;;

@@ -8,6 +8,12 @@ To preview and apply a rollback, run `ternuxx ssh deploy-rollback-preview --oper
 
 Seven fixture regression tests are in `tests/test_runit_deployment.py`. They cover read-only preview/diff, exact-plan confirmation, apply and explicit rollback, partial write with automatic restore, failed automatic restore followed by recovery, partial explicit rollback recovery, symlinked snapshot refusal, source/config validation, and the absence of Runit up/down/restart actions. These tests do not replace device deployment verification.
 
+## Current lifecycle qualification result (2026-10-18)
+
+The lifecycle plan below has now been executed for the current boot. Exact-plan stop/start passed twice, repeated-start was an idempotent no-op, authenticated loopback SSH returned exit 0, and ADB socket inode ownership matched the managed sshd FD and Runit ancestry. 8022 remained available. Fixture-only deployment failure, rollback, and recovery scenarios passed in the full suite. Reboot remains `UNVERIFIED`; no reboot was performed. See [dated gate evidence](../evidence/2026-10-18-8023-lifecycle-qualification.md) for exact PIDs, hashes, commands, and limits.
+
+The historical state mismatch described above is resolved: the installed CLI shim invokes the checkout through `$PREFIX/bin/bash`, and the run definition exports only `TERNUXX_STATE_DIR`. A stale lease for PID 12951 was removed only after the kernel confirmed the PID absent; ambiguous identity remains fail-closed. Current service and SSH banner pass, and both CLI paths report one active `native.sshd` lease. The key-only BatchMode probe was denied; a subsequent owner-provided interactive SSH probe returned `authenticated-loopback-ok`. ADB mapped 8023 inode 2372520 to managed sshd PID 22443 FD 6 and Runit ancestry. Current authenticated readiness and listener ownership are VERIFIED; see the follow-up evidence. The installed CLI shebang was then changed to Android `/system/bin/sh` and direct `execve` via Python exited 0; see the same continuation evidence. Full continuation evidence: [CLI/state reconciliation](../evidence/2026-10-18-cli-entrypoint-state-reconciliation.md). Android global wakelock state remains unobservable.
+
 ## Separate 8023 lifecycle qualification plan
 
 Run this only after a reviewed plan and preserve 8022 as the recovery channel. Do not reboot without explicit owner approval.

@@ -11,3 +11,18 @@
 - **Lifecycle qualification:** plan added; start/stop/restart/readiness/duplicate/failure cases remain untested on device. Reboot and reboot readiness remain `UNVERIFIED`; no reboot requested or performed.
 - **PRoot preservation:** Debian 13 installed and `sbj` login plus `db`/`droot`, `x`, `xgo`, `killx` were inspected read-only. No PRoot files, packages, launchers, GUI or rootfs changed.
 - **Cross-environment limit:** PRoot-to-native SSH authentication on both 8022 and 8023 was unavailable in this session; implementation and tests ran through authenticated Native Termux 8022 shell. No credential was stored. The active 8022 shell remained connected throughout reconciliation.
+
+
+## Read-only bind follow-up — 2026-10-18 15:35 UTC
+
+ADB `toybox netstat -ltnp` confirmed actual binds: 8022 on `0.0.0.0` and `[::]`, 8023 on `127.0.0.1`. The scoped process listing shows the 8022 sshd process and the 8023 Runit wrapper/sshd child under Termux UID. This is not socket ownership proof: `ss -ltnp` and `netstat -p` return no PID, and `/proc/13449/fd` is denied. The 8023 service remains running and was not restarted; 8022 was not changed. Exact socket-to-process mapping remains UNVERIFIED. See [continuation evidence](2026-10-18-live-session-state-reconciliation.json).
+
+
+## Listener ownership resolved — 2026-10-18
+
+The earlier permission limitation was resolved without elevated access or service changes. ADB shell supplied `/proc/net/tcp*` socket inodes, and Native Termux UID 10490 could read its own sshd FDs. PID 16337 FD 7 (`socket:[135149]`) matches `0.0.0.0:8022`; FD 6 (`socket:[135147]`) matches `[::]:8022`. Managed sshd PID 13449 FD 6 (`socket:[117876]`) matches `127.0.0.1:8023`; PID 13449 is the Runit service child (service PID 13061). Listener ownership and bind scope are VERIFIED for this observation. The service remained running and no lifecycle or SSH policy change was made. 8022 external reachability and reboot readiness remain untested; reboot still requires explicit owner approval. See [updated live evidence](2026-10-18-live-session-state-reconciliation.json).
+
+
+## Later lifecycle qualification supersedes earlier checkpoint
+
+The no-lifecycle and ownership-`UNVERIFIED` statements above accurately describe the earlier reconciliation checkpoint only. The later live qualification on the same date verified the 8023 listener inode against the managed sshd process, authenticated loopback readiness, two stop/start cycles, repeated-start idempotence, and 8022 continuity. It also fixed the service/CLI state variable mismatch through preview-first deployment. See [later lifecycle evidence](2026-10-18-8023-lifecycle-qualification.md). Reboot readiness remains `UNVERIFIED`.

@@ -8,6 +8,8 @@ Native Termux lets me run compatible tools directly and use Android or Termux fe
 
 I do not want Ternuxx to replace, trim, or break my current Ternux setup. Ternux is already useful to me, and it should stay independent.
 
-CPU is the baseline. I have seen the PRoot GPU setup work on my device, but the docs should say when the live renderer was last checked. A driver file or shader cache alone is not enough proof. NPU support is a goal; first we need to confirm that the right runtime works on my exact device.
+CPU is the baseline. I have seen the PRoot GPU setup work on my device, but the docs should say when the live renderer was last checked. A driver file or shader cache alone is not enough proof. NPU support is a goal; first we need to confirm that the right runtime works on my exact device. The existing Ternux repository also contains optional CPU/Vulkan llama.cpp work and an experimental SM8735 HTP path. Ternuxx should discover and integrate proven parts of that existing work rather than rebuild them; source documentation and installed device state must remain separate evidence.
+
+I want four ways to manage the same workstation: CLI, an interactive Terminal/TUI, Web UI, and Graphical UI. Each must call the same management service and operation contract, so validation, authorization, provider selection, state, journal, and recovery behave consistently. The interfaces are different clients, not separate management systems.
 
 I want the documentation and compatibility research done before feature implementation. Then we can build phase by phase and update the docs as the work changes. Keep device checks read-only unless I explicitly authorize a specific change.
