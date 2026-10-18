@@ -4,7 +4,7 @@
 - **Project type:** `cli-tool` with automation capability; see `PROJECT_CLASSIFICATION.yaml`.
 - **Current phase:** P3 — Doctor, management, and recovery. Generated milestone details are in [Phase status](docs/PHASE-STATUS.md).
 - **Implementation authority:** source in this repository. Product and technical evidence are documented under `docs/`.
-- **Mechanical Git/CI status:** see generated [`.repo/STATUS.md`](.repo/STATUS.md) and current GitHub Actions runs. No product build or remote CI result is claimed for this unpushed worktree. Local tests are listed below; they do not qualify Android hardware. Do not copy generated commit/build/test values here.
+- **Mechanical Git/CI status:** see generated [`.repo/STATUS.md`](.repo/STATUS.md) and current GitHub Actions runs. No product build or remote CI result is claimed for the current source. Local tests are listed below; they do not qualify Android hardware. Do not copy generated commit/build/test values here.
 
 ## Current continuation — 8023 reconciliation (2026-10-18)
 
