@@ -2,14 +2,14 @@
 # ternuxx -- deterministic status
 
 - Repository: `soobujmiah/ternuxx`
-- Generated at: 2026-10-18T14:07:27Z (by `tools/repo_knowledge collect`)
-- Version: `ec9a6af`
-- Head: `ec9a6aff58f7ecd945700998da534d17e9c0ee52` on `main` (2026-10-18T14:06:44Z)
+- Generated at: 2026-10-18T14:10:47Z (by `tools/repo_knowledge collect`)
+- Version: `7558251`
+- Head: `75582514640c8506b18608bbd849269160654cb0` on `main` (2026-10-18T14:09:58Z)
 
 ## Build / test
 
 - Build: **unknown** (run `39134525690`)
-- Test: **passed**
+- Test: **passed** -- 308/308 Native Termux tests via owner-started SSH 8022; device lifecycle and reboot not tested
 
 ## Phases
 - Not configured (no `.repo/phases.yaml`).
@@ -17,5 +17,5 @@
 ## Sync
 
 - Status: ok
-- Source: ci
-- Last synced at: 2026-10-18T14:07:27Z
+- Source: local
+- Last synced at: 2026-10-18T14:10:47Z

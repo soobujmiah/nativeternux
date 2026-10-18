@@ -1,13 +1,13 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-18T14:07:27Z'
+generated_at: '2026-10-18T14:10:47Z'
 generated_by: tools/repo_knowledge collect
-version: ec9a6af
+version: '7558251'
 head:
-  commit: ec9a6aff58f7ecd945700998da534d17e9c0ee52
+  commit: 75582514640c8506b18608bbd849269160654cb0
   branch: main
-  committed_at: '2026-10-18T14:06:44Z'
+  committed_at: '2026-10-18T14:09:58Z'
 phases:
   source: not_configured
   completed: []
@@ -26,19 +26,16 @@ build:
   run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39134525690
 test:
   status: passed
-  run_id: '39134525690'
-  commit: ec9a6aff58f7ecd945700998da534d17e9c0ee52
+  run_id: native-8022-20261018-308
+  commit: 75582514640c8506b18608bbd849269160654cb0
   run_attempt: '1'
-  at: '2026-10-18T14:07:27Z'
+  at: '2026-10-18T14:10:47Z'
   timestamp_source: observed
-  workflow_name: Repository Knowledge Sync
-  event_type: push
-  actor: soobujmiah
-  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39134525690
-  summary: null
+  summary: 308/308 Native Termux tests via owner-started SSH 8022; device lifecycle
+    and reboot not tested
 last_successful_build: null
 last_failed_build: null
 sync:
   status: ok
-  last_synced_at: '2026-10-18T14:07:27Z'
-  source: ci
+  last_synced_at: '2026-10-18T14:10:47Z'
+  source: local
