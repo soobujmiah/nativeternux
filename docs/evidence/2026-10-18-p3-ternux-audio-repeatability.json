@@ -1,0 +1,559 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T00:47:51Z",
+  "verification_finished_at_utc": "2026-10-18T01:22:36Z",
+  "scope": "read-only repeatability check of the existing Termux PulseAudio bridge from the Debian PRoot guest",
+  "target": {
+    "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+    "native_desktop_status": "running",
+    "display": ":1",
+    "native_audio_owner": "external",
+    "guest": "Debian PRoot",
+    "guest_user": "sbj",
+    "companion_version": "1.4.0"
+  },
+  "endpoint": {
+    "configured_by_diagnostic": "tcp:127.0.0.1:4713",
+    "native_server_name": "pulseaudio",
+    "native_default_sink": "OpenSL_ES_sink",
+    "native_tcp_module": {
+      "present": true,
+      "listen_address": "127.0.0.1",
+      "port": 4713,
+      "auth_ip_acl": "127.0.0.1",
+      "anonymous_auth": true
+    }
+  },
+  "observations": [
+    {
+      "window_utc": "2026-10-18T00:47:51Z/2026-10-18T00:47:53Z",
+      "native_status": "running on :1",
+      "guest_verification": "partial",
+      "guest_x11": "reachable",
+      "guest_audio": "unavailable",
+      "guest_renderer": "zink Vulkan 1.4 (Adreno 825, MESA_TURNIP)"
+    },
+    {
+      "window_utc": "after 00:47:53Z and before 00:51:29Z",
+      "consecutive_guest_verifier_runs": 5,
+      "result_each_run": "partial",
+      "audio_each_run": "unavailable",
+      "renderer_each_run": "zink_turnip"
+    },
+    {
+      "window_utc": "2026-10-18T00:51:29Z/2026-10-18T00:51:32Z",
+      "native_loopback_tcp_probe": "connected",
+      "guest_loopback_tcp_probe": "connected",
+      "guest_pactl_info_exit_code": 0,
+      "guest_verification": "complete",
+      "guest_audio": "reachable",
+      "guest_x11": "reachable",
+      "guest_renderer": "zink_turnip"
+    },
+    {
+      "window_utc": "after 00:51:32Z and before 00:52:15Z",
+      "consecutive_guest_verifier_runs": 10,
+      "complete_runs": 10,
+      "audio_reachable_runs": 10,
+      "x11_reachable_runs": 10,
+      "zink_turnip_runs": 10
+    },
+    {
+      "window_utc": "after 00:52:15Z and before 00:55:01Z",
+      "silent_guest_pcm_client": "invoked for one second of zero-valued PCM; PulseAudio returned Connection failure: Connection refused before accepting the stream",
+      "audio_stream_accepted": false
+    },
+    {
+      "window_utc": "2026-10-18T00:55:01Z/2026-10-18T00:55:03Z",
+      "ternux_host_status": "Overall running; Termux:X11 running; PulseAudio stopped; VirGL stopped; launcher present",
+      "native_pactl_info": "reachable; server name pulseaudio; default sink OpenSL_ES_sink",
+      "native_tcp_probe": "connected",
+      "guest_tcp_probe": "connected",
+      "guest_pactl_info": "reachable",
+      "guest_verification": "complete; X11 reachable; audio reachable; Zink/Turnip selected"
+    },
+    {
+      "window_utc": "2026-10-18T01:03:35Z/2026-10-18T01:03:37Z",
+      "ternuxx_cli": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+      "result": "partial",
+      "native_ternux_status": {
+        "availability": "available",
+        "identity": "unverified",
+        "version": "1.4.0",
+        "status": "running",
+        "x11_running": "yes",
+        "pulseaudio": "stopped",
+        "virgl": "stopped",
+        "launcher": "present"
+      },
+      "guest_checks": {
+        "x11": "reachable",
+        "audio": "unavailable",
+        "renderer_class": "zink_turnip"
+      },
+      "read_only": true
+    },
+    {
+      "window_utc": "2026-10-18T01:06:34Z/2026-10-18T01:08:30Z",
+      "native_ternux_readonly_info": {
+        "version": "1.4.0",
+        "configured_backend": "zink",
+        "host_renderer": "unknown",
+        "vulkan": "yes"
+      },
+      "ternuxx_guest_verification": {
+        "status": "partial",
+        "native_status_backend": "zink",
+        "native_status_renderer": "unknown",
+        "guest_renderer": "zink_turnip",
+        "guest_display": ":1",
+        "guest_audio": "unavailable",
+        "profile_owner": "unverified"
+      },
+      "user_and_configured_distro": "not exposed by the queried typed status/backend output; remain unverified",
+      "read_only": true
+    },
+    {
+      "recorded_at_utc": "2026-10-18T01:16:27Z",
+      "ternuxx_cli": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+      "result": "partial",
+      "native_ternux_status": {
+        "availability": "available",
+        "identity": "unverified",
+        "version": "1.4.0",
+        "status": "running",
+        "x11_running": "yes",
+        "pulseaudio": "stopped",
+        "virgl": "stopped",
+        "launcher": "present",
+        "configured_backend": "zink",
+        "host_renderer": "unknown",
+        "vulkan": "yes"
+      },
+      "guest_checks": {
+        "display": ":1",
+        "x11": "reachable",
+        "audio": "unavailable",
+        "renderer_class": "zink_turnip",
+        "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))"
+      },
+      "guest_profile_owner": "unverified",
+      "read_only": true,
+      "mutation_reported": false
+    },
+    {
+      "recorded_at_utc": "2026-10-18T01:16:53Z",
+      "native_pactl_info_exit_code": 0,
+      "native_audio": {
+        "server_name": "pulseaudio",
+        "default_sink": "OpenSL_ES_sink"
+      },
+      "native_tcp_127001_4713": "connected",
+      "native_ternux_process_status": "stopped per immediately preceding bounded guest report",
+      "guest_audio_control_status": "unavailable per immediately preceding bounded guest report",
+      "device_mutations": [],
+      "read_only": true,
+      "interpretation": "Control-protocol reachability only; no sound stream was sent and no audio service or configuration was changed."
+    },
+    {
+      "recorded_at_utc": "2026-10-18T01:17:08Z",
+      "after_native_endpoint_check": "native pactl info succeeded (PulseAudio/OpenSL_ES_sink) and 127.0.0.1:4713 accepted TCP",
+      "ternuxx_cli": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+      "result": "complete",
+      "native_ternux_status": {
+        "status": "running",
+        "x11_running": "yes",
+        "pulseaudio": "stopped",
+        "configured_backend": "zink",
+        "host_renderer": "unknown",
+        "identity": "unverified"
+      },
+      "guest_checks": {
+        "display": ":1",
+        "x11": "reachable",
+        "audio": "reachable",
+        "renderer_class": "zink_turnip",
+        "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))"
+      },
+      "guest_profile_owner": "unverified",
+      "read_only": true,
+      "mutation_reported": false
+    },
+    {
+      "recorded_at_utc": "2026-10-18T01:18:09Z",
+      "scope": "three sequential bounded PRoot status probes correlated with native PulseAudio endpoint status",
+      "command": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+      "runs": [
+        {
+          "run": 1,
+          "started_at_utc": "2026-10-18T01:18:02Z",
+          "finished_at_utc": "2026-10-18T01:18:04Z",
+          "exit_code": 0,
+          "result": "partial",
+          "guest_display": ":1",
+          "guest_audio": "unavailable",
+          "guest_x11": "reachable",
+          "guest_renderer_class": "zink_turnip",
+          "guest_renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+          "native_ternux_pulseaudio_process_status": "stopped",
+          "native_pactl_exit_code": 0,
+          "native_pactl": {
+            "server_name": "pulseaudio",
+            "default_sink": "OpenSL_ES_sink"
+          },
+          "native_tcp_127001_4713": "connected",
+          "profile_owner": "unverified",
+          "read_only": true,
+          "guest_write_command_invoked": false,
+          "services_started": false,
+          "services_stopped": false
+        },
+        {
+          "run": 2,
+          "started_at_utc": "2026-10-18T01:18:05Z",
+          "finished_at_utc": "2026-10-18T01:18:07Z",
+          "exit_code": 0,
+          "result": "complete",
+          "guest_display": ":1",
+          "guest_audio": "reachable",
+          "guest_x11": "reachable",
+          "guest_renderer_class": "zink_turnip",
+          "guest_renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+          "native_ternux_pulseaudio_process_status": "stopped",
+          "native_pactl_exit_code": 0,
+          "native_pactl": {
+            "server_name": "pulseaudio",
+            "default_sink": "OpenSL_ES_sink"
+          },
+          "native_tcp_127001_4713": "connected",
+          "profile_owner": "unverified",
+          "read_only": true,
+          "guest_write_command_invoked": false,
+          "services_started": false,
+          "services_stopped": false
+        },
+        {
+          "run": 3,
+          "started_at_utc": "2026-10-18T01:18:07Z",
+          "finished_at_utc": "2026-10-18T01:18:09Z",
+          "exit_code": 0,
+          "result": "complete",
+          "guest_display": ":1",
+          "guest_audio": "reachable",
+          "guest_x11": "reachable",
+          "guest_renderer_class": "zink_turnip",
+          "guest_renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+          "native_ternux_pulseaudio_process_status": "stopped",
+          "native_pactl_exit_code": 0,
+          "native_pactl": {
+            "server_name": "pulseaudio",
+            "default_sink": "OpenSL_ES_sink"
+          },
+          "native_tcp_127001_4713": "connected",
+          "profile_owner": "unverified",
+          "read_only": true,
+          "guest_write_command_invoked": false,
+          "services_started": false,
+          "services_stopped": false
+        }
+      ],
+      "summary": {
+        "complete": 2,
+        "partial": 1,
+        "guest_audio_reachable": 2,
+        "native_pactl_reachable": 3,
+        "native_tcp_reachable": 3,
+        "zink_turnip": 3
+      },
+      "device_mutations": [],
+      "limitations": [
+        "This measures control-protocol status, not audible playback.",
+        "No sound stream, service action, config change, package transaction, or guest write command was used.",
+        "PRoot profile ownership remains unverified."
+      ]
+    },
+    {
+      "recorded_at_utc": "2026-10-18T01:19:32Z",
+      "scope": "three bounded read-only guest status probes with concurrent native loopback TCP sampling and bracketing pactl checks",
+      "command": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+      "runs": [
+        {
+          "run": 1,
+          "started_at_utc": "2026-10-18T01:19:25Z",
+          "finished_at_utc": "2026-10-18T01:19:28Z",
+          "exit_code": 0,
+          "result": "complete",
+          "guest_audio": "reachable",
+          "guest_x11": "reachable",
+          "renderer_class": "zink_turnip",
+          "native_ternux_pulseaudio_process_status": "stopped",
+          "native_before": {
+            "at_utc": "2026-10-18T01:19:25Z",
+            "pactl": {
+              "exit_code": 0,
+              "summary": {
+                "server_name": "pulseaudio",
+                "default_sink": "OpenSL_ES_sink"
+              }
+            },
+            "tcp": "connected"
+          },
+          "native_tcp_samples_during_guest_probe": [
+            {
+              "at_utc": "2026-10-18T01:19:25Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:26Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:26Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:27Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:27Z",
+              "tcp": "connected"
+            }
+          ],
+          "native_after": {
+            "at_utc": "2026-10-18T01:19:28Z",
+            "pactl": {
+              "exit_code": 0,
+              "summary": {
+                "server_name": "pulseaudio",
+                "default_sink": "OpenSL_ES_sink"
+              }
+            },
+            "tcp": "connected"
+          },
+          "profile_owner": "unverified",
+          "read_only": true,
+          "mutations": {
+            "guest_write_command_invoked": false,
+            "host_lifecycle_started": false,
+            "host_lifecycle_stopped": false,
+            "packages_changed": false,
+            "services_started": false,
+            "services_stopped": false
+          }
+        },
+        {
+          "run": 2,
+          "started_at_utc": "2026-10-18T01:19:28Z",
+          "finished_at_utc": "2026-10-18T01:19:30Z",
+          "exit_code": 0,
+          "result": "complete",
+          "guest_audio": "reachable",
+          "guest_x11": "reachable",
+          "renderer_class": "zink_turnip",
+          "native_ternux_pulseaudio_process_status": "stopped",
+          "native_before": {
+            "at_utc": "2026-10-18T01:19:28Z",
+            "pactl": {
+              "exit_code": 0,
+              "summary": {
+                "server_name": "pulseaudio",
+                "default_sink": "OpenSL_ES_sink"
+              }
+            },
+            "tcp": "connected"
+          },
+          "native_tcp_samples_during_guest_probe": [
+            {
+              "at_utc": "2026-10-18T01:19:28Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:28Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:29Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:29Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:30Z",
+              "tcp": "connected"
+            }
+          ],
+          "native_after": {
+            "at_utc": "2026-10-18T01:19:30Z",
+            "pactl": {
+              "exit_code": 0,
+              "summary": {
+                "server_name": "pulseaudio",
+                "default_sink": "OpenSL_ES_sink"
+              }
+            },
+            "tcp": "connected"
+          },
+          "profile_owner": "unverified",
+          "read_only": true,
+          "mutations": {
+            "guest_write_command_invoked": false,
+            "host_lifecycle_started": false,
+            "host_lifecycle_stopped": false,
+            "packages_changed": false,
+            "services_started": false,
+            "services_stopped": false
+          }
+        },
+        {
+          "run": 3,
+          "started_at_utc": "2026-10-18T01:19:30Z",
+          "finished_at_utc": "2026-10-18T01:19:32Z",
+          "exit_code": 0,
+          "result": "complete",
+          "guest_audio": "reachable",
+          "guest_x11": "reachable",
+          "renderer_class": "zink_turnip",
+          "native_ternux_pulseaudio_process_status": "stopped",
+          "native_before": {
+            "at_utc": "2026-10-18T01:19:30Z",
+            "pactl": {
+              "exit_code": 0,
+              "summary": {
+                "server_name": "pulseaudio",
+                "default_sink": "OpenSL_ES_sink"
+              }
+            },
+            "tcp": "connected"
+          },
+          "native_tcp_samples_during_guest_probe": [
+            {
+              "at_utc": "2026-10-18T01:19:30Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:31Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:31Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:32Z",
+              "tcp": "connected"
+            },
+            {
+              "at_utc": "2026-10-18T01:19:32Z",
+              "tcp": "connected"
+            }
+          ],
+          "native_after": {
+            "at_utc": "2026-10-18T01:19:32Z",
+            "pactl": {
+              "exit_code": 0,
+              "summary": {
+                "server_name": "pulseaudio",
+                "default_sink": "OpenSL_ES_sink"
+              }
+            },
+            "tcp": "connected"
+          },
+          "profile_owner": "unverified",
+          "read_only": true,
+          "mutations": {
+            "guest_write_command_invoked": false,
+            "host_lifecycle_started": false,
+            "host_lifecycle_stopped": false,
+            "packages_changed": false,
+            "services_started": false,
+            "services_stopped": false
+          }
+        }
+      ],
+      "summary": {
+        "complete": 3,
+        "partial": 0,
+        "guest_audio_reachable": 3,
+        "host_tcp_samples": 15,
+        "host_tcp_unavailable_samples": 0,
+        "host_tcp_before_after_all_connected": true,
+        "pactl_before_after_all_reachable": true,
+        "zink_turnip": 3
+      },
+      "mutations": {
+        "audio_stream_sent": false,
+        "service_action": false,
+        "config_changed": false,
+        "package_changed": false,
+        "guest_write_command": false
+      }
+    },
+    {
+      "recorded_at_utc": "2026-10-18T01:22:36Z",
+      "command": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+      "exit_code": 0,
+      "status": "complete",
+      "native_pulseaudio_endpoint": {
+        "default_sink": "OpenSL_ES_sink",
+        "server_name": "pulseaudio",
+        "status": "available"
+      },
+      "native_ternux_status": {
+        "status": "running",
+        "pulseaudio": "stopped",
+        "backend": "zink",
+        "renderer": "unknown",
+        "vulkan": "yes",
+        "identity": "unverified"
+      },
+      "guest_checks": {
+        "audio": "reachable",
+        "observed_display": ":1",
+        "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+        "renderer_class": "zink_turnip",
+        "x11": "reachable"
+      },
+      "profile_owner": "unverified",
+      "read_only": true,
+      "safety": {
+        "guest_write_command_invoked": false,
+        "host_lifecycle_started": false,
+        "host_lifecycle_stopped": false,
+        "packages_changed": false,
+        "services_started": false,
+        "services_stopped": false
+      }
+    }
+  ],
+  "interpretation": {
+    "audio_bridge": "time-variable across windows: prior windows include guest failures, a 10/10 pass window, and a refused silent PCM stream. In the latest concurrent window, 3/3 guest checks passed while all 15 native TCP samples and every bracketing pactl check passed; native process-only status still said PulseAudio stopped. This qualifies a short control-connectivity window only, not long-term reliability or audible playback.",
+    "audible_playback": "not tested; a one-second zero-valued PCM stream was attempted, but the client received connection refused before the stream was accepted",
+    "cause_of_initial_failures": "unknown; Ternux host status reports PulseAudio stopped while native pactl and loopback TCP probes can succeed; no service or configuration change was made",
+    "unix_socket_alternative": "read-only connection probe unavailable; no path or authentication change was attempted"
+  },
+  "safety": {
+    "pulse_module_changed": false,
+    "service_started_or_stopped": false,
+    "package_changed": false,
+    "desktop_or_guest_lifecycle_changed": false,
+    "guest_files_written": false,
+    "credentials_or_cookie_recorded": false,
+    "silent_audio_client_invoked": true,
+    "audible_audio_stream_accepted": false,
+    "native_ternux_status_command_invoked": true,
+    "native_ternux_lifecycle_invoked": false
+  },
+  "limits": [
+    "The successful checks establish PulseAudio control-protocol reachability only, not audible playback or output-device routing from a guest application.",
+    "The previous unavailable result is preserved as an observed failure; it is not overwritten by this successful run.",
+    "This does not establish Ternux profile ownership, workload routing, or P3/P4 completion.",
+    "The 01:16Z check again found guest PulseAudio unavailable while X11 and Zink/Turnip were reachable; native PulseAudio process status still said stopped. This is another failed control-reachability observation, not a sound playback result.",
+    "The newest native pactl/TCP endpoint observation is recorded separately and must not be interpreted as an audible playback check.",
+    "The 01:17Z successful guest verification proves control-protocol reachability at that moment only; no audible stream was sent and audio reliability remains unqualified.",
+    "For the latest three-run window, native pactl/TCP were sampled immediately after each guest run rather than concurrently; their success does not prove the endpoint was reachable at the exact instant of the failed guest check.",
+    "The concurrent 01:19Z sample establishes only a seven-second success window; earlier failures remain valid and no guest sound playback was tested."
+  ]
+}

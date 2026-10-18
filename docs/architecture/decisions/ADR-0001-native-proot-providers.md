@@ -10,7 +10,7 @@ The owner wants a phone-first workstation that uses Termux-native applications a
 
 ## Decision
 
-Model native Termux and the existing Ternux Debian PRoot as separate, first-class providers. Keep NativeTernux's host management and guest workload adapters additive and opt-in. Hybrid mode routes selected work through scoped arguments, files, and display/audio endpoints. One owner controls each display/session. Preserve Ternux's launcher, rootfs, GPU environment, and lifecycle; use a separately reviewed adapter that tracks only processes it starts.
+Model native Termux and the existing Ternux Debian PRoot as separate, first-class providers. Keep Ternuxx's host management and guest workload adapters additive and opt-in. Hybrid mode routes selected work through scoped arguments, files, and display/audio endpoints. One owner controls each display/session. Preserve Ternux's launcher, rootfs, GPU environment, and lifecycle; use a separately reviewed adapter that tracks only processes it starts.
 
 ## Alternatives considered
 
@@ -35,6 +35,6 @@ The project must manage two package/state namespaces, validate environment hando
 
 ## Evidence
 
-- Owner direction in the NativeTernux project brief.
-- NativeTernux `docs/ARCHITECTURE.md`, `docs/HYBRID-INTEGRATION.md`, and `docs/PROOT-GPU.md`.
-- Read-only inspection of the existing Ternux source and launcher, as summarized in NativeTernux research; no live PRoot renderer rerun was made for this decision.
+- Owner direction in the Ternuxx project brief.
+- Ternuxx `docs/ARCHITECTURE.md`, `docs/HYBRID-INTEGRATION.md`, and `docs/PROOT-GPU.md`.
+- Read-only inspection of the existing Ternux source and launcher, as summarized in Ternuxx research; no live PRoot renderer rerun was made for this decision.

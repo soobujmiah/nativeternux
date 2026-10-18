@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:wakelock-status:v1",
+  "title": "Ternuxx Wake Lock ownership status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "managed_owners",
+    "stale_owners",
+    "unknown_owners",
+    "owner_count",
+    "coordinator_state",
+    "platform_lock_state",
+    "ownership_scope",
+    "boot_id_relation",
+    "acquire_command_available",
+    "release_command_available",
+    "last_error",
+    "safety"
+  ],
+  "properties": {
+    "component": {
+      "const": "wakelock_manager"
+    },
+    "managed_owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "stale_owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "unknown_owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "owner_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "coordinator_state": {
+      "enum": [
+        "held_by_registered_owners",
+        "no_active_registered_owners"
+      ]
+    },
+    "platform_lock_state": {
+      "const": "unknown"
+    },
+    "ownership_scope": {
+      "const": "Ternuxx_registered_owners_only; Android lock remains app_global"
+    },
+    "boot_id_relation": {
+      "enum": [
+        "match",
+        "different",
+        "unknown"
+      ]
+    },
+    "acquire_command_available": {
+      "type": "boolean"
+    },
+    "release_command_available": {
+      "type": "boolean"
+    },
+    "last_error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_only",
+        "acquire_or_release_invoked"
+      ],
+      "properties": {
+        "read_only": {
+          "const": true
+        },
+        "acquire_or_release_invoked": {
+          "const": false
+        }
+      }
+    }
+  }
+}

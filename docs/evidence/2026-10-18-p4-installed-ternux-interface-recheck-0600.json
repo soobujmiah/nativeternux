@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_installed_ternux_cli_interface_recheck",
+  "observed_at_utc": "2026-10-18T05:56:13+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "read-only installed Ternux version/help/backend display; no PRoot launch, package, service, desktop, or network action",
+  "checks": [
+    {
+      "command": [
+        "ternux",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "ternux v1.4.0\nhttps://github.com/soobujmiah/ternux",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "ternux",
+        "--help"
+      ],
+      "exit_code": 0,
+      "stdout": "ternux — Linux desktop for Android with Zink and VirGL graphics routes\nv1.4.0 · https://github.com/soobujmiah/ternux\n\nUsage:\n  ternux <command> [options] [subcommand]\n\nCommands:\n  install    Install full desktop environment\n  start      Start the desktop session\n  stop       Stop the desktop session\n  restart    Restart the desktop session\n  doctor     Run system diagnostics  [--json]\n  repair     Auto-fix common issues\n  verify     Verify installation      [--json]\n  benchmark  Run GPU benchmarks       [--json]\n  profile    Device hardware profile  [--json]\n  backend    GPU backend management   [--json]\n  info       System information       [--json]\n  state      Installation state       [--json]\n  logs       View/manage log files\n  update     Self-update ternux CLI\n  uninstall  Remove ternux components\n\nGlobal options:\n  --help, -h    Show help for any command\n  --json        Machine-readable JSON output\n  --verbose     Show detailed debug output\n  --quiet       Suppress non-critical messages\n\nExamples:\n  ternux doctor --json     machine-readable diagnostics\n  ternux start             Launch the desktop\n  ternux backend set zink  Switch GPU backend\n  ternux profile save      Snapshot device config\n\nRun 'ternux <command> --help' for detailed help.",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "ternux",
+        "--json",
+        "backend",
+        "show"
+      ],
+      "exit_code": 0,
+      "stdout": {
+        "command": "backend",
+        "status": "ok",
+        "timestamp": "2026-10-18T05:56:13Z",
+        "version": "1.4.0",
+        "gpu": "Adreno (Adreno825)",
+        "backend": "zink",
+        "renderer": "unknown",
+        "vulkan": "yes",
+        "available_backends": "zink,virgl"
+      },
+      "stderr": ""
+    }
+  ],
+  "generic_workload_command_advertised": false
+}

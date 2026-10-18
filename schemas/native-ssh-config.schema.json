@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:native-ssh-config:v1",
+  "title": "Ternuxx native SSH desired configuration",
+  "description": "Non-secret desired policy only. Key bytes, passwords, raw sshd configuration, and private paths are forbidden.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "provider",
+    "service_owner",
+    "login_principal",
+    "endpoint",
+    "authentication",
+    "boot",
+    "wakelock",
+    "migration"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "provider": {"const": "native_termux"},
+    "service_owner": {"enum": ["external_unmanaged", "ternuxx_managed"]},
+    "login_principal": {"const": "termux_app_user"},
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bind_policy", "port"],
+      "properties": {
+        "bind_policy": {"enum": ["loopback", "explicit_address"]},
+        "address": {"type": "string", "pattern": "^[a-zA-Z0-9_.:%-]{1,128}$"},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "lan_exposure_confirmed": {"type": "boolean", "default": false}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"bind_policy": {"const": "explicit_address"}}},
+          "then": {"required": ["address", "lan_exposure_confirmed"], "properties": {"lan_exposure_confirmed": {"const": true}}}
+        },
+        {
+          "if": {"properties": {"bind_policy": {"const": "loopback"}}},
+          "then": {"properties": {"lan_exposure_confirmed": {"const": false}}}
+        }
+      ]
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preferred_method", "preserve_existing_policy", "client_identity_refs", "host_key_policy"],
+      "properties": {
+        "preferred_method": {"const": "public_key"},
+        "preserve_existing_policy": {"type": "boolean", "const": true},
+        "client_identity_refs": {"type": "array", "items": {"$ref": "#/$defs/opaqueRef"}, "uniqueItems": true},
+        "host_key_policy": {"enum": ["preserve_existing", "generate_if_missing"]},
+        "accepted_auth_methods_observed": {
+          "type": "array",
+          "items": {"enum": ["public_key", "password", "keyboard_interactive", "unknown"]},
+          "uniqueItems": true
+        },
+        "accepted_key_fingerprints": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^SHA256:[A-Za-z0-9+/]{20,}$"},
+          "uniqueItems": true
+        },
+        "host_key_fingerprints": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^SHA256:[A-Za-z0-9+/]{20,}$"},
+          "uniqueItems": true
+        }
+      }
+    },
+    "boot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["auto_start", "termux_boot_confirmed"],
+      "properties": {
+        "auto_start": {"enum": ["disabled", "termux_boot"]},
+        "termux_boot_confirmed": {"type": "boolean"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"auto_start": {"const": "termux_boot"}}},
+          "then": {"properties": {"termux_boot_confirmed": {"const": true}}}
+        }
+      ]
+    },
+    "wakelock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy"],
+      "properties": {"policy": {"enum": ["never", "while_owned_service_active"]}}
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_classification", "last_validated_revision"],
+      "properties": {
+        "source_classification": {"enum": ["none_detected", "external_manual", "ternuxx_managed", "unknown"]},
+        "last_validated_revision": {"type": ["string", "null"], "maxLength": 128},
+        "adoption_confirmed": {"type": "boolean", "default": false}
+      }
+    }
+  },
+  "$defs": {
+    "opaqueRef": {"type": "string", "pattern": "^[A-Za-z0-9_-]{8,128}$"}
+  }
+}

@@ -1,11 +1,11 @@
 # =============================================================================
-#  nativeternux — system info
+#  Ternuxx — system info
 # =============================================================================
 # shellcheck source=lib/core.sh
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 nt_cmd_info() {
-  echo "=== NativeTernux Info ==="
+  echo "=== Ternuxx Info ==="
   echo ""
 
   # Device

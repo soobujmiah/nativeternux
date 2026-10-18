@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "provider": "native_termux",
+  "owner": "external_unmanaged",
+  "state": "running",
+  "observed_at": "2026-10-17T12:00:00Z",
+  "endpoint": {
+    "bind_class": "explicit_address",
+    "port": 12222,
+    "listener_verified": true
+  },
+  "process_identity": {
+    "pid": 4242,
+    "start_time_token": "synthetic_fixture_start_token",
+    "executable_id": "openssh_sshd",
+    "config_revision": null
+  },
+  "auth_state": "legacy_policy_preserved",
+  "observed_auth_methods": ["public_key", "password", "keyboard_interactive"],
+  "boot_state": "unknown",
+  "wakelock_leases": [],
+  "last_operation_id": null,
+  "last_error_code": null
+}

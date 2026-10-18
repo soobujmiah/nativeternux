@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:termux-boot-diagnostics:v1",
+  "title": "Ternuxx read-only Termux:Boot diagnostics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "app",
+    "package_enabled",
+    "boot_completed_receiver",
+    "system_delivery_policy",
+    "package_manager_available",
+    "script_directory",
+    "regular_script_count",
+    "non_executable_script_count",
+    "startup_policy",
+    "termux_boot_command_available",
+    "safety"
+  ],
+  "properties": {
+    "component": {
+      "const": "termux_boot_diagnostics"
+    },
+    "app": {
+      "enum": [
+        "installed",
+        "not_installed",
+        "unknown"
+      ]
+    },
+    "package_enabled": {
+      "enum": ["enabled", "disabled", "unknown"]
+    },
+    "boot_completed_receiver": {
+      "enum": ["enabled", "disabled", "absent", "unknown"]
+    },
+    "system_delivery_policy": {
+      "const": "unknown"
+    },
+    "package_manager_available": {
+      "type": "boolean"
+    },
+    "script_directory": {
+      "enum": [
+        "present",
+        "absent",
+        "unknown"
+      ]
+    },
+    "regular_script_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "non_executable_script_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "startup_policy": {
+      "enum": [
+        "unknown",
+        "not_configured"
+      ]
+    },
+    "termux_boot_command_available": {
+      "type": "boolean"
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_only",
+        "package_changed",
+        "script_contents_read"
+      ],
+      "properties": {
+        "read_only": {
+          "const": true
+        },
+        "package_changed": {
+          "const": false
+        },
+        "script_contents_read": {
+          "const": false
+        }
+      }
+    }
+  }
+}

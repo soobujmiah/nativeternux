@@ -1,0 +1,87 @@
+{
+  "baseline": {
+    "desktop": {
+      "display": ":1",
+      "gui_visible": "unknown",
+      "status": "running",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes"
+    },
+    "proot": {
+      "guest_entered": false,
+      "installed_distribution": "debian",
+      "ownership": "unverified"
+    },
+    "repository": {
+      "branch": "main",
+      "commit": "1a891faabc925136c1801f40194b0969d28041df",
+      "id": "soobujmiah/ternuxx",
+      "modified_paths": 42,
+      "untracked_paths": 231
+    },
+    "ssh": {
+      "auth_modes": [
+        "publickey",
+        "password",
+        "keyboard-interactive"
+      ],
+      "effective_bind": "127.0.0.1:8023",
+      "listener_owner": "unknown",
+      "managed_config": "valid",
+      "managed_service": "running",
+      "native_8022_config": "wildcard; password and keyboard-interactive enabled",
+      "service_definition": "verified"
+    },
+    "termux_boot": {
+      "app": "installed",
+      "delivery_policy": "unknown",
+      "package": "enabled",
+      "receiver": "enabled",
+      "regular_scripts": 2,
+      "script_directory": "present"
+    },
+    "termux_version": "0.119.0-beta.3",
+    "wakelock": {
+      "owner_count": 1,
+      "platform_lock_state": "unknown",
+      "registered_owner": "native.sshd"
+    }
+  },
+  "checkpoint": {
+    "boot_id_recorded_in_repo": false,
+    "mode": "0600",
+    "nonce_recorded_in_repo": false,
+    "readiness": "NOT_READY",
+    "state": "prepared",
+    "storage": "native private continuity/reboot-tests directory"
+  },
+  "mutations": {
+    "android_reboot": false,
+    "packages": false,
+    "private_checkpoint_created": true,
+    "proot_or_rootfs": false,
+    "service_or_desktop_lifecycle": false,
+    "termux_boot_settings": false
+  },
+  "next_action": "Owner restarts device from Android UI; after boot, reconnect and collect read-only 8023 evidence without manually invoking boot-observe.",
+  "recorded_at_utc": "2026-10-18T08:48:01Z",
+  "required_postboot_checks": [
+    "boot_id_changed",
+    "termux_boot_observed",
+    "native_sshd_ready",
+    "ssh_socket_observed",
+    "continuity_marker_matches",
+    "proot_independent",
+    "db_preserved",
+    "xgo_preserved",
+    "wakelock_owner_checked"
+  ],
+  "schema_version": 1,
+  "stage": "fresh pre-reboot baseline prepared; always NOT_READY until postboot checks",
+  "test_id": "TERN-20261018-RB04",
+  "tests": {
+    "8023_loopback_ssh": "authenticated session established",
+    "boot_observer": "dry-run only; installed and checkout agree; no state write"
+  }
+}

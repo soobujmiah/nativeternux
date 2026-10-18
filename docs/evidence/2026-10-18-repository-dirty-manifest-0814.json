@@ -1,0 +1,1944 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:14:33Z",
+  "snapshot_semantics": "Git worktree compared with HEAD; untracked files expanded individually (git status --untracked-files=all). The new manifest itself is excluded from its census. Git cannot attribute pre-existing uncommitted changes. No paths were staged, removed, reset, committed, or pushed.",
+  "repository": {
+    "root": "/data/data/com.termux/files/home/ternuxx",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "origin": "https://github.com/soobujmiah/ternuxx.git",
+    "phase_status_source": "project/phase-state.json"
+  },
+  "dirty_counts": {
+    "total": 316,
+    "tracked_modified": 42,
+    "untracked": 274,
+    "staged": 0,
+    "by_category": {
+      "P0-repository-governance": 8,
+      "cross-phase-project-contract": 7,
+      "cross-phase-product-source": 25,
+      "cross-phase-documentation": 16,
+      "P4/P8-architecture": 5,
+      "cross-phase-architecture": 7,
+      "P2-evidence": 15,
+      "P2/P3-source": 9,
+      "P0-brand-compatibility": 2,
+      "cross-phase-phase-state": 1,
+      "repository-state": 21,
+      "P3-architecture": 5,
+      "P7-architecture": 1,
+      "P3-evidence": 86,
+      "P4-evidence": 5,
+      "P0/P1-evidence": 1,
+      "future-governance-planning": 9,
+      "P1/P6/P10-testing-plans": 11,
+      "P3-source": 82
+    }
+  },
+  "scope_disposition": {
+    "active_phase": "P3",
+    "P0-P2": "completed per project phase state",
+    "P3": "in progress; retain device/ownership gates",
+    "P4": "planned; depends on P3 ownership contract and owner review of ADR-0006",
+    "outside_active_phase": "later roadmap proposals and unrelated generated state are not authorization for implementation"
+  },
+  "entries": [
+    {
+      "status": " M",
+      "path": ".github/workflows/repo-contract.yml",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    },
+    {
+      "status": " M",
+      "path": ".github/workflows/repo-knowledge-sync.yml",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    },
+    {
+      "status": " M",
+      "path": ".repo/STATUS.md",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/sync-49db2f9d4fe1-0e89a3bcd39e33ee.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/sync-49db2f9d4fe1-state-40f9ddaa14370fd8-1.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-06ce2728e1d06e5c.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-122289f68d15b8b7.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-14498459619c1664.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-15404f7221f3807b.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-36e1eab8c08be55b.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-3990917654342654.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-444c66245c87004e.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-4aa08dc36515d0ca.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-4d12654269cf6c21.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-4d43275211b4dd9f.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-56dfaf15bb6ae145.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-8912a5d8871325b3.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-96034022ac8bfe6c.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-a9e482dee7d367c1.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-c6bef3c746b661a4.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-e3caa31dcdb3c3e3.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-e45d3014c73563e7.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-e497fc004e900e89.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/test-49db2f9d4fe1-ee2afa440edafbe3.yaml",
+      "category": "repository-state",
+      "scope_review": "generated sync/test events; preserve and review as append-only metadata"
+    },
+    {
+      "status": " M",
+      "path": ".repo/project.yaml",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    },
+    {
+      "status": " M",
+      "path": "AI_ASSISTANT.md",
+      "category": "cross-phase-project-contract",
+      "scope_review": "current project facts or repo-wide instructions; synchronize with source/evidence"
+    },
+    {
+      "status": " M",
+      "path": "CURRENT_STATE.md",
+      "category": "cross-phase-project-contract",
+      "scope_review": "current project facts or repo-wide instructions; synchronize with source/evidence"
+    },
+    {
+      "status": " M",
+      "path": "PROJECT_CLASSIFICATION.yaml",
+      "category": "cross-phase-project-contract",
+      "scope_review": "current project facts or repo-wide instructions; synchronize with source/evidence"
+    },
+    {
+      "status": " M",
+      "path": "PROJECT_MANIFEST.yaml",
+      "category": "cross-phase-project-contract",
+      "scope_review": "current project facts or repo-wide instructions; synchronize with source/evidence"
+    },
+    {
+      "status": " M",
+      "path": "README.md",
+      "category": "cross-phase-project-contract",
+      "scope_review": "current project facts or repo-wide instructions; synchronize with source/evidence"
+    },
+    {
+      "status": " M",
+      "path": "SECURITY.md",
+      "category": "cross-phase-project-contract",
+      "scope_review": "current project facts or repo-wide instructions; synchronize with source/evidence"
+    },
+    {
+      "status": " M",
+      "path": "SKB_KNOWLEDGE_SYNC.md",
+      "category": "cross-phase-project-contract",
+      "scope_review": "current project facts or repo-wide instructions; synchronize with source/evidence"
+    },
+    {
+      "status": " M",
+      "path": "bin/nativeternux",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "bin/ternuxx",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "bn/README.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/ARCHITECTURE.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": "??",
+      "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/HYBRID-INTEGRATION.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/INSTALLATION.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/KNOWLEDGE-SYNC.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/OPERATIONS.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/OPTIMIZATION.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/PHASE-STATUS.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/PRODUCT-VISION.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/PROOT-GPU.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/RESEARCH.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/ROADMAP.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": "??",
+      "path": "docs/SOFTWARE-CATALOG.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": " M",
+      "path": "docs/WINE-NATIVE.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": "??",
+      "path": "docs/WORKSTATION-EXTENSIONS.md",
+      "category": "cross-phase-documentation",
+      "scope_review": "product docs; keep current claims distinct from future plans and snapshots"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
+      "category": "cross-phase-architecture",
+      "scope_review": "product architecture contract; implementation follows phase dependencies"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/MANAGEMENT-API.md",
+      "category": "cross-phase-architecture",
+      "scope_review": "product architecture contract; implementation follows phase dependencies"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/SSH-LIFECYCLE.md",
+      "category": "cross-phase-architecture",
+      "scope_review": "product architecture contract; implementation follows phase dependencies"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/UNIFIED-WORKSTATION.md",
+      "category": "cross-phase-architecture",
+      "scope_review": "product architecture contract; implementation follows phase dependencies"
+    },
+    {
+      "status": " M",
+      "path": "docs/architecture/decisions/ADR-0001-native-proot-providers.md",
+      "category": "P4/P8-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": " M",
+      "path": "docs/architecture/decisions/ADR-0002-workload-verified-acceleration.md",
+      "category": "cross-phase-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": " M",
+      "path": "docs/architecture/decisions/ADR-0003-deterministic-state-and-skb-return.md",
+      "category": "cross-phase-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0004-three-interfaces-shared-management.md",
+      "category": "P3-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0005-capability-permission-and-task-model.md",
+      "category": "P3-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0006-adapt-existing-ternux-provider.md",
+      "category": "P4/P8-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md",
+      "category": "P4/P8-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md",
+      "category": "P4/P8-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0009-provider-scoped-optional-software.md",
+      "category": "P7-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0010-native-termux-autonomy.md",
+      "category": "cross-phase-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0011-unified-ssh-lifecycle.md",
+      "category": "P3-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0012-native-owned-shared-dependencies.md",
+      "category": "P4/P8-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0013-owner-controlled-remote-access.md",
+      "category": "P3-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0014-proot-adb-and-management-tcp.md",
+      "category": "P3-architecture",
+      "scope_review": "design contract; does not authorize device/service changes"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-17-native-continuation.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-17-native-management-slice.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-17-reboot-recovery-baseline.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-17-reboot-recovery-implementation.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-boot-profile-recovery.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-desktop-session-recovery.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-live-p3-state.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-managed-ssh-definition-identity.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-native-ssh-banner-probe.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-native-ssh-service-control.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-native-vlc-install-preview-0612.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-current-gate-recheck-0214.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-current-gate-recheck-0233.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-installed-package-closure-audit.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-installer-current-noop-0610.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-p3-current-session-recheck.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-package-closure-current-recheck.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-package-closure-followup.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-package-closure-latest-recheck.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-package-closure-recheck-0610.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p2-regression-recheck-0545.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-adb-doctor-integration-0701.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-adb-live-recheck-0656.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-adb-shizuku-dependency-review.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-android-addon-state-0650.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-android-listener-bind-observation.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-boot-diagnostic-implementation-0643.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-boot-log-delivery-recheck-0554.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-boot-profile-gate.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-boot-profile-preview-0200.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-boot-profile-preview-recheck.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-boot-receiver-enabled-0640.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-continuation-0231.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-continuation-focused-tests-0543.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-continuation-tests.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-current-doctor-recheck.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-current-gate-recheck-0632.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-current-readonly-gate-latest.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-current-readonly-gate-recheck.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-current-readonly-gate-snapshot.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-display-process-diagnostic-0206.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-doctor-remote-recheck-0544.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-exit-gate-audit.md",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-full-suite-recheck-0602.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-live-current-gates-0603.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-live-followup-0158.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-managed-ssh-boot-static-inspection-0212.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-managed-ssh-current-boot-timing-0219.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-authorization-policy.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-http-adapter.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-http-runtime.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-http-server.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-readiness-0809.json",
+      "category": "P3-evidence",
+      "scope_review": "phase evidence; verify provenance and current applicability before relying on it"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-request-store.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-sessions.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-management-transport-guards.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-native-mp3-playback-check-0610.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-offhome-tailscale-candidate-review.md",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-p2-native-recheck-0757.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-pactl-endpoint-status.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-private-access-live-recheck-0217.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-private-remote-policy-tests.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-proot-isolation-verification.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-reboot-checkpoint-compatibility-tests.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-reboot-gate-review-0546.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-reboot-observer-managed-service-tests.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-reboot-observer-regression-recheck-0555.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-recovery-post-suite-state.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-remote-access-current-recheck-0238.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-repo-test-recheck-0800.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-service-owner-correlation.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-shizuku-capability-disclosure.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-shizuku-capability-tests.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-shizuku-package-metadata-0224.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-shizuku-runtime-recheck-0610.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ssh-bind-policy-doctor.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ssh-current-session-recheck.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ssh-inspect-recheck-0649.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ssh-listener-ownership-recheck.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ssh-ownership-alternative-probes-0215.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ssh-startup-timing-live-0223.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ssh-unprivileged-listener-probes-0609.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ternux-audio-command-surface-0610.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ternux-audio-repeatability.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ternux-guest-handoff-0235.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ternux-guest-handoff.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ternux-guest-repeatability-recheck.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ternux-profile-source-implementation-0536.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p3-ternux-x11-presence-correlation-0202.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p4-installed-cli-identity-0636.json",
+      "category": "P4-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p4-installed-ternux-interface-recheck-0600.json",
+      "category": "P4-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-p4-ternux-profile-discovery-recheck.json",
+      "category": "P4-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-post-suite-readonly-state.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-postboot-native-ssh-verification.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-proot-inventory-api.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-repository-dirty-manifest-0801.json",
+      "category": "P3-evidence",
+      "scope_review": "phase evidence; verify provenance and current applicability before relying on it"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-repository-phase-scope-audit.md",
+      "category": "P3-evidence",
+      "scope_review": "phase evidence; verify provenance and current applicability before relying on it"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-18-service-journal-recovery.json",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": " M",
+      "path": "docs/evidence/P2-lifecycle-progress.md",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/P2-live-installer-preview-validation-2026-10-18.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/P2-phase-completion-2026-10-18.md",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/P2-termux-xfce-install-transaction-2026-10-18.json",
+      "category": "P2-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/P3-doctor-progress.md",
+      "category": "P3-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
+      "category": "P4-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
+      "category": "P4-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/PHASE-0-MASTER-AUDIT.md",
+      "category": "P0/P1-evidence",
+      "scope_review": "historical/current evidence; claims remain bounded by recorded scope and timestamp"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/DECISIONS-AND-PLAN.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/LEGAL-IP.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/NAME-MIGRATION-INVENTORY.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/PREMIUM-DISTRIBUTION.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/PRODUCT-MARKET-COMMERCIAL.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/README.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/REPOSITORY-AUDIT.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/THREAT-MODEL.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/WEBSITE-SEO-OPERATIONS.md",
+      "category": "future-governance-planning",
+      "scope_review": "not part of active P3 runtime implementation; keep as planning material"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/BENCHMARK-METHODOLOGY.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/CPU-BASELINE.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/DEVICE-COMPATIBILITY.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/FEATURE-MATRIX.yaml",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/GPU-ACCELERATION.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/KNOWN-LIMITATIONS.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/NPU-ACCELERATION.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/README.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/reports/README.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/reports/REPORT-TEMPLATE.md",
+      "category": "P1/P6/P10-testing-plans",
+      "scope_review": "product verification guidance; future hardware/release work, not current runtime implementation"
+    },
+    {
+      "status": "??",
+      "path": "lib/adb_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/backup_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/boot_profile_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/boot_profiles.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/config_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/continuity.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/continuity.sh",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "lib/core.sh",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "lib/desktop-supervisor.sh",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "lib/desktop.sh",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/desktop_session_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "lib/doctor.sh",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/doctor_report.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "lib/help.sh",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "lib/info.sh",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management.sh",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_authorization.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_http_adapter.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_http_runtime.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_http_server.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_request_policy.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_request_store.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_service.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_sessions.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/operation_journal.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/operation_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/owned-exec.py",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "lib/phases.sh",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/proot.sh",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/proot_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/reboot.sh",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/reboot_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/recovery.sh",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/remote_access.sh",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/remote_access_policy.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/resource_ownership.py",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/restore_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/runit_service.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/runtime_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/service_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/ssh.sh",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/ssh_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "lib/wakelock_manager.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "nativeternux",
+      "category": "P0-brand-compatibility",
+      "scope_review": "legacy compatibility entrypoint; project-scoped repository identity work"
+    },
+    {
+      "status": " M",
+      "path": "project/phase-state.json",
+      "category": "cross-phase-phase-state",
+      "scope_review": "authoritative phase status and evidence index; generated docs derive from this file"
+    },
+    {
+      "status": "??",
+      "path": "schemas/adb-server-diagnostics.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/backup-create-recovery.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/boot-profile-action.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/boot-profile-preview.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/boot-profile-recovery.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/boot-profile.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/config-backup.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/continuity-checkpoint.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/desktop-session-recovery.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/doctor-report.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/install-package-preview.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/launch-registry.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-config.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-diagnostic-report.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-service-action.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-service-recovery.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-service-state.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/operation-journal.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/optional-software-catalog.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/profile-restore-recovery.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/proot-distribution-inventory.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/reboot-test-checkpoint.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/remote-access-config.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/remote-access-policy-preview.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/shell-profile.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/shell-settings.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/termux-boot-diagnostics.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/ternux-guest-diagnostics.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/verification-evidence.schema.json",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/wakelock-owner-state.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "schemas/wakelock-status.schema.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "scripts/repo_test.sh",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "scripts/termux-boot/00-ternuxx-services",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "scripts/termux-boot/ternuxx-recovery",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "scripts/termux-services/ternuxx-sshd/run",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "ternuxx",
+      "category": "P0-brand-compatibility",
+      "scope_review": "canonical source-checkout entrypoint; project-scoped repository identity work"
+    },
+    {
+      "status": "??",
+      "path": "tests/fixtures/ssh/README.md",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/fixtures/ssh/external-manual-state.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/fixtures/ssh/fresh-native-config.json",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_adb_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_backup_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_boot_profile_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_boot_profiles.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_cli_help.sh",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_config_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_continuity.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_desktop_lifecycle_fixture.py",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_desktop_session_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_desktop_supervisor.py",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_doctor_report.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_authorization.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_http_adapter.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_http_runtime.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_http_server.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_request_policy.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_request_store.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_service.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_management_sessions.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_native_service_scripts.py",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_operation_journal.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_package_plan.py",
+      "category": "P2/P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_proot_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_reboot_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_recovery_cli.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_remote_access_policy.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_repo_knowledge_repository_rename.py",
+      "category": "cross-phase-product-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_restore_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_runit_service.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_runtime_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_service_recovery.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_ssh_diagnostics.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": "??",
+      "path": "tests/test_wakelock_manager.py",
+      "category": "P3-source",
+      "scope_review": "product implementation/contract test; must retain ownership and preview-first boundaries"
+    },
+    {
+      "status": " M",
+      "path": "tools/doc_bridge.py",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    },
+    {
+      "status": " M",
+      "path": "tools/repo_knowledge/README.md",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    },
+    {
+      "status": " M",
+      "path": "tools/repo_knowledge/cli.py",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    },
+    {
+      "status": " M",
+      "path": "tools/repo_knowledge/core.py",
+      "category": "P0-repository-governance",
+      "scope_review": "project metadata, contract verification, or knowledge-sync infrastructure"
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 # =============================================================================
-#  nativeternux — core library
+#  Ternuxx — core library
 #  Shared utilities, I/O helpers, version info, and JSON/CLI framework.
 #  Every other library sources this first.
 #
 #  Copyright (c) 2026 Sobuj Miah (@soobujmiah)
 #  License: not yet selected; see README.md.
-#  https://github.com/soobujmiah/nativeternux
+#  https://github.com/soobujmiah/ternuxx
 # =============================================================================
 
 # --- Logging ------------------------------------------------------------
@@ -103,11 +103,10 @@ nt_require_command() {
 }
 
 nt_require_termux() {
-  # Check we're in a Termux environment
-  if [ -z "${TERMUX_VERSION:-}" ] && [ ! -d "/data/data/com.termux" ]; then
-    # Allow in JSON mode for testing
-    [ "$NATIVERNUX_JSON" = "1" ] && return 0
-    nt_fail "Not running in Termux. Install Termux from F-Droid or GitHub."
+  # PRoot may see /data/data/com.termux through a bind mount. Require the
+  # native Termux environment markers instead of treating that path as proof.
+  if [ -z "${TERMUX_VERSION:-}" ] || [ "${PREFIX:-}" != "/data/data/com.termux/files/usr" ]; then
+    nt_fail "This operation requires the native Termux shell (TERMUX_VERSION and PREFIX do not identify it). Do not run native package or desktop lifecycle commands from Debian PRoot."
     return 1
   fi
   return 0
@@ -115,19 +114,25 @@ nt_require_termux() {
 
 # --- Display number allocation ------------------------------------------
 nt_find_free_display() {
-  # Find next available X11 display number, avoiding conflicts with existing
-  # Termux:X11 sessions. Returns the display number or "error".
+  # :0 is the existing Ternux PRoot allocation on the owner device. Prefer
+  # native Termux displays :1 through :10; recover only positively stale,
+  # same-UID lock/socket pairs. Ambiguous artifacts stay unavailable.
   local max_try=10
-  local existing
-  existing="$(ls /data/data/com.termux/files/usr/tmp/.X11-unix/ 2>/dev/null | sed 's/X//' || true)"
-  for n in $(seq 0 $max_try); do
-    local conflict=0
-    for ex in $existing; do
-      [ "$ex" = "$n" ] && { conflict=1; break; }
-    done
-    [ $conflict -eq 0 ] && echo "$n" && return 0
+  local tmp_root="${TMPDIR:-/data/data/com.termux/files/usr/tmp}"
+  local helper="${_TN_LIB_DIR:-}/x11_display.py" result
+  for n in $(seq 1 "$max_try"); do
+    if [ -f "$helper" ]; then
+      result="$(python3 "$helper" "$tmp_root" "$n" 2>/dev/null)" || continue
+      [ "$result" = "recovered" ] && nt_warn "Recovered stale Termux:X11 socket and lock for :$n."
+      printf '%s\n' "$n"
+      return 0
+    fi
+    [ ! -e "$tmp_root/.X$n-lock" ] || continue
+    [ ! -e "$tmp_root/.X11-unix/X$n" ] || continue
+    printf '%s\n' "$n"
+    return 0
   done
-  echo "error"
+  printf '%s\n' "error"
   return 1
 }
 

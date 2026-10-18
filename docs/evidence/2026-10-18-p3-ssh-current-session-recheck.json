@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_ssh_current_readonly_recheck",
+  "observed_at_utc": "2026-10-18T05:41:15+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "native Ternuxx SSH diagnostics and Runit service status only; no authentication attempt, configuration readout, service action, listener probe, or network change",
+  "ssh_inspect": {
+    "command": [
+      "./ternuxx",
+      "--json",
+      "ssh",
+      "inspect"
+    ],
+    "exit_code": 0,
+    "result": {
+      "api_version": 1,
+      "data": {
+        "checks": {
+          "authenticated_connection_test": "not_run",
+          "config_present": true,
+          "config_syntax": "valid",
+          "configuration_owner": "unknown",
+          "configured_listener_bind_scope": "wildcard",
+          "configured_policy": {
+            "authenticationmethods": [
+              "any"
+            ],
+            "kbdinteractiveauthentication": [
+              "yes"
+            ],
+            "listenaddress": [
+              "0.0.0.0:8022",
+              "[::]:8022"
+            ],
+            "passwordauthentication": [
+              "yes"
+            ],
+            "permitrootlogin": [
+              "prohibit-password"
+            ],
+            "port": [
+              "8022"
+            ],
+            "pubkeyauthentication": [
+              "yes"
+            ]
+          },
+          "daemon_process_present": true,
+          "listener_daemon_correlation": "unknown",
+          "managed_service": {
+            "config_present": true,
+            "config_syntax": "valid",
+            "definition_identity": {
+              "installed_sha256": "ec59008a2cbe3a8b7d5e13c72e0a8274d28ae238cd02ff1750a5901a683efb69",
+              "source_sha256": "ec59008a2cbe3a8b7d5e13c72e0a8274d28ae238cd02ff1750a5901a683efb69",
+              "status": "verified"
+            },
+            "effective_policy": {
+              "authenticationmethods": [
+                "any"
+              ],
+              "kbdinteractiveauthentication": [
+                "yes"
+              ],
+              "listenaddress": [
+                "127.0.0.1:8023"
+              ],
+              "passwordauthentication": [
+                "yes"
+              ],
+              "permitrootlogin": [
+                "prohibit-password"
+              ],
+              "port": [
+                "8023"
+              ],
+              "pubkeyauthentication": [
+                "yes"
+              ]
+            },
+            "listener_bind_scope": "loopback_only",
+            "loopback_ssh_probe": {
+              "address": "127.0.0.1",
+              "port": 8023,
+              "status": "ssh_banner"
+            },
+            "manager": "runit",
+            "service_id": "ternuxx-sshd",
+            "startup_timing": {
+              "kernel_uptime_seconds": 40761,
+              "runit_service_age_seconds": 40721,
+              "seconds_after_kernel_boot": 40,
+              "status": "observed"
+            },
+            "status": "running"
+          },
+          "observed_tcp_listeners_all_processes": [],
+          "policy_context": "native_user_loopback",
+          "service_supervisor": "runit_available",
+          "sshd_available": true,
+          "tcp_listener_observation": "permission_denied",
+          "termux_boot_directory": "present"
+        },
+        "component": "native_ssh_diagnostics",
+        "environment": "native_termux",
+        "observed_at": "2026-10-18T05:41:16Z",
+        "safety": {
+          "credential_files_read": false,
+          "raw_config_output_included": false,
+          "read_only": true
+        },
+        "schema_version": 1
+      },
+      "ok": true,
+      "operation": "ssh.inspect",
+      "request_id": "1d904e140a064448b3db269e865d97cf"
+    },
+    "stderr": ""
+  },
+  "managed_service_status": {
+    "command": [
+      "sv",
+      "status",
+      "ternuxx-sshd"
+    ],
+    "exit_code": 0,
+    "result": "run: ternuxx-sshd: (pid 13363) 40721s",
+    "stderr": ""
+  }
+}

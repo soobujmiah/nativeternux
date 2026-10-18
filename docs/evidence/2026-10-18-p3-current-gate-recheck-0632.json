@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-p3-readonly-gate-recheck",
+  "observed_at_utc": "2026-10-18T06:32:06Z",
+  "scope": "Native Termux Ternuxx read-only status, boot, Wake Lock, reboot checkpoint, SSH, and PRoot inventory commands; no lifecycle action",
+  "commands": [
+    "./ternuxx --json status",
+    "./ternuxx --json boot status",
+    "./ternuxx --json wakelock status",
+    "./ternuxx --json reboot status",
+    "./ternuxx --json ssh inspect",
+    "./ternuxx --json proot status"
+  ],
+  "native_desktop": {
+    "status": "running",
+    "display": ":1",
+    "supervisor_present": true,
+    "x11_present": true,
+    "xfce_session_present": true,
+    "cli_gui_visibility": "unknown",
+    "owner_visual_audio_confirmation": "Owner confirmed native VLC media was visible and audible on :1 at 06:26 UTC; this is scoped to that playback sample."
+  },
+  "boot": {
+    "app": "installed",
+    "script_directory": "present",
+    "regular_script_count": 2,
+    "non_executable_script_count": 0,
+    "startup_policy": "unknown",
+    "termux_boot_command_available": false,
+    "read_only": true,
+    "script_contents_read": false
+  },
+  "wakelock": {
+    "coordinator_state": "held_by_registered_owners",
+    "managed_owners": [
+      "native.sshd"
+    ],
+    "owner_count": 1,
+    "boot_id_relation": "match",
+    "platform_lock_state": "unknown",
+    "acquire_or_release_invoked": false
+  },
+  "reboot_checkpoints": {
+    "state": "boot_observed",
+    "automatic_resume": false,
+    "readiness": "NOT_READY",
+    "pending_count": 3,
+    "checkpoint_states": [
+      "boot_observed",
+      "inconclusive",
+      "prepared"
+    ]
+  },
+  "ssh": {
+    "managed_8023": {
+      "manager": "runit",
+      "status": "running",
+      "config_syntax": "valid",
+      "definition_identity": "verified",
+      "listener_scope": "loopback_only",
+      "loopback_probe": "ssh_banner",
+      "listener_ownership": "unverified",
+      "startup_timing_seconds_after_kernel_boot": 40
+    },
+    "separate_8022": {
+      "config_present": true,
+      "config_syntax": "valid",
+      "bind_scope": "wildcard",
+      "password_authentication": "enabled",
+      "daemon_process_present": true,
+      "listener_daemon_correlation": "unknown",
+      "authenticated_connection_test": "not_run"
+    },
+    "listener_observation": "permission_denied",
+    "credential_files_read": false,
+    "raw_config_output_included": false
+  },
+  "proot": {
+    "installed_distributions": [
+      "debian"
+    ],
+    "status": "installed",
+    "guest_entered": false,
+    "ownership": "unverified",
+    "read_only": true
+  },
+  "mutation_performed": false,
+  "limitations": [
+    "The 8023 service start timing is consistent with boot startup, but does not rule out manual invocation or prove Termux:Boot causation.",
+    "The owner-confirmed native VLC sample does not establish PRoot display/audio ownership or boot-time GUI visibility.",
+    "No controlled reboot, package/service action, desktop lifecycle, checkpoint mutation, or PRoot entry was performed."
+  ],
+  "remote_access_preview": {
+    "observed_at_utc": "2026-10-18T06:33Z",
+    "command": "./ternuxx --json remote access preview",
+    "exit_status": 0,
+    "mode": "disabled",
+    "readiness": "disabled",
+    "remote_access_active": false,
+    "public_ingress": false,
+    "transport_kind": null,
+    "transport_state": "not_probed",
+    "allowed_clients": 0,
+    "allowed_targets": 0,
+    "credentials_resolved": false,
+    "files_changed": false,
+    "network_accessed": false,
+    "services_changed": false
+  }
+}

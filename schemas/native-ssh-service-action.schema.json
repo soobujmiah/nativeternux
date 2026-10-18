@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:native-ssh-service-action:v1",
+  "title": "Ternuxx fixed native SSH Runit action result",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "service_id", "action", "current_status", "target_status",
+        "source_sha256", "installed_sha256", "manager", "manager_sha256",
+        "plan_id", "requires_confirmation", "changed", "read_only", "impact"
+      ],
+      "properties": {
+        "service_id": {"const": "ternuxx-sshd"},
+        "action": {"enum": ["start", "stop"]},
+        "current_status": {"enum": ["running", "stopped"]},
+        "target_status": {"enum": ["running", "stopped"]},
+        "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "installed_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "manager": {"const": "runit"},
+        "manager_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "plan_id": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "requires_confirmation": {"type": "boolean"},
+        "changed": {"const": false},
+        "read_only": {"const": true},
+        "impact": {"type": "string", "maxLength": 240}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["service_id", "action", "status", "changed", "operation_id", "read_only"],
+      "properties": {
+        "service_id": {"const": "ternuxx-sshd"},
+        "action": {"enum": ["start", "stop"]},
+        "status": {"enum": ["running", "stopped"]},
+        "changed": {"const": true},
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "read_only": {"const": false}
+      }
+    }
+  ]
+}

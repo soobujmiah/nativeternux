@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T06:09:13Z",
+  "scope": "read-only native Termux unprivileged TCP listener visibility probes",
+  "probes": [
+    {
+      "command": "ss -ltn",
+      "result": "unavailable",
+      "detail": "ss command not installed"
+    },
+    {
+      "command": "netstat -ltn",
+      "result": "unsupported",
+      "detail": "netstat reports no AF_INET TCP support on this system"
+    },
+    {
+      "command": "lsof -nP -iTCP -sTCP:LISTEN",
+      "result": "no_rows",
+      "detail": "lsof 4.99.7 exists; filtered listener listing returned no output"
+    },
+    {
+      "command": "ternuxx --json ssh inspect",
+      "result": "permission_limited",
+      "detail": "TCP listener observation permission denied; daemon correlation unknown"
+    }
+  ],
+  "interpretation": "These unprivileged probes did not establish PID-to-listener ownership for ports 8022 or 8023. Do not infer that no listener exists from empty/unsupported tool output.",
+  "safety": {
+    "read_only": true,
+    "network_accessed": false,
+    "service_changed": false,
+    "configuration_changed": false,
+    "reboot": false
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_ternux_guest_readonly_repeatability_recheck",
+  "observed_at_utc": "2026-10-18T05:42:18+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "three bounded read-only Ternuxx guest verifications using the private Ternux state profile; fixed version/status and display/renderer/audio-control probes; no audio stream, guest write command, package/service change, or host lifecycle action",
+  "command": [
+    "./ternuxx",
+    "--json",
+    "proot",
+    "verify",
+    "--distro",
+    "debian",
+    "--guest-user-from",
+    "ternux-state",
+    "--display",
+    ":1",
+    "--backend",
+    "zink"
+  ],
+  "runs": [
+    {
+      "run": 1,
+      "started_at_utc": "2026-10-18T05:42:10+00:00",
+      "exit_code": 0,
+      "result": {
+        "api_version": 1,
+        "data": {
+          "blockers": [],
+          "checks": {
+            "audio": "reachable",
+            "observed_display": ":1",
+            "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+            "renderer_class": "zink_turnip",
+            "x11": "reachable"
+          },
+          "companion_version": "1.4.0",
+          "component": "ternux_guest_diagnostics",
+          "display": ":1",
+          "distro": "debian",
+          "guest_entered": true,
+          "native_pulseaudio_endpoint": {
+            "default_sink": "OpenSL_ES_sink",
+            "server_name": "pulseaudio",
+            "status": "available"
+          },
+          "native_ternux_status": {
+            "availability": "available",
+            "backend": "zink",
+            "backend_availability": "available",
+            "identity": "unverified",
+            "launcher": "present",
+            "pulseaudio": "stopped",
+            "renderer": "unknown",
+            "status": "running",
+            "version": "1.4.0",
+            "virgl": "stopped",
+            "vulkan": "yes",
+            "x11_running": "yes"
+          },
+          "profile_owner": "unverified",
+          "pulse_server": "tcp:127.0.0.1:4713",
+          "read_only": true,
+          "requested_backend": "zink",
+          "safety": {
+            "guest_write_command_invoked": false,
+            "host_home_and_shared_storage_unbound": true,
+            "host_lifecycle_started": false,
+            "host_lifecycle_stopped": false,
+            "packages_changed": false,
+            "services_started": false,
+            "services_stopped": false
+          },
+          "status": "complete"
+        },
+        "ok": true,
+        "operation": "proot.guest.verify",
+        "request_id": "041aedc149e34be49b22f50e47fb5ed8"
+      },
+      "stderr": ""
+    },
+    {
+      "run": 2,
+      "started_at_utc": "2026-10-18T05:42:13+00:00",
+      "exit_code": 0,
+      "result": {
+        "api_version": 1,
+        "data": {
+          "blockers": [],
+          "checks": {
+            "audio": "reachable",
+            "observed_display": ":1",
+            "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+            "renderer_class": "zink_turnip",
+            "x11": "reachable"
+          },
+          "companion_version": "1.4.0",
+          "component": "ternux_guest_diagnostics",
+          "display": ":1",
+          "distro": "debian",
+          "guest_entered": true,
+          "native_pulseaudio_endpoint": {
+            "default_sink": "OpenSL_ES_sink",
+            "server_name": "pulseaudio",
+            "status": "available"
+          },
+          "native_ternux_status": {
+            "availability": "available",
+            "backend": "zink",
+            "backend_availability": "available",
+            "identity": "unverified",
+            "launcher": "present",
+            "pulseaudio": "stopped",
+            "renderer": "unknown",
+            "status": "running",
+            "version": "1.4.0",
+            "virgl": "stopped",
+            "vulkan": "yes",
+            "x11_running": "yes"
+          },
+          "profile_owner": "unverified",
+          "pulse_server": "tcp:127.0.0.1:4713",
+          "read_only": true,
+          "requested_backend": "zink",
+          "safety": {
+            "guest_write_command_invoked": false,
+            "host_home_and_shared_storage_unbound": true,
+            "host_lifecycle_started": false,
+            "host_lifecycle_stopped": false,
+            "packages_changed": false,
+            "services_started": false,
+            "services_stopped": false
+          },
+          "status": "complete"
+        },
+        "ok": true,
+        "operation": "proot.guest.verify",
+        "request_id": "e5c4294e54d0409399086d2c86daa190"
+      },
+      "stderr": ""
+    },
+    {
+      "run": 3,
+      "started_at_utc": "2026-10-18T05:42:15+00:00",
+      "exit_code": 0,
+      "result": {
+        "api_version": 1,
+        "data": {
+          "blockers": [],
+          "checks": {
+            "audio": "reachable",
+            "observed_display": ":1",
+            "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+            "renderer_class": "zink_turnip",
+            "x11": "reachable"
+          },
+          "companion_version": "1.4.0",
+          "component": "ternux_guest_diagnostics",
+          "display": ":1",
+          "distro": "debian",
+          "guest_entered": true,
+          "native_pulseaudio_endpoint": {
+            "default_sink": "OpenSL_ES_sink",
+            "server_name": "pulseaudio",
+            "status": "available"
+          },
+          "native_ternux_status": {
+            "availability": "available",
+            "backend": "zink",
+            "backend_availability": "available",
+            "identity": "unverified",
+            "launcher": "present",
+            "pulseaudio": "stopped",
+            "renderer": "unknown",
+            "status": "running",
+            "version": "1.4.0",
+            "virgl": "stopped",
+            "vulkan": "yes",
+            "x11_running": "yes"
+          },
+          "profile_owner": "unverified",
+          "pulse_server": "tcp:127.0.0.1:4713",
+          "read_only": true,
+          "requested_backend": "zink",
+          "safety": {
+            "guest_write_command_invoked": false,
+            "host_home_and_shared_storage_unbound": true,
+            "host_lifecycle_started": false,
+            "host_lifecycle_stopped": false,
+            "packages_changed": false,
+            "services_started": false,
+            "services_stopped": false
+          },
+          "status": "complete"
+        },
+        "ok": true,
+        "operation": "proot.guest.verify",
+        "request_id": "6ccc09769c7944e1a9ba3c2feb5f4dcd"
+      },
+      "stderr": ""
+    }
+  ],
+  "complete_count": 3,
+  "audible_playback_tested": false,
+  "ownership_claimed": false
+}

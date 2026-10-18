@@ -13,6 +13,9 @@ python3 -m tools.repo_knowledge collect \
 python3 -m tools.repo_knowledge sync --ci                  # writes .repo/project.yaml + STATUS.md
 python3 -m tools.repo_knowledge verify                      # report-only schema check, exit 1 on findings
 python3 -m tools.repo_knowledge status                       # human-readable summary
+# After an owner-authorized same-owner GitHub rename:
+python3 -m tools.repo_knowledge migrate-repository \
+  --from-repository owner/old-name --to-repository owner/new-name
 ```
 
 Run from the repository root (the module infers `--repository owner/repo` from `git remote get-url origin`
@@ -30,7 +33,7 @@ and `--project-id` from the repo name; override either flag if that inference is
 ## Tests
 
 ```bash
-python3 -m unittest discover -s tools/repo_knowledge/tests -p 'test_*.py' -v
+python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
 ## Retry and publication contract (audit remediation)
@@ -45,6 +48,11 @@ python3 -m unittest discover -s tools/repo_knowledge/tests -p 'test_*.py' -v
   A changed result for the same run/attempt is a conflict, not a silent rewrite.
 - Both `collect` and `sync` render STATUS.md. `sync` additionally records a state
   transition event, not another event for every unchanged poll.
+- A repository slug rename requires the explicit `migrate-repository` command after
+  `origin` is updated. It supports same-owner slug changes only, preserves `project_id`
+  and historical build/test records, and appends a `sync` event describing the migration.
+  `verify`, `collect`, and `sync` reject a persisted repository slug that differs from
+  `origin`; they never silently infer a rename.
 - Candidate state and events are validated in a private staging directory under a
   Git-directory lock. Linux `renameat2(RENAME_EXCHANGE)` publishes the complete .repo
   directory atomically. Unsupported filesystems/platforms fail without replacing

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:09:21Z",
+  "phase": "P3",
+  "kind": "management_http_liveness_readiness_contract",
+  "implementation": {
+    "adapter": "lib/management_http_adapter.py",
+    "server": "lib/management_http_server.py",
+    "runtime": "lib/management_http_runtime.py",
+    "liveness": "GET /health returns adapter status=alive after request policy validation",
+    "readiness": "GET /ready reports ready only when the owning listener's serving thread is alive, ready, and not closing; false returns HTTP 503",
+    "policy": "Readiness passes through the same loopback Host/Origin and request-rate policy",
+    "shutdown": "Readiness event clears before worker drain; listener rejects new connections while draining",
+    "mutations": "Foreground runtime mutation dispatch remains disabled",
+    "persistent_listener_started": false
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_management_http_runtime tests.test_management_http_server tests.test_management_http_adapter -q",
+    "focused_passed": 22,
+    "focused_failed": 0,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 273,
+    "full_failed": 0,
+    "full_duration_seconds": 41.756,
+    "full_exit_code": 0
+  },
+  "readiness_fixture_cases": [
+    "adapter reports not_ready before listener start",
+    "live listener returns alive from /health and ready from /ready",
+    "unexpected Origin is rejected on /ready",
+    "adapter reports not_ready after listener shutdown"
+  ],
+  "device_actions": [],
+  "limitations": [
+    "The suite uses ephemeral fixture listeners and closes them; no persistent native listener or service was started.",
+    "Readiness describes only the local API listener, not Android GUI visibility, guest ownership, SSH reachability, or workload readiness.",
+    "No browser client, boot/service-manager integration, or off-home transport is qualified."
+  ]
+}

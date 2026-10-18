@@ -1,0 +1,58 @@
+{
+  "record_id": "p3-post-suite-readonly-state-2026-10-18",
+  "phase": "P3",
+  "observed_at_utc": "2026-10-17T23:06:33Z",
+  "target": {
+    "termux_version": "0.119.0-beta.3",
+    "android_release": "16",
+    "abi": "arm64-v8a"
+  },
+  "checks": {
+    "native_desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": true,
+      "x11": true,
+      "xfce4_session": true,
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "proot_inventory": {
+      "status": "installed",
+      "distributions": ["debian"],
+      "ownership": "unverified",
+      "guest_entered": false
+    },
+    "operation_recovery": {
+      "unresolved_count": 0
+    },
+    "doctor": {
+      "overall": "pass",
+      "pass": 14,
+      "info": 14,
+      "warning": 0,
+      "error": 0,
+      "ssh": "runit service running; loopback SSH banner observed; listener ownership unverified",
+      "native_renderer": "not probed"
+    }
+  },
+  "commands": [
+    "./ternuxx status --json",
+    "./ternuxx proot status --json",
+    "./ternuxx recovery status --json",
+    "./ternuxx doctor --json"
+  ],
+  "safety": {
+    "read_only": true,
+    "desktop_processes_signaled": false,
+    "proot_guest_entered": false,
+    "packages_changed": false,
+    "boot_or_android_settings_changed": false
+  },
+  "limits": [
+    "Termux:X11 GUI activity visibility was not inferred from server readiness.",
+    "Installed Debian inventory does not prove Ternux ownership or running guest state.",
+    "A loopback SSH banner does not establish listener process ownership or external reachability.",
+    "This observation does not qualify cold boot, retry, PRoot, or hybrid lifecycle behavior."
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "8023_dry_run": {
+    "boot_id_transition": "changed",
+    "installed_and_checkout_agree": true,
+    "listener_daemon_correlation": "unknown",
+    "managed_config_syntax": "valid",
+    "managed_loopback_probe": "ssh_banner",
+    "managed_service_definition": "verified",
+    "managed_service_status": "running",
+    "route": "authenticated SSH loopback 127.0.0.1:8023",
+    "state": "dry_run",
+    "state_written": false,
+    "termux_boot_invoked": false,
+    "test_id": "TERN-20261017-RB03"
+  },
+  "checkpoint": {
+    "RB01": "prepared / NOT_READY",
+    "RB02": "inconclusive / NOT_READY",
+    "RB03": "boot_observed / NOT_READY",
+    "meaning": "changed boot ID is relative to saved pre-reboot ID; does not prove Termux:Boot causality"
+  },
+  "implementation": {
+    "installed_file": "$PREFIX/lib/nativeternux/ssh_diagnostics.py",
+    "new_sha256": "1f4d8a8cff335fc10622fb0ab8b4f5cf1c209333a52d1c9391fa651dafe51a76",
+    "old_sha256": "a3182e989e099047512c573f86d83bb929f151e3f2af7adae217a75264028b80",
+    "resolver": "TERNUXX_REPO_ROOT override; checkout-relative source; fallback $HOME/ternuxx",
+    "rollback": "private native deploy backup retained; prior/current hashes in local manifest",
+    "runit_service_installed": false,
+    "source_files": [
+      "lib/ssh_diagnostics.py",
+      "lib/runit_service.py",
+      "tests/test_ssh_diagnostics.py"
+    ]
+  },
+  "mutations": {
+    "boot_observer_write": false,
+    "native_module_sync": true,
+    "packages_or_android_settings": false,
+    "proot_or_separate_ternux": false,
+    "reboot": false,
+    "service_or_desktop_lifecycle": false
+  },
+  "open_gates": [
+    "Termux:Boot causality/post-boot GUI",
+    "listener ownership",
+    "Ternux workload ownership/dispatch",
+    "Shizuku/watchdog and ADB authorization",
+    "cold-boot qualification"
+  ],
+  "recorded_at_utc": "2026-10-18T08:41:14Z",
+  "runtime": {
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "layer": "native Termux Android",
+    "origin": "https://github.com/soobujmiah/ternuxx.git",
+    "prefix": "/data/data/com.termux/files/usr",
+    "repo": "$HOME/ternuxx",
+    "worktree": "pre-existing dirty changes preserved"
+  },
+  "schema_version": 1,
+  "scope": "P3 installed reboot-observer source identity and managed 8023 test",
+  "tests": {
+    "focused_pre_fixture": "28/28 passed",
+    "installed_path_fixture": "1/1 passed",
+    "managed_suite": "bash scripts/repo_test.sh; 274/274 passed; 35.028s; exit 0"
+  }
+}

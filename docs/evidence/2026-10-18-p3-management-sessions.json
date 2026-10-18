@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:15:25Z",
+  "phase": "P3",
+  "kind": "management_session_authority",
+  "implementation": {
+    "module": "lib/management_sessions.py",
+    "security_properties": [
+      "high-entropy local bootstrap secret is consumed atomically at most once",
+      "requested session scopes must be a subset of launcher-approved scopes",
+      "only SHA-256 digests of bearer and CSRF tokens are held in process memory",
+      "idle and absolute session expiry are enforced",
+      "every API operation is classified read-only or mutating",
+      "mutations require the session-specific CSRF token",
+      "individual and global session revocation are available",
+      "concurrent bootstrap exchange is serialized"
+    ],
+    "integration_state": "primitive only; no HTTP/TCP listener, CLI dispatch integration, or remote access"
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_management_authorization tests.test_management_sessions -v",
+    "focused_passed": 13,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 238,
+    "full_failed": 0,
+    "full_duration_seconds": 140.463,
+    "coverage": [
+      "scope narrowing and unknown scope rejection",
+      "credential redaction from repr",
+      "one winner under concurrent bootstrap exchange",
+      "idle expiry and absolute expiry",
+      "exact operation scope and mutation CSRF checks",
+      "individual/global revocation",
+      "complete read-only/mutation operation classification"
+    ]
+  },
+  "device_actions": [],
+  "limitations": [
+    "No listener or browser/client handshake exists; bootstrap presentation is not yet designed or implemented.",
+    "No on-device transport test was run; this evidence is repository fixture coverage only.",
+    "The application service still rejects non-CLI callers, and remote access remains disabled."
+  ]
+}

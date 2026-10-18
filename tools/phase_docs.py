@@ -21,6 +21,8 @@ README_START = "<!-- generated:phase-status:start -->"
 README_END = "<!-- generated:phase-status:end -->"
 ROADMAP_START = "<!-- generated:phase-table:start -->"
 ROADMAP_END = "<!-- generated:phase-table:end -->"
+ACTIVE_START = "<!-- generated:active-work:start -->"
+ACTIVE_END = "<!-- generated:active-work:end -->"
 
 
 def load_state() -> dict:
@@ -62,6 +64,8 @@ def render(state: dict) -> dict[Path, str]:
     if active:
         current = f"**Current phase:** {active['id']} — {active['title']}"
         detail = active.get("summary") or "Work is in progress; no completion evidence has been accepted yet."
+        if active.get("next_action"):
+            detail += f"\n\n**Next action:** {active['next_action']}"
     else:
         current = "**Current phase:** All roadmap phases are complete."
         detail = "See the evidence records below for completed gates."
@@ -81,6 +85,15 @@ def render(state: dict) -> dict[Path, str]:
         "\n".join(table_rows),
         "ROADMAP",
     )
+    if active:
+        active_work = (
+            f"**Active phase:** {active['id']} — {active['title']}\n\n"
+            f"**Next action:** {active.get('next_action') or 'Choose the next evidence-backed item from this phase.'}\n\n"
+            "Complete this item and update its evidence before moving to the next item or phase."
+        )
+    else:
+        active_work = "All phases are complete; see their evidence records for accepted gates."
+    roadmap = replace_block(roadmap, ACTIVE_START, ACTIVE_END, active_work, "ROADMAP active work")
 
     status_lines = [
         "# Phase status",
@@ -97,6 +110,8 @@ def render(state: dict) -> dict[Path, str]:
             status_lines.append(f"**Completed:** {phase['completed_on']}")
         if phase.get("summary"):
             status_lines += ["", phase["summary"]]
+        if phase.get("next_action") and phase["status"] == "in_progress":
+            status_lines += ["", f"**Next action:** {phase['next_action']}"]
         if phase.get("evidence"):
             status_lines += ["", "Evidence:"]
             for item in phase["evidence"]:

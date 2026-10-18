@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T10:38:51Z",
+  "target": "native Termux work shell through SSH port 8022",
+  "owner_report": "Termux:X11 app is open in Android floating-window mode",
+  "sequence": [
+    {
+      "action": "read-only status before start",
+      "result": "stale session state running; supervisor/X11/XFCE processes absent"
+    },
+    {
+      "action": "Ternuxx stop manager reconciliation",
+      "result": "stale record marked stopped after exact recorded process identity checks; no matching process was signaled"
+    },
+    {
+      "action": "Ternuxx start manager",
+      "result": "native X11/XFCE started and reported running on :2"
+    },
+    {
+      "action": "Android activity request",
+      "result": "not accepted; manager reported manual-open fallback"
+    }
+  ],
+  "post_start_status": {
+    "status": "running",
+    "display": ":2",
+    "supervisor": "yes",
+    "x11": "yes",
+    "xfce4_session": "yes",
+    "gui_visible": "unknown"
+  },
+  "display_1_conflict": {
+    "socket_present": true,
+    "lock_present": true,
+    "lock_pid": "24612",
+    "ps_observation": "not visible",
+    "artifacts_removed": false
+  },
+  "boot_profile": {
+    "name": "cli-only",
+    "source": "default",
+    "managed_startup_script_installed": false,
+    "changed": false
+  },
+  "actions": {
+    "boot_files_changed": false,
+    "boot_profile_changed": false,
+    "unrelated_processes_signaled": false,
+    "android_settings_changed": false
+  },
+  "interpretation": "The desktop manager process path works, but its Android activity request was rejected in this run. GUI visibility remains unknown. Display :1 remains reserved by existing socket/lock artifacts of unverified ownership, so the manager selected :2. No artifact was removed."
+}

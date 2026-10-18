@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T10:35:18Z",
+  "target": "native Termux work shell through SSH port 8022",
+  "source": "read-only Ternuxx Doctor (NTX-APP-103 and NTX-ADB-001)",
+  "shizuku": {
+    "package": "present",
+    "version_code": "1318",
+    "rish_command": "not found",
+    "upstream_process_name": "shizuku_server",
+    "process_name_signal": "not observed (process visibility unknown)",
+    "signer_identity": "unknown",
+    "binder_health": "unknown",
+    "granted_permission": "unknown",
+    "watchdog_health": "unknown"
+  },
+  "adb": {
+    "loopback_host_version": "not observed at 127.0.0.1:5037",
+    "wireless_debugging_and_device_authorization": "unknown"
+  },
+  "safety": {
+    "doctor_read_only": true,
+    "shizuku_launched": false,
+    "permissions_changed": false,
+    "android_settings_changed": false,
+    "adb_started_or_queried_for_devices": false,
+    "adb_wifi_listener_enabled": false
+  },
+  "interpretation": "A process-name match is only a hint. No match does not prove the service is stopped; Binder readiness, permission, custom-fork identity, and watchdog state are not observable from this Termux-side check.",
+  "upstream_references": [
+    "https://github.com/RikkaApps/Shizuku/blob/master/manager/src/main/jni/starter.cpp",
+    "https://github.com/RikkaApps/Shizuku"
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-readonly-ternux-profile-user-source-implementation",
+  "recorded_at_utc": "2026-10-18T05:36:41Z",
+  "repository": {
+    "origin": "https://github.com/soobujmiah/ternuxx.git",
+    "head": "1a891fa"
+  },
+  "implementation": {
+    "cli_option": "--guest-user-from ternux-state",
+    "existing_explicit_user_option_preserved": true,
+    "scope": "Bounded proot verify only; reads Ternux's state command and protected state file, then runs only the existing Ternux version and read-only status checks.",
+    "state_file_guards": [
+      "Ternux CLI state response must be valid and versioned",
+      "state directory must be below Termux HOME",
+      "directory traversal uses directory file descriptors and rejects symlinks",
+      "state directories must be current-UID-owned and private",
+      "state file must be regular, current-UID-owned, and mode 0600",
+      "exactly one supported non-root user key is required"
+    ],
+    "privacy": {
+      "account_value_returned": false,
+      "account_value_logged_or_recorded": false,
+      "only_resolved_in_process_for_proot_login": true
+    },
+    "mutations": []
+  },
+  "device_verification": {
+    "command_template": "./ternuxx --json proot verify --distro debian --guest-user-from ternux-state --display :1 --backend zink",
+    "exit_code": 0,
+    "status": "complete",
+    "guest_entered": true,
+    "profile_owner": "unverified",
+    "checks": {
+      "display": ":1",
+      "x11": "reachable",
+      "audio_control_protocol": "reachable",
+      "renderer_class": "zink_turnip",
+      "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))"
+    },
+    "safety": {
+      "guest_write_command_invoked": false,
+      "packages_changed": false,
+      "host_lifecycle_started": false,
+      "host_lifecycle_stopped": false,
+      "services_started": false,
+      "services_stopped": false,
+      "host_home_and_shared_storage_unbound": true
+    },
+    "account_value_emitted": false,
+    "audible_playback_tested": false
+  },
+  "tests": {
+    "focused_proot_diagnostics": {
+      "command": "python3 -m unittest discover -s tests -p 'test_proot_diagnostics.py'",
+      "result": "passed",
+      "passed": 20,
+      "failed": 0,
+      "duration_seconds": 0.006
+    },
+    "focused_management_service": {
+      "command": "python3 -m unittest discover -s tests -p 'test_management_service.py'",
+      "result": "passed",
+      "passed": 24,
+      "failed": 0,
+      "duration_seconds": 0.186
+    },
+    "full_repository": {
+      "command": "bash scripts/repo_test.sh",
+      "result": "passed",
+      "passed": 218,
+      "failed": 0,
+      "duration_seconds": 2189.176
+    },
+    "static_checks": {
+      "python_compile": "passed for lib/proot_diagnostics.py and lib/management_service.py",
+      "bash_syntax": "passed for lib/proot.sh and lib/help.sh",
+      "device_python_compile": "passed for both changed Python modules",
+      "repo_knowledge_verify": "0 findings",
+      "git_diff_check": "passed"
+    }
+  },
+  "phase_decision": "This makes configured-user discovery reproducible for bounded diagnostics, but does not provide an ownership-aware workload router, prove GUI visibility/cold boot, or qualify audible guest audio. P3 remains in_progress; P4 remains planned."
+}

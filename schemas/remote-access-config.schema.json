@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:remote-access-config:v2",
+  "title": "Ternuxx optional off-home access desired configuration v2",
+  "description": "Secret-free desired policy for owner-selected private access. It does not prove the transport is installed, active, private, or reachable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "mode", "public_ingress"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "mode": {"enum": ["disabled", "private_transport"]},
+    "public_ingress": {"const": false, "default": false},
+    "transport": {"$ref": "#/$defs/transport"},
+    "allowed_client_refs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/opaqueRef"},
+      "uniqueItems": true,
+      "maxItems": 32
+    },
+    "allowed_targets": {
+      "type": "array",
+      "items": {"enum": ["native_termux", "proot_debian"]},
+      "uniqueItems": true,
+      "maxItems": 2
+    },
+    "capability_refs": {
+      "description": "Opaque references to named capabilities registered by the shared management service; these are not shell commands.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/opaqueRef"},
+      "uniqueItems": true,
+      "maxItems": 64
+    },
+    "session_ttl_seconds": {"type": "integer", "minimum": 60, "maximum": 3600, "default": 900}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "private_transport"}}, "required": ["mode"]},
+      "then": {
+        "required": ["transport", "allowed_client_refs", "allowed_targets", "capability_refs", "session_ttl_seconds"],
+        "properties": {
+          "allowed_client_refs": {"minItems": 1},
+          "allowed_targets": {"minItems": 1},
+          "capability_refs": {"minItems": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "disabled"}}, "required": ["mode"]},
+      "then": {
+        "properties": {"public_ingress": {"const": false}}
+      }
+    }
+  ],
+  "$defs": {
+    "opaqueRef": {"type": "string", "pattern": "^[A-Za-z0-9_-]{8,128}$"},
+    "credentialRef": {
+      "type": "string",
+      "pattern": "^credential_ref_[A-Za-z0-9_-]{8,128}$",
+      "description": "Opaque credential-store reference ID only; never a token, key, password, or credential value."
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "provider_id", "credential_ref"],
+      "properties": {
+        "kind": {"enum": ["vpn_overlay", "authenticated_outbound_tunnel"]},
+        "provider_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,63}$"},
+        "credential_ref": {"$ref": "#/$defs/credentialRef"}
+      }
+    }
+  }
+}

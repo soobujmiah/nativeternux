@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-18",
+  "phase": "P3",
+  "kind": "architecture_dependency_review",
+  "status": "design_clarified_runtime_unverified",
+  "owner_report": {
+    "adb_location": "existing Debian PRoot",
+    "native_termux_adb_available": false,
+    "shizuku_startup_path": "PRoot ADB over Android Wireless Debugging",
+    "custom_shizuku_fork_watchdog_restarts_after_reboot": true,
+    "runtime_independently_verified": false
+  },
+  "verified_protocol_distinction": {
+    "adb_client_to_adb_server": "local TCP port 5037 by default",
+    "adb_server_to_android_adbd": "separate device-side endpoint; Wireless Debugging pairing and connect endpoint are distinct from 5037",
+    "implication": "Adding a PRoot ADB server does not by itself preserve or enable Wireless Debugging after reboot and does not replace the Shizuku service."
+  },
+  "owner_adt_audit": {
+    "source": "https://github.com/soobujmiah/adt/blob/abece9e714a3bcb24d4a8dcc9f001feb421c1411/docs/ON_DEVICE_ADB_SHIZUKU_OPERATIONAL_DEPENDENCY.md",
+    "snapshot_date": "2026-09-13",
+    "topology": "PRoot ADB relay on loopback TCP 5037 -> Android-side TCP 5555 bridge via shizuku_server",
+    "relay_startup_in_that_snapshot": "manual in PRoot",
+    "custom_shizuku_boot_and_watchdog": "reported to bootstrap/recover the device-side bridge after boot/crash",
+    "dependency_conclusion": "The local ADB relay on 5037 does not remove this workflow's cold-boot Shizuku bridge dependency; the 5555 property may persist during a session after Shizuku stops, but the audit reports the bridge/transport is unavailable after a full reboot without Shizuku.",
+    "scope_limit": "Dated ADT device topology; not independently revalidated as current Ternuxx runtime."
+  },
+  "answer_to_dependency_question": "A PRoot local server on 5037 organizes ADB clients only; it does not replace Shizuku's device-side bridge/boot path in the audited setup. Standard paired Wireless Debugging is a distinct ADB transport, but Shizuku-backed APIs still require Shizuku.",
+  "implementation_constraints": [
+    "Keep PRoot ADB lifecycle separate from Ternuxx management TCP and Shizuku lifecycle.",
+    "Do not add a native Termux ADB package dependency without a separately approved requirement.",
+    "Before managing ADB, inspect the exact PRoot client/server versions, listener bind/owner, device authorization, and custom Shizuku fork/watchdog behavior read-only.",
+    "Do not enable a wildcard or off-device ADB listener by default."
+  ],
+  "sources": [
+    {
+      "title": "Android Debug Bridge",
+      "url": "https://developer.android.com/tools/adb",
+      "supports": "ADB client/server/device-daemon roles and local TCP port 5037 for ADB clients."
+    },
+    {
+      "title": "Shizuku setup guide",
+      "url": "https://shizuku.rikka.app/guide/setup/",
+      "supports": "Upstream ADB-mode Shizuku startup needs to be repeated after reboot because of system limitations."
+    }
+  ],
+  "limitations": [
+    "Custom Shizuku fork identity, watchdog source, boot receiver, retry policy, Wireless Debugging enablement, and current endpoint are not verified.",
+    "No device query, listener start/stop, ADB pairing, Wireless Debugging setting change, or Shizuku operation was performed for this review."
+  ]
+}

@@ -1,0 +1,31 @@
+# Dependency and capability fallback matrix
+
+This matrix records what Ternuxx does when an optional host component or provider is missing, unknown, or unqualified. It is a source contract, not a promise that every dependency is installed on every device. Package availability and live status must be checked again when a preview or operation is requested.
+
+## Current behavior
+
+| Component or capability | Readiness evidence | Missing or unknown behavior | Provider boundary |
+|---|---|---|---|
+| Native Termux:X11/XFCE | `install` previews the base packages from the configured signed Termux indexes; desktop start separately requires `termux-x11`, `dbus-launch`, `xfce4-session`, Python, `nohup`, and the owned-process supervisor. | Missing commands or an unsafe/stale package plan fail the operation. Ternuxx remains usable as a CLI; no guest is started as a substitute. Android app visibility is not inferred from server readiness. | Native desktop only. A failed native start does not start Ternux PRoot. |
+| Termux:X11 Android app | Doctor queries Android package presence separately from native command presence. | Unknown package-query output stays unknown. The CLI does not open Android settings, install the app, or claim that a GUI is visible. | Android UI state is separate from the native X server and any PRoot workload. |
+| Termux:Boot | Boot diagnostics distinguish app package state, script-directory state, and script count. Profile enable preview requires a positively detected app and the supported native prerequisites. | Unknown app state blocks enable. CLI/manual start remains available; no package install, boot-script apply, or Android setting change is automatic. | Boot delivery is not inferred from file presence and does not select a PRoot provider. |
+| Runit / managed native SSH | SSH inspection reports the selected manager; lifecycle actions require the fixed Ternuxx Runit unit and exact installed/source definition identity. | Missing/unknown Runit is reported as unavailable. There is no `sshd` fallback, process kill, or alternate service manager. SSH listener ownership remains unknown if the OS hides socket ownership. | Native Termux SSH only; does not control PRoot SSH. |
+| `proot-distro` inventory | `ternuxx proot status` runs the read-only `proot-distro list` probe. | Missing manager returns `unavailable`; failed or unrecognized output returns `unknown`. It does not install the manager or enter a guest. | An installed Debian name does not prove Ternuxx ownership or permission to manage that guest. |
+| Existing Debian PRoot ownership and launch | Current status reports installed distribution inventory only; no ownership-aware launcher is implemented. | Ownership remains `unverified`; no guest command, start/stop, package operation, display/audio handoff, or automatic fallback is performed. | Existing Ternux owns its launcher, XFCE, audio, and rootfs lifecycle. `~/x.sh` and broad Ternux cleanup remain outside Ternuxx control. |
+| Wake Lock / Termux:API | Diagnostics report command availability; active Android lock state remains `unknown`. The lease manager scopes persistent leases to the registered native SSH owner. | If a command or safe owner record is unavailable, no keep-awake capability is claimed. Ternuxx does not infer or release a lock owned by another Termux client. | Android's lock is app-global; it is not evidence of display, PRoot, or GUI readiness. |
+| Native OpenGL/Vulkan | Renderer and Vulkan probes report only the current native process/display context. | Native `llvmpipe` remains software rendering; unavailable probes stay unavailable/unknown. No native GPU capability is borrowed from PRoot evidence. | Native Termux only. |
+| PRoot Zink/Turnip GPU | The recorded PRoot `glxinfo`/`glxgears` result is from a guest process on `:1`; see [P4 renderer evidence](evidence/P4-proot-gpu-renderer-2026-10-18.md). | The result is a dated process-context observation, not a Ternuxx-managed launch. Without an active, ownership-verified guest workload, Ternuxx reports no current PRoot renderer. | Guest graphics evidence cannot qualify native OpenGL/Vulkan or a different Ternux desktop/display. |
+| Shizuku | Doctor reports Android package/version, `rish` command presence, and a bounded `pidof shizuku_server` process-name signal when available. | Process-name absence means “not observed,” not stopped; custom forks may differ. Binder health, app authorization, signer identity, and watchdog state remain unknown unless independently observable. No service launch, permission change, or ADB-over-Wi-Fi listener is performed. | A provider is not ready from app/process presence alone; no silent PRoot↔native or local↔remote workload reroute. |
+| NPU runtime | No Ternuxx NPU runtime bridge is currently qualified. | Report unavailable/unknown; CPU remains the baseline within the explicitly selected provider. | Hardware presence is not runtime availability. |
+
+## Contract for future optional dependencies
+
+- Keep the user's selected provider fixed when a dependency is missing. Report the failed capability and the exact prerequisite; do not retry the workload in another provider.
+- Separate package presence, command presence, service readiness, Android app visibility, process ownership, and workload acceleration into distinct observations.
+- Use a preview of the exact package transaction and require explicit confirmation before a package change. An unknown size or capability remains unknown.
+- Preserve CPU as the baseline only inside the selected provider. A CPU fallback must not change privacy, network, cost, permissions, or provider scope.
+- Existing Ternux Debian, launcher, display, and audio remain independently owned; missing Ternuxx integration is not permission to repair or replace them.
+
+## Evidence boundary
+
+Source and fixture coverage establish fail-closed handling for missing commands, unknown package-query results, stale package metadata, absent PRoot manager, and unverified ownership. Live 2026-10-18 native inventory reports Debian installed with `ownership=unverified`; the guest was not entered for this check. See [P3 progress](evidence/P3-doctor-progress.md), [PRoot inventory evidence](evidence/2026-10-18-proot-inventory-api.json), and [native/P4 graphics evidence](PROOT-GPU.md).

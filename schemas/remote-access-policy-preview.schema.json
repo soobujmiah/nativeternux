@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:remote-access-policy-preview:v1",
+  "title": "Ternuxx offline remote-access policy preview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "component", "mode", "public_ingress", "remote_access_active", "transport_state", "readiness", "transport_kind", "allowed_client_count", "allowed_target_count", "capability_count", "blockers", "safety"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "component": {"const": "remote_access_policy_preview"},
+    "mode": {"enum": ["disabled", "private_transport"]},
+    "public_ingress": {"const": false},
+    "remote_access_active": {"const": false},
+    "transport_state": {"const": "not_probed"},
+    "readiness": {"enum": ["disabled", "unavailable"]},
+    "transport_kind": {"enum": ["vpn_overlay", "authenticated_outbound_tunnel", null]},
+    "allowed_client_count": {"type": "integer", "minimum": 0, "maximum": 32},
+    "allowed_target_count": {"type": "integer", "minimum": 0, "maximum": 2},
+    "capability_count": {"type": "integer", "minimum": 0, "maximum": 64},
+    "blockers": {"type": "array", "maxItems": 2, "items": {"type": "string", "maxLength": 120}},
+    "safety": {
+      "type": "object", "additionalProperties": false,
+      "required": ["network_accessed", "credentials_resolved", "files_changed", "services_changed", "public_ingress_enabled"],
+      "properties": {
+        "network_accessed": {"const": false},
+        "credentials_resolved": {"const": false},
+        "files_changed": {"const": false},
+        "services_changed": {"const": false},
+        "public_ingress_enabled": {"const": false}
+      }
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"mode": {"const": "disabled"}}, "required": ["mode"]},
+     "then": {"properties": {"readiness": {"const": "disabled"}, "blockers": {"maxItems": 0}}}},
+    {"if": {"properties": {"mode": {"const": "private_transport"}}, "required": ["mode"]},
+     "then": {"properties": {"readiness": {"const": "unavailable"}, "blockers": {"minItems": 2}}}}
+  ]
+}

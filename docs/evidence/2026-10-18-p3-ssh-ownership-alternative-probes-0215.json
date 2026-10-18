@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-native-ssh-listener-ownership-alternative-probes",
+  "observed_at_utc": "2026-10-18T02:15:24Z",
+  "runtime": "native Termux via existing shell",
+  "commands": {
+    "primary": "./ternuxx --json ssh inspect",
+    "alternatives": [
+      "lsof -nP -iTCP:8023 -sTCP:LISTEN",
+      "netstat -ltnp"
+    ],
+    "tests": "python3 -m unittest tests.test_ssh_diagnostics -v"
+  },
+  "observations": {
+    "managed_service": {
+      "id": "ternuxx-sshd",
+      "status": "running",
+      "definition_identity": "verified",
+      "config_syntax": "valid",
+      "bind": "127.0.0.1:8023",
+      "loopback_probe": "ssh_banner"
+    },
+    "procfs": {
+      "tcp_listener_observation": "permission_denied",
+      "listener_daemon_correlation": "unknown",
+      "observed_tcp_listeners": []
+    },
+    "optional_tools": {
+      "lsof": {
+        "available": true,
+        "exit_code": 1,
+        "rows_for_8023_listener": 0,
+        "ownership_attributed": false
+      },
+      "netstat": {
+        "available": true,
+        "exit_code": 1,
+        "rows_for_8023_listener": 0,
+        "ownership_attributed": false,
+        "stderr": "non-empty; details not retained"
+      }
+    }
+  },
+  "interpretation": "The managed service definition and loopback SSH endpoint are healthy at this observation, but neither procfs nor the optional lsof/netstat probes provide process attribution. Listener ownership remains unknown; do not promote service status or banner reachability into an ownership claim.",
+  "safety": {
+    "read_only": true,
+    "pid_or_argv_recorded": false,
+    "credentials_read": false,
+    "services_changed": false,
+    "packages_changed": false,
+    "desktop_or_proot_touched": false
+  },
+  "tests": {
+    "result": "passed",
+    "passed": 9,
+    "failed": 0,
+    "scope": "SSH diagnostics parser, procfs permission handling, listener ownership correlation and native SSH report fixtures"
+  },
+  "mutations": []
+}

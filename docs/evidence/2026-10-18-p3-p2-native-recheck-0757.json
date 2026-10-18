@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-p2-and-p3-readonly-recheck",
+  "observed_at_utc": "2026-10-18T07:57:43Z",
+  "target_scope": "authenticated SSH session to the owner's native Termux on the recorded Android device",
+  "source_checkout": {
+    "path": "$HOME/ternuxx",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "worktree": "pre-existing dirty/uncommitted changes preserved"
+  },
+  "device": {
+    "termux_version": "0.119.0-beta.3",
+    "android_release": "16",
+    "abi": "arm64-v8a"
+  },
+  "p2": {
+    "package_source_record": "P2-termux-xfce-install-transaction-2026-10-18.json",
+    "query": "dpkg-query -W -f=${Package}|${Version}|${Status}\\n against the 77 recorded package names",
+    "read_only": true,
+    "queried": 77,
+    "installed_at_exact_recorded_version": 77,
+    "missing_or_mismatched": 0,
+    "package_changes": false,
+    "historical_preview_limitation": "The original full pre-consent APT simulation remains unrecoverable; this installed-package closure check does not recreate it."
+  },
+  "p3": {
+    "doctor": {
+      "read_only": true,
+      "overall": "warning",
+      "pass": 14,
+      "info": 15,
+      "warning": 1,
+      "error": 0,
+      "warning_ids": ["NTX-SSH-001"]
+    },
+    "desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "ssh": {
+      "native_8022": {
+        "configured_bind_scope": "wildcard",
+        "password_authentication": "enabled",
+        "listener_process_correlation": "unknown",
+        "external_reachability": "unknown"
+      },
+      "managed_8023": {
+        "manager": "runit",
+        "service": "ternuxx-sshd",
+        "status": "running",
+        "configured_bind_scope": "loopback_only",
+        "configuration_identity": "verified against repository source",
+        "loopback_banner_probe": "ssh_banner",
+        "listener_process_ownership": "unverified",
+        "service_start_after_kernel_boot_seconds": 41
+      }
+    },
+    "android_and_adb": {
+      "termux_boot_package_enabled": true,
+      "boot_completed_receiver_enabled": true,
+      "system_boot_delivery_policy": "unknown",
+      "adb_loopback_host_version": "0x0029",
+      "adb_device_transport_and_authorization": "unknown",
+      "shizuku_package_version_code": 1318,
+      "rish_present_on_path": false,
+      "shizuku_signer_server_permission_watchdog_state": "unknown"
+    }
+  },
+  "checks": {
+    "doctor_command": "bash bin/ternuxx doctor --json",
+    "status_command": "bash bin/ternuxx status --json",
+    "ssh_command": "bash bin/ternuxx ssh inspect --json",
+    "package_command": "read-only dpkg-query of the exact recorded P2 package closure",
+    "all_commands_read_only": true
+  },
+  "mutations": [],
+  "limitations": [
+    "The native desktop remained running; this record does not independently confirm Android GUI visibility.",
+    "The SSH configuration warning remains unresolved; this audit did not change configuration or service state.",
+    "Current-boot timing is consistent with startup automation but does not prove Termux:Boot broadcast causation.",
+    "This snapshot does not qualify a PRoot-owned workload, Shizuku provider, or off-home remote transport."
+  ]
+}

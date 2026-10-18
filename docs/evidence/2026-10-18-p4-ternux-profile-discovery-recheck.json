@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "record_type": "existing-ternux-readonly-profile-discovery-probe",
+  "observed_at_utc": "2026-10-18T01:39:50Z",
+  "commands": {
+    "state": "ternux --json state",
+    "status": "ternux --json status (01:39:21 UTC)",
+    "backend": "ternux --json backend show (01:39:22 UTC)",
+    "proot_inventory": "./ternuxx --json proot status (01:29:12 UTC)",
+    "info": "ternux --json info (01:41:46 UTC)",
+    "profile_show": "ternux --json profile show (01:41:47 UTC)"
+  },
+  "observations": {
+    "ternux_version": "1.4.0",
+    "state_status": "ok",
+    "completed_phases": [
+      "phase_preflight",
+      "phase_packages",
+      "phase_cli",
+      "phase_debian",
+      "phase_gpu",
+      "phase_audio_fonts",
+      "phase_launcher",
+      "phase_aliases",
+      "phase_extras",
+      "phase_phantom",
+      "phase_verify"
+    ],
+    "configured_backend": "zink",
+    "host_renderer": "unknown",
+    "ternux_desktop_status": "running",
+    "ternux_x11_process_status": "yes",
+    "ternux_pulseaudio_process_status": "stopped",
+    "installed_proot_distro": "debian",
+    "proot_guest_entered_for_inventory": false,
+    "profile_owner": "unverified"
+  },
+  "discovery_gaps": [
+    "State/status/backend output does not identify the active guest distro/user pair.",
+    "State/status output does not identify the active X display or prove that the Debian inventory is the Ternux-managed rootfs.",
+    "Host renderer remains unknown; the separate :1 guest renderer observation does not identify the active Ternux desktop context."
+  ],
+  "mutations": [],
+  "redaction": "Private state directory path and any state-file contents were not recorded.",
+  "additional_readonly_cli_checks": {
+    "info": {
+      "status": "ok",
+      "version": "1.4.0",
+      "android_version": "16",
+      "architecture": "aarch64",
+      "gpu": "Adreno (Adreno825)",
+      "vulkan": "yes",
+      "backend": "zink",
+      "renderer": "unknown"
+    },
+    "profile_show": {
+      "status": "complete",
+      "version": "1.4.0",
+      "backend": "zink",
+      "renderer": "unknown"
+    },
+    "active_guest_distro_user_display": "not exposed by these commands",
+    "ternux_managed_rootfs_identity": "not exposed; ownership remains unverified"
+  },
+  "configured_profile_from_installed_ternux": {
+    "state_file": {
+      "checked": true,
+      "regular_non_symlink": true,
+      "owner_matches_termux_uid": true,
+      "mode": "0600"
+    },
+    "guest_user_key": {
+      "present": true,
+      "matched_explicit_guest_verifier_user": true,
+      "literal_recorded": false
+    },
+    "distro": {
+      "value": "debian",
+      "basis": [
+        "phase_debian completed in Ternux state",
+        "Debian is the installed proot-distro inventory entry"
+      ]
+    },
+    "backend": "zink",
+    "install_profile": "base",
+    "display": {
+      "value": ":0",
+      "basis": "installed Ternux phases.sh launcher sets DISPLAY=:0 for Zink and VirGL"
+    },
+    "ternux_status": {
+      "status": "running",
+      "x11_running": "yes",
+      "launcher": "present"
+    }
+  },
+  "same_guest_display_comparison": {
+    "observed_window_utc": "2026-10-18T01:43:57Z\u20132026-10-18T01:45:14Z",
+    "profile_inputs": {
+      "distro": "debian",
+      "guest_user": "matched Ternux configured user; literal omitted",
+      "backend": "zink"
+    },
+    "display_0": {
+      "requested": ":0",
+      "result": "partial",
+      "x11": "unavailable",
+      "renderer": "unavailable",
+      "audio": "reachable",
+      "read_only": true
+    },
+    "display_1": {
+      "requested": ":1",
+      "result": "complete",
+      "x11": "reachable",
+      "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
+      "audio": "reachable",
+      "read_only": true
+    },
+    "host_x11_socket_nodes": [
+      "X0",
+      "X1"
+    ],
+    "socket_nodes_are_connectivity_proof": false,
+    "native_xdpyinfo_available": false,
+    "mutations": []
+  },
+  "interpretation": "The configured Ternux display :0 did not pass guest X11/renderer verification through the current read-only handoff, while :1 passed. This does not establish that :0 is stopped or that :1 is owned by Ternux; profile/rootfs ownership and active desktop identity remain unverified. No launch/stop or environment substitution was attempted.",
+  "device_state_after_display_probes": {
+    "observed_at_utc": "2026-10-18T01:46:47Z",
+    "native_desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "proot_inventory": {
+      "status": "installed",
+      "distributions": [
+        "debian"
+      ],
+      "guest_entered": false,
+      "ownership": "unverified"
+    },
+    "lifecycle_or_package_actions": []
+  }
+}

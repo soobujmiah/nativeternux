@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:proot-distribution-inventory:v1",
+  "title": "Ternuxx read-only PRoot distribution inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "status",
+    "manager_available",
+    "installed_distributions",
+    "ownership",
+    "guest_entered",
+    "read_only"
+  ],
+  "properties": {
+    "component": {"const": "proot_distribution_inventory"},
+    "status": {"enum": ["unavailable", "unknown", "none", "installed"]},
+    "manager_available": {"type": "boolean"},
+    "installed_distributions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$"}
+    },
+    "ownership": {"const": "unverified"},
+    "guest_entered": {"const": false},
+    "read_only": {"const": true}
+  }
+}

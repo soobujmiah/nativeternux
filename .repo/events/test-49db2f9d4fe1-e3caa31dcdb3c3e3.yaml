@@ -1,0 +1,9 @@
+event_id: test-49db2f9d4fe1-e3caa31dcdb3c3e3
+repository: soobujmiah/ternuxx
+commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
+kind: test
+occurred_at: '2026-10-17T12:17:50Z'
+status: passed
+summary: Native Termux repository suite 151/151 passed in 68.002s; proot inventory
+  API fixtures 21/21 passed; live probe unavailable because SSH environment omitted
+  TERMUX_VERSION; no override used.

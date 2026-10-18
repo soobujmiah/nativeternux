@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-private-remote-access-current-readonly-recheck",
+  "observed_at_utc": "2026-10-18T02:38:34Z",
+  "target_scope": "native Termux remote-access policy and narrow Tailscale package discovery",
+  "policy_preview": {
+    "command": "./ternuxx --json remote access preview",
+    "exit_code": 0,
+    "result": {
+      "mode": "disabled",
+      "readiness": "disabled",
+      "remote_access_active": false,
+      "public_ingress": false,
+      "transport_kind": null,
+      "transport_state": "not_probed",
+      "allowed_client_count": 0,
+      "allowed_target_count": 0,
+      "capability_count": 0,
+      "safety": {
+        "credentials_resolved": false,
+        "files_changed": false,
+        "network_accessed": false,
+        "public_ingress_enabled": false,
+        "services_changed": false
+      }
+    }
+  },
+  "tailscale_discovery": {
+    "android_package": "com.tailscale.ipn",
+    "package_present": true,
+    "termux_cli_present": false,
+    "process_present_at_probe": false,
+    "vpn_or_tailnet_state": "unknown",
+    "network_tested": false
+  },
+  "management_boundary": "The current Ternuxx remote-access adapter has no selected private transport or provider. App package presence alone does not show that VPN service, tailnet membership, or an authorized SSH route is active.",
+  "prior_native_ssh_context": "The separate 8022 SSH configuration was last observed wildcard-bound with password and keyboard-interactive authentication enabled; process-to-listener attribution was unavailable. No change or external connectivity probe was made.",
+  "source_tests": {
+    "command": "python3 -m unittest discover -s tests -p 'test_remote_access_policy.py'",
+    "result": "passed",
+    "passed": 8,
+    "failed": 0,
+    "duration_seconds": 0.003
+  },
+  "mutations": []
+}

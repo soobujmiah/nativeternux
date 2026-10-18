@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:01:39Z",
+  "phase": "P3",
+  "kind": "adb_server_doctor_integration",
+  "implementation": {
+    "module": "lib/adb_diagnostics.py",
+    "doctor_finding": "NTX-ADB-001",
+    "scope": "fixed loopback host:version query to 127.0.0.1:5037",
+    "does_not": [
+      "invoke adb executable or start a server",
+      "request adb devices or device authorization data",
+      "send shell or other device commands",
+      "change Wireless Debugging or Shizuku state",
+      "infer listener ownership, bind scope, or external reachability"
+    ]
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_adb_diagnostics tests.test_doctor_report -v",
+    "focused_passed": 26,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 225,
+    "full_failed": 0,
+    "full_duration_seconds": 143.967
+  },
+  "device_check": {
+    "access": "owner-authorized native Termux SSH session on loopback port 8022",
+    "command": "./ternuxx doctor --json",
+    "exit_code": 0,
+    "read_only": true,
+    "overall": "warning",
+    "summary": {"pass": 14, "info": 15, "warning": 1, "error": 0},
+    "adb_finding": {
+      "id": "NTX-ADB-001",
+      "severity": "info",
+      "observed": "local ADB server responds at 127.0.0.1:5037; protocol version=0x0029; process owner/bind scope, device transport/authorization, and Shizuku readiness=unknown"
+    },
+    "desktop_finding": "recorded native desktop state running on :1; no lifecycle action invoked",
+    "existing_ssh_warning": "wildcard bind/password authentication remains reported; no listener ownership/reachability claim changed",
+    "shizuku_state": "unknown; package metadata is not treated as server/permission/watchdog health"
+  },
+  "actions_not_performed": [
+    "No device list, ADB pairing, or ADB device command",
+    "No ADB server start/stop/restart",
+    "No Wireless Debugging, Android setting, Shizuku, package, or permission change",
+    "No desktop, boot profile, or PRoot lifecycle action"
+  ],
+  "related_owner_audit": "https://github.com/soobujmiah/adt/blob/abece9e714a3bcb24d4a8dcc9f001feb421c1411/docs/ON_DEVICE_ADB_SHIZUKU_OPERATIONAL_DEPENDENCY.md",
+  "limitations": [
+    "The native Doctor observation confirms only a local ADB server protocol response.",
+    "The ADB server's bind host, Android-side transport state, device authorization, and current Shizuku fork/watchdog remain unverified."
+  ]
+}

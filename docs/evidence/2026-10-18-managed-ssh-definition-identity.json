@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "date_local": "2026-10-18",
+  "evidence_type": "read_only_native_termux_observation_and_fixture_tests",
+  "target": {
+    "manager": "runit",
+    "service_id": "ternuxx-sshd",
+    "service_status": "running",
+    "loopback_probe": {
+      "address": "127.0.0.1",
+      "port": 8023,
+      "status": "ssh_banner"
+    },
+    "definition_identity": {
+      "status": "verified",
+      "checkout_sha256": "ec59008a2cbe3a8b7d5e13c72e0a8274d28ae238cd02ff1750a5901a683efb69",
+      "installed_sha256": "ec59008a2cbe3a8b7d5e13c72e0a8274d28ae238cd02ff1750a5901a683efb69"
+    },
+    "doctor_summary": {
+      "overall": "pass",
+      "pass": 14,
+      "info": 14,
+      "warning": 0,
+      "error": 0
+    }
+  },
+  "tests": {
+    "command": "python3 -m unittest tests.test_ssh_diagnostics tests.test_doctor_report -v",
+    "passed": 24,
+    "full_suite_command": "PYTHONPATH=$HOME/.cache/ternuxx-audit-venv/lib/python3.14/site-packages bash scripts/repo_test.sh",
+    "full_suite_passed": 131,
+    "full_suite_seconds": 31.565,
+    "service_wrapper_fixture_passed": 2
+  },
+  "mutations": {
+    "service": false,
+    "packages": false,
+    "boot_profile": false,
+    "desktop": false,
+    "proot": false,
+    "ssh_configuration": false,
+    "repository_source": true,
+    "installed_service_definition": false,
+    "service_restart": false
+  },
+  "limits": [
+    "Definition hash match does not prove the Runit process owns the observed listener.",
+    "No service start/stop action was performed.",
+    "No remote/LAN reachability or authenticated connection was tested by this read-only check."
+  ],
+  "checks": {
+    "python_compileall": "passed",
+    "cli_help_contract": "passed",
+    "evidence_json_parse": "passed",
+    "git_diff_check": "passed",
+    "native_ssh_report_schema_structural_assertions": "passed",
+    "formal_jsonschema_validation": "not_run_jsonschema_not_installed_or_declared_as_dev_dependency",
+    "repo_knowledge_verify_findings": 0
+  },
+  "initial_drift_observation": {
+    "status": "mismatch",
+    "checkout_sha256": "84f601a88d4f6a2917b5769e4ae479d49e2cfa7dcfc9f7722848eb30be1a0e1b",
+    "installed_sha256": "ec59008a2cbe3a8b7d5e13c72e0a8274d28ae238cd02ff1750a5901a683efb69",
+    "resolution": "aligned repository source to reviewed already-installed script; did not write or restart installed service"
+  }
+}

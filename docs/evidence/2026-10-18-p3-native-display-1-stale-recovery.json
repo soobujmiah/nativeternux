@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-18T10:56:06Z",
+  "phase": "P3",
+  "pre_recovery": {
+    "display": ":1",
+    "lock": {
+      "path": "$TMPDIR/.X1-lock",
+      "pid": 24612,
+      "mode": "0444",
+      "owner": "Termux UID",
+      "pid_visible_in_termux_proc": false,
+      "pid_visible_in_adb_shell_ps": false
+    },
+    "socket": {
+      "path": "$TMPDIR/.X11-unix/X1",
+      "type": "Unix socket",
+      "owner": "Termux UID",
+      "connect_result": "ECONNREFUSED",
+      "path_found_in_proc_net_unix": false
+    },
+    "artifact_mtime_local": "2026-10-18 15:25:49 +0600"
+  },
+  "implementation": {
+    "file": "lib/x11_display.py",
+    "behavior": "Recovers only an exact same-UID lock/socket when lock PID is absent from /proc and socket connect returns ECONNREFUSED; checks inode identity before unlink. Ambiguous/live artifacts remain busy.",
+    "integrated_in": [
+      "lib/core.sh display auto-selection",
+      "lib/desktop.sh explicit display check"
+    ]
+  },
+  "actions": [
+    {
+      "action": "Stopped only the recorded Ternuxx-owned :2 session through the manager.",
+      "result": "stopped"
+    },
+    {
+      "action": "Started native manager with automatic display selection.",
+      "result": {
+        "status": "running",
+        "display": ":1",
+        "activity_request": "accepted",
+        "gui_visible": "unknown",
+        "audio_owner": "external"
+      }
+    }
+  ],
+  "post_recovery": {
+    "lock_pid": 28608,
+    "x11_process": "termux-x11 com.termux.x11 :1",
+    "supervisor_pid": 28596,
+    "xfce_session_pid": 28671,
+    "manager_status": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown"
+    },
+    "android_activity_pid": 17642,
+    "termux_x11_activity_resumed": true,
+    "helper_on_active_display": "busy (exit 1), no cleanup"
+  },
+  "boot_profile": "cli-only",
+  "outcome": "Confirmed stale lock/socket caused :1 rejection. Exact stale artifacts recovered; native desktop now runs on its default :1 display. GUI render visibility remains unverified."
+}

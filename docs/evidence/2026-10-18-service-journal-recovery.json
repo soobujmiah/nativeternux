@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "date_local": "2026-10-18",
+  "evidence_type": "fixture_tests_and_read_only_native_termux_verification",
+  "implementation": {
+    "operation": "recovery.resolve",
+    "cli": "ternuxx recovery resolve OPERATION_ID [--yes --plan-id ID]",
+    "scope": "reconcile only one needs_recovery service.start/service.stop journal record",
+    "preview_binds": [
+      "journal operation ID/kind/timestamp",
+      "requested service state",
+      "observed Runit state",
+      "checked-out and installed run-script SHA-256",
+      "Runit sv SHA-256"
+    ],
+    "apply_requires_exact_preview_and_confirmation": true,
+    "service_manager_mutation_during_resolution": false,
+    "target_result_semantics": "complete only when Runit reports the requested state; otherwise explicit confirmation records failed; neither result asserts authenticated SSH health",
+    "supported_journal_kinds": [
+      "service.start",
+      "service.stop"
+    ]
+  },
+  "tests": {
+    "focused_service_recovery_management_journal": {
+      "result": "passed",
+      "count": 38
+    },
+    "full_native_termux_suite": {
+      "result": "passed",
+      "count": 143,
+      "duration_seconds": 31.11
+    },
+    "cli_help_contract": "passed",
+    "python_compileall": "passed",
+    "shell_syntax": "passed",
+    "schema_json_parse": "passed",
+    "git_diff_check": "passed",
+    "repo_knowledge_verify": "passed_zero_findings"
+  },
+  "native_target_read_only": {
+    "managed_ssh_service": "running",
+    "start_preview_changed": false,
+    "stop_preview_requires_confirmation": true,
+    "service_action_executed": false,
+    "recovery_unresolved_count": 0,
+    "doctor_summary": {
+      "pass": 14,
+      "info": 14,
+      "warning": 0,
+      "error": 0
+    },
+    "desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown"
+    },
+    "proot_or_desktop_mutated": false,
+    "invalid_operation_id_preview": "refused_without_journal_change",
+    "recovery_unresolved_count_after_negative_check": 0,
+    "listener_owner_correlation": {
+      "proc_net_tcp": "permission_denied",
+      "proc_net_tcp6": "permission_denied",
+      "netlink_sock_diag_ipv4": "permission_denied_errno_13",
+      "netlink_sock_diag_ipv6": "permission_denied_errno_13",
+      "ss_binary_present": false,
+      "status": "unavailable"
+    }
+  },
+  "limitations": [
+    "No unresolved service journal existed on the target, so journal reconciliation itself was verified by fixtures rather than an on-device apply.",
+    "Runit status confirms supervisor state, not listener ownership or authenticated SSH health.",
+    "Other needs_recovery operation kinds remain inspect-only; broader P3 recovery and PRoot ownership gates remain open.",
+    "A direct read-only NETLINK_SOCK_DIAG query was also denied (EACCES) for IPv4 and IPv6. Installing an ss/iproute2 client would not bypass this kernel permission boundary; do not add it as a runtime installer dependency for ownership proof."
+  ]
+}

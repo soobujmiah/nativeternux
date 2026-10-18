@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:49:54Z",
+  "phase": "P3",
+  "kind": "management_durable_idempotency_and_audit",
+  "implementation": {
+    "module": "lib/management_request_store.py",
+    "storage": "HOME-contained 0700 directories; atomic 0600 JSON records; 0600 lock and append-only JSONL audit",
+    "concurrency": "thread lock plus fcntl process lock",
+    "record_contents": [
+      "session reference",
+      "idempotency key SHA-256 only",
+      "canonical request fingerprint",
+      "request ID",
+      "typed operation and required capability",
+      "in-progress/completed state, outcome, HTTP status, duration"
+    ],
+    "audit_contents": "Allowlisted metadata only; no request body, operation arguments, bearer/CSRF/bootstrap tokens, or response payloads",
+    "replay_behavior": "Conflict rejects changed payload; in-progress reports unknown outcome; completed duplicate is rejected without replaying response or mutation",
+    "limits": {
+      "records": 2048,
+      "audit_bytes": 4194304,
+      "completed_record_retention_seconds": 86400
+    },
+    "adapter_policy": "Mutation transport remains disabled by default and requires explicit allow_mutations plus an object declaring durable storage; adapter binds no socket",
+    "session_policy": "Session credentials remain in-memory and expire on process restart",
+    "record_validation": "Strict schema and private owner/mode; rejects JSON non-finite constants and timestamps outside 0..1e12 seconds"
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_management_request_store -q",
+    "focused_passed": 7,
+    "focused_failed": 0,
+    "py_compile_command": "python3 -m py_compile lib/management_request_store.py lib/management_http_adapter.py",
+    "py_compile_passed": true,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 272,
+    "full_failed": 0,
+    "full_duration_seconds": 101.661
+  },
+  "adt_shizuku_context": {
+    "source": "https://github.com/soobujmiah/adt/blob/abece9e714a3bcb24d4a8dcc9f001feb421c1411/docs/ON_DEVICE_ADB_SHIZUKU_OPERATIONAL_DEPENDENCY.md",
+    "snapshot_date": "2026-09-13",
+    "interpretation": "The report distinguishes local ADB client/server port 5037 from the Android device transport. In the audited topology the custom Shizuku fork bootstraps the bridge after cold boot; standard Android Wireless Debugging is described as an alternative requiring manual pairing after reboot. Neither alternative has been qualified in the current Ternuxx runtime. No claim is made that enabling a local TCP listener alone reduces Shizuku dependency."
+  },
+  "device_actions": [],
+  "limitations": [
+    "No HTTP socket/listener, browser, or on-device loopback test was run.",
+    "The durable store is a tested primitive and is not configured as the live adapter's production store.",
+    "Session authority is still memory-only.",
+    "Concurrent server worker and request deadline enforcement remain future listener requirements.",
+    "No ADB pairing, Shizuku operation, device setting, package, service, desktop, or PRoot lifecycle action occurred."
+  ]
+}

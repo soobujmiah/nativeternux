@@ -1,0 +1,71 @@
+{
+  "boot_capability": {
+    "app": "installed",
+    "regular_script_count": 2,
+    "safety": {
+      "package_changed": false,
+      "read_only": true,
+      "script_contents_read": false
+    },
+    "script_directory": "present",
+    "startup_policy": "unknown",
+    "termux_boot_command_available": false
+  },
+  "captured_at": "2026-10-17T23:52:12Z",
+  "configured_profile": {
+    "configuration_source": "default",
+    "configured_profile": "cli-only",
+    "readiness_scope": "startup command prerequisites only; Termux:Boot delivery and Android background policy are not verified",
+    "ready": true
+  },
+  "profile_previews": {
+    "cli-only": {
+      "actions": [
+        "start no graphical session; keep separately configured CLI services"
+      ],
+      "blockers": [],
+      "ready": true,
+      "safety": {
+        "boot_config_changed": false,
+        "existing_proot_touched": false,
+        "read_only": true,
+        "script_installed": false,
+        "silent_provider_fallback": false
+      }
+    },
+    "hybrid": {
+      "actions": [
+        "no startup action; resolve the listed provider prerequisites first"
+      ],
+      "blockers": [
+        "native XFCE plus Ternux workload-routing adapter is not implemented; no provider fallback will run"
+      ],
+      "ready": false,
+      "safety": {
+        "boot_config_changed": false,
+        "existing_proot_touched": false,
+        "read_only": true,
+        "script_installed": false,
+        "silent_provider_fallback": false
+      }
+    },
+    "proot": {
+      "actions": [
+        "no startup action; resolve the listed provider prerequisites first"
+      ],
+      "blockers": [
+        "Ternux Debian ownership-aware adapter is not implemented; no provider fallback will run"
+      ],
+      "ready": false,
+      "safety": {
+        "boot_config_changed": false,
+        "existing_proot_touched": false,
+        "read_only": true,
+        "script_installed": false,
+        "silent_provider_fallback": false
+      }
+    }
+  },
+  "schema_version": 1,
+  "scope": "native Termux read-only profile preview; no boot files/settings changed and no PRoot guest entered"
+}

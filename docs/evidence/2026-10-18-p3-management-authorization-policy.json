@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:10:00Z",
+  "phase": "P3",
+  "kind": "management_authorization_policy",
+  "implementation": {
+    "module": "lib/management_authorization.py",
+    "operation_count": 31,
+    "policy": "one explicit capability scope per API-v1 operation; unknown operations and absent scopes deny",
+    "not_implemented_here": [
+      "caller authentication or session bootstrap",
+      "HTTP/TCP listener",
+      "remote access or device network changes",
+      "authorization enforcement in the existing local CLI dispatch"
+    ]
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_management_authorization -v",
+    "focused_passed": 4,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 229,
+    "full_failed": 0,
+    "full_duration_seconds": 145.148,
+    "coverage": [
+      "exact policy/service allowlist parity",
+      "unknown and malformed operations denied",
+      "wildcard and read-to-mutation escalation denied",
+      "malformed scope containers denied"
+    ]
+  },
+  "device_actions": [],
+  "limitations": [
+    "Repository contract tests do not authenticate a real client or validate a network transport.",
+    "No listener was started and no device networking, service, desktop, or PRoot state was changed.",
+    "P3 management TCP delivery gates remain open until authentication, request limits, audit/redaction, lifecycle, fake transport, and on-device loopback tests are complete."
+  ]
+}

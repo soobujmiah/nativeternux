@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-post-install-package-closure-audit",
+  "checked_at_local": "2026-10-18T04:51:51.858786+06:00",
+  "target_scope": "authenticated native Termux shell on the recorded Android 16/aarch64 target",
+  "runtime_observed": {
+    "termux_user": "u0_a490",
+    "prefix": "/data/data/com.termux/files/usr",
+    "termux_version": "0.119.0-beta.3",
+    "architecture": "aarch64",
+    "android_release": "16"
+  },
+  "read_only": true,
+  "package_mutation_performed": false,
+  "source_record": {
+    "path": "docs/evidence/P2-termux-xfce-install-transaction-2026-10-18.json",
+    "sha256": "8b8ec780d3c5174666d370391ca2c9ca24d9d5bbd590a7fd2caeed5fad8be6d5",
+    "historical_package_count": 77,
+    "originally_requested": 8,
+    "apt_marked_automatic": 69
+  },
+  "verification": {
+    "tool": "dpkg-query -W",
+    "fields": ["Package", "Version", "Status"],
+    "query_exit_code": 0,
+    "queried_package_count": 77,
+    "currently_installed_at_exact_recorded_version": 77,
+    "missing_or_not_installed": 0,
+    "version_mismatches": 0,
+    "stderr": ""
+  },
+  "method_note": "An initial ad hoc tab-delimited parser used the wrong escaped delimiter and falsely classified entries as missing. The raw dpkg-query format was checked on known installed packages, then the corrected pipe-delimited query was run across all 77 entries; only the corrected 77/77 result is evidence.",
+  "historical_limits": [
+    "This verifies current installed package names and versions against the recovered APT history record only.",
+    "It does not recreate the complete pre-consent simulation shown during the original 77-package install.",
+    "The later live preview record is a separate four-package xfce4-power-manager probe and is not represented as the original XFCE preview.",
+    "No original repository index snapshot or archive hashes were present in APT history; this audit does not invent them."
+  ]
+}

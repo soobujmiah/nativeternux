@@ -1,0 +1,43 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Start only the enabled Native Termux runit services; never enter PRoot.
+set -u
+umask 077
+
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+HOME="${HOME:?Termux HOME is required}"
+TERMUX_VERSION="${TERMUX_VERSION:-unknown}"
+NATIVERNUX_STATE_DIR="${NATIVERNUX_STATE_DIR:-$HOME/.local/share/nativeternux}"
+LOG_DIR="$NATIVERNUX_STATE_DIR/continuity/boot-logs"
+LOG_FILE="$LOG_DIR/ternuxx-services.log"
+export PREFIX HOME TERMUX_VERSION NATIVERNUX_STATE_DIR
+export PATH="$PREFIX/bin:$PATH"
+
+mkdir -p "$LOG_DIR" || exit 1
+chmod 700 "$NATIVERNUX_STATE_DIR/continuity" "$LOG_DIR" 2>/dev/null || true
+touch "$LOG_FILE" || exit 1
+chmod 600 "$LOG_FILE" || exit 1
+
+{
+  printf 'startup-at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || printf unknown)"
+  if [ ! -r "$PREFIX/etc/profile.d/start-services.sh" ] || ! command -v sv >/dev/null 2>&1; then
+    printf 'result=termux-services-unavailable\n'
+    exit 1
+  fi
+  # The official Termux helper starts runit in the background. Enabled
+  # services are controlled by their own service-directory policy.
+  . "$PREFIX/etc/profile.d/start-services.sh"
+  ready=0
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    status="$(sv status ternuxx-sshd 2>&1 || true)"
+    case "$status" in
+      run:*) printf 'sshd=%s\n' "$status"; ready=1; break ;;
+    esac
+    sleep 1
+  done
+  if [ "$ready" -ne 1 ]; then
+    printf 'sshd=not-ready detail=%s\n' "${status:-no-status}"
+    printf 'result=degraded; PRoot was not started\n'
+    exit 1
+  fi
+  printf 'result=ready; provider=native_termux; proot_dependency=false\n'
+} >>"$LOG_FILE" 2>&1

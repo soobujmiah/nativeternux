@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:29:21Z",
+  "runtime": {
+    "layer": "Termux Android shell reached through managed loopback SSH port 8023",
+    "uname": "Linux localhost 6.6.77-android15-8-g4a507830d890-ab13636293-4k #1 SMP PREEMPT Thu Jun 12 08:20:39 UTC 2025 aarch64 Android",
+    "access_route": "SSH from the authorized 8022 work shell to 127.0.0.1:8023"
+  },
+  "repository": {
+    "root": "$HOME/ternuxx",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "origin": "https://github.com/soobujmiah/ternuxx.git"
+  },
+  "test_run": {
+    "command": "bash scripts/repo_test.sh",
+    "result": "passed",
+    "passed": 273,
+    "failed": 0,
+    "duration_seconds": 35.7,
+    "exit_code": 0,
+    "log_path": "SSH terminal output; not copied into repository"
+  },
+  "mutations": {
+    "package_manager": false,
+    "desktop_or_service_lifecycle": false,
+    "boot_or_android_settings": false,
+    "proot_guest": false,
+    "ternux_repository": false
+  }
+}

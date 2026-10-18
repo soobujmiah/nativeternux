@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T02:31:37Z",
+  "phase": "P3",
+  "phase_status": "in_progress",
+  "repository": {
+    "origin": "https://github.com/soobujmiah/ternuxx.git",
+    "head": "1a891fa"
+  },
+  "checks": {
+    "full_repository_tests": {
+      "command": "bash scripts/repo_test.sh",
+      "result": "passed",
+      "passed": 213,
+      "failed": 0,
+      "duration_seconds": 33.491
+    },
+    "guest_profile_input": {
+      "result": "not_run",
+      "reason": "The installed Ternux profile inspection evidence confirms a secure state file and a configured guest-user key matching the earlier verifier input, but does not retain the literal username. No username was guessed or recovered from unrelated user data.",
+      "source_evidence": "2026-10-18-p4-ternux-profile-discovery-recheck.json",
+      "guest_rootfs_touched": false,
+      "ternux_lifecycle_changed": false
+    },
+    "live_readonly_device_snapshot": {
+      "doctor": {
+        "command": "./ternuxx --json doctor",
+        "exit_code": 1,
+        "read_only": true,
+        "overall": "warning",
+        "summary": {
+          "pass": 14,
+          "info": 14,
+          "warning": 1,
+          "error": 0
+        },
+        "findings": [
+          {
+            "id": "NTX-SSH-001",
+            "severity": "warning",
+            "message": null
+          }
+        ]
+      },
+      "managed_ssh": {
+        "command": "./ternuxx --json ssh inspect",
+        "exit_code": 0,
+        "environment": "native_termux",
+        "manager": "runit",
+        "service_id": "ternuxx-sshd",
+        "status": "running",
+        "listener_bind_scope": "loopback_only",
+        "loopback_ssh_probe": {
+          "address": "127.0.0.1",
+          "port": 8023,
+          "status": "ssh_banner"
+        },
+        "startup_timing": {
+          "kernel_uptime_seconds": 29437,
+          "runit_service_age_seconds": 29397,
+          "seconds_after_kernel_boot": 40,
+          "status": "observed"
+        },
+        "process_ownership": "unknown",
+        "external_sshd_configured_bind_scope": "wildcard",
+        "external_sshd_authentication": {
+          "password": [
+            "yes"
+          ],
+          "keyboard_interactive": [
+            "yes"
+          ]
+        },
+        "listener_process_observation": "permission_denied"
+      },
+      "proot_inventory": {
+        "command": "./ternuxx --json proot status",
+        "exit_code": 0,
+        "status": "installed",
+        "installed_distributions": [
+          "debian"
+        ],
+        "guest_entered": false,
+        "ownership": "unverified",
+        "read_only": true
+      }
+    }
+  },
+  "phase_decision": "P3 remains in_progress; Doctor is read-only with 14 pass / 14 info / 1 warning / 0 errors; native managed SSH on loopback is running and startup timing is observed, but listener ownership is unknown; a separate SSH configuration is wildcard-bound with password and keyboard-interactive authentication enabled, with listener attribution unavailable; Debian is installed but guest ownership is unverified and the guest was not entered. Existing cold-boot, visible-GUI, guest audio, Shizuku health/permission, and workload-routing gates remain open.",
+  "mutations": []
+}

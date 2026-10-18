@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-18",
+  "phase": "P3",
+  "method": "native Termux SSH 8022; PRoot inventory/ADB availability only",
+  "proot": {
+    "distribution": "debian",
+    "installed": true,
+    "ownership": "unverified"
+  },
+  "checks": [
+    {
+      "command": "./ternuxx proot status",
+      "result": "Debian installed; inventory only; guest not entered"
+    },
+    {
+      "command": "adb devices -l",
+      "environment": "native Termux",
+      "result": "adb executable not installed"
+    },
+    {
+      "command": "proot-distro login debian -- adb devices -l",
+      "environment": "Debian PRoot",
+      "result": "/bin/bash: adb: command not found"
+    },
+    {
+      "command": "/home/sbj/android-sdk/platform-tools/adb -s emulator-5554 devices -l",
+      "environment": "authorized Linux PRoot-Distro host",
+      "result": "ADB 35.0.2; emulator-5554 in device state"
+    }
+  ],
+  "previous_runtime_observation": "Native ADB loopback server at 127.0.0.1:5037 was not observed in prior read-only inspection.",
+  "outcome": "Authorized ADB is available from the PRoot-Distro host; initial no-ADB conclusion was incorrect. Force-stop/retry is in 2026-10-18-p3-x11-activity-retry.json.",
+  "correction": "Initial search checked native Termux and Debian guest PATH only, missing the host Android SDK platform-tools binary."
+}

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "date_local": "2026-10-18",
+  "evidence_type": "fixture_tests_and_read_only_native_termux_previews",
+  "target": {
+    "manager": "runit",
+    "service_id": "ternuxx-sshd",
+    "service_status": "running",
+    "service_definition_identity": "verified",
+    "manager_binary_identity": "verified",
+    "start_preview": {
+      "current_status": "running",
+      "requires_confirmation": false,
+      "changed": false
+    },
+    "stop_preview": {
+      "current_status": "running",
+      "target_status": "stopped",
+      "requires_confirmation": true,
+      "changed": false
+    },
+    "doctor_summary": {
+      "overall": "pass",
+      "pass": 14,
+      "info": 14,
+      "warning": 0,
+      "error": 0
+    },
+    "desktop": {
+      "display": ":1",
+      "supervisor_running": true,
+      "x11_running": true,
+      "visibility": "unknown"
+    },
+    "recovery_unresolved_count": 0,
+    "listener_ownership": {
+      "tcp_listener_observation": "unavailable",
+      "proc_net_tcp_access": "permission_denied",
+      "proc_net_tcp6_access": "permission_denied",
+      "ss_tool_present": false,
+      "loopback_8023_probe": "ssh_banner",
+      "daemon_listener_correlation": "unverified"
+    }
+  },
+  "fixture_tests": {
+    "tests.test_runit_service_latest": 6,
+    "tests.test_runit_service_management_journal_pre_schema_assertion": 32,
+    "full_suite": {
+      "result": "passed",
+      "count": 138,
+      "duration_seconds": 31.807
+    },
+    "initial_attempt": {
+      "result": "blocked_by_missing_declared_dev_dependency",
+      "dependency": "PyYAML 6.0.3",
+      "resolution": "installed from requirements-dev.txt in native Termux user site; no runtime or system package installed"
+    }
+  },
+  "mutations": {
+    "service_start_stop": false,
+    "ssh_config": false,
+    "packages": false,
+    "boot_profile": false,
+    "desktop": false,
+    "proot": false,
+    "repository_source": true,
+    "python_dev_dependency": true,
+    "termux_system_packages": false
+  },
+  "limits": [
+    "No target service start/stop action was executed.",
+    "A fixed run-script identity does not correlate the managed process with a kernel listener.",
+    "Authenticated post-action health, Web/X11 parity, and cold-boot service behavior remain unverified.",
+    "The declared development dependency PyYAML was installed into the native Termux user Python site for the reproducible repository suite; this was not a product package or an installer runtime dependency.",
+    "The attached unrooted Termux process cannot read /proc/net/tcp or /proc/net/tcp6 and has no ss binary; the 127.0.0.1:8023 SSH banner confirms reachability only, not listener ownership. A correlation method needs a supported Android/Termux observation path before claiming service-to-listener ownership."
+  ]
+}

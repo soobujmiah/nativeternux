@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:adb-server-diagnostics:v1",
+  "title": "Ternuxx read-only local ADB server diagnostics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "status",
+    "host",
+    "port",
+    "server_protocol_version_hex",
+    "safety"
+  ],
+  "properties": {
+    "component": {"const": "adb_server_diagnostics"},
+    "status": {"enum": ["available", "not_observed", "unknown", "protocol_error"]},
+    "host": {"const": "127.0.0.1"},
+    "port": {"const": 5037},
+    "server_protocol_version_hex": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{1,8}$"
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_only",
+        "adb_executable_invoked",
+        "server_started_or_stopped",
+        "device_list_requested",
+        "device_command_sent"
+      ],
+      "properties": {
+        "read_only": {"const": true},
+        "adb_executable_invoked": {"const": false},
+        "server_started_or_stopped": {"const": false},
+        "device_list_requested": {"const": false},
+        "device_command_sent": {"const": false}
+      }
+    }
+  }
+}

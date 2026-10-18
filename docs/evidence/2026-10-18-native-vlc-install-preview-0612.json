@@ -1,0 +1,669 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-optional-package-preview",
+  "observed_at_utc": "2026-10-18T06:18:11.035654+00:00",
+  "request": "Install native VLC for audio/video playback; owner authorization received in conversation.",
+  "package_indexes_fresh": true,
+  "candidate": {
+    "package": "vlc",
+    "version": "3.0.24-1",
+    "policy_output": "vlc:\n  Installed: (none)\n  Candidate: 3.0.24-1\n  Version table:\n     3.0.24-1 500\n        500 https://grimler.se/termux/termux-main stable/main aarch64 Packages\n"
+  },
+  "plan_id": "f1d336767670790d580a63d88a5a3f8cbf15dd6e97677a81b84f7ef856c1c15a",
+  "requested_candidates": [
+    "vlc=3.0.24-1"
+  ],
+  "resolved_transaction": [
+    {
+      "package": "cjson",
+      "version": "1.7.19",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "game-music-emu",
+      "version": "0.6.5",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libaom",
+      "version": "3.15.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libass",
+      "version": "0.17.5",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libudfread",
+      "version": "1.2.0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libbluray",
+      "version": "1.5.1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libbs2b",
+      "version": "3.1.0-2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libdvdread",
+      "version": "7.1.1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libdvdnav",
+      "version": "7.0.0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "giflib",
+      "version": "6.1.3",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "highway",
+      "version": "1.4.0-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libjxl",
+      "version": "0.12.0-2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libmysofa",
+      "version": "1.3.5",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libopencore-amr",
+      "version": "0.1.6-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libopenmpt",
+      "version": "0.8.9",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "littlecms",
+      "version": "2.19.1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "glslang",
+      "version": "16.6.0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libplacebo",
+      "version": "7.360.1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "librav1e",
+      "version": "0.8.1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libsrt",
+      "version": "1.5.7",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libssh",
+      "version": "0.12.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libtheora",
+      "version": "1.2.0-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libv4l",
+      "version": "1.32.0-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libvidstab",
+      "version": "1.1.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libvmaf",
+      "version": "3.2.1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libvo-amrwbenc",
+      "version": "0.1.3-2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libvpx",
+      "version": "1:1.17.0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libwebp",
+      "version": "1.6.0-rc1-0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libx264",
+      "version": "1:0.164.3191-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libx265",
+      "version": "4.3",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libzimg",
+      "version": "3.0.6",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libsodium",
+      "version": "1.0.22-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libzmq",
+      "version": "4.3.5-2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "ocl-icd",
+      "version": "2.3.5",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "fftw",
+      "version": "3.3.11",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libsamplerate",
+      "version": "0.2.2-4",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "rubberband",
+      "version": "4.0.0-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "svt-av1",
+      "version": "4.2.0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "xvidcore",
+      "version": "1.3.7-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "ffmpeg",
+      "version": "9.0.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "fluidsynth",
+      "version": "2.6.1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "gstreamer",
+      "version": "1.28.8",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libxv",
+      "version": "1.0.13-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "gst-plugins-base",
+      "version": "1.28.8",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libde265",
+      "version": "1.1.3",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libheif",
+      "version": "1.23.6",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libid3tag",
+      "version": "0.16.4-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "openjpeg",
+      "version": "2.5.4",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "imlib2",
+      "version": "1.12.7",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "liba52",
+      "version": "0.8.0-3",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libandroid-spawn",
+      "version": "0.3",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libarchive",
+      "version": "3.8.10",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libbsd",
+      "version": "0.12.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libcaca",
+      "version": "0.99.beta20-3",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libcddb",
+      "version": "1.3.2-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libchromaprint",
+      "version": "1.6.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libdvbpsi",
+      "version": "1.3.3-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libebml",
+      "version": "1.4.7",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libidn",
+      "version": "1.44",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libmad",
+      "version": "0.16.5-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libmatroska",
+      "version": "1.7.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libmicrohttpd",
+      "version": "1.0.10",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libmpeg2",
+      "version": "0.5.1-2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libnfs",
+      "version": "8.0.0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libpopt",
+      "version": "1.19-3",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "mbedtls",
+      "version": "3.6.7",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "librist",
+      "version": "0.2.20",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libsecret",
+      "version": "0.21.8.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libtdb",
+      "version": "1.4.15-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "libtwolame",
+      "version": "0.4.0-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "lua52",
+      "version": "5.2.4-19",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "tdb-tools",
+      "version": "1.4.15-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "samba",
+      "version": "4.25.0",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "utf8cpp",
+      "version": "1:4.2.1",
+      "origin": "termux-main stable:stable [all]"
+    },
+    {
+      "package": "taglib",
+      "version": "2.3.2",
+      "origin": "termux-main stable:stable [aarch64]"
+    },
+    {
+      "package": "vlc",
+      "version": "3.0.24-1",
+      "origin": "termux-main stable:stable [aarch64]"
+    }
+  ],
+  "transaction_summary": {
+    "upgraded": 0,
+    "newly_installed": 76,
+    "removed": 0,
+    "not_upgraded": 12
+  },
+  "apt_simulation": "NOTE: This is only a simulation!\n      apt-get needs root privileges for real execution.\n      Keep also in mind that locking is deactivated,\n      so don't depend on the relevance to the real current situation!\nReading package lists...\nBuilding dependency tree...\nReading state information...\nThe following additional packages will be installed:\n  cjson ffmpeg fftw fluidsynth game-music-emu giflib glslang gst-plugins-base\n  gstreamer highway imlib2 liba52 libandroid-spawn libaom libarchive libass\n  libbluray libbs2b libbsd libcaca libcddb libchromaprint libde265 libdvbpsi\n  libdvdnav libdvdread libebml libheif libid3tag libidn libjxl libmad\n  libmatroska libmicrohttpd libmpeg2 libmysofa libnfs libopencore-amr\n  libopenmpt libplacebo libpopt librav1e librist libsamplerate libsecret\n  libsodium libsrt libssh libtdb libtheora libtwolame libudfread libv4l\n  libvidstab libvmaf libvo-amrwbenc libvpx libwebp libx264 libx265 libxv\n  libzimg libzmq littlecms lua52 mbedtls ocl-icd openjpeg rubberband samba\n  svt-av1 taglib tdb-tools utf8cpp xvidcore\nSuggested packages:\n  gst-plugins-libav gst-plugins-good gst-plugins-bad gst-plugins-ugly\nThe following NEW packages will be installed:\n  cjson ffmpeg fftw fluidsynth game-music-emu giflib glslang gst-plugins-base\n  gstreamer highway imlib2 liba52 libandroid-spawn libaom libarchive libass\n  libbluray libbs2b libbsd libcaca libcddb libchromaprint libde265 libdvbpsi\n  libdvdnav libdvdread libebml libheif libid3tag libidn libjxl libmad\n  libmatroska libmicrohttpd libmpeg2 libmysofa libnfs libopencore-amr\n  libopenmpt libplacebo libpopt librav1e librist libsamplerate libsecret\n  libsodium libsrt libssh libtdb libtheora libtwolame libudfread libv4l\n  libvidstab libvmaf libvo-amrwbenc libvpx libwebp libx264 libx265 libxv\n  libzimg libzmq littlecms lua52 mbedtls ocl-icd openjpeg rubberband samba\n  svt-av1 taglib tdb-tools utf8cpp vlc xvidcore\n0 upgraded, 76 newly installed, 0 to remove and 12 not upgraded.\nInst cjson (1.7.19 termux-main stable:stable [aarch64])\nInst game-music-emu (0.6.5 termux-main stable:stable [aarch64])\nInst libaom (3.15.2 termux-main stable:stable [aarch64])\nInst libass (0.17.5 termux-main stable:stable [aarch64])\nInst libudfread (1.2.0 termux-main stable:stable [aarch64])\nInst libbluray (1.5.1 termux-main stable:stable [aarch64])\nInst libbs2b (3.1.0-2 termux-main stable:stable [aarch64])\nInst libdvdread (7.1.1 termux-main stable:stable [aarch64])\nInst libdvdnav (7.0.0 termux-main stable:stable [aarch64])\nInst giflib (6.1.3 termux-main stable:stable [aarch64])\nInst highway (1.4.0-1 termux-main stable:stable [aarch64])\nInst libjxl (0.12.0-2 termux-main stable:stable [aarch64])\nInst libmysofa (1.3.5 termux-main stable:stable [aarch64])\nInst libopencore-amr (0.1.6-1 termux-main stable:stable [aarch64])\nInst libopenmpt (0.8.9 termux-main stable:stable [aarch64])\nInst littlecms (2.19.1 termux-main stable:stable [aarch64])\nInst glslang (16.6.0 termux-main stable:stable [aarch64])\nInst libplacebo (7.360.1 termux-main stable:stable [aarch64])\nInst librav1e (0.8.1 termux-main stable:stable [aarch64])\nInst libsrt (1.5.7 termux-main stable:stable [aarch64])\nInst libssh (0.12.2 termux-main stable:stable [aarch64])\nInst libtheora (1.2.0-1 termux-main stable:stable [aarch64])\nInst libv4l (1.32.0-1 termux-main stable:stable [aarch64])\nInst libvidstab (1.1.2 termux-main stable:stable [aarch64])\nInst libvmaf (3.2.1 termux-main stable:stable [aarch64])\nInst libvo-amrwbenc (0.1.3-2 termux-main stable:stable [aarch64])\nInst libvpx (1:1.17.0 termux-main stable:stable [aarch64])\nInst libwebp (1.6.0-rc1-0 termux-main stable:stable [aarch64])\nInst libx264 (1:0.164.3191-1 termux-main stable:stable [aarch64])\nInst libx265 (4.3 termux-main stable:stable [aarch64])\nInst libzimg (3.0.6 termux-main stable:stable [aarch64])\nInst libsodium (1.0.22-1 termux-main stable:stable [aarch64])\nInst libzmq (4.3.5-2 termux-main stable:stable [aarch64])\nInst ocl-icd (2.3.5 termux-main stable:stable [aarch64])\nInst fftw (3.3.11 termux-main stable:stable [aarch64])\nInst libsamplerate (0.2.2-4 termux-main stable:stable [aarch64])\nInst rubberband (4.0.0-1 termux-main stable:stable [aarch64])\nInst svt-av1 (4.2.0 termux-main stable:stable [aarch64])\nInst xvidcore (1.3.7-1 termux-main stable:stable [aarch64])\nInst ffmpeg (9.0.2 termux-main stable:stable [aarch64])\nInst fluidsynth (2.6.1 termux-main stable:stable [aarch64])\nInst gstreamer (1.28.8 termux-main stable:stable [aarch64])\nInst libxv (1.0.13-1 termux-main stable:stable [aarch64])\nInst gst-plugins-base (1.28.8 termux-main stable:stable [aarch64])\nInst libde265 (1.1.3 termux-main stable:stable [aarch64])\nInst libheif (1.23.6 termux-main stable:stable [aarch64])\nInst libid3tag (0.16.4-1 termux-main stable:stable [aarch64])\nInst openjpeg (2.5.4 termux-main stable:stable [aarch64])\nInst imlib2 (1.12.7 termux-main stable:stable [aarch64])\nInst liba52 (0.8.0-3 termux-main stable:stable [aarch64])\nInst libandroid-spawn (0.3 termux-main stable:stable [aarch64])\nInst libarchive (3.8.10 termux-main stable:stable [aarch64])\nInst libbsd (0.12.2 termux-main stable:stable [aarch64])\nInst libcaca (0.99.beta20-3 termux-main stable:stable [aarch64])\nInst libcddb (1.3.2-1 termux-main stable:stable [aarch64])\nInst libchromaprint (1.6.2 termux-main stable:stable [aarch64])\nInst libdvbpsi (1.3.3-1 termux-main stable:stable [aarch64])\nInst libebml (1.4.7 termux-main stable:stable [aarch64])\nInst libidn (1.44 termux-main stable:stable [aarch64])\nInst libmad (0.16.5-1 termux-main stable:stable [aarch64])\nInst libmatroska (1.7.2 termux-main stable:stable [aarch64])\nInst libmicrohttpd (1.0.10 termux-main stable:stable [aarch64])\nInst libmpeg2 (0.5.1-2 termux-main stable:stable [aarch64])\nInst libnfs (8.0.0 termux-main stable:stable [aarch64])\nInst libpopt (1.19-3 termux-main stable:stable [aarch64])\nInst mbedtls (3.6.7 termux-main stable:stable [aarch64])\nInst librist (0.2.20 termux-main stable:stable [aarch64])\nInst libsecret (0.21.8.2 termux-main stable:stable [aarch64])\nInst libtdb (1.4.15-1 termux-main stable:stable [aarch64])\nInst libtwolame (0.4.0-1 termux-main stable:stable [aarch64])\nInst lua52 (5.2.4-19 termux-main stable:stable [aarch64])\nInst tdb-tools (1.4.15-1 termux-main stable:stable [aarch64])\nInst samba (4.25.0 termux-main stable:stable [aarch64])\nInst utf8cpp (1:4.2.1 termux-main stable:stable [all])\nInst taglib (2.3.2 termux-main stable:stable [aarch64])\nInst vlc (3.0.24-1 termux-main stable:stable [aarch64])\nConf cjson (1.7.19 termux-main stable:stable [aarch64])\nConf game-music-emu (0.6.5 termux-main stable:stable [aarch64])\nConf libaom (3.15.2 termux-main stable:stable [aarch64])\nConf libass (0.17.5 termux-main stable:stable [aarch64])\nConf libudfread (1.2.0 termux-main stable:stable [aarch64])\nConf libbluray (1.5.1 termux-main stable:stable [aarch64])\nConf libbs2b (3.1.0-2 termux-main stable:stable [aarch64])\nConf libdvdread (7.1.1 termux-main stable:stable [aarch64])\nConf libdvdnav (7.0.0 termux-main stable:stable [aarch64])\nConf giflib (6.1.3 termux-main stable:stable [aarch64])\nConf highway (1.4.0-1 termux-main stable:stable [aarch64])\nConf libjxl (0.12.0-2 termux-main stable:stable [aarch64])\nConf libmysofa (1.3.5 termux-main stable:stable [aarch64])\nConf libopencore-amr (0.1.6-1 termux-main stable:stable [aarch64])\nConf libopenmpt (0.8.9 termux-main stable:stable [aarch64])\nConf littlecms (2.19.1 termux-main stable:stable [aarch64])\nConf glslang (16.6.0 termux-main stable:stable [aarch64])\nConf libplacebo (7.360.1 termux-main stable:stable [aarch64])\nConf librav1e (0.8.1 termux-main stable:stable [aarch64])\nConf libsrt (1.5.7 termux-main stable:stable [aarch64])\nConf libssh (0.12.2 termux-main stable:stable [aarch64])\nConf libtheora (1.2.0-1 termux-main stable:stable [aarch64])\nConf libv4l (1.32.0-1 termux-main stable:stable [aarch64])\nConf libvidstab (1.1.2 termux-main stable:stable [aarch64])\nConf libvmaf (3.2.1 termux-main stable:stable [aarch64])\nConf libvo-amrwbenc (0.1.3-2 termux-main stable:stable [aarch64])\nConf libvpx (1:1.17.0 termux-main stable:stable [aarch64])\nConf libwebp (1.6.0-rc1-0 termux-main stable:stable [aarch64])\nConf libx264 (1:0.164.3191-1 termux-main stable:stable [aarch64])\nConf libx265 (4.3 termux-main stable:stable [aarch64])\nConf libzimg (3.0.6 termux-main stable:stable [aarch64])\nConf libsodium (1.0.22-1 termux-main stable:stable [aarch64])\nConf libzmq (4.3.5-2 termux-main stable:stable [aarch64])\nConf ocl-icd (2.3.5 termux-main stable:stable [aarch64])\nConf fftw (3.3.11 termux-main stable:stable [aarch64])\nConf libsamplerate (0.2.2-4 termux-main stable:stable [aarch64])\nConf rubberband (4.0.0-1 termux-main stable:stable [aarch64])\nConf svt-av1 (4.2.0 termux-main stable:stable [aarch64])\nConf xvidcore (1.3.7-1 termux-main stable:stable [aarch64])\nConf ffmpeg (9.0.2 termux-main stable:stable [aarch64])\nConf fluidsynth (2.6.1 termux-main stable:stable [aarch64])\nConf gstreamer (1.28.8 termux-main stable:stable [aarch64])\nConf libxv (1.0.13-1 termux-main stable:stable [aarch64])\nConf gst-plugins-base (1.28.8 termux-main stable:stable [aarch64])\nConf libde265 (1.1.3 termux-main stable:stable [aarch64])\nConf libheif (1.23.6 termux-main stable:stable [aarch64])\nConf libid3tag (0.16.4-1 termux-main stable:stable [aarch64])\nConf openjpeg (2.5.4 termux-main stable:stable [aarch64])\nConf imlib2 (1.12.7 termux-main stable:stable [aarch64])\nConf liba52 (0.8.0-3 termux-main stable:stable [aarch64])\nConf libandroid-spawn (0.3 termux-main stable:stable [aarch64])\nConf libarchive (3.8.10 termux-main stable:stable [aarch64])\nConf libbsd (0.12.2 termux-main stable:stable [aarch64])\nConf libcaca (0.99.beta20-3 termux-main stable:stable [aarch64])\nConf libcddb (1.3.2-1 termux-main stable:stable [aarch64])\nConf libchromaprint (1.6.2 termux-main stable:stable [aarch64])\nConf libdvbpsi (1.3.3-1 termux-main stable:stable [aarch64])\nConf libebml (1.4.7 termux-main stable:stable [aarch64])\nConf libidn (1.44 termux-main stable:stable [aarch64])\nConf libmad (0.16.5-1 termux-main stable:stable [aarch64])\nConf libmatroska (1.7.2 termux-main stable:stable [aarch64])\nConf libmicrohttpd (1.0.10 termux-main stable:stable [aarch64])\nConf libmpeg2 (0.5.1-2 termux-main stable:stable [aarch64])\nConf libnfs (8.0.0 termux-main stable:stable [aarch64])\nConf libpopt (1.19-3 termux-main stable:stable [aarch64])\nConf mbedtls (3.6.7 termux-main stable:stable [aarch64])\nConf librist (0.2.20 termux-main stable:stable [aarch64])\nConf libsecret (0.21.8.2 termux-main stable:stable [aarch64])\nConf libtdb (1.4.15-1 termux-main stable:stable [aarch64])\nConf libtwolame (0.4.0-1 termux-main stable:stable [aarch64])\nConf lua52 (5.2.4-19 termux-main stable:stable [aarch64])\nConf tdb-tools (1.4.15-1 termux-main stable:stable [aarch64])\nConf samba (4.25.0 termux-main stable:stable [aarch64])\nConf utf8cpp (1:4.2.1 termux-main stable:stable [all])\nConf taglib (2.3.2 termux-main stable:stable [aarch64])\nConf vlc (3.0.24-1 termux-main stable:stable [aarch64])\n",
+  "apply_argv": [
+    "apt-get",
+    "--assume-yes",
+    "--no-install-recommends",
+    "--no-remove",
+    "--no-upgrade",
+    "install",
+    "cjson=1.7.19",
+    "game-music-emu=0.6.5",
+    "libaom=3.15.2",
+    "libass=0.17.5",
+    "libudfread=1.2.0",
+    "libbluray=1.5.1",
+    "libbs2b=3.1.0-2",
+    "libdvdread=7.1.1",
+    "libdvdnav=7.0.0",
+    "giflib=6.1.3",
+    "highway=1.4.0-1",
+    "libjxl=0.12.0-2",
+    "libmysofa=1.3.5",
+    "libopencore-amr=0.1.6-1",
+    "libopenmpt=0.8.9",
+    "littlecms=2.19.1",
+    "glslang=16.6.0",
+    "libplacebo=7.360.1",
+    "librav1e=0.8.1",
+    "libsrt=1.5.7",
+    "libssh=0.12.2",
+    "libtheora=1.2.0-1",
+    "libv4l=1.32.0-1",
+    "libvidstab=1.1.2",
+    "libvmaf=3.2.1",
+    "libvo-amrwbenc=0.1.3-2",
+    "libvpx=1:1.17.0",
+    "libwebp=1.6.0-rc1-0",
+    "libx264=1:0.164.3191-1",
+    "libx265=4.3",
+    "libzimg=3.0.6",
+    "libsodium=1.0.22-1",
+    "libzmq=4.3.5-2",
+    "ocl-icd=2.3.5",
+    "fftw=3.3.11",
+    "libsamplerate=0.2.2-4",
+    "rubberband=4.0.0-1",
+    "svt-av1=4.2.0",
+    "xvidcore=1.3.7-1",
+    "ffmpeg=9.0.2",
+    "fluidsynth=2.6.1",
+    "gstreamer=1.28.8",
+    "libxv=1.0.13-1",
+    "gst-plugins-base=1.28.8",
+    "libde265=1.1.3",
+    "libheif=1.23.6",
+    "libid3tag=0.16.4-1",
+    "openjpeg=2.5.4",
+    "imlib2=1.12.7",
+    "liba52=0.8.0-3",
+    "libandroid-spawn=0.3",
+    "libarchive=3.8.10",
+    "libbsd=0.12.2",
+    "libcaca=0.99.beta20-3",
+    "libcddb=1.3.2-1",
+    "libchromaprint=1.6.2",
+    "libdvbpsi=1.3.3-1",
+    "libebml=1.4.7",
+    "libidn=1.44",
+    "libmad=0.16.5-1",
+    "libmatroska=1.7.2",
+    "libmicrohttpd=1.0.10",
+    "libmpeg2=0.5.1-2",
+    "libnfs=8.0.0",
+    "libpopt=1.19-3",
+    "mbedtls=3.6.7",
+    "librist=0.2.20",
+    "libsecret=0.21.8.2",
+    "libtdb=1.4.15-1",
+    "libtwolame=0.4.0-1",
+    "lua52=5.2.4-19",
+    "tdb-tools=1.4.15-1",
+    "samba=4.25.0",
+    "utf8cpp=1:4.2.1",
+    "taglib=2.3.2",
+    "vlc=3.0.24-1"
+  ],
+  "state_changed": false,
+  "limitations": [
+    "This optional package is not added to the Ternuxx base installer; native application catalog integration belongs to the later software-catalog phase."
+  ],
+  "application": {
+    "started_at_utc": "2026-10-18T06:19:21.219978+00:00",
+    "plan_revalidated": true,
+    "plan_id_recomputed": "f1d336767670790d580a63d88a5a3f8cbf15dd6e97677a81b84f7ef856c1c15a",
+    "apt_exit_code": 0,
+    "apt_output_present": true,
+    "apt_error_present": false,
+    "command": [
+      "apt-get",
+      "--assume-yes",
+      "--no-install-recommends",
+      "--no-remove",
+      "--no-upgrade",
+      "install",
+      "<76 exact package=version pins>"
+    ],
+    "post_install_verification": {
+      "dpkg_query_exit_code": 0,
+      "exact_installed_version_status_matches": 76,
+      "expected_count": 76,
+      "all_exact": true
+    },
+    "completed_at_utc": "2026-10-18T06:19:21.236843+00:00"
+  },
+  "native_audio_smoke_test": {
+    "observed_at_utc": "2026-10-18T06:20Z",
+    "scope": "Native Termux VLC to native PulseAudio; source was one regular MP3 in native HOME/Desktop, path and filename omitted.",
+    "command_template": [
+      "vlc",
+      "--intf",
+      "dummy",
+      "--aout=pulse",
+      "--no-video",
+      "--play-and-exit",
+      "--run-time=8",
+      "--quiet",
+      "<native-desktop-mp3>"
+    ],
+    "exit_code": 0,
+    "sample_limit_seconds": 8,
+    "pulse_sink_input_count": {
+      "before": 0,
+      "during": 1,
+      "after": 0
+    },
+    "result": "VLC opened and closed a native PulseAudio sink-input during the bounded sample.",
+    "owner_audible_confirmation": "pending",
+    "limitations": [
+      "Does not test PRoot guest audio routing or prove human audibility."
+    ]
+  },
+  "native_video_smoke_test": {
+    "observed_at_utc": "2026-10-18T06:21Z",
+    "scope": "One regular video file from native Termux HOME/Desktop; path and filename omitted; audio disabled.",
+    "preflight": {
+      "vlc_version": "3.0.24",
+      "display": ":1",
+      "glxinfo_probe": "reachable",
+      "xdpyinfo": "unavailable (command not present or probe failed)",
+      "video_file_count": 1
+    },
+    "command_template": [
+      "DISPLAY=:1",
+      "timeout 18s",
+      "vlc",
+      "--no-one-instance",
+      "--intf",
+      "dummy",
+      "--vout=xcb_x11",
+      "--aout=dummy",
+      "--no-audio",
+      "--play-and-exit",
+      "--run-time=8",
+      "<native-desktop-video>"
+    ],
+    "exit_code": 0,
+    "sample_limit_seconds": 8,
+    "result": "Bounded VLC invocation completed with the XCB X11 video output explicitly selected.",
+    "owner_visual_confirmation": "pending",
+    "limitations": [
+      "Exit status and forced output selection do not prove that frames were visibly observed.",
+      "This does not establish GPU or hardware video decoding.",
+      "This does not test PRoot guest audio/video routing."
+    ]
+  },
+  "post_media_read_only_doctor": {
+    "observed_at_utc": "2026-10-18T06:23:05.890562+00:00",
+    "exit_status": 0,
+    "overall": "warning",
+    "summary": {
+      "pass": 14,
+      "info": 14,
+      "warning": 1,
+      "error": 0
+    },
+    "material_existing_warning": "Native SSH is configured wildcard/password-enabled; process ownership and external reachability remain unknown.",
+    "session": "recorded running on :1; verified Ternuxx desktop and X11 processes present",
+    "interpretation": "No new VLC-specific warning or error was reported; this read-only Doctor snapshot does not prove GUI visibility or workload ownership."
+  },
+  "native_video_with_audio_smoke_test": {
+    "observed_at_utc": "2026-10-18T06:24Z",
+    "scope": "Same single regular native HOME/Desktop video source; path and filename omitted.",
+    "command_template": [
+      "DISPLAY=:1",
+      "timeout 18s",
+      "vlc",
+      "--no-one-instance",
+      "--intf",
+      "dummy",
+      "--vout=xcb_x11",
+      "--aout=pulse",
+      "--play-and-exit",
+      "--run-time=8",
+      "--quiet",
+      "<native-desktop-video>"
+    ],
+    "exit_code": 0,
+    "sample_limit_seconds": 8,
+    "audio_enabled": true,
+    "pulse_sink_input_count": {
+      "before": 0,
+      "during_max": 1,
+      "observed": true,
+      "after": 0
+    },
+    "result": "VLC created a native PulseAudio sink-input while the bounded audio/video invocation was active, then closed it; XCB X11 output was selected.",
+    "owner_audible_and_visual_confirmation": {
+      "audible": "owner confirmed sound was heard during this audio-enabled video sample at 2026-10-18T06:26:09Z",
+      "visual": "owner confirmed video frames were visible during this audio-enabled native VLC sample at 2026-10-18T06:26:09Z"
+    },
+    "limitations": [
+      "PulseAudio stream creation does not prove human audibility.",
+      "Does not establish hardware/GPU video decoding or PRoot guest routing."
+    ]
+  },
+  "owner_confirmation_observed_at_utc": "2026-10-18T06:26:09+00:00",
+  "post_audio_video_read_only_doctor": {
+    "observed_at_utc": "2026-10-18T06:28:19.609627+00:00",
+    "read_only": true,
+    "overall": "warning",
+    "summary": {
+      "pass": 14,
+      "info": 14,
+      "warning": 1,
+      "error": 0
+    },
+    "desktop_session": "recorded running on :1",
+    "managed_ssh_8023": "runit running, config valid, loopback SSH banner passed; listener ownership unverified",
+    "existing_ssh_8022_warning": "wildcard bind and password authentication enabled; process owner and external reachability unknown",
+    "proot": "Debian installed; guest/session ownership unverified",
+    "interpretation": "Read-only post-playback check; no new session or media-related Doctor error. The existing SSH warning remains."
+  },
+  "post_install_package_closure_recheck": {
+    "observed_at_utc": "2026-10-18T06:30:40.887245+00:00",
+    "read_only": true,
+    "network_accessed": false,
+    "package_transaction_run": false,
+    "query": "dpkg-query -W for each package/version in the referenced records; compared both exact version and installed status",
+    "xfce_desktop": {
+      "source_record": "P2-termux-xfce-install-transaction-2026-10-18.json",
+      "expected_count": 77,
+      "exact_installed_matches": 77,
+      "mismatch_count": 0,
+      "all_exact": true
+    },
+    "native_vlc": {
+      "source_record": "2026-10-18-native-vlc-install-preview-0612.json#resolved_transaction",
+      "expected_count": 76,
+      "exact_installed_matches": 76,
+      "mismatch_count": 0,
+      "all_exact": true
+    },
+    "limitations": [
+      "Confirms current installed package versions/status after optional VLC installation; does not reconstruct the original pre-consent XFCE simulation."
+    ]
+  }
+}

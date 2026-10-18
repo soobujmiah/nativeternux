@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:boot-profile-preview:v1",
+  "title": "Ternuxx boot profile status and preview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "schema_version",
+    "requested_profile",
+    "configured_profile",
+    "configuration_source",
+    "ready",
+    "readiness_scope",
+    "blockers",
+    "actions",
+    "generated_script",
+    "managed_script_path",
+    "safety"
+  ],
+  "properties": {
+    "component": {
+      "const": "boot_profile_preview"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "requested_profile": {
+      "enum": [
+        "cli-only",
+        "native",
+        "proot",
+        "hybrid"
+      ]
+    },
+    "configured_profile": {
+      "enum": [
+        "cli-only",
+        "native",
+        "proot",
+        "hybrid"
+      ]
+    },
+    "configuration_source": {
+      "enum": [
+        "default",
+        "configured"
+      ]
+    },
+    "ready": {
+      "type": "boolean"
+    },
+    "readiness_scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generated_script": {
+      "type": "string"
+    },
+    "managed_script_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_only",
+        "script_installed",
+        "boot_config_changed",
+        "existing_proot_touched",
+        "silent_provider_fallback"
+      ],
+      "properties": {
+        "read_only": {
+          "const": true
+        },
+        "script_installed": {
+          "const": false
+        },
+        "boot_config_changed": {
+          "const": false
+        },
+        "existing_proot_touched": {
+          "const": false
+        },
+        "silent_provider_fallback": {
+          "const": false
+        }
+      }
+    }
+  }
+}

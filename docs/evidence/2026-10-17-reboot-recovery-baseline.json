@@ -1,0 +1,337 @@
+{
+  "report_id": "TERN-20261017-REBOOT-BASELINE-01",
+  "captured_at": "2026-10-17T16:00:48Z",
+  "repository": "soobujmiah/ternuxx",
+  "head": "1a891faabc925136c1801f40194b0969d28041df",
+  "branch": "main",
+  "working_tree": "dirty; all pre-existing draft changes preserved",
+  "preexisting_paths_at_phase_start": [
+    {
+      "status": "M",
+      "path": ".github/workflows/repo-contract.yml"
+    },
+    {
+      "status": "M",
+      "path": ".repo/STATUS.md"
+    },
+    {
+      "status": "M",
+      "path": ".repo/project.yaml"
+    },
+    {
+      "status": "M",
+      "path": "AI_ASSISTANT.md"
+    },
+    {
+      "status": "M",
+      "path": "CURRENT_STATE.md"
+    },
+    {
+      "status": "M",
+      "path": "PROJECT_CLASSIFICATION.yaml"
+    },
+    {
+      "status": "M",
+      "path": "PROJECT_MANIFEST.yaml"
+    },
+    {
+      "status": "M",
+      "path": "README.md"
+    },
+    {
+      "status": "M",
+      "path": "SECURITY.md"
+    },
+    {
+      "status": "M",
+      "path": "SKB_KNOWLEDGE_SYNC.md"
+    },
+    {
+      "status": "M",
+      "path": "bin/nativeternux"
+    },
+    {
+      "status": "M",
+      "path": "bn/README.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/ARCHITECTURE.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/HYBRID-INTEGRATION.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/INSTALLATION.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/KNOWLEDGE-SYNC.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/OPERATIONS.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/OPTIMIZATION.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/PRODUCT-VISION.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/PROOT-GPU.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/RESEARCH.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/ROADMAP.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/WINE-NATIVE.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/architecture/decisions/ADR-0001-native-proot-providers.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/architecture/decisions/ADR-0002-workload-verified-acceleration.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/architecture/decisions/ADR-0003-deterministic-state-and-skb-return.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/evidence/P2-lifecycle-progress.md"
+    },
+    {
+      "status": "M",
+      "path": "lib/core.sh"
+    },
+    {
+      "status": "M",
+      "path": "lib/desktop-supervisor.sh"
+    },
+    {
+      "status": "M",
+      "path": "lib/desktop.sh"
+    },
+    {
+      "status": "M",
+      "path": "lib/doctor.sh"
+    },
+    {
+      "status": "M",
+      "path": "lib/help.sh"
+    },
+    {
+      "status": "M",
+      "path": "lib/info.sh"
+    },
+    {
+      "status": "M",
+      "path": "lib/phases.sh"
+    },
+    {
+      "status": "M",
+      "path": "nativeternux"
+    },
+    {
+      "status": "M",
+      "path": "tools/repo_knowledge/README.md"
+    },
+    {
+      "status": "M",
+      "path": "tools/repo_knowledge/cli.py"
+    },
+    {
+      "status": "M",
+      "path": "tools/repo_knowledge/core.py"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/sync-49db2f9d4fe1-0e89a3bcd39e33ee.yaml"
+    },
+    {
+      "status": "??",
+      "path": ".repo/events/sync-49db2f9d4fe1-state-88bd492a53616652-1.yaml"
+    },
+    {
+      "status": "??",
+      "path": "bin/ternuxx"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/MANAGEMENT-API.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/SSH-LIFECYCLE.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/UNIFIED-WORKSTATION.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0004-three-interfaces-shared-management.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0005-capability-permission-and-task-model.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0006-adapt-existing-ternux-provider.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0009-provider-scoped-optional-software.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0010-native-termux-autonomy.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/architecture/decisions/ADR-0011-unified-ssh-lifecycle.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/2026-10-17-native-management-slice.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/evidence/PHASE-0-MASTER-AUDIT.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/readiness/"
+    },
+    {
+      "status": "??",
+      "path": "docs/testing/"
+    },
+    {
+      "status": "??",
+      "path": "lib/continuity.py"
+    },
+    {
+      "status": "??",
+      "path": "lib/continuity.sh"
+    },
+    {
+      "status": "??",
+      "path": "lib/management_service.py"
+    },
+    {
+      "status": "??",
+      "path": "lib/resource_ownership.py"
+    },
+    {
+      "status": "??",
+      "path": "lib/ssh.sh"
+    },
+    {
+      "status": "??",
+      "path": "lib/ssh_diagnostics.py"
+    },
+    {
+      "status": "??",
+      "path": "schemas/continuity-checkpoint.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/launch-registry.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-config.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-diagnostic-report.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/native-ssh-service-state.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/optional-software-catalog.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/shell-profile.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/shell-settings.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "schemas/verification-evidence.schema.json"
+    },
+    {
+      "status": "??",
+      "path": "ternuxx"
+    },
+    {
+      "status": "??",
+      "path": "tests/"
+    }
+  ],
+  "preexisting_path_count": 74,
+  "native_live_baseline": {
+    "termux_version": "0.119.0-beta.3",
+    "authenticated_ssh": "PASS for read-only commands during this phase; password path; SSH config untouched",
+    "sshd": "process observed; command includes explicit port argument; parent is init; native service supervisor ownership unknown",
+    "sshd_config": "prior same-session read-only sshd -t passed; configured auth policy available in preceding diagnostic; no config content recorded",
+    "socket_binding": "UNVERIFIED: procfs TCP tables inaccessible; netstat/lsof did not produce a listener row; absence is not inferred",
+    "termux_boot_app": "installed according to Android package-manager package path",
+    "termux_boot_script_directory": "absent at phase start",
+    "native_service_supervisor": "sv not detected",
+    "db": "interactive Bash alias enters existing Debian PRoot directly; no GUI command in alias; not reinvoked while active PRoot session exists",
+    "xgo": "interactive Bash alias opens Termux:X11 and calls existing x.sh",
+    "x_script": "read-only source audit: global pkill -9 of Termux:X11/virgl processes, PulseAudio kill, X socket removal, global Wake Lock acquire before GUI and global unlock in EXIT cleanup",
+    "wakelock": "native acquire/release commands available; active state and owner attribution cannot be queried by current adapter; x.sh has unscoped global release",
+    "proot": "existing PRoot session/process observed; not stopped or modified",
+    "live_actions": "read-only shell inspection and authenticated harmless commands only; no xgo/db invocation, Wake Lock command, package install, SSH config change, boot hook change, or reboot"
+  },
+  "readiness": "NOT_READY",
+  "blockers": [
+    "Existing x.sh teardown is global and destructive to current X11/audio/virgl sessions; live xgo/restart acceptance cannot be run safely while those workloads may be active.",
+    "Wake Lock acquisition/release is global and unscoped; ownership interaction with native SSH has not been experimentally verified.",
+    "No Termux:Boot script directory or startup entry exists; the add-on is installed but boot receiver execution has not been verified.",
+    "The working sshd socket binding and daemon-to-socket ownership remain unverified; current policy had wildcard ListenAddress entries, so persistent boot start is not yet qualified."
+  ],
+  "not_done": [
+    "No physical reboot",
+    "No Termux:Boot entry installed or enabled",
+    "No SSH daemon/service configuration changed",
+    "No Wake Lock acquire/release invoked",
+    "No PRoot or xgo workflow stopped or restarted"
+  ]
+}

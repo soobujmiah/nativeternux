@@ -1,0 +1,166 @@
+{
+  "report_id": "native-access-wakelock-baseline-2026-10-17",
+  "generated_at": "2026-10-17T22:37:22+06:00",
+  "repository": "soobujmiah/ternuxx",
+  "source_commit": "1a891faabc925136c1801f40194b0969d28041df",
+  "worktree_state": "Pre-existing dirty/untracked work preserved. This activity added/updated its evidence report and architecture documentation; no commit or push was made.",
+  "scope": [
+    "Recheck the current PRoot checkout and live native access before Wake Lock or SSH implementation.",
+    "Use the existing authenticated native SSH session for read-only inspection and owner-authorized isolated xgo launch/stop; no SSH/boot/service configuration was changed.",
+    "Do not change any Ternux repository, PRoot launcher, SSH service, boot policy, or Wake Lock state."
+  ],
+  "tests": [
+    {
+      "requirement_id": "LIVE-ACCESS-01",
+      "component": "Native SSH access to Ternuxx checkout",
+      "environment": "PRoot Debian SSH client to Android loopback port 8022",
+      "test_case": "Batch-mode authentication to the existing endpoint",
+      "method": "Read-only SSH command with a five-second connection timeout",
+      "expected": "Authenticated access to the native checkout and diagnostics",
+      "actual": "An authenticated read-only command reached the native checkout and returned its Git identity/status. The initial BatchMode probe was not a valid password-authentication test.",
+      "status": "PASS",
+      "evidence": "Authenticated SSH command reported native checkout /data/data/com.termux/files/home/nativeternux, commit 1a891faabc925136c1801f40194b0969d28041df, and preserved dirty/untracked paths.",
+      "uncertainty": "The native checkout origin still names soobujmiah/nativeternux.git while the PRoot checkout names soobujmiah/ternuxx.git. Both report the same HEAD; their dirty worktrees differ. The initial SSH probe used StrictHostKeyChecking=accept-new and host-key records were not independently pinned before a subsequent authenticated attempt."
+    },
+    {
+      "requirement_id": "LIVE-SSH-02",
+      "component": "Native SSH listener exposure",
+      "environment": "Android shell via connected ADB device authorized local ADB observation (model 25053RT47C)",
+      "test_case": "Observe TCP listeners on the configured SSH port",
+      "method": "Read-only `ss -ltnp` query through adb shell",
+      "expected": "Report observed bind addresses without inferring reachability",
+      "actual": "ADB shell showed listeners on 0.0.0.0:8022 and *:8022 without process attribution. The native Ternuxx SSH diagnostic could not read either TCP procfs table and reported listener observation unavailable.",
+      "status": "PARTIAL",
+      "evidence": "Live `ss -ltnp` output from adb shell plus `ternuxx ssh inspect --json` over authenticated SSH",
+      "uncertainty": "Listener ownership, effective sshd configuration, and external network reachability remain unverified."
+    },
+    {
+      "requirement_id": "BOOT-01",
+      "component": "Termux:Boot",
+      "environment": "Android package manager via ADB",
+      "test_case": "Inspect package presence and receiver metadata",
+      "method": "Read-only `pm path` and filtered `dumpsys package com.termux.boot` queries",
+      "expected": "Determine whether the app is present; do not equate package presence with successful boot execution",
+      "actual": "Package path and BootReceiver/RECEIVE_BOOT_COMPLETED metadata were present. Package state reported stopped=true and enabled=0 (default). Native `ternuxx boot status --json` reported app=unknown, command unavailable, startup policy unknown, and one regular script in the boot directory. No boot-script execution was verified.",
+      "status": "PARTIAL",
+      "evidence": "Live ADB package-manager output, native boot status JSON, and a filename/permission-only listing of the boot directory",
+      "uncertainty": "Whether the owner has opened/initialized the app, whether its receiver runs on the next boot, and whether the current boot hook executes are unknown."
+    },
+    {
+      "requirement_id": "WAKE-01",
+      "component": "Termux Wake Lock ownership and PRoot launcher cleanup",
+      "environment": "Native Termux and existing Ternux PRoot launcher",
+      "test_case": "Inspect acquisition, release, and ownership semantics before migration",
+      "method": "Repository baseline review only; no native shell or launcher file access",
+      "expected": "Verify live launcher ownership before any change",
+      "actual": "Live `x.sh` requests `termux-wake-lock` at startup and `termux-wake-unlock` in EXIT cleanup. Android PowerManager reported the app-global `termux:service-wakelock` active before and after the xgo test; its owner cannot be attributed to a workload.",
+      "status": "PARTIAL",
+      "evidence": "Native `x.sh` read over authenticated SSH; Android `dumpsys power` observations before, during, and after xgo; `termux-wake-lock` and `termux-wake-unlock` commands were available.",
+      "uncertainty": "The Termux mechanism is app-global and no per-service owner is exposed by these observations. The active lock's originating workload and whether x.sh's unlock released/reacquired it remain unknown. The original launcher was not edited."
+    },
+    {
+      "requirement_id": "LAUNCH-XGO-01",
+      "component": "Existing xgo/Xfce graphical workflow",
+      "environment": "Native Termux launcher plus a separate Debian PRoot/X11 session",
+      "test_case": "Launch xgo with no pre-existing desktop session; verify the new desktop and cleanly stop it",
+      "method": "Owner-authorized `bash -ic xgo` over authenticated SSH; inspect X11 windows and Android processes; send Ctrl-C to the test SSH PTY",
+      "expected": "New Xfce session appears and can be stopped without terminating the agent's existing PRoot or native SSH",
+      "actual": "Termux:X11 :0, PulseAudio, xfce4-session, xfwm4, panel windows, and a Thunar window appeared. Ctrl-C ended the new session with status 130. Follow-up process checks showed the new X11/XFCE/PulseAudio processes gone while sshd and the pre-existing PRoot PID 30131 remained.",
+      "status": "PASS",
+      "evidence": "X11 `xdpyinfo`, `xwininfo -root -tree`, `xdotool` panel-window IDs, ADB process lists before/during/after, and an authenticated post-xgo SSH command.",
+      "uncertainty": "This verifies launch/process lifecycle, not visual quality or audio functionality. XFCE emitted expected PRoot limitations/warnings for systemd proxy, DBus, DPMS, colord, and power state. `xgo` still invokes broad process/socket cleanup and global Wake Lock commands."
+    },
+    {
+      "requirement_id": "LAUNCH-BACKUP-01",
+      "component": "Existing native x.sh preservation",
+      "environment": "Native Termux private home",
+      "test_case": "Create and verify a recoverable x.sh backup before any launcher change",
+      "method": "Owner-requested `cp -p`, byte comparison, SHA-256, and mode/size checks over authenticated SSH",
+      "expected": "A private backup exactly matches the original launcher; original remains untouched",
+      "actual": "Backup `~/x.sh.ternuxx-backup-20261017T163623Z` matches source SHA-256 `196edaa59a8e7990198781a3551058b0c29d67961bad47d816102374fe90734a`, mode 700, 2507 bytes. Original x.sh was not edited.",
+      "status": "PASS",
+      "evidence": "Native `cmp`, `sha256sum`, and `stat` output",
+      "uncertainty": "The backup is in native Termux private home and is not a Git-managed rollback artifact. No launcher patch has been applied."
+    },
+    {
+      "requirement_id": "LIVE-REGRESSION-01",
+      "component": "Native SSH and pre-existing PRoot after xgo cleanup",
+      "environment": "Android device observed through ADB and authenticated SSH",
+      "test_case": "Verify current sshd/listener and original PRoot remain after stopping the newly launched GUI session",
+      "method": "Read-only process/listener inspection and a fresh authenticated SSH diagnostic command",
+      "expected": "Existing native SSH and PRoot continue while only xgo's new GUI session exits",
+      "actual": "sshd PID 11957 and port 8022 listeners remained; pre-existing PRoot PID 30131 remained; the new GUI/X11 processes stopped; fresh authenticated SSH command succeeded.",
+      "status": "PASS",
+      "evidence": "ADB process/socket output and authenticated post-xgo SSH output",
+      "uncertainty": "The wildcard listener remains; listener ownership and external network reachability are not established. This is not a reboot-independence test."
+    },
+    {
+      "requirement_id": "TEST-UNIT-01",
+      "component": "Ternuxx existing unit/mock suite",
+      "environment": "PRoot Debian development checkout",
+      "test_case": "Run all repository unittest tests",
+      "method": "`python3 -m unittest discover -s tests -v`",
+      "expected": "Existing tests pass without changing device state",
+      "actual": "35 tests passed; 0 failed",
+      "status": "PASS",
+      "evidence": "Captured test runner output in the active implementation session",
+      "uncertainty": "This suite is host-side unit/mock evidence and does not verify installation or Android Wake Lock/boot behavior."
+    },
+    {
+      "requirement_id": "SERVICE-BASELINE-01",
+      "component": "Native Termux service supervisor availability",
+      "environment": "Native Termux over authenticated SSH",
+      "test_case": "Check for existing runit/termux-services supervisor without changing packages",
+      "method": "Read-only `command -v sv` and installed-package query; native SSH diagnostic service-supervisor field",
+      "expected": "Identify an existing supervisor before adding another",
+      "actual": "`sv` and `termux-services` were not detected; `ternuxx ssh inspect` reported service_supervisor=not_detected.",
+      "status": "PASS",
+      "evidence": "Native command/package inspection and SSH diagnostic JSON",
+      "uncertainty": "A nonstandard supervisor or manually managed service may exist; no broad process or filesystem scan was performed."
+    }
+  ],
+  "suite_summary": {
+    "command": "python3 -m unittest discover -s tests -v",
+    "passed": 35,
+    "failed": 0,
+    "status": "PASS"
+  },
+  "live_device": {
+    "device": "Redmi Turbo 4 Pro / 25053RT47C",
+    "adb_connected": true,
+    "native_ssh_authenticated": true,
+    "termux_boot_package_present": true,
+    "termux_boot_execution_verified": false,
+    "ssh_listener_addresses_observed": [
+      "0.0.0.0:8022",
+      "*:8022"
+    ],
+    "ssh_listener_process_correlated": false,
+    "wake_lock_state_observed": true,
+    "termux_wakelock_diagnostic": "active_lock_state=unknown; ownership_scope=global_unscoped",
+    "native_boot_diagnostic": "app=unknown; termux_boot_command_available=false; startup_policy=unknown; one regular boot script",
+    "native_service_supervisor": "not_detected",
+    "device_writes_performed": true,
+    "physical_reboot_performed": false,
+    "launcher_invoked": true,
+    "xgo_session_started_and_stopped": true,
+    "preexisting_proot_preserved": true,
+    "native_sshd_preserved": true
+  },
+  "rollback": {
+    "device_configuration_changed": "No SSH/boot/service configuration was changed. A byte-identical x.sh backup was created and the existing xgo workflow was started/stopped. The original x.sh remains unchanged.",
+    "repository_files_changed_by_this_attempt": [
+      "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
+      "docs/architecture/UNIFIED-WORKSTATION.md",
+      "docs/architecture/decisions/ADR-0012-native-owned-shared-dependencies.md",
+      "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
+      "docs/architecture/decisions/ADR-0009-provider-scoped-optional-software.md",
+      "schemas/optional-software-catalog.schema.json",
+      "docs/testing/FEATURE-MATRIX.yaml",
+      "docs/readiness/DECISIONS-AND-PLAN.md"
+    ],
+    "ssh_known_hosts_note": "The initial SSH probe used StrictHostKeyChecking=accept-new; matching host-key records are present and may have been added by that attempt. The subsequent password-authenticated command used StrictHostKeyChecking=yes. The fingerprint was not independently pinned against the native host key before authentication.",
+    "user_action": "Verify the [127.0.0.1]:8022 known-host fingerprint against a trusted native fingerprint before relying on future password-authenticated connections. The records were not deleted."
+  },
+  "next_action": "Keep native and PRoot package installation provider-scoped; next implement a typed shared-service dependency model and native lifecycle adapters only after safe ownership and boot readiness are established. Any x.sh change remains a separate approved step. Reboot readiness remains NOT READY because Termux:Boot execution, SSH boot policy/socket ownership, and Wake Lock ownership are not verified."
+}

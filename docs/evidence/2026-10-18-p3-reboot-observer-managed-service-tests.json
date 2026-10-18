@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "scope": "P3 reboot observer managed-service health source and fixture verification",
+  "changes": [
+    "Native service health derives from managed runit status, fixed definition identity, managed config syntax, and managed loopback SSH banner.",
+    "Boot observations persist managed service evidence and listener correlation as explicit enum fields.",
+    "Schema-v1 fields are additive and optional for compatibility; runtime validates them when present.",
+    "Degraded or unknown managed health adds an explicit observation error; malformed enum input fails with a controlled recovery error."
+  ],
+  "tests": {
+    "focused": "python -m unittest tests.test_reboot_recovery -v",
+    "focused_result": "10/10 passed",
+    "full": "bash scripts/repo_test.sh",
+    "full_result": "183/183 passed",
+    "full_elapsed_seconds": 33.022,
+    "fixture_cases": [
+      "generic sshd present with managed service stopped -> degraded",
+      "managed service verified and loopback banner -> ready_unqualified",
+      "listener correlation unknown and authenticated connectivity not tested remain explicit"
+    ]
+  },
+  "device_mutations": [],
+  "limitations": [
+    "No physical reboot test or Termux:Boot delivery test was run.",
+    "Listener PID correlation remains unknown when platform denies socket ownership inspection.",
+    "A loopback SSH banner does not prove authenticated connectivity."
+  ]
+}

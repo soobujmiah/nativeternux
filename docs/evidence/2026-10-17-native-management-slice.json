@@ -1,0 +1,144 @@
+{
+  "report_id": "TERN-20261017-NATIVE-MGMT-01",
+  "generated_at": "2026-10-17T15:47:00Z",
+  "repository": "soobujmiah/ternuxx",
+  "source_commit": "1a891faabc925136c1801f40194b0969d28041df",
+  "worktree_state": "dirty; pre-existing uncommitted and untracked owner work preserved",
+  "scope": [
+    "Ternuxx canonical source-checkout CLI alias with legacy command compatibility",
+    "native private continuity checkpoint primitive",
+    "mock owner-scoped shared-resource lease model",
+    "read-only native SSH diagnostic adapter",
+    "desktop restart lock regression fix",
+    "versioned local management application-service API v1 for CLI SSH diagnostics and continuity operations"
+  ],
+  "tests": [
+    {
+      "requirement_id": "LIFE-RESTART-LOCK",
+      "component": "Native desktop lifecycle",
+      "environment": "host Linux fixture with mock Termux:X11, DBus, and XFCE processes",
+      "test_case": "test_restart_releases_stop_lock_and_is_repeatable",
+      "method": "integration fixture",
+      "expected": "Restart succeeds repeatedly, leaves a running session, and releases the session lock after each CLI invocation.",
+      "actual": "Passed.",
+      "status": "PASS",
+      "evidence": "tests/test_desktop_lifecycle_fixture.py",
+      "uncertainty": "Physical Termux child-process cleanup and X11 behavior remain unverified."
+    },
+    {
+      "requirement_id": "CONTINUITY-PRIVATE-ATOMIC",
+      "component": "Native continuity checkpoint",
+      "environment": "host temporary HOME fixture",
+      "test_case": "private modes, nonce, atomic no-overwrite, corrupt record rejection, symlink containment, same/reboot/unavailable boot IDs, and no automatic resume",
+      "method": "unit tests with injected boot IDs",
+      "expected": "Private checkpoint files, validated input, accurate boot outcome, and no pending-task execution.",
+      "actual": "Passed.",
+      "status": "PASS",
+      "evidence": "tests/test_continuity.py",
+      "uncertainty": "Termux filesystem semantics and real post-reboot evidence have not been exercised."
+    },
+    {
+      "requirement_id": "RESOURCE-OWNER-ISOLATION",
+      "component": "Resource ownership policy model",
+      "environment": "host Python unit test",
+      "test_case": "test_one_environment_cannot_release_another_environments_lease",
+      "method": "unit test",
+      "expected": "One owner cannot release another owner's lease; shared resource remains required until all owners release.",
+      "actual": "Passed.",
+      "status": "PASS",
+      "evidence": "tests/test_continuity.py",
+      "uncertainty": "This is an in-memory policy model; no Android Wake Lock API was called."
+    },
+    {
+      "requirement_id": "SSH-DIAGNOSTIC-ALLOWLIST",
+      "component": "Read-only SSH diagnostic adapter",
+      "environment": "synthetic procfs and fake sshd runner",
+      "test_case": "test_report_allowlists_policy_and_does_not_correlate_global_listeners; test_missing_tools_and_procfs_report_unknown_without_failing",
+      "method": "unit tests",
+      "expected": "Allowlisted sshd policy only; socket observations clearly uncorrelated; unavailable tools reported without secret access.",
+      "actual": "Passed.",
+      "status": "PASS",
+      "evidence": "tests/test_ssh_diagnostics.py",
+      "uncertainty": "The adapter was executed read-only in native Termux over SSH; listener ownership remains unknown."
+    },
+    {
+      "requirement_id": "CLI-CANONICAL-NAME",
+      "component": "CLI entry points and help contract",
+      "environment": "host shell",
+      "test_case": "canonical ternuxx help/version and compatibility dispatcher help",
+      "method": "CLI contract test",
+      "expected": "Canonical command identifies as Ternuxx and the old command remains callable.",
+      "actual": "Passed.",
+      "status": "PASS",
+      "evidence": "tests/test_cli_help.sh",
+      "uncertainty": "No installed Termux command path was changed."
+    },
+    {
+      "requirement_id": "REPOSITORY-CONTRACTS",
+      "component": "Repository documentation and deterministic state",
+      "environment": "local checkout",
+      "test_case": "repo_knowledge verify; strict doc_bridge README check; git diff --check; JSON syntax parse; shell syntax; Python byte-compile",
+      "method": "repository validation commands",
+      "expected": "No repository-state findings, broken README bridge, whitespace errors, invalid JSON, shell syntax error, or Python syntax error.",
+      "actual": "All passed; repo_knowledge reported 0 findings and doc_bridge reported OK.",
+      "status": "PASS",
+      "evidence": "command output inspected during 2026-10-17 session",
+      "uncertainty": "JSON Schema semantic validation was not run because jsonschema/check-jsonschema is unavailable."
+    },
+    {
+      "requirement_id": "SSH-NATIVE-READONLY-DIAGNOSTIC",
+      "component": "Read-only native SSH diagnostic adapter",
+      "environment": "physical Android device; final diagnostic source executed from stdin over existing authenticated SSH session",
+      "test_case": "inspect native sshd/configuration, effective policy, process presence, procfs listener visibility, runit and Termux:Boot directory",
+      "method": "native-runtime read-only diagnostic; no repository file was copied to the device",
+      "expected": "Report allowlisted policy and runtime observations without touching credentials, configuration, services, or boot state; represent inaccessible socket evidence explicitly.",
+      "actual": "sshd present; sshd -t valid; sshd -T -C evaluated the native login identity in loopback context and reported password/public-key/keyboard-interactive enabled, PermitRootLogin prohibit-password, AuthenticationMethods any, wildcard IPv4/IPv6 ListenAddress on configured SSH port. Both procfs TCP tables unavailable. Standard Termux:Boot directory absent; sv not detected. Socket ownership and actual bind remain unknown.",
+      "status": "PARTIAL",
+      "evidence": "Sanitized output inspected 2026-10-17T15:41:31Z; detailed non-secret findings in docs/architecture/SSH-LIFECYCLE.md",
+      "uncertainty": "The diagnostic itself does not authenticate or identify the listener owner; procfs denied listener observation and no service/boot owner was established."
+    },
+    {
+      "requirement_id": "SSH-AUTHENTICATED-CLIENT",
+      "component": "Existing Native Termux SSH connection",
+      "environment": "authorized SSH client session",
+      "test_case": "authenticated session executed a harmless marker command; separate key-only attempt also recorded",
+      "method": "interactive SSH password authentication followed by remote marker output",
+      "expected": "Authentication succeeds and remote command returns the expected marker without changing service state.",
+      "actual": "Password-authenticated command returned the expected marker. Key-only attempt from this runtime was denied; this does not prove other keys are rejected.",
+      "status": "PASS",
+      "evidence": "sanitized command output observed 2026-10-17 during this session",
+      "uncertainty": "Confirms this supplied password path at test time only; does not verify socket ownership, external reachability, boot recovery, or alternate keys."
+    },
+    {
+      "requirement_id": "MANAGEMENT-LOCAL-API-V1",
+      "component": "Shared local management application service",
+      "environment": "host unit tests and native-only CLI fixtures",
+      "test_case": "allowlisted dispatch, request/version validation, caller/environment rejection, continuity prepare/verify, SSH inspect response envelope, and no generic shell operation",
+      "method": "unit and CLI integration tests",
+      "expected": "CLI operations use one versioned service contract and reject malformed or unsupported requests.",
+      "actual": "All contract tests and routed CLI fixture tests passed.",
+      "status": "PASS",
+      "evidence": "tests/test_management_service.py and tests/test_desktop_lifecycle_fixture.py",
+      "uncertainty": "No HTTP server, GUI/Web client, remote authentication, or physical-device installation of the service exists."
+    }
+  ],
+  "suite_summary": {
+    "command": "python3 -m unittest discover -s tests -v",
+    "passed": 23,
+    "failed": 0,
+    "status": "PASS"
+  },
+  "live_device": {
+    "physical_device_test_this_change": "PARTIAL: read-only SSH diagnostic source executed and separate authenticated password SSH marker command passed; desktop, checkpoint persistence, reboot and service lifecycle not tested",
+    "native_install_or_file_change": false,
+    "ssh_service_or_credential_change": false,
+    "boot_or_wake_lock_change": false,
+    "proot_change": false,
+    "reboot_performed": false
+  },
+  "rollback": {
+    "repository_changes": "Uncommitted reviewable source changes; remove only this change set after preserving pre-existing work if rollback is requested.",
+    "device_rollback_required": false
+  },
+  "next_action": "Continue native management API contracts and guided SSH setup design/validation. Keep SSH provisioning, service lifecycle, Termux:Boot, Wake Lock integration, package installation, and reboot behind their respective approval and verification gates."
+}

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T00:41:44Z",
+  "verification_finished_at_utc": "2026-10-18T00:41:46Z",
+  "scope": "bounded read-only Ternux guest companion verification through native shared management and CLI",
+  "upstream_source": {
+    "repository": "https://github.com/soobujmiah/ternux",
+    "branch": "main",
+    "commit": "9fda63162426f77ee575b5f6729d8799a30f51b7",
+    "files": [
+      "bin/ternux-guest",
+      "lib/phases.sh"
+    ],
+    "guest_companion_version_observed": "1.4.0"
+  },
+  "invocation": {
+    "command": "./ternuxx --json proot verify --distro debian --guest-user <explicit-non-root-user> --display :1 --backend zink",
+    "management_operation": "proot.guest.verify",
+    "guest_commands": [
+      "ternux --version",
+      "ternux status"
+    ],
+    "environment_profile": {
+      "shared_tmp": true,
+      "zink_device_binds": [
+        "/dev/kgsl-3d0:/dev/kgsl",
+        "/dev/dri"
+      ],
+      "display": ":1",
+      "pulse_server": "tcp:127.0.0.1:4713",
+      "renderer": [
+        "MESA_LOADER_DRIVER_OVERRIDE=zink",
+        "GALLIUM_DRIVER=zink",
+        "TU_DEBUG=sysmem,noconform",
+        "MESA_VK_WSI_DEBUG=sw"
+      ],
+      "shader_cache": "disabled for this diagnostic"
+    }
+  },
+  "result": {
+    "status": "partial",
+    "distro": "debian",
+    "guest_entered": true,
+    "profile_owner": "unverified",
+    "companion_version": "1.4.0",
+    "display": {
+      "requested": ":1",
+      "observed": ":1",
+      "x11": "reachable"
+    },
+    "audio": {
+      "endpoint": "tcp:127.0.0.1:4713",
+      "state": "unavailable"
+    },
+    "renderer": {
+      "class": "zink_turnip",
+      "value": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))"
+    },
+    "blockers": [
+      "guest PulseAudio connection is not verified",
+      "guest status reported one or more failed checks"
+    ]
+  },
+  "comparison": {
+    "without_shared_tmp": {
+      "x11": "not reachable",
+      "renderer": "unavailable"
+    },
+    "with_shared_tmp_and_explicit_environment": {
+      "x11": "reachable",
+      "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))"
+    }
+  },
+  "device_state_after": {
+    "native_desktop": "running on :1",
+    "gui_visible_to_cli": "unknown"
+  },
+  "safety": {
+    "packages_changed": false,
+    "guest_write_command_invoked": false,
+    "host_lifecycle_started": false,
+    "host_lifecycle_stopped": false,
+    "services_started": false,
+    "services_stopped": false,
+    "shell_string_execution": false,
+    "generic_guest_command_exposed": false
+  },
+  "limits": [
+    "This proves the selected read-only guest handoff path on the active :1 X server; it does not establish the installed Ternux profile owner or its active :0 backend.",
+    "Audio on the source-documented loopback endpoint at port 4713 is not reachable from this guest status invocation; no PulseAudio service was started or reconfigured.",
+    "No XFCE session, agent workload, or desktop lifecycle was started through Ternuxx.",
+    "The guest companion version/source URL identifies its self-reported version but does not cryptographically attest the installed rootfs or profile.",
+    "This diagnostic does not complete P3 exit gate 4 or qualify P4 feature parity."
+  ]
+}

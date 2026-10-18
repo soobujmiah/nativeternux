@@ -1,0 +1,9 @@
+event_id: test-49db2f9d4fe1-444c66245c87004e
+repository: soobujmiah/ternuxx
+commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
+kind: test
+occurred_at: '2026-10-17T12:17:50Z'
+status: passed
+summary: native Termux suite 150/150 (31.812s); boot/service recovery fixture, management
+  and journal tests 39 passed; CLI help and static checks passed; target generic resolve
+  refused invalid ID without journal changes

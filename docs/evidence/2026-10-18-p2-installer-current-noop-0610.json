@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-readonly-p2-installer-preview-recheck",
+  "observed_at_utc_minute": "2026-10-18T06:10Z",
+  "command": [
+    "./ternuxx",
+    "--json",
+    "install",
+    "--preview"
+  ],
+  "result": {
+    "install": "already_installed",
+    "packages_changed": false
+  },
+  "interpretation": "All current base installer roots are installed, so no dependency simulation or approval record was needed. This is a current no-op check, not a recreation of the historical 77-package pre-consent preview.",
+  "package_transaction_run": false,
+  "network_accessed": false
+}

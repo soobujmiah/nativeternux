@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_android_addon_readonly_state_probe",
+  "observed_at_utc": "2026-10-18T06:50:49Z",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "runtime": "native Termux on Android user 0",
+  "commands": [
+    "cmd package list packages --show-versioncode --user 0 <fixed package>",
+    "cmd package list packages -e/-d --user 0 <fixed package>",
+    "command -v tailscale tailscaled rish pgrep",
+    "pgrep -x for shizuku_server, moe.shizuku.privileged.api, and tailscaled"
+  ],
+  "observations": {
+    "shizuku": {
+      "package": "moe.shizuku.privileged.api",
+      "version_code": 1318,
+      "package_enabled": true,
+      "package_disabled_filter_match": false,
+      "rish_in_termux_path": false,
+      "exact_process_names_observed": [],
+      "server_permission_signer_and_watchdog": "unknown"
+    },
+    "tailscale": {
+      "package": "com.tailscale.ipn",
+      "version_code": 298177930,
+      "package_enabled": true,
+      "tailscale_cli_in_termux_path": false,
+      "tailscaled_in_termux_path": false,
+      "exact_tailscaled_process_observed": false,
+      "vpn_connection_tailnet_identity_and_incoming_policy": "unknown"
+    }
+  },
+  "interpretation": "Both Android companion apps are present and enabled. This is package metadata only: it does not establish Shizuku server/permission state or Tailscale VPN connectivity. Termux has no documented CLI helper available for either integration in this check, and exact-name process probes found no matching processes; process visibility/name variation limits the meaning of those negative observations.",
+  "safety": {
+    "read_only": true,
+    "app_launched": false,
+    "permission_requested": false,
+    "vpn_changed": false,
+    "adb_wifi_touched": false,
+    "network_accessed": false,
+    "service_or_package_changed": false
+  },
+  "mutations": []
+}

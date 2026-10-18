@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "date_local": "2026-10-18",
+  "evidence_type": "native_termux_fixture_tests_and_read_only_target_verification",
+  "scope": {
+    "journal_kinds": ["desktop.start", "desktop.stop"],
+    "recovery_mutation": "update one matching journal record after exact plan confirmation",
+    "desktop_processes_signaled_by_recovery": false,
+    "session_file_changed_by_recovery": false,
+    "desktop_or_proot_lifecycle_action_applied": false
+  },
+  "recovery_contract": {
+    "preview_binds": ["journal timestamp", "session file hash", "recorded PID start time", "command marker", "process group and session identity"],
+    "all_supported_resolvers_list_exact_affected_journal_path": true,
+    "only_mutated_path": "matching operation journal record",
+    "session_lock_present": "refuse_for_manual_review",
+    "active_or_ambiguous_process_state": "refuse_for_manual_review",
+    "stop_incomplete": "resolve journal as failed; leave recorded processes untouched",
+    "target_state_complete": "desktop.start requires running session and all three exact process identities; desktop.stop requires stopped session and absent recorded identities"
+  },
+  "tests": {
+    "focused_desktop_service_boot_journal_management": {
+      "result": "passed",
+      "count": 47,
+      "duration_seconds": 1.077
+    },
+    "full_native_termux_suite": {
+      "result": "passed",
+      "count": 158,
+      "duration_seconds": 32.471
+    },
+    "cli_help_contract": "passed",
+    "compileall": "passed",
+    "shell_syntax": "passed",
+    "response_schema_json_parse": "passed",
+    "git_diff_check": "passed",
+    "repo_knowledge_verify": "passed_zero_findings"
+  },
+  "native_target_read_only": {
+    "recovery_unresolved_count": 0,
+    "desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown"
+    },
+    "proot": {
+      "status": "installed",
+      "distributions": ["debian"],
+      "ownership": "unverified",
+      "guest_entered": false
+    }
+  },
+  "limits": [
+    "Fixture tests verify reconciliation logic; the target had no pending desktop journal, so no live journal was resolved.",
+    "An existing .session.lock is deliberately not removed or inferred stale by recovery.",
+    "P3 still has boot delivery/cold-start, listener ownership, PRoot ownership, visible GUI, and provider handoff gates open."
+  ]
+}

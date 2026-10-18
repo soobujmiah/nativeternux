@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-readonly-existing-ternux-guest-handoff",
+  "observed_at_utc": "2026-10-18T02:35:10Z",
+  "target_scope": "native Termux shell and the existing Debian PRoot guest; bounded read-only Ternux CLI verifier",
+  "profile_discovery": {
+    "command": "ternux --json state",
+    "state_file": "$TERNUX_STATE_DIR/state",
+    "state_file_regular_non_symlink": true,
+    "state_file_owner_matches_termux_uid": true,
+    "state_file_mode": "0600",
+    "guest_user_key_present": true,
+    "guest_user_value_emitted_or_recorded": false,
+    "guest_user_validation": "safe username syntax; non-root",
+    "configured_backend": "zink",
+    "configured_install_profile": "base"
+  },
+  "verification": {
+    "command_template": "./ternuxx --json proot verify --distro debian --guest-user <read-from-protected-Ternux-state> --display :1 --backend zink",
+    "exit_code": 0,
+    "ok": true,
+    "status": "complete",
+    "distro": "debian",
+    "guest_entered": true,
+    "profile_owner": "unverified",
+    "checks": {
+      "observed_display": ":1",
+      "x11": "reachable",
+      "audio_control_protocol": "reachable",
+      "renderer_class": "zink_turnip",
+      "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))"
+    },
+    "native_ternux_status": {
+      "availability": "available",
+      "version": "1.4.0",
+      "status": "running",
+      "x11_running": "yes",
+      "backend": "zink",
+      "backend_availability": "available",
+      "renderer": "unknown",
+      "pulseaudio": "stopped",
+      "virgl": "stopped",
+      "vulkan": "yes",
+      "identity": "unverified"
+    },
+    "safety": {
+      "read_only": true,
+      "guest_write_command_invoked": false,
+      "packages_changed": false,
+      "host_lifecycle_started": false,
+      "host_lifecycle_stopped": false,
+      "services_started": false,
+      "services_stopped": false,
+      "host_home_and_shared_storage_unbound": true
+    },
+    "audible_playback_tested": false
+  },
+  "interpretation": "This revalidates X11, renderer, and PulseAudio control-protocol reachability for the explicit existing guest user on :1. It does not prove Ternuxx-owned workload launch, guest profile ownership, native Ternux renderer identity, PulseAudio service health, or audible playback.",
+  "mutations": [],
+  "source_tests": {
+    "command": "python3 -m unittest discover -s tests -p 'test_proot_diagnostics.py'",
+    "observed_at_utc": "2026-10-18T02:37:01Z",
+    "result": "passed",
+    "passed": 17,
+    "failed": 0,
+    "duration_seconds": 0.002,
+    "scope_note": "Fixture/unit coverage of bounded read-only Ternux guest discovery and fail-closed argument handling; does not replace the live device handoff evidence."
+  }
+}

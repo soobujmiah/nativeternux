@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "provider": "native_termux",
+  "service_owner": "ternuxx_managed",
+  "login_principal": "termux_app_user",
+  "endpoint": {
+    "bind_policy": "loopback",
+    "port": 12222,
+    "lan_exposure_confirmed": false
+  },
+  "authentication": {
+    "preferred_method": "public_key",
+    "preserve_existing_policy": true,
+    "client_identity_refs": ["test_identity_01"],
+    "host_key_policy": "preserve_existing",
+    "accepted_auth_methods_observed": ["public_key"],
+    "accepted_key_fingerprints": ["SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"],
+    "host_key_fingerprints": ["SHA256:BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"]
+  },
+  "boot": {
+    "auto_start": "disabled",
+    "termux_boot_confirmed": false
+  },
+  "wakelock": {
+    "policy": "never"
+  },
+  "migration": {
+    "source_classification": "none_detected",
+    "last_validated_revision": null,
+    "adoption_confirmed": false
+  }
+}

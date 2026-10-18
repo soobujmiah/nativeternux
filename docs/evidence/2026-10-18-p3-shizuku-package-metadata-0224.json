@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-shizuku-package-metadata-live-recheck",
+  "observed_at_utc": "2026-10-18T02:24:30Z",
+  "runtime": "native Termux on attached Android target",
+  "commands": [
+    "./ternuxx --json doctor",
+    "cmd package list packages --show-versioncode moe.shizuku.privileged.api",
+    "command -v rish"
+  ],
+  "observations": {
+    "doctor_finding_id": "NTX-APP-103",
+    "app_presence": "present",
+    "package_version_code": "1318",
+    "rish_command": "not found",
+    "provider_support": "not implemented",
+    "signer_or_release_identity": "unknown",
+    "Shizuku_server_state": "unknown",
+    "Ternuxx_permission": "unknown",
+    "watchdog_health": "unknown",
+    "native_desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "proot_inventory": {
+      "api_version": 1,
+      "data": {
+        "component": "proot_distribution_inventory",
+        "guest_entered": false,
+        "installed_distributions": [
+          "debian"
+        ],
+        "manager_available": true,
+        "ownership": "unverified",
+        "read_only": true,
+        "status": "installed"
+      },
+      "ok": true,
+      "operation": "proot.status",
+      "request_id": "b0bdd49ff2d34a5e823c6e5aa3759e41"
+    }
+  },
+  "interpretation": "The device exposes package versionCode 1318 and no rish executable in PATH. These are package/helper presence facts only; versionCode does not authenticate the signer or distinguish upstream from a custom/old build, and rish absence/presence does not prove server state or permission. No ADB-over-Wi-Fi action is enabled.",
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_doctor_report -v",
+    "focused_result": "passed 21/21",
+    "full_command": "bash scripts/repo_test.sh",
+    "full_result": "passed 213/213 in 33.709 seconds"
+  },
+  "safety": {
+    "read_only": true,
+    "package_manager_mutation": false,
+    "app_started": false,
+    "permission_requested": false,
+    "adb_wifi_touched": false,
+    "network_accessed": false,
+    "desktop_or_proot_touched": false,
+    "raw_package_dump_saved": false,
+    "post_check_desktop_lifecycle_changed": false,
+    "proot_guest_entered": false
+  },
+  "mutations": [],
+  "post_suite_runtime_recheck_observed_at_utc": "2026-10-18T02:27:30Z"
+}

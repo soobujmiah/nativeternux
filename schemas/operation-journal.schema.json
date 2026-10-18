@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/operation-journal.schema.json",
+  "title": "Ternuxx native operation journal record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation_id",
+    "kind",
+    "status",
+    "owner",
+    "provider",
+    "initiating_pid",
+    "detail",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "kind": {
+      "enum": [
+        "desktop.start",
+        "desktop.stop",
+        "boot.enable",
+        "boot.disable",
+        "service.start",
+        "service.stop",
+        "recovery.backup.create",
+        "recovery.restore.apply",
+        "recovery.restore.rollback"
+      ]
+    },
+    "status": {
+      "enum": [
+        "starting",
+        "stopping",
+        "needs_recovery",
+        "complete",
+        "failed"
+      ]
+    },
+    "owner": {
+      "const": "ternuxx"
+    },
+    "provider": {
+      "const": "native"
+    },
+    "initiating_pid": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "detail": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "parent_operation_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"kind": {"const": "recovery.restore.rollback"}},
+        "required": ["kind"]
+      },
+      "then": {"required": ["parent_operation_id"]},
+      "else": {"not": {"required": ["parent_operation_id"]}}
+    }
+  ]
+}

@@ -1,0 +1,598 @@
+{
+  "schema_version": 1,
+  "record_type": "p2_p3_current_readonly_session_recheck",
+  "observed_at_utc": "2026-10-18T05:40:34+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "read-only Termux/Ternuxx status and installed package database queries; no lifecycle, package, service, boot, guest, or network changes",
+  "native_desktop": {
+    "command": [
+      "./ternuxx",
+      "--json",
+      "status"
+    ],
+    "exit_code": 0,
+    "result": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    }
+  },
+  "proot_inventory": {
+    "command": [
+      "./ternuxx",
+      "--json",
+      "proot",
+      "status"
+    ],
+    "exit_code": 0,
+    "result": {
+      "api_version": 1,
+      "data": {
+        "component": "proot_distribution_inventory",
+        "guest_entered": false,
+        "installed_distributions": [
+          "debian"
+        ],
+        "manager_available": true,
+        "ownership": "unverified",
+        "read_only": true,
+        "status": "installed"
+      },
+      "ok": true,
+      "operation": "proot.status",
+      "request_id": "1e7fbfc343494c139338d07db4f05d48"
+    }
+  },
+  "p2_installed_package_closure": {
+    "expected_count": 77,
+    "observed_count": 77,
+    "exact_installed_matches": 77,
+    "mismatches": [],
+    "packages": [
+      {
+        "name": "adwaita-icon-theme",
+        "expected_version": "51.0",
+        "installed_version": "51.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "adwaita-icon-theme-legacy",
+        "expected_version": "46.2-1",
+        "installed_version": "46.2-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "at-spi2-core",
+        "expected_version": "2.62.1",
+        "installed_version": "2.62.1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "atk",
+        "expected_version": "2.48.0",
+        "installed_version": "2.48.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "brotli",
+        "expected_version": "1.2.0",
+        "installed_version": "1.2.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "desktop-file-utils",
+        "expected_version": "0.28-3",
+        "installed_version": "0.28-3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "exo",
+        "expected_version": "4.21.0",
+        "installed_version": "4.21.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "fontconfig",
+        "expected_version": "2.18.3",
+        "installed_version": "2.18.3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "freetype",
+        "expected_version": "2.15.0",
+        "installed_version": "2.15.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "fribidi",
+        "expected_version": "1.0.17",
+        "installed_version": "1.0.17",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "garcon",
+        "expected_version": "4.20.0-1",
+        "installed_version": "4.20.0-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "gdk-pixbuf",
+        "expected_version": "2.44.8",
+        "installed_version": "2.44.8",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "graphene",
+        "expected_version": "1.10.8-3",
+        "installed_version": "1.10.8-3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "gtk-layer-shell",
+        "expected_version": "0.10.1",
+        "installed_version": "0.10.1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "gtk-update-icon-cache",
+        "expected_version": "3.24.52",
+        "installed_version": "3.24.52",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "gtk3",
+        "expected_version": "3.24.52",
+        "installed_version": "3.24.52",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "gtk4",
+        "expected_version": "4.24.1",
+        "installed_version": "4.24.1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "harfbuzz",
+        "expected_version": "14.6.0",
+        "installed_version": "14.6.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "hicolor-icon-theme",
+        "expected_version": "0.18",
+        "installed_version": "0.18",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "iso-codes",
+        "expected_version": "4.20.1",
+        "installed_version": "4.20.1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libcairo",
+        "expected_version": "1.18.6",
+        "installed_version": "1.18.6",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libdav1d",
+        "expected_version": "1.5.4",
+        "installed_version": "1.5.4",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libdisplay-info",
+        "expected_version": "0.4.0",
+        "installed_version": "0.4.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libepoxy",
+        "expected_version": "1.5.10-3",
+        "installed_version": "1.5.10-3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libexif",
+        "expected_version": "0.6.26",
+        "installed_version": "0.6.26",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libglvnd",
+        "expected_version": "1.7.0-1",
+        "installed_version": "1.7.0-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libgraphite",
+        "expected_version": "1.3.15",
+        "installed_version": "1.3.15",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libgtop",
+        "expected_version": "2.41.3-2",
+        "installed_version": "2.41.3-2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libicu",
+        "expected_version": "78.3",
+        "installed_version": "78.3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libjpeg-turbo",
+        "expected_version": "3.2.0",
+        "installed_version": "3.2.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "liblzo",
+        "expected_version": "2.10-5",
+        "installed_version": "2.10-5",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libnotify",
+        "expected_version": "0.8.8",
+        "installed_version": "0.8.8",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libpixman",
+        "expected_version": "0.46.4-1",
+        "installed_version": "0.46.4-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libpng",
+        "expected_version": "1.6.59",
+        "installed_version": "1.6.59",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "librsvg",
+        "expected_version": "2.63.3",
+        "installed_version": "2.63.3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libsimdutf",
+        "expected_version": "9.3.2",
+        "installed_version": "9.3.2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libtiff",
+        "expected_version": "4.7.2",
+        "installed_version": "4.7.2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libvte",
+        "expected_version": "2:0.84.1",
+        "installed_version": "2:0.84.1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libwnck",
+        "expected_version": "43.3",
+        "installed_version": "43.3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxcomposite",
+        "expected_version": "0.4.7",
+        "installed_version": "0.4.7",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxcursor",
+        "expected_version": "1.2.3-1",
+        "installed_version": "1.2.3-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxdamage",
+        "expected_version": "1.1.7",
+        "installed_version": "1.1.7",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxfce4ui",
+        "expected_version": "4.20.2-2",
+        "installed_version": "4.20.2-2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxfce4util",
+        "expected_version": "4.20.1-1",
+        "installed_version": "4.20.1-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxfce4windowing",
+        "expected_version": "4.20.7",
+        "installed_version": "4.20.7",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxfixes",
+        "expected_version": "6.0.2",
+        "installed_version": "6.0.2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxft",
+        "expected_version": "2.3.9-1",
+        "installed_version": "2.3.9-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxi",
+        "expected_version": "1.8.4",
+        "installed_version": "1.8.4",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxinerama",
+        "expected_version": "1.1.6",
+        "installed_version": "1.1.6",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxkbcommon",
+        "expected_version": "1.13.2",
+        "installed_version": "1.13.2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxkbfile",
+        "expected_version": "1.2.0",
+        "installed_version": "1.2.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxklavier",
+        "expected_version": "5.4-28",
+        "installed_version": "5.4-28",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxpresent",
+        "expected_version": "1.0.2",
+        "installed_version": "1.0.2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxrandr",
+        "expected_version": "1.5.5",
+        "installed_version": "1.5.5",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxrender",
+        "expected_version": "0.9.13",
+        "installed_version": "0.9.13",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxres",
+        "expected_version": "1.2.3",
+        "installed_version": "1.2.3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxtst",
+        "expected_version": "1.2.6",
+        "installed_version": "1.2.6",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libxxf86vm",
+        "expected_version": "1.1.7",
+        "installed_version": "1.1.7",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "libyaml",
+        "expected_version": "0.2.5-5",
+        "installed_version": "0.2.5-5",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "mesa",
+        "expected_version": "26.2.5",
+        "installed_version": "26.2.5",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "opengl",
+        "expected_version": "4.5",
+        "installed_version": "4.5",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "pango",
+        "expected_version": "1.58.2",
+        "installed_version": "1.58.2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "shared-mime-info",
+        "expected_version": "2.5.1",
+        "installed_version": "2.5.1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "startup-notification",
+        "expected_version": "0.12-29",
+        "installed_version": "0.12-29",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "thunar",
+        "expected_version": "4.20.10",
+        "installed_version": "4.20.10",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "ttf-dejavu",
+        "expected_version": "2.37-8",
+        "installed_version": "2.37-8",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xcb-util",
+        "expected_version": "0.4.1-1",
+        "installed_version": "0.4.1-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xfce4-panel",
+        "expected_version": "4.20.8",
+        "installed_version": "4.20.8",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xfce4-session",
+        "expected_version": "4.20.4-1",
+        "installed_version": "4.20.4-1",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xfce4-settings",
+        "expected_version": "4.20.5",
+        "installed_version": "4.20.5",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xfce4-terminal",
+        "expected_version": "1.2.0",
+        "installed_version": "1.2.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xfconf",
+        "expected_version": "4.20.0",
+        "installed_version": "4.20.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xfdesktop",
+        "expected_version": "4.20.2",
+        "installed_version": "4.20.2",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xfwm4",
+        "expected_version": "4.20.0-3",
+        "installed_version": "4.20.0-3",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xorg-iceauth",
+        "expected_version": "1.0.11",
+        "installed_version": "1.0.11",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xorg-xkbcomp",
+        "expected_version": "1.5.0",
+        "installed_version": "1.5.0",
+        "status": "install ok installed",
+        "match": true
+      },
+      {
+        "name": "xorg-xrdb",
+        "expected_version": "1.2.3",
+        "installed_version": "1.2.3",
+        "status": "install ok installed",
+        "match": true
+      }
+    ]
+  },
+  "historical_preview_note": "The original full pre-consent dependency preview remains unrecoverable. This current installed-state comparison does not reconstruct or replace it."
+}

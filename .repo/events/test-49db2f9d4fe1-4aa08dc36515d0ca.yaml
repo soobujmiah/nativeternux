@@ -1,0 +1,10 @@
+event_id: test-49db2f9d4fe1-4aa08dc36515d0ca
+repository: soobujmiah/ternuxx
+commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
+kind: test
+occurred_at: '2026-10-17T12:17:50Z'
+status: passed
+summary: 'Native Termux suite 156/156 passed in 32.806s after desktop-session recovery;
+  focused desktop/service/boot/journal/management 45/45 passed in 1.008s; live read-only
+  status: no unresolved operations, desktop :1 active, Debian installed, ownership
+  unverified.'

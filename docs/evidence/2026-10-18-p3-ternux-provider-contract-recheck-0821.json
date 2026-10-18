@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:22:26Z",
+  "source_runtime": "Native Termux; read-only host commands via the authorized SSH session.",
+  "repository": {
+    "root": "/data/data/com.termux/files/home/ternuxx",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "origin": "https://github.com/soobujmiah/ternuxx.git"
+  },
+  "installed_ternux_cli": {
+    "path": "/data/data/com.termux/files/usr/bin/ternux",
+    "version_command": "ternux v1.4.0\nhttps://github.com/soobujmiah/ternux",
+    "version_exit_code": 0,
+    "help_exit_code": 0,
+    "advertised_top_level_commands": [
+      "install",
+      "start",
+      "stop",
+      "restart",
+      "doctor",
+      "repair",
+      "verify",
+      "benchmark",
+      "profile",
+      "backend",
+      "info",
+      "state",
+      "logs",
+      "update",
+      "uninstall"
+    ],
+    "generic_workload_command_advertised": false,
+    "status": {
+      "command": "status",
+      "status": "running",
+      "timestamp": "2026-10-18T08:22:25Z",
+      "version": "1.4.0",
+      "x11_running": "yes",
+      "pulseaudio": "stopped",
+      "virgl": "stopped",
+      "launcher": "present"
+    },
+    "backend_show": {
+      "status": "ok",
+      "version": "1.4.0",
+      "backend": "zink",
+      "renderer": "unknown",
+      "available_backends": "zink,virgl",
+      "vulkan": "yes",
+      "gpu": "Adreno (Adreno825)"
+    },
+    "observed_but_unlisted_commands": [
+      "status"
+    ],
+    "status_command_result": "ternux --json status returned exit 0 and self-reported Ternux v1.4.0 status=running, x11_running=yes; status is omitted from the top-level help list."
+  },
+  "ternuxx_proot_inventory": {
+    "component": "proot_distribution_inventory",
+    "guest_entered": false,
+    "installed_distributions": [
+      "debian"
+    ],
+    "manager_available": true,
+    "ownership": "unverified",
+    "read_only": true,
+    "status": "installed"
+  },
+  "interpretation": "Installed Ternux provides read-only status/backend discovery but its current top-level help advertises no generic workload dispatcher. The status command responds although it is omitted from help. Ternuxx inventory reports Debian installed, guest_entered=false, read_only=true, ownership=unverified. This does not authorize guest launch or prove rootfs/session ownership.",
+  "mutations": {
+    "packages": false,
+    "services": false,
+    "desktop_or_guest_lifecycle": false,
+    "guest_entered": false,
+    "network": false
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-18",
+  "phase": "P3",
+  "method": "native Termux SSH 8022",
+  "before": {
+    "desktop_status": "running",
+    "display": ":2",
+    "supervisor": "yes",
+    "x11": "yes",
+    "xfce4_session": "yes"
+  },
+  "actions": [
+    {
+      "command": "/system/bin/am force-stop com.termux.x11",
+      "result": "denied",
+      "reason": "Android SecurityException: uid 10490 lacks android.permission.FORCE_STOP_PACKAGES"
+    },
+    {
+      "command": "/system/bin/am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity",
+      "result": "denied",
+      "reason": "Android SecurityException: package=com.android.shell does not belong to uid=10490"
+    },
+    {
+      "command": "./ternuxx --json start",
+      "result": {
+        "start": "running",
+        "display": ":2",
+        "activity_request": "not_confirmed",
+        "gui_visible": "unknown",
+        "audio_owner": "external"
+      }
+    },
+    {
+      "command": "./ternuxx --json status",
+      "result": {
+        "status": "running",
+        "display": ":2",
+        "supervisor": "yes",
+        "x11": "yes",
+        "xfce4_session": "yes",
+        "gui_visible": "unknown",
+        "audio_owner": "external"
+      }
+    }
+  ],
+  "side_effects": "No app was closed; no desktop process, display, or boot profile was changed.",
+  "outcome": "The already-running X11 activity was not the cause. ADB force-stop succeeded, but a cold manager request was still rejected by Android; gui_visible remains unknown.",
+  "adb_host": "/home/sbj/android-sdk/platform-tools/adb (Android Debug Bridge 35.0.2)",
+  "device": "emulator-5554; state=device",
+  "precheck": {
+    "package_path": "com.termux.x11 installed",
+    "process": "pid 14515 before force-stop",
+    "top_resumed_activity": "com.termux.x11/.MainActivity"
+  },
+  "force_stop": {
+    "command": "adb -s emulator-5554 shell am force-stop com.termux.x11",
+    "result": "success; package process absent afterward; TermuxActivity top-resumed"
+  },
+  "manager_retry_after_force_stop": {
+    "command": "./ternuxx --json start via native SSH 8022",
+    "result": {
+      "start": "running",
+      "display": ":2",
+      "activity_request": "not_confirmed",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    }
+  },
+  "final_status": {
+    "desktop": "running on :2; supervisor, X11, XFCE all yes",
+    "termux_x11_activity": "closed; no package process; TermuxActivity top-resumed"
+  }
+}

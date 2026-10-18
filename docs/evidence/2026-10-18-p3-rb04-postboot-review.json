@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "record_type": "owner_reboot_test_review",
+  "test_id": "TERN-20261018-RB04",
+  "runtime": {
+    "layer": "native Termux Android",
+    "repository": "soobujmiah/ternuxx",
+    "branch": "main"
+  },
+  "observed": {
+    "owner_reported_android_reboot": true,
+    "boot_id_transition": "changed",
+    "boot_observation_matches": true,
+    "termux_boot_observer_event": "observed",
+    "observer_at_utc": "2026-10-18T08:57:11Z",
+    "observer_service_status": "unknown",
+    "observer_loopback_probe": "unreachable",
+    "observer_outcome": "verified_reboot_partial",
+    "observer_error": "managed_service_not_ready",
+    "service_start_log_at_utc": "2026-10-18T08:57:10Z",
+    "service_start_log_result": "runit_service_running",
+    "later_managed_service": "running; definition verified; config valid; loopback SSH banner reachable",
+    "later_authenticated_8023_probe": "passed",
+    "later_startup_timing_seconds_after_kernel_boot": 192,
+    "listener_pid_correlation": "unknown",
+    "readiness": "NOT_READY",
+    "automatic_resume": false
+  },
+  "analysis": {
+    "finding": "The observer sampled native SSH while Termux:Boot service startup was still settling; the observer and service-start log timestamps are one second apart, and the later managed SSH and authenticated loopback checks passed.",
+    "cause_classification": "timing race is consistent with the observed evidence; the precise scheduler interleaving is not directly logged.",
+    "platform_basis": "Termux:Boot sorts script names but schedules each script as a separate JobScheduler job, so sorted names do not establish completion order."
+  },
+  "implementation": {
+    "change": "The source observer now retries transient managed-service readiness checks for up to 20 attempts at one-second intervals before recording boot evidence. It stops retrying for terminal definition/configuration failures and preserves dry-run behavior.",
+    "device_deployment": "PASS; installed module hash matches repository source; mode 0600; prior installed module backed up privately",
+    "device_reboot_after_change": "not performed",
+    "previous_installed_sha256": "3ebcb812418325b3d2bae0602d744fd4acf847b8968dc77802ff04c533e94d20",
+    "installed_sha256": "a4f90f2265f998ff7cbde4bd159473696661bb96f393ea7bfa4adcd6a01de584",
+    "installed_module_load_check": "PASS; installed module --help completed",
+    "repository_source_sha256": "a4f90f2265f998ff7cbde4bd159473696661bb96f393ea7bfa4adcd6a01de584",
+    "full_repository_suite": "PASS 275/275 in 34.234 seconds via authenticated managed loopback SSH",
+    "native_display_allocation": {
+      "default_range": ":1 through :10",
+      "reserved_owner_device_display": ":0 for existing Ternux PRoot",
+      "conflict_behavior": "skip any display with an X11 socket or lock; do not delete foreign artifacts"
+    }
+  },
+  "tests": {
+    "route": "authenticated managed loopback SSH on 127.0.0.1:8023",
+    "command": "python3 -m unittest tests.test_reboot_recovery -v",
+    "result": "PASS 13/13",
+    "fixture_effects": "temporary unit-test files only",
+    "full_repository_suite": "PASS 275/275 in 34.234 seconds",
+    "native_display_allocator_focused": "PASS 10/10",
+    "post_change_native_termux_full_repository_suite": "PASS 277/277 in 37.894 seconds via direct native Termux work shell on 8022",
+    "repo_knowledge_verify": "0 findings"
+  },
+  "privacy": {
+    "credentials_included": false,
+    "private_checkpoint_nonce_included": false,
+    "boot_ids_included": false,
+    "private_paths_included": false
+  },
+  "limitations": [
+    "RB04 remains verified_reboot_partial / NOT_READY; its original boot observation is preserved.",
+    "A follow-up owner-operated reboot is required to verify the new source behavior on device.",
+    "Listener process/socket ownership and GUI visibility remain unknown.",
+    "Desktop recovery was manual after reboot; cold-boot GUI recovery is not qualified."
+  ],
+  "postboot_device_checks": {
+    "managed_ssh": "running; definition/config verified; loopback banner and authenticated 8023 probe passed",
+    "listener_pid_correlation": "unknown (Android procfs permission limitation)",
+    "desktop_recovery": "manual Ternuxx recovery succeeded on display :2 after the preexisting :1 session record was degraded; supervisor, X11, and XFCE session report running",
+    "gui_visibility": "unknown; no visual confirmation was performed",
+    "debian_proot": "installed; guest not entered; ownership unverified",
+    "termux_boot": "app/receiver enabled and two scripts present; delivery policy unknown",
+    "wakelock": "native.sshd is the sole registered owner; Android platform lock state unknown",
+    "legacy_xgo": "not invoked because its x.sh path performs broad process cleanup",
+    "display_assignment_followup": {
+      "owner_assignment": "native Ternuxx uses :1; existing PRoot allocation is :0",
+      "stale_display_1_lock_pid": 16032,
+      "stale_display_1_verification": "PID absent; owned Unix socket returned ECONNREFUSED; no live Termux:X11 :1 process",
+      "cleanup": "removed only stale owned .X1-lock and X1 socket after exact inode/type/owner revalidation",
+      "display_0": "lock and socket preserved; no :0 cleanup or lifecycle action",
+      "current_status": "Ternuxx running on :1; supervisor/X11/XFCE present; GUI visibility remains unknown"
+    }
+  },
+  "native_termux_audit": {
+    "runtime": "native Termux Android shell; repository checkout ~/ternuxx; branch main",
+    "full_repository_suite": "PASS 277/277 in 37.894 seconds after source changes",
+    "focused_display_suite": "PASS 10/10",
+    "repo_knowledge_verify": "0 findings",
+    "json_parse": "147 JSON files parsed; 0 errors after adding the dirty-tree manifest",
+    "yaml_parse": "35 YAML files parsed; 0 errors (before adding this updated manifest)",
+    "shell_syntax": "bash -n passed for lib/*.sh, scripts/*.sh, Termux:Boot/Services entries, and wrappers",
+    "python_compileall": "passed for lib, tools, tests",
+    "git_diff_check": "passed",
+    "phase_state": "P3 remains in_progress; RB04 partial; generated phase docs refreshed",
+    "git_state": "all changes remain unstaged; no paths removed/reset/committed/pushed",
+    "repo_knowledge_status": "last generated 2026-10-17; not recollected because local tests exercised a dirty worktree and cannot be attributed to the committed HEAD",
+    "wakelock_status_recheck": "first interactive invocation was interrupted after no output for over 15 seconds; direct manager and CLI retries then passed in 0.11s and 0.26s; no mutation; Android platform lock remains unknown"
+  },
+  "live_native_recheck": {
+    "doctor": "read_only=true; 14 pass, 15 info, 1 warning, 0 errors; wildcard/password SSH warning remains",
+    "desktop": "running on :1; supervisor, X11, XFCE verified; GUI visibility unknown",
+    "proot": "Debian installed; guest_entered=false; ownership unverified",
+    "reboot": "RB04 boot_observed / NOT_READY; automatic_resume=false",
+    "termux_boot": "package and receiver enabled; two regular scripts; delivery policy unknown",
+    "wakelock": "native.sshd registered; coordinator says held_by_registered_owners; Android lock state unknown"
+  }
+}

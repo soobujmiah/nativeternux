@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ternuxx.local/schemas/install-package-preview.schema.json",
+  "title": "Ternuxx install package preview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["install", "plan_id", "packages", "transaction"],
+  "properties": {
+    "install": {"const": "preview"},
+    "plan_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "packages": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9+.-]*=[^\\s]+$"}},
+    "transaction": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9+.-]*=[^\\s]+$"}}
+  }
+}

@@ -1,5 +1,5 @@
 # =============================================================================
-#  nativeternux — device check / doctor
+#  Ternuxx — device check / doctor
 # =============================================================================
 # shellcheck source=lib/core.sh
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
@@ -83,9 +83,9 @@ nt_cmd_check() {
   # --- Summary ----------------------------------------------------------
   echo ""
   if [ $rc -eq 0 ]; then
-    nt_ok "Required checks passed; desktop launch is not implemented yet."
+    nt_ok "Required readiness checks passed; this command checks prerequisites, not full lifecycle qualification."
   else
-    nt_warn "$((${#missing[@]})) item(s) missing. Package installation is not implemented yet."
+  nt_warn "$((${#missing[@]})) required item(s) are missing. Review 'ternuxx install' for the current package plan; --yes applies changes."
   fi
 
   if [ "$NATIVERNUX_JSON" = "1" ]; then
@@ -100,17 +100,15 @@ nt_cmd_check() {
 }
 
 nt_cmd_doctor() {
-  nt_cmd_check
-  local check_rc=$?
-  echo ""
-  nt_step "Renderer & Vulkan info..."
-  local renderer; renderer="$(_nt_detect_renderer)"
-  nt_info "Renderer: $renderer"
-  echo ""
-  nt_info "Vulkan summary (first 10 lines):"
-  _nt_detect_vulkan | head -10
-  echo ""
-  nt_info "Session status:"
-  nt_cmd_status
-  return $check_rc
+  local graphics=0 arg report="$(dirname "${BASH_SOURCE[0]}")/doctor_report.py"
+  while [ $# -gt 0 ]; do
+    arg="$1"; shift
+    case "$arg" in
+      --graphics) graphics=1 ;;
+      *) nt_fail "Unknown doctor option: $arg"; return 2 ;;
+    esac
+  done
+  nt_require_command python3 "read-only Doctor report" || return 1
+  [ -f "$report" ] || { nt_fail "Doctor report module is missing: $report"; return 1; }
+  python3 "$report" "$graphics" "$NATIVERNUX_JSON" "$NATIVERNUX_STATE_DIR"
 }

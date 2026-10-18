@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "scope": "reboot checkpoint managed-service evidence validation and backward compatibility",
+  "changes": [
+    "Added a regression assertion that degraded managed SSH service health is present in observation errors.",
+    "Added schema-v1 compatibility fixture for observations persisted before additive managed-service fields.",
+    "Added malformed managed-service evidence fixtures for both direct recording and persisted checkpoint parsing."
+  ],
+  "tests": {
+    "focused_command": "python -m unittest tests.test_reboot_recovery -v",
+    "focused_result": "12/12 passed",
+    "full_command": "bash scripts/repo_test.sh",
+    "full_result": "185/185 passed",
+    "full_elapsed_seconds": 32.212
+  },
+  "device_mutations": [],
+  "limitations": [
+    "Fixtures prove repository behavior only; no physical boot or Termux:Boot delivery test was run.",
+    "Listener ownership and authenticated SSH remain unqualified."
+  ]
+}

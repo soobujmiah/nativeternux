@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/boot-profile-recovery.schema.json",
+  "title": "Native Ternuxx boot-profile recovery response",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "record_kind", "record_updated_at", "affected_paths", "requested_profile", "observed_profile", "profile_file_sha256", "boot_script_sha256", "boot_script_state", "state_matches_target", "resolution", "plan_id", "requires_confirmation", "changed", "read_only", "impact"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "record_kind": {"enum": ["boot.enable", "boot.disable"]},
+        "record_updated_at": {"type": "string", "format": "date-time"},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1}},
+        "requested_profile": {"enum": ["cli-only", "native", "absent"]},
+        "observed_profile": {"enum": ["cli-only", "native", "proot", "hybrid", "absent"]},
+        "profile_file_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "boot_script_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "boot_script_state": {"enum": ["absent", "cli-only", "native"]},
+        "state_matches_target": {"type": "boolean"},
+        "resolution": {"enum": ["complete", "failed"]},
+        "plan_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "requires_confirmation": {"const": true},
+        "changed": {"const": false},
+        "read_only": {"const": true},
+        "impact": {"type": "string"}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "resolution", "requested_profile", "observed_profile", "changed", "read_only", "affected_paths", "boot_files_changed"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "resolution": {"enum": ["complete", "failed"]},
+        "requested_profile": {"enum": ["cli-only", "native", "absent"]},
+        "observed_profile": {"enum": ["cli-only", "native", "proot", "hybrid", "absent"]},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1}},
+        "changed": {"const": true},
+        "read_only": {"const": false},
+        "boot_files_changed": {"const": false}
+      }
+    }
+  ]
+}

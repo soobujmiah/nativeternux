@@ -218,9 +218,70 @@ def cmd_sync(args: argparse.Namespace) -> int:
     return _collect(args, sync=True)
 
 
+def migrate_repository(root: Path, from_repository: str, to_repository: str) -> None:
+    """Record a same-owner GitHub repository rename without rewriting event history."""
+    slug = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+    if not slug.fullmatch(from_repository) or not slug.fullmatch(to_repository):
+        raise ValueError("repository names must use owner/repo form")
+    old_owner, old_name = from_repository.split("/", 1)
+    new_owner, new_name = to_repository.split("/", 1)
+    if old_owner.casefold() != new_owner.casefold() or old_name.casefold() == new_name.casefold():
+        raise ValueError("only a repository rename under the same owner is supported")
+
+    existing = core.load_yaml(_project_yaml(root))
+    if existing is None:
+        raise ValueError("repository state is not initialized")
+    if existing.get("repository") != from_repository:
+        raise ValueError("--from-repository must match the persisted repository identity")
+    inferred = _infer_repository(root)
+    if inferred != to_repository:
+        raise ValueError("origin must point to --to-repository before migration")
+    if not existing.get("project_id"):
+        raise ValueError("persisted project_id is missing; refusing to infer a replacement")
+    head = existing.get("head") or {}
+    if not head.get("commit"):
+        raise ValueError("persisted source commit is missing")
+
+    occurred_at = core.now_iso()
+    state = dict(existing)
+    state["repository"] = to_repository
+    state["generated_at"] = occurred_at
+    state["generated_by"] = "tools/repo_knowledge migrate-repository"
+    sync = dict(existing.get("sync") or {})
+    sync.update({"status": "ok", "last_synced_at": occurred_at, "source": "local"})
+    state["sync"] = sync
+
+    event = core.make_event(
+        repository=to_repository,
+        commit=head["commit"],
+        kind="sync",
+        status="completed",
+        summary=f"Repository renamed from {from_repository} to {to_repository}; project_id preserved.",
+        occurred_at=occurred_at,
+    )
+    event["verification"] = "origin matched the new repository; persisted project_id and historical events were preserved"
+    event["source_paths"] = [".repo/project.yaml"]
+    with _locked(root):
+        # Re-read after taking the lock so the preconditions cannot go stale.
+        latest = core.load_yaml(_project_yaml(root))
+        if latest != existing or _infer_repository(root) != to_repository:
+            raise ValueError("repository state or origin changed during migration; retry after review")
+        _transaction(root, state, [event])
+
+
+def cmd_migrate_repository(args: argparse.Namespace) -> int:
+    root = Path(args.root).resolve()
+    migrate_repository(root, args.from_repository, args.to_repository)
+    print(f"migrated repository identity {args.from_repository} -> {args.to_repository}; project_id and historical events preserved")
+    return 0
+
+
 def cmd_verify(args: argparse.Namespace) -> int:
     root = Path(args.root).resolve()
     schemas_dir = root / "schemas"
+    if not schemas_dir.exists():
+        # The CLI's canonical schemas also support disposable library fixtures.
+        schemas_dir = Path(__file__).resolve().parents[2] / "schemas"
     findings: list[str] = []
 
     project_yaml = _project_yaml(root)
@@ -228,6 +289,12 @@ def cmd_verify(args: argparse.Namespace) -> int:
     if state is None:
         print(f"VERIFY: {project_yaml} does not exist (run `repo-knowledge init` first)")
         return 1
+    inferred = _infer_repository(root)
+    if inferred and inferred != state.get("repository"):
+        findings.append(
+            f"origin repository {inferred!r} differs from persisted identity {state.get('repository')!r}; "
+            "review the rename and use `migrate-repository --from-repository OLD --to-repository NEW`"
+        )
     status_path = _repo_dir(root) / "STATUS.md"
     if not status_path.exists():
         findings.append("STATUS.md is missing")
@@ -295,6 +362,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("verify", help="validate .repo/ against the schemas; report-only").set_defaults(func=cmd_verify)
     sub.add_parser("status", help="print a human summary of .repo/project.yaml").set_defaults(func=cmd_status)
+    migration = sub.add_parser("migrate-repository", help="record an explicit same-owner repository rename")
+    migration.add_argument("--from-repository", required=True, help="persisted owner/repo identity before rename")
+    migration.add_argument("--to-repository", required=True, help="new owner/repo identity; origin must already match")
+    migration.set_defaults(func=cmd_migrate_repository)
     return parser
 
 

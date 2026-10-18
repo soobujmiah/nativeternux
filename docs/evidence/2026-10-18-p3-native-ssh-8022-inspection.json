@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T10:38:51Z",
+  "target": "native Termux port 8022 read-only SSH inspector",
+  "configuration": {
+    "syntax": "valid",
+    "bind_addresses": [
+      "0.0.0.0:8022",
+      "[::]:8022"
+    ],
+    "bind_scope": "wildcard",
+    "password_authentication": "yes",
+    "keyboard_interactive_authentication": "yes",
+    "public_key_authentication": "yes"
+  },
+  "runtime": {
+    "daemon_process_present": true,
+    "tcp_listener_observation": "permission_denied",
+    "listener_daemon_correlation": "unknown",
+    "configuration_owner": "unknown",
+    "authenticated_connection_test": "not_run"
+  },
+  "separate_managed_8023": {
+    "manager": "runit",
+    "service": "running",
+    "definition_identity": "verified",
+    "bind_scope": "loopback_only",
+    "banner_probe": "ssh_banner"
+  },
+  "safety": {
+    "read_only": true,
+    "credential_files_read": false,
+    "configuration_changed": false,
+    "service_changed": false
+  },
+  "interpretation": "This records the effective configuration and observation limits; it does not establish the 8022 listener owner or external reachability. No SSH authentication or service mutation was performed."
+}

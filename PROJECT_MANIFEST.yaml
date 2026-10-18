@@ -3,8 +3,8 @@ standard_version: "1.0.0"
 template_version: "1.0.0"
 
 project:
-  name: "NativeTernux"
-  repository: "soobujmiah/nativeternux"
+  name: "Ternuxx"
+  repository: "soobujmiah/ternuxx"
   owner: "Sobuj Miah"
 
 product:
@@ -61,16 +61,19 @@ ai:
   source_of_truth: "GitHub"
 
 status:
-  phase: "P2 — Safe native desktop lifecycle"
-  next_milestone: "Resolve owned desktop process-tree shutdown design, then validate the native lifecycle when authorized"
+  phase: "P3 — Doctor, management, and recovery"
+  next_milestone: "Close P3 ownership, adapter, recovery, and boot qualification gates in roadmap order; keep PRoot/hybrid profiles fail-closed until ownership is verified"
   known_unknowns:
-    - "Native XFCE package transaction and live X11 session are not validated"
-    - "Existing Ternux PRoot live renderer was not rerun in this review"
+    - "The original XFCE install's full pre-consent console capture is unavailable; a later target-native preview/apply-argument revalidation is recorded without package mutation"
+    - "The PRoot ownership adapter and listener-to-service correlation are not implemented; installed distro and managed SSH configuration do not prove session/socket ownership"
+    - "RB03 boot observer recorded the changed boot, but automated verification is partial because it did not capture sshd/service health; current postboot Doctor and service observations are separate evidence"
+    - "Native boot-profile apply, cold-boot desktop visibility, and recovery beyond the boot-profile allowlist remain unqualified"
+    - "The live PRoot renderer was checked through Debian on display :1; the existing Ternux-owned :0 desktop was not qualified by that check"
     - "Native Wine/Hangover applications and graphics paths are not tested"
-    - "Termux process-level NPU access is not established"
+    - "Ternuxx has no integrated NPU runtime; separate Ternux PRoot HTP/QNN experiments are external and not release-qualified"
     - "SKB registry entry and first App-backed pull remain outstanding; owner confirms Reader App selection is updated, pending effective-access verification"
   deferred_scope:
-    - "Package installation and device mutation until explicitly authorized"
+    - "Any future device mutation outside the exact owner-authorized operation"
     - "Ternux rootfs cleanup/minimization or launcher modification"
     - "Default-on Shizuku or Wireless ADB automation"
     - "Native DXVK support until native Vulkan and a real workload pass"

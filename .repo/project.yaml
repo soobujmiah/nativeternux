@@ -1,7 +1,7 @@
 schema_version: 1
 project_id: nativeternux
-repository: soobujmiah/nativeternux
-generated_at: '2026-10-17T12:18:11Z'
+repository: soobujmiah/ternuxx
+generated_at: '2026-10-17T17:39:02Z'
 generated_by: tools/repo_knowledge collect
 version: 49db2f9
 head:
@@ -25,20 +25,21 @@ build:
   actor: soobujmiah
   run_url: https://github.com/soobujmiah/nativeternux/actions/runs/39031968284
 test:
-  status: unknown
-  run_id: '39031968284'
+  status: passed
+  run_id: null
   commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
   run_attempt: '1'
-  at: '2026-10-17T12:18:11Z'
-  timestamp_source: observed
-  workflow_name: Repository Knowledge Sync
-  event_type: push
-  actor: soobujmiah
-  run_url: https://github.com/soobujmiah/nativeternux/actions/runs/39031968284
-  summary: null
+  at: '2026-10-17T12:17:50Z'
+  timestamp_source: commit
+  summary: 'Native Termux full suite 158/158 passed in 32.471s; focused recovery and
+    management 47/47 passed in 1.077s. CLI help, compileall, shell syntax, all recovery
+    schemas, JSON, and diff check pass. All supported recovery previews list their
+    single affected journal path. Read-only target: unresolved 0, desktop :1 active,
+    Debian installed/ownership unverified. P2 historical 77-package closure corroborated
+    77/77 exact current installed versions.'
 last_successful_build: null
 last_failed_build: null
 sync:
   status: ok
-  last_synced_at: '2026-10-17T12:18:11Z'
-  source: ci
+  last_synced_at: '2026-10-17T17:39:02Z'
+  source: local

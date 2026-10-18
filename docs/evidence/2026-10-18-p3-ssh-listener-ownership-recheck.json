@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-readonly-ssh-listener-ownership-recheck",
+  "observed_at_utc": "2026-10-18T01:36:06Z",
+  "command": "./ternuxx --json ssh inspect",
+  "read_only": true,
+  "authenticated_connection_test": "not_run",
+  "native_default_sshd_config": {
+    "syntax": "valid",
+    "listen_addresses": [
+      "0.0.0.0:8022",
+      "[::]:8022"
+    ],
+    "bind_scope": "wildcard",
+    "password_authentication": "yes",
+    "public_key_authentication": "yes",
+    "daemon_process_present": true
+  },
+  "managed_runit_service": {
+    "service_id": "ternuxx-sshd",
+    "status": "running",
+    "definition_identity": "verified; checked-out and installed run script hashes matched",
+    "listen_addresses": [
+      "127.0.0.1:8023"
+    ],
+    "bind_scope": "loopback_only",
+    "password_authentication": "yes",
+    "loopback_banner_probe": "ssh_banner"
+  },
+  "listener_ownership": {
+    "tcp_listener_observation": "permission_denied",
+    "observed_listener_rows": [],
+    "daemon_to_socket_correlation": "unknown",
+    "reason": "procfs TCP listener table could not be read; netstat lacked AF_INET support and ss was not installed"
+  },
+  "external_reachability": "unknown",
+  "mutations": [],
+  "limitations": [
+    "Configured bind scope does not establish actual listener ownership or network reachability.",
+    "The managed 8023 service and the separate 8022 native config were inspected independently.",
+    "No password, key material, raw config file, or process ID is included."
+  ],
+  "fixture_verification": {
+    "command": "python3 -m unittest tests.test_ssh_diagnostics -v",
+    "result": "9/9 passed",
+    "coverage_relevant_to_observation": [
+      "proc listener permission denial is distinguished from absence",
+      "listener ownership requires process-tree and socket-inode correlation",
+      "loopback probe is restricted to explicitly configured loopback policy",
+      "managed service definition identity is exact and owned"
+    ],
+    "runtime_scope": "fixture tests; no device state changed"
+  }
+}

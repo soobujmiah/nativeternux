@@ -36,4 +36,4 @@ SKB's deterministic registry update is not instantaneous and requires repository
 ## Evidence
 
 - SKB `governance/DETERMINISTIC_STATE_SYNC_POLICY.md`, `governance/REPO_STATE_PROTOCOL.md`, `governance/KNOWLEDGE_RETURN_PROTOCOL.md`, and `standards/new-repository-standard.md`, verified from the local checkout whose `origin` remote is `soobujmiah/skb` on 2026-10-17.
-- NativeTernux `docs/KNOWLEDGE-SYNC.md`.
+- Ternuxx `docs/KNOWLEDGE-SYNC.md`.

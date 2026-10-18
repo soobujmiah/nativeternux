@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:launch-registry:1",
+  "title": "Ternuxx Launch Registry",
+  "description": "Draft contract for named, ownership-aware launch targets and explicit profiles. It does not define executable shell commands or authorize a target.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "registry_id", "targets", "profiles"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "registry_id": { "const": "ternuxx.launch-registry" },
+    "targets": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/target" }
+    },
+    "profiles": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/profile" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$",
+      "maxLength": 100
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name_key", "description_key", "provider", "status",
+        "entrypoint_id", "aliases", "dependencies", "capabilities",
+        "display", "audio", "startup_policy", "health_check", "stop_policy",
+        "recovery"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name_key": { "$ref": "#/$defs/id" },
+        "description_key": { "$ref": "#/$defs/id" },
+        "provider": {
+          "enum": ["native_termux", "existing_ternux_proot", "shared_service"]
+        },
+        "status": { "enum": ["available", "planned", "blocked", "unsupported"] },
+        "entrypoint_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/id" },
+            { "type": "null" }
+          ]
+        },
+        "aliases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^ternuxx\\.[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$",
+            "maxLength": 100
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "display": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "readiness_check_id"],
+          "properties": {
+            "mode": { "enum": ["none", "managed_server", "attach_existing"] },
+            "readiness_check_id": {
+              "oneOf": [
+                { "$ref": "#/$defs/id" },
+                { "type": "null" }
+              ]
+            }
+          }
+        },
+        "audio": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode"],
+          "properties": {
+            "mode": { "enum": ["none", "shared_existing", "managed_exclusive"] },
+            "provider_id": {
+              "oneOf": [
+                { "$ref": "#/$defs/id" },
+                { "type": "null" }
+              ]
+            }
+          }
+        },
+        "startup_policy": {
+          "enum": ["manual", "boot_opt_in", "dependency_only"]
+        },
+        "health_check": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["check_id", "timeout_seconds"],
+          "properties": {
+            "check_id": {
+              "oneOf": [
+                { "$ref": "#/$defs/id" },
+                { "type": "null" }
+              ]
+            },
+            "timeout_seconds": { "type": ["integer", "null"], "minimum": 1, "maximum": 300 }
+          }
+        },
+        "stop_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "owner_record_required"],
+          "properties": {
+            "mode": {
+              "enum": ["owned_process_group", "provider_adapter", "manual_only", "not_stoppable"]
+            },
+            "owner_record_required": { "type": "boolean" }
+          }
+        },
+        "recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["guide_key", "rollback_scope"],
+          "properties": {
+            "guide_key": { "$ref": "#/$defs/id" },
+            "rollback_scope": {
+              "enum": ["none", "ternuxx_owned_state", "provider_defined"]
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "available" } } },
+          "then": {
+            "properties": {
+              "entrypoint_id": { "$ref": "#/$defs/id" },
+              "health_check": {
+                "properties": { "check_id": { "$ref": "#/$defs/id" } }
+              },
+              "stop_policy": {
+                "properties": { "owner_record_required": { "const": true } }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "entrypoint_id": { "type": "null" }
+            }
+          }
+        }
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name_key", "status", "target_ids", "boot_policy", "load_models"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name_key": { "$ref": "#/$defs/id" },
+        "status": { "enum": ["available", "planned", "blocked"] },
+        "target_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "boot_policy": { "enum": ["disabled", "explicit_opt_in"] },
+        "load_models": { "type": "boolean" }
+      }
+    }
+  }
+}

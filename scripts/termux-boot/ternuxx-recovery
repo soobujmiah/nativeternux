@@ -1,0 +1,45 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Read-only boot evidence collector. It does not start services or hold locks.
+set -u
+umask 077
+
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+TERMUX_VERSION="${TERMUX_VERSION:-unknown}"
+export PREFIX TERMUX_VERSION
+case "$PREFIX" in
+  /data/data/com.termux/files/usr) ;;
+  *) exit 2 ;;
+esac
+case "$TERMUX_VERSION" in
+  "") exit 2 ;;
+esac
+
+STATE_DIR="${NATIVERNUX_STATE_DIR:-$HOME/.local/share/nativeternux}"
+export NATIVERNUX_STATE_DIR="$STATE_DIR"
+LOG_DIR="$STATE_DIR/continuity/boot-logs"
+LOG_FILE="$LOG_DIR/termux-boot.log"
+RECOVERY_MODULE="$PREFIX/lib/nativeternux/reboot_recovery.py"
+
+mkdir -p "$LOG_DIR" 2>/dev/null || exit 1
+chmod 700 "$STATE_DIR/continuity" "$LOG_DIR" 2>/dev/null || true
+touch "$LOG_FILE" 2>/dev/null || exit 1
+chmod 600 "$LOG_FILE" 2>/dev/null || exit 1
+
+{
+  printf 'boot-script-started-at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || printf unknown)"
+  if [ ! -r "$RECOVERY_MODULE" ]; then
+    printf 'result=recovery-module-unavailable\n'
+    exit 1
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf 'result=python3-unavailable\n'
+    exit 1
+  fi
+  observer_args=()
+  if [ "${TERNUXX_BOOT_DRY_RUN:-0}" = "1" ]; then observer_args+=(--dry-run); fi
+  python3 "$RECOVERY_MODULE" boot-observe "${observer_args[@]}"
+  result=$?
+  printf 'observer-exit=%s\n' "$result"
+  printf 'service-start=not-configured-by-this-observer\n'
+  exit "$result"
+} >>"$LOG_FILE" 2>&1

@@ -1,0 +1,559 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:reboot-test-checkpoint:v1",
+  "title": "Ternuxx Native Termux reboot test checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "test_id",
+    "nonce",
+    "state",
+    "readiness",
+    "prepared_at",
+    "previous_boot_id",
+    "baseline",
+    "boot_observations",
+    "verification_history",
+    "automatic_resume"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "test_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 128
+    },
+    "state": {
+      "enum": [
+        "prepared",
+        "awaiting_reboot",
+        "boot_observed",
+        "verified",
+        "failed",
+        "inconclusive"
+      ]
+    },
+    "readiness": {
+      "enum": [
+        "READY",
+        "NOT_READY"
+      ]
+    },
+    "prepared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "previous_boot_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "baseline": {
+      "$ref": "#/$defs/baseline"
+    },
+    "boot_observations": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/bootObservation"
+      }
+    },
+    "verification_history": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/verification"
+      }
+    },
+    "automatic_resume": {
+      "const": false
+    }
+  },
+  "$defs": {
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native",
+        "repository",
+        "stage",
+        "references",
+        "ssh",
+        "termux_boot",
+        "wake_lock",
+        "required_postboot_checks",
+        "recovery_instructions",
+        "rollback_instructions",
+        "next_action"
+      ],
+      "properties": {
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "termux_version"
+          ],
+          "properties": {
+            "termux_version": {
+              "type": "string",
+              "maxLength": 80
+            }
+          }
+        },
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "branch",
+            "commit",
+            "modified_paths",
+            "untracked_paths"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,128}/[A-Za-z0-9_.-]{1,128}$"
+            },
+            "branch": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^(unknown|[a-fA-F0-9]{7,64})$"
+            },
+            "modified_paths": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "untracked_paths": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "references": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "ssh": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sshd_process",
+            "auth_modes",
+            "config_syntax",
+            "socket_binding",
+            "boot_policy"
+          ],
+          "properties": {
+            "sshd_process": {
+              "enum": [
+                "present",
+                "absent",
+                "unknown"
+              ]
+            },
+            "auth_modes": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "publickey",
+                  "password",
+                  "keyboard-interactive",
+                  "unknown"
+                ]
+              }
+            },
+            "config_syntax": {
+              "enum": [
+                "valid",
+                "invalid",
+                "unknown"
+              ]
+            },
+            "socket_binding": {
+              "enum": [
+                "verified_loopback",
+                "verified_other",
+                "unverified",
+                "not_observed"
+              ]
+            },
+            "boot_policy": {
+              "enum": [
+                "enabled",
+                "disabled",
+                "not_configured",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "termux_boot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "app",
+            "script_directory",
+            "startup_policy"
+          ],
+          "properties": {
+            "app": {
+              "enum": [
+                "installed",
+                "not_installed",
+                "unknown"
+              ]
+            },
+            "script_directory": {
+              "enum": [
+                "present",
+                "absent",
+                "unknown"
+              ]
+            },
+            "startup_policy": {
+              "enum": [
+                "enabled",
+                "disabled",
+                "not_configured",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "wake_lock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cli_available",
+            "launcher_acquire_request",
+            "launcher_global_release_request",
+            "ownership"
+          ],
+          "properties": {
+            "cli_available": {
+              "type": "boolean"
+            },
+            "launcher_acquire_request": {
+              "type": "boolean"
+            },
+            "launcher_global_release_request": {
+              "type": "boolean"
+            },
+            "ownership": {
+              "enum": [
+                "scoped",
+                "global_unscoped",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "required_postboot_checks": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 32,
+          "items": {
+            "enum": [
+              "boot_id_changed",
+              "termux_boot_observed",
+              "native_sshd_ready",
+              "ssh_socket_observed",
+              "continuity_marker_matches",
+              "proot_independent",
+              "db_preserved",
+              "xgo_preserved",
+              "wakelock_owner_checked"
+            ]
+          }
+        },
+        "recovery_instructions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 24,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "rollback_instructions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 24,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "next_action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      }
+    },
+    "bootObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observed_at",
+        "current_boot_id",
+        "boot_id_transition",
+        "genuine_android_reboot",
+        "termux_version",
+        "termux_boot_invoked",
+        "sshd_process",
+        "config_syntax",
+        "native_service_health",
+        "sshd_authenticated_connectivity",
+        "errors",
+        "socket_binding",
+        "wakelock_state",
+        "proot_dependency",
+        "automatic_resume"
+      ],
+      "properties": {
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "current_boot_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "uuid"
+            }
+          ]
+        },
+        "boot_id_transition": {
+          "enum": [
+            "changed",
+            "same",
+            "unknown"
+          ]
+        },
+        "genuine_android_reboot": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "termux_version": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "termux_boot_invoked": {
+          "type": "boolean"
+        },
+        "sshd_process": {
+          "enum": [
+            "present",
+            "absent",
+            "unknown"
+          ]
+        },
+        "config_syntax": {
+          "enum": [
+            "valid",
+            "invalid",
+            "unknown"
+          ]
+        },
+        "native_service_health": {
+          "enum": [
+            "ready_unqualified",
+            "degraded",
+            "unknown"
+          ]
+        },
+        "sshd_authenticated_connectivity": {
+          "const": "not_tested"
+        },
+        "errors": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "socket_binding": {
+          "const": "not_observed"
+        },
+        "wakelock_state": {
+          "const": "unknown"
+        },
+        "proot_dependency": {
+          "const": false
+        },
+        "automatic_resume": {
+          "const": false
+        },
+        "managed_service_status": {
+          "enum": [
+            "running",
+            "stopped",
+            "unknown"
+          ]
+        },
+        "managed_service_definition": {
+          "enum": [
+            "verified",
+            "mismatch",
+            "unavailable",
+            "unsafe",
+            "unknown"
+          ]
+        },
+        "managed_config_syntax": {
+          "enum": [
+            "valid",
+            "invalid_or_unavailable",
+            "unknown"
+          ]
+        },
+        "managed_loopback_probe": {
+          "enum": [
+            "ssh_banner",
+            "failed",
+            "unknown"
+          ]
+        },
+        "listener_daemon_correlation": {
+          "enum": [
+            "verified",
+            "not_verified",
+            "unknown",
+            "not_performed"
+          ]
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verified_at",
+        "outcome",
+        "previous_boot_id",
+        "current_boot_id",
+        "boot_observation_matches",
+        "sshd_process",
+        "native_service_health",
+        "sshd_authenticated_connectivity",
+        "errors",
+        "socket_binding",
+        "test_id",
+        "automatic_resume"
+      ],
+      "properties": {
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "outcome": {
+          "enum": [
+            "verified_reboot_partial",
+            "verified_reboot_service_unqualified",
+            "same_boot",
+            "inconclusive"
+          ]
+        },
+        "previous_boot_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "uuid"
+            }
+          ]
+        },
+        "current_boot_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "uuid"
+            }
+          ]
+        },
+        "boot_observation_matches": {
+          "type": "boolean"
+        },
+        "sshd_process": {
+          "enum": [
+            "present",
+            "absent",
+            "unknown"
+          ]
+        },
+        "native_service_health": {
+          "enum": [
+            "ready_unqualified",
+            "degraded",
+            "unknown"
+          ]
+        },
+        "sshd_authenticated_connectivity": {
+          "const": "not_tested"
+        },
+        "errors": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "socket_binding": {
+          "const": "not_observed"
+        },
+        "test_id": {
+          "type": "string"
+        },
+        "automatic_resume": {
+          "const": false
+        }
+      }
+    }
+  }
+}

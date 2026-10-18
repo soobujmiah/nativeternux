@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/config-backup.schema.json",
+  "title": "Ternuxx configuration backup archive",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "schema_version",
+    "software_version",
+    "backup_id",
+    "created_at_utc",
+    "entries",
+    "excluded_paths",
+    "integrity_sha256"
+  ],
+  "properties": {
+    "format": {
+      "const": "ternuxx-config-backup"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "software_version": {
+      "type": "string",
+      "pattern": "^0\\.1\\.[0-9]+$"
+    },
+    "backup_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "present",
+          "mode",
+          "size",
+          "sha256",
+          "data_b64"
+        ],
+        "properties": {
+          "path": {
+            "const": "state/boot/profile.json"
+          },
+          "mode": {
+            "const": 384
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65536
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "data_b64": {
+            "type": "string",
+            "contentEncoding": "base64"
+          },
+          "present": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "excluded_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "integrity_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

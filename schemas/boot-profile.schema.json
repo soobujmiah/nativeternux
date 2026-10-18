@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/boot-profile.schema.json",
+  "title": "Ternuxx boot profile selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "owner", "provider", "profile"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "owner": {"const": "ternuxx"},
+    "provider": {"const": "native"},
+    "profile": {"enum": ["cli-only", "native", "proot", "hybrid"]}
+  }
+}

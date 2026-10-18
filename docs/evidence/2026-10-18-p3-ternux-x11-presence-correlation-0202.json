@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-ternux-x11-process-presence-correlation",
+  "observed_at_utc": "2026-10-18T02:02:33Z",
+  "commands": {
+    "ternux_status": "ternux --json status (02:02:28 UTC)",
+    "visible_x11_processes": "ps -A -o pid=,ppid=,comm=,args= filtered to comm=termux-x11; output reduced to display only",
+    "ternuxx_doctor": "./ternuxx --json doctor (02:02:33 UTC)"
+  },
+  "observations": {
+    "ternux_status": {
+      "status": "running",
+      "x11_running": "yes",
+      "version": "1.4.0"
+    },
+    "visible_termux_x11_displays": [
+      ":1"
+    ],
+    "visible_display_0_process": "not observed",
+    "correlation": {
+      "visible_termux_x11_pid_matches_ternuxx_doctor_verified_x11_pid": true,
+      "literal_pid_recorded": false,
+      "process_argv_recorded": false
+    },
+    "ternux_profile_display": "configured :0 in prior read-only profile discovery",
+    "guest_display_checks": {
+      "display_0": "partial; X11/renderer unavailable",
+      "display_1": "complete; X11/audio reachable; Zink/Turnip renderer"
+    },
+    "checked_out_ternux_source": {
+      "head": "38a5217",
+      "status_implementation": "uses pgrep -f termux-x11 process presence to set running/x11_running",
+      "installed_script_identity_correlated_to_checkout": false
+    }
+  },
+  "interpretation": "Ternux reports running/X11-present while the only visible termux-x11 server in the sampled process table is :1 and its transient PID matched the X11 PID that Ternuxx Doctor verified as its own. The checked-out Ternux source uses name-presence status detection, but the installed live script was not proven byte-identical to that checkout. This does not prove an active Ternux Debian desktop on :0 or guest rootfs ownership. The :0 process was not observed in the Termux-visible process table; hidden or differently named processes are not ruled out.",
+  "safety": {
+    "read_only": true,
+    "lifecycle_actions": [],
+    "package_actions": [],
+    "service_actions": [],
+    "guest_writes": [],
+    "literal_pid_or_argv_stored": false
+  }
+}

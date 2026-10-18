@@ -1,10 +1,10 @@
 # Workload optimization
 
-NativeTernux should improve useful work per watt and keep performance sustainable. An optimization result is measured against a named workload and device state; a “boost” label alone is not evidence.
+Ternuxx should improve useful work per watt and keep performance sustainable. An optimization result is measured against a named workload and device state; a “boost” label alone is not evidence.
 
 ## Optimization profiles
 
-Planned profiles are `efficiency`, `balanced`, `sustained`, and `custom`. A profile changes only settings that NativeTernux can identify, scope to one workload/session, explain, and restore. A higher performance preference is offered only when the device/runtime exposes a supported control; NativeTernux will not force hidden Android settings to simulate one.
+Planned profiles are `efficiency`, `balanced`, `sustained`, and `custom`. A profile changes only settings that Ternuxx can identify, scope to one workload/session, explain, and restore. A higher performance preference is offered only when the device/runtime exposes a supported control; Ternuxx will not force hidden Android settings to simulate one.
 
 The profile registry records provider (native or existing Debian PRoot), workload, selected backend, supported knobs, original values, applied values, and restore steps. Profile changes are previewed, saved to the operation journal, and reversible. Profiles are not mixed across providers unless an explicit hybrid workload rule says so.
 
@@ -22,7 +22,7 @@ An accelerator is never forced just because a library, device node, or environme
 
 ## Thermal, battery, and memory awareness
 
-`nativeternux optimize status` should report the evidence available to the current environment: battery state, Android thermal state when a supported companion API supplies it, memory pressure, workload thread count, provider, renderer, and recent task performance. Missing telemetry is shown as unavailable. A Termux shell temperature file is not treated as a portable Android Thermal API.
+`ternuxx optimize status` should report the evidence available to the current environment: battery state, Android thermal state when a supported companion API supplies it, memory pressure, workload thread count, provider, renderer, and recent task performance. Missing telemetry is shown as unavailable. A Termux shell temperature file is not treated as a portable Android Thermal API.
 
 When supported telemetry says the device is under sustained thermal pressure, the controller may offer or apply an owner-enabled per-workload reduction, such as fewer worker threads, smaller model batches, lower render quality, or pause. It must not disable Android thermal protections, raise hidden clock limits, pin work to guessed CPU cores, or hold a wake lock after the selected task ends.
 
@@ -30,9 +30,9 @@ Wake locks are scoped to an explicit job/session with a visible reason and owner
 
 ## Storage and cache management
 
-`nativeternux optimize storage` reports size and ownership before proposing cleanup. By default, cleanup may target only NativeTernux-owned temporary files or caches whose safe regeneration is documented. It previews exact paths and expected space before requiring confirmation. It never prunes the existing Ternux Debian rootfs, removes user files, runs package autoremove, or deletes shader/model caches without explaining the rebuild cost and asking separately.
+`ternuxx optimize storage` reports size and ownership before proposing cleanup. By default, cleanup may target only Ternuxx-owned temporary files or caches whose safe regeneration is documented. It previews exact paths and expected space before requiring confirmation. It never prunes the existing Ternux Debian rootfs, removes user files, runs package autoremove, or deletes shader/model caches without explaining the rebuild cost and asking separately.
 
-No size saving is promised until measured. Profile and cache reports distinguish Termux app-private storage, NativeTernux state, the existing Ternux rootfs, and shared Android storage.
+No size saving is promised until measured. Profile and cache reports distinguish Termux app-private storage, Ternuxx state, the existing Ternux rootfs, and shared Android storage.
 
 ## System-level controls
 

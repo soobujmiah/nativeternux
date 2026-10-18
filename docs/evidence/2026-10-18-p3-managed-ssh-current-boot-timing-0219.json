@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-managed-ssh-current-boot-timing-correlation",
+  "observed_at_utc": "2026-10-18T02:19:45Z",
+  "runtime": "native Termux on attached target",
+  "boot_diagnostics": {
+    "app": "installed",
+    "script_directory": "present",
+    "regular_script_count": 2,
+    "non_executable_script_count": 0,
+    "startup_policy": "unknown",
+    "termux_boot_command_available": false
+  },
+  "startup_chain_static_review": {
+    "boot_script": {
+      "name": "00-ternuxx-services",
+      "executable": true,
+      "sha256": "53b6745a930af57434cc046861f5df11d9a6aaf76529a857ab4c2cc978ac9b4e",
+      "references_managed_service": true,
+      "sources_start_services_helper": true,
+      "contains_explicit_sv_up": false,
+      "bash_n_exit": 0
+    },
+    "termux_helper": {
+      "path": "$PREFIX/etc/profile.d/start-services.sh",
+      "sha256": "8c8b8c5222a74bd037cb059ccbbedd4d94cf1f0b1b76b2df8cfa220b9de9d3f8",
+      "sets_service_directory": true,
+      "starts_service_daemon": true,
+      "background_start": true,
+      "bash_n_exit": 0
+    },
+    "managed_service_entry": {
+      "exists": true,
+      "is_symlink": false,
+      "under_termux_prefix": true
+    }
+  },
+  "current_boot_timing": {
+    "clock_boottime_seconds": 28682,
+    "runit_service_state": "run",
+    "runit_service_age_seconds": 28642,
+    "service_started_seconds_after_kernel_boot": 40
+  },
+  "ssh_health": {
+    "service_status": "running",
+    "definition_identity": "verified",
+    "config_syntax": "valid",
+    "bind": [
+      "127.0.0.1:8023"
+    ],
+    "loopback_probe": "ssh_banner",
+    "listener_observation": "permission_denied",
+    "listener_owner_correlation": "unknown"
+  },
+  "interpretation": "Strong evidence consistent with service activation early in the current boot: the executable Termux:Boot script references the managed service, sources the Termux services helper, the helper starts the shared service daemon over PREFIX/var/service, the managed service entry exists, and runit reports it started 40 seconds after kernel boot. This timing plus static wiring does not prove that Android delivered this specific Termux:Boot script; no controlled reboot or boot receiver log was observed. SSH banner and config are healthy; process ownership remains unknown.",
+  "safety": {
+    "read_only": true,
+    "scripts_executed": false,
+    "service_action_invoked": false,
+    "rebooted": false,
+    "packages_changed": false,
+    "boot_configuration_changed": false,
+    "desktop_or_proot_touched": false,
+    "pid_or_argv_recorded": false
+  },
+  "mutations": [],
+  "tests": {
+    "command": "python3 -m unittest tests.test_boot_profiles tests.test_ssh_diagnostics -v",
+    "result": "passed",
+    "passed": 21,
+    "failed": 0,
+    "scope": "boot profile preview/fail-closed fixtures and SSH listener diagnostics/ownership fixtures"
+  }
+}

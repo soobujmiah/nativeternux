@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-10-17T23:55:28Z",
+  "external_reachability": "not tested",
+  "listeners": [
+    {
+      "local_binds": [
+        "0.0.0.0",
+        "*"
+      ],
+      "port": 8022,
+      "process_owner": "unknown",
+      "state": "LISTEN"
+    },
+    {
+      "local_binds": [
+        "127.0.0.1"
+      ],
+      "port": 8023,
+      "process_owner": "unknown",
+      "state": "LISTEN"
+    }
+  ],
+  "process_attribution": "unavailable; ss reported netlink permission denied and returned no users/process fields",
+  "read_only": true,
+  "schema_version": 1,
+  "scope": "No listener, service, Android setting, desktop, package, or PRoot state was changed. No process ownership is inferred from the port.",
+  "source": "read-only ADB shell /system/bin/ss -ltnp; output filtered to ports 8022 and 8023"
+}

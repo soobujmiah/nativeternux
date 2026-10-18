@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:19:14Z",
+  "phase": "P3",
+  "kind": "management_transport_policy_guards",
+  "implementation": {
+    "module": "lib/management_request_policy.py",
+    "checks": [
+      "exact configured 127.0.0.1 Host and Origin",
+      "GET/POST method allowlist",
+      "same-origin requirement for POST",
+      "application/json content type for POST",
+      "bounded request body length",
+      "thread-safe global token-bucket rate limit"
+    ],
+    "socket_created": false,
+    "remaining_adapter_controls": [
+      "loopback bind enforcement in server construction",
+      "handler concurrency and request deadlines",
+      "response security headers and no-CORS policy",
+      "audit/redaction and route dispatch",
+      "on-device loopback qualification"
+    ]
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_management_authorization tests.test_management_sessions tests.test_management_request_policy -v",
+    "focused_passed": 19,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 244,
+    "full_failed": 0,
+    "full_duration_seconds": 145.904
+  },
+  "device_actions": [],
+  "limitations": [
+    "This tests pure policy helpers only; it does not prove a real HTTP server binds to loopback or enforces policy in handlers.",
+    "No TCP/HTTP listener, Android setting, service, desktop, or PRoot state was changed.",
+    "Ternuxx management TCP and off-home access remain unavailable and disabled."
+  ]
+}

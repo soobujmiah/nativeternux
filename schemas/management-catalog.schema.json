@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ternuxx.local/schemas/management-catalog.schema.json",
+  "title": "Ternuxx shared management catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "read_only", "providers", "domains", "policy"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "read_only": {"const": true},
+    "providers": {"type": "array", "items": {"type": "object", "required": ["id", "kind", "status", "secret_policy"], "properties": {"id": {"type": "string"}, "kind": {"type": "string"}, "status": {"type": "string"}, "secret_policy": {"type": "string"}}, "additionalProperties": false}},
+    "domains": {"type": "array", "items": {"type": "object", "required": ["id", "status", "providers", "operations", "available_operations", "unavailable_operations"], "properties": {"id": {"type": "string"}, "status": {"type": "string"}, "providers": {"type": "array", "items": {"type": "string"}}, "operations": {"type": "array", "items": {"type": "string"}}, "available_operations": {"type": "array", "items": {"type": "string"}}, "unavailable_operations": {"type": "array", "items": {"type": "string"}}, "planned": {"type": "array", "items": {"type": "string"}}, "targets": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}},
+    "policy": {"type": "object", "required": ["mutations_require_preview_and_explicit_confirmation", "external_cloud_calls_enabled", "credentials_in_catalog"], "properties": {"mutations_require_preview_and_explicit_confirmation": {"const": true}, "external_cloud_calls_enabled": {"const": false}, "credentials_in_catalog": {"const": false}}, "additionalProperties": false}
+  }
+}

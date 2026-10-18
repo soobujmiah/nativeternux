@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/native-ssh-service-recovery.schema.json",
+  "title": "Native Ternuxx SSH service journal recovery response",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "record_kind", "record_updated_at", "affected_paths", "observed_service_status", "expected_service_status", "resolution", "source_sha256", "installed_sha256", "manager_sha256", "plan_id", "requires_confirmation", "changed", "read_only", "impact"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "record_kind": {"enum": ["service.start", "service.stop"]},
+        "record_updated_at": {"type": "string", "format": "date-time"},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1}},
+        "observed_service_status": {"enum": ["running", "stopped"]},
+        "expected_service_status": {"enum": ["running", "stopped"]},
+        "resolution": {"enum": ["complete", "failed"]},
+        "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "installed_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "manager_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "plan_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "requires_confirmation": {"const": true},
+        "changed": {"const": false},
+        "read_only": {"const": true},
+        "impact": {"type": "string"}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "resolution", "observed_service_status", "changed", "read_only", "affected_paths", "service_action_performed"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "resolution": {"enum": ["complete", "failed"]},
+        "observed_service_status": {"enum": ["running", "stopped"]},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1}},
+        "changed": {"const": true},
+        "read_only": {"const": false},
+        "service_action_performed": {"const": false}
+      }
+    }
+  ]
+}

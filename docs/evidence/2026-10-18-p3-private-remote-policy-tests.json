@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "scope": "offline off-home access desired-policy validation, shared management API, and CLI preview",
+  "implementation": {
+    "module": "lib/remote_access_policy.py",
+    "management_operation": "remote.access.preview",
+    "cli": "ternuxx remote access preview [--policy-stdin]",
+    "config_schema": "schemas/remote-access-config.schema.json",
+    "config_schema_version": 2,
+    "preview_response_schema": "schemas/remote-access-policy-preview.schema.json",
+    "preview_response_schema_version": 1,
+    "default_mode": "disabled"
+  },
+  "behavior": [
+    "Rejects public_ingress=true and unknown fields.",
+    "Requires explicit private transport, bounded client/target/capability references, and a bounded session TTL for private_transport.",
+    "Credential reference must use the credential_ref_ ID shape; client, capability, and credential reference values are omitted from previews.",
+    "Management API exposes only the allowlisted read-only preview operation; CLI stdin requires explicit --policy-stdin and valid piped JSON.",
+    "Private transport preview remains unavailable because no reviewed transport adapter exists; it never claims remote access active."
+  ],
+  "tests": {
+    "focused_command": "python -m unittest tests.test_remote_access_policy tests.test_management_service -v",
+    "focused_result": "28/28 passed",
+    "cli_help_command": "bash tests/test_cli_help.sh",
+    "cli_help_result": "PASS",
+    "schema_parse_command": "python -m json.tool schemas/remote-access-policy-preview.schema.json",
+    "schema_parse_result": "PASS",
+    "full_command": "bash scripts/repo_test.sh",
+    "full_result": "195/195 passed",
+    "full_elapsed_seconds": 33.580
+  },
+  "live_cli_preview": {
+    "default": {"ok": true, "mode": "disabled", "readiness": "disabled", "remote_access_active": false, "public_ingress": false},
+    "private_transport": {"ok": true, "mode": "private_transport", "readiness": "unavailable", "remote_access_active": false, "public_ingress": false, "transport_kind": "vpn_overlay", "credential_values_emitted": false, "client_values_emitted": false}
+  },
+  "device_mutations": [],
+  "safety_observed": {
+    "network_accessed": false,
+    "credentials_resolved": false,
+    "files_changed_by_preview": false,
+    "services_changed": false,
+    "public_ingress_enabled": false
+  },
+  "limitations": [
+    "No VPN/tunnel provider was selected or implemented.",
+    "No config is persisted and no transport adapter consumes the policy for connection setup.",
+    "No device, router, listener, or external network qualification was performed.",
+    "This preview integration does not establish P3 completion or change P4 ownership/handoff gates."
+  ]
+}

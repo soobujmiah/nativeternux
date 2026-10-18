@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "date_local": "2026-10-18",
+  "evidence_type": "fixture_tests_and_read_only_native_termux_verification",
+  "scope": {
+    "journal_kinds": [
+      "boot.enable",
+      "boot.disable",
+      "service.start",
+      "service.stop"
+    ],
+    "journal_statuses": [
+      "starting",
+      "stopping",
+      "needs_recovery"
+    ],
+    "mutation_scope": "update exactly one validated journal record after preview-bound confirmation",
+    "boot_profile_file_changes_during_recovery": false,
+    "service_manager_actions_during_recovery": false
+  },
+  "boot_profile_resolution": {
+    "enable_complete_requires": "valid configured requested profile and byte-exact managed startup script",
+    "disable_complete_requires": "profile config and managed startup file both absent",
+    "unknown_script_symlink_unsafe_mode_corrupt_config": "fail_closed",
+    "requested_profile_intent": "recorded in boot.enable journal detail and retained on rollback failure",
+    "legacy_enable_records_without_profile_intent": "fail_closed_for_manual_review"
+  },
+  "tests": {
+    "focused_boot_service_management_journal": {
+      "result": "passed",
+      "count": 39
+    },
+    "full_native_termux_suite": {
+      "result": "passed",
+      "count": 150,
+      "duration_seconds": 31.812
+    },
+    "cli_help_contract": "passed",
+    "compileall": "passed",
+    "shell_syntax": "passed",
+    "response_schema_json_parse": "passed",
+    "git_diff_check": "passed",
+    "repo_knowledge_verify": "passed_zero_findings"
+  },
+  "native_target_read_only": {
+    "boot_profile": {
+      "configured": "cli-only",
+      "source": "default",
+      "read_only": true
+    },
+    "invalid_operation_id_resolution": "refused_without_journal_change",
+    "recovery_unresolved_count_before_after": 0,
+    "desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "gui_visible": "unknown"
+    },
+    "boot_enable_disable_applied": false,
+    "journal_resolution_applied": false,
+    "desktop_or_proot_mutated": false,
+    "packages_installed_for_this_slice": false
+  },
+  "limits": [
+    "No target boot or service journal was pending, so successful resolution was fixture-tested only.",
+    "Termux:Boot delivery, Android background policy, and visible GUI after reboot remain unverified.",
+    "Desktop-session and other operation-kind recovery remains open; P3 is not complete."
+  ]
+}

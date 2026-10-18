@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "scope": "typed native PulseAudio pactl endpoint summary in the bounded Ternux guest diagnostic",
+  "implementation": {
+    "module": "lib/proot_diagnostics.py",
+    "response_schema": "schemas/ternux-guest-diagnostics.schema.json",
+    "field": "native_pulseaudio_endpoint",
+    "behavior": [
+      "Runs only native `pactl info` with a five-second timeout.",
+      "Allow-lists only server name and default sink; malformed values remain unknown.",
+      "Distinguishes command/server unavailable from malformed or timed-out unknown state.",
+      "Does not send audio, start or stop services, or alter configuration.",
+      "Keeps Ternux `pulseaudio` process-name status separate from native pactl endpoint state and guest audio check."
+    ]
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_proot_diagnostics tests.test_management_service -v",
+    "focused_result": "36/36 passed",
+    "full_command": "bash scripts/repo_test.sh",
+    "full_result": "207/207 passed",
+    "full_elapsed_seconds": 33.461
+  },
+  "live_check": {
+    "recorded_at_utc": "2026-10-18T01:22:36Z",
+    "command": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+    "exit_code": 0,
+    "result": "complete",
+    "native_pulseaudio_endpoint": {
+      "status": "available",
+      "server_name": "pulseaudio",
+      "default_sink": "OpenSL_ES_sink"
+    },
+    "native_ternux_process_status": "stopped",
+    "guest_audio": "reachable",
+    "guest_x11": "reachable",
+    "guest_renderer": "zink_turnip",
+    "profile_owner": "unverified",
+    "read_only": true
+  },
+  "mutations": {
+    "audio_stream_sent": false,
+    "services_changed": false,
+    "packages_changed": false,
+    "guest_files_changed": false
+  },
+  "limitations": [
+    "This confirms control status only, not audible playback.",
+    "A successful point check does not erase earlier intermittent guest failures or establish long-term reliability.",
+    "It does not establish existing Ternux guest/profile ownership or host renderer.",
+    "A second point check at 01:26:38 UTC returned the same endpoint/control state; this is still not an audible or sustained playback test."
+  ],
+  "live_recheck": {
+    "recorded_at_utc": "2026-10-18T01:26:38Z",
+    "command": "./ternuxx --json proot verify --distro debian --guest-user sbj --display :1 --backend zink",
+    "exit_code": 0,
+    "result": "complete",
+    "native_pulseaudio_endpoint": {
+      "status": "available",
+      "server_name": "pulseaudio",
+      "default_sink": "OpenSL_ES_sink"
+    },
+    "native_ternux_process_status": "stopped",
+    "guest_audio": "reachable",
+    "guest_x11": "reachable",
+    "guest_renderer": "zink_turnip",
+    "profile_owner": "unverified",
+    "read_only": true,
+    "mutations": []
+  }
+}

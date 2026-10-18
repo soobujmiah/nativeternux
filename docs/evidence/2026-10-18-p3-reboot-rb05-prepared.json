@@ -1,0 +1,126 @@
+{
+  "baseline": {
+    "desktop": {
+      "display": ":1",
+      "gui_visible": "unknown",
+      "status": "running",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes"
+    },
+    "display_assignment": {
+      "existing_proot": ":0",
+      "native_ternuxx": ":1"
+    },
+    "managed_ssh": {
+      "bind": "127.0.0.1:8023",
+      "config": "valid",
+      "definition": "verified",
+      "listener_owner": "unknown",
+      "loopback_banner": "reachable",
+      "status": "running"
+    },
+    "native_ssh_8022": {
+      "configured_bind": "wildcard",
+      "keyboard_interactive_auth": "enabled",
+      "listener_correlation": "unknown",
+      "password_auth": "enabled"
+    },
+    "proot": {
+      "distribution": "debian",
+      "guest_entered": false,
+      "ownership": "unverified",
+      "status": "installed"
+    },
+    "repository_worktree": {
+      "disposition": "preserved; no reset/clean/commit/push",
+      "modified_paths": 42,
+      "staged_paths": 0,
+      "untracked_paths": 234
+    },
+    "termux_boot": {
+      "app": "installed",
+      "delivery_policy": "unknown",
+      "package": "enabled",
+      "receiver": "enabled",
+      "regular_scripts": 2
+    },
+    "wakelock": {
+      "android_platform_state": "unknown",
+      "registered_owner": "native.sshd"
+    }
+  },
+  "checkpoint": {
+    "automatic_resume": false,
+    "mode": "0600",
+    "nonce_or_boot_id_in_public_evidence": false,
+    "readiness": "NOT_READY",
+    "state": "prepared",
+    "storage": "native private continuity/reboot-tests directory"
+  },
+  "limitations": [
+    "GUI visibility is unknown.",
+    "Android platform Wake Lock state and managed SSH listener PID correlation are unknown.",
+    "Termux:Boot delivery policy remains unknown until the new owner-operated reboot observer result.",
+    "Existing dirty/untracked repository paths were preserved."
+  ],
+  "mutations": {
+    "android_reboot_triggered_by_agent": false,
+    "packages_changed": false,
+    "private_checkpoint_created": true,
+    "proot_or_rootfs_changed": false,
+    "repository_reset_or_clean": false,
+    "services_or_desktop_changed": false,
+    "termux_boot_settings_changed": false
+  },
+  "next_action": "Do not use RB05 for reboot verification; use RB06.",
+  "postboot_procedure": [
+    "Owner restarts Android using normal power UI.",
+    "After return, reconnect using the already configured native SSH route; port 8022 is the current work-shell route. If that is unavailable, report what is reachable; do not change SSH settings.",
+    "Read Ternuxx reboot status for RB05, then run reboot verify for RB05; do not manually invoke boot-observe.",
+    "Collect read-only managed SSH readiness and authenticated loopback 8023 result, desktop/session status, PRoot inventory and db/xgo preservation, Termux:Boot observer evidence, and Wake Lock owner status.",
+    "Compare against the private continuity marker. Keep readiness NOT_READY unless every required gate is explicitly supported; automatic resume remains false."
+  ],
+  "preparation_verification": {
+    "command": "./ternuxx reboot prepare --test-id TERN-20261018-RB05 --baseline-json <sanitized baseline object>",
+    "private_checkpoint_status": "confirmed by status command",
+    "private_mode": "0600",
+    "result": "prepared / NOT_READY",
+    "test_id_status_query": "confirmed; nonce and boot ID deliberately filtered out"
+  },
+  "privacy": {
+    "boot_ids_included": false,
+    "credentials_included": false,
+    "nonce_included": false,
+    "private_checkpoint_path_included": false
+  },
+  "record_type": "superseded_reboot_test_preparation",
+  "recorded_at_utc": "2026-10-18T09:47:34Z",
+  "required_postboot_checks": [
+    "boot_id_changed",
+    "termux_boot_observed",
+    "native_sshd_ready",
+    "ssh_socket_observed",
+    "continuity_marker_matches",
+    "proot_independent",
+    "db_preserved",
+    "xgo_preserved",
+    "wakelock_owner_checked"
+  ],
+  "runtime": {
+    "branch": "main",
+    "commit": "1a891faabc925136c1801f40194b0969d28041df",
+    "layer": "native Termux Android",
+    "repository": "soobujmiah/ternuxx"
+  },
+  "schema_version": 1,
+  "source_change_under_test": {
+    "behavior": "retry transient managed-service readiness up to 20 one-second attempts before recording boot evidence; terminal definition/configuration failures stop retrying",
+    "path": "lib/reboot_recovery.py"
+  },
+  "superseded_before_reboot": {
+    "reason": "RB05 private baseline incorrectly recorded Termux:Boot startup policy as enabled although live diagnostics report unknown; no reboot was performed against RB05.",
+    "superseded_by": "TERN-20261018-RB06"
+  },
+  "test_id": "TERN-20261018-RB05"
+}

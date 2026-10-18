@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-ssh-startup-timing-diagnostic-live-validation",
+  "observed_at_utc": "2026-10-18T02:23:34Z",
+  "runtime": "native Termux on attached target",
+  "command": "./ternuxx --json ssh inspect",
+  "exit_code": 0,
+  "managed_service": {
+    "status": "running",
+    "definition_identity": "verified",
+    "config_syntax": "valid",
+    "bind": [
+      "127.0.0.1:8023"
+    ],
+    "loopback_probe": "ssh_banner",
+    "startup_timing": {
+      "kernel_uptime_seconds": 28906,
+      "runit_service_age_seconds": 28865,
+      "seconds_after_kernel_boot": 41,
+      "status": "observed"
+    }
+  },
+  "listener_owner_correlation": "unknown",
+  "proc_listener_observation": "permission_denied",
+  "interpretation": "The new read-only field reports Runit service age relative to kernel CLOCK_BOOTTIME. It records timing only; this does not attribute startup to Termux:Boot or prove listener ownership, remote reachability, or GUI state.",
+  "tests": {
+    "focused": "python3 -m unittest tests.test_ssh_diagnostics -v",
+    "focused_result": "passed 10/10",
+    "full": "bash scripts/repo_test.sh",
+    "full_result": "passed 211/211 in 33.367 seconds"
+  },
+  "safety": {
+    "read_only": true,
+    "service_action": false,
+    "reboot": false,
+    "packages_changed": false,
+    "desktop_or_proot_touched": false,
+    "pid_or_argv_persisted": false
+  },
+  "mutations": []
+}

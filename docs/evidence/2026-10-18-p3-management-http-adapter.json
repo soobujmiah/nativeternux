@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:28:33Z",
+  "phase": "P3",
+  "kind": "management_http_adapter_contract",
+  "implementation": {
+    "module": "lib/management_http_adapter.py",
+    "routes": [
+      "GET /health (minimal process liveness only)",
+      "POST /api/v1/session (single-use local bootstrap)",
+      "POST /api/v1/session/revoke (bearer plus CSRF)",
+      "POST /api/v1/operations (typed shared-service dispatch)"
+    ],
+    "controls": [
+      "request policy, exact Host/Origin, body length, JSON duplicate-key and constant rejection",
+      "session authentication, exact operation capability, mutation CSRF",
+      "free-form service error text removed from HTTP responses",
+      "no-store, nosniff, no-referrer and CSP response headers; no CORS",
+      "bounded 128-entry, 60-minute process-local mutation replay cache",
+      "mutation transport disabled by default"
+    ],
+    "socket_bound": false,
+    "cli_backend_policy_changed": false
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_management_http_adapter tests.test_management_request_policy tests.test_management_sessions tests.test_management_authorization -v",
+    "focused_passed": 28,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 253,
+    "full_failed": 0,
+    "full_duration_seconds": 74.333
+  },
+  "device_actions": [],
+  "limitations": [
+    "The adapter is an in-process handler, not a TCP listener; no real socket, browser, or on-device loopback test was performed.",
+    "Mutation replay state is lost on process restart; mutation routes therefore remain disabled by default.",
+    "Durable sanitized audit, bounded server workers/deadlines, and listener lifecycle/recovery remain open.",
+    "The existing application service still accepts only its trusted local CLI caller; the adapter invokes it only after in-process session authorization."
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-postboot-verification",
+  "observed_at_utc": "2026-10-17T21:33:43Z",
+  "environment": "native_termux",
+  "test_id": "TERN-20261017-RB03",
+  "privacy": {
+    "boot_ids_included": false,
+    "checkpoint_nonce_included": false,
+    "credentials_included": false,
+    "private_paths_included": false
+  },
+  "checkpoint_verification": {
+    "verified_at_utc": "2026-10-17T21:28:24Z",
+    "boot_id_transition": "changed",
+    "boot_observation_matches": true,
+    "outcome": "verified_reboot_partial",
+    "sshd_process_observed_by_boot_observer": "unknown",
+    "native_service_health_observed_by_boot_observer": "unknown",
+    "authenticated_connectivity_in_checkpoint": "not_tested",
+    "socket_binding_in_checkpoint": "not_observed",
+    "automatic_resume": false,
+    "readiness": "NOT_READY"
+  },
+  "independent_readonly_observations": {
+    "native_desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": true,
+      "x11": true,
+      "xfce4_session": true,
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "doctor": {
+      "overall": "pass",
+      "summary": {"pass": 14, "info": 14, "warning": 0, "error": 0},
+      "termux_boot_app": "present",
+      "runit_service": "ternuxx-sshd running; config syntax valid",
+      "proot_inventory": "debian installed; guest/session ownership unverified"
+    },
+    "ssh_inspect": {
+      "managed_service": "ternuxx-sshd running under runit",
+      "managed_effective_bind": "127.0.0.1:8023",
+      "managed_config_syntax": "valid",
+      "daemon_process_present_in_visible_procfs": true,
+      "tcp_listener_observation": "unavailable",
+      "listener_daemon_correlation": "not_performed",
+      "authenticated_connection_test": "not_run"
+    }
+  },
+  "manual_postboot_authenticated_probe": {
+    "result": "PASS",
+    "source": "native Termux shell",
+    "destination": "127.0.0.1:8023",
+    "authentication": "existing native SSH account password; secret not recorded",
+    "remote_command": "printf TERNX_8023_AUTH_OK",
+    "observed_marker": "TERNX_8023_AUTH_OK",
+    "host_key_policy": "host key verification bypassed for this one loopback probe; known-hosts output directed to /dev/null",
+    "persistent_client_config_changed": false
+  },
+  "resume_info_after_fix": {
+    "state": "boot_observed",
+    "readiness": "NOT_READY",
+    "automatic_resume": false,
+    "next_action_tracks_verification_outcome": true,
+    "stale_manual_reboot_instruction_removed": true
+  },
+  "tests": {
+    "targeted": "python3 -m unittest tests.test_reboot_recovery -v",
+    "targeted_result": "PASS 8/8",
+    "full_suite": "PYTHONPATH=\"$HOME/.cache/ternuxx-audit-venv/lib/python3.14/site-packages\" bash scripts/repo_test.sh",
+    "full_suite_result": "PASS 126/126",
+    "runtime_effects": "fixture/unit tests only; no package, service, desktop, boot-profile, or PRoot changes"
+  },
+  "limitations": [
+    "The reboot observer recorded an unknown sshd process and unknown native service health, so automated checkpoint verification remains partial.",
+    "The later read-only Doctor and ssh inspect calls saw the runit service running with valid loopback config; ssh inspect itself did not test authentication and kernel socket ownership remains unavailable. The separate loopback SSH probe authenticated successfully after boot, but it does not prove the service started automatically at boot.",
+    "No automatic task resume occurred. The checkpoint remains NOT_READY pending explicit manual review."
+  ]
+}

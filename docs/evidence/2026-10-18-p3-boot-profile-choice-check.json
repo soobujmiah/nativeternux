@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-18",
+  "target": "native Termux work shell over SSH port 8022",
+  "current_profile": {
+    "name": "cli-only",
+    "source": "default",
+    "managed_startup_script_installed": false
+  },
+  "preview": {
+    "native": {
+      "ready": true,
+      "blockers": [],
+      "starts": "Ternuxx-owned native X11/XFCE processes"
+    },
+    "cli-only": {
+      "ready": true,
+      "starts_gui": false
+    }
+  },
+  "termux_boot": {
+    "package_and_receiver_enabled": true,
+    "delivery_causality_and_android_policy": "unknown"
+  },
+  "visibility": "Android Termux:X11 activity visibility is not established by process startup",
+  "actions_taken": {
+    "profile_changed": false,
+    "boot_files_changed": false,
+    "application_started": false,
+    "test_suite_run": false
+  }
+}

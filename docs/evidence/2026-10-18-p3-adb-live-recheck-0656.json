@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-18T06:56:01Z",
+  "phase": "P3",
+  "kind": "read_only_adb_server_recheck",
+  "device_access": "native Termux over owner-authorized loopback SSH on port 8022",
+  "native_termux": {
+    "adb_command_in_path": false,
+    "shizuku_package_user_0": "moe.shizuku.privileged.api",
+    "shizuku_version_code": 1318,
+    "custom_fork_identity": "unknown"
+  },
+  "proot_observation": {
+    "adb_named_process_visible": true,
+    "process_executable_context": "Termux PRoot loader",
+    "adb_server_mode_marker": true,
+    "tcp_listener_port_argument": 5037,
+    "listener_bind_scope": "unknown",
+    "protocol_query": {
+      "destination": "127.0.0.1:5037",
+      "request": "host:version",
+      "result": "OKAY",
+      "server_protocol_version_hex": "0029"
+    },
+    "default_proot_distro_debian_adb_path_lookup": "not_found",
+    "active_process_guest_identity": "unknown"
+  },
+  "not_checked": [
+    "Android Wireless Debugging adbd endpoint and pairing state",
+    "ADB device list and per-device authorization",
+    "exact PRoot executable/rootfs and ADB configuration",
+    "external or LAN reachability of TCP 5037",
+    "custom Shizuku fork signer/build identity and service process health",
+    "watchdog boot receiver, retry bounds, and reboot causality"
+  ],
+  "related_owner_analysis": {
+    "repository": "soobujmiah/adt",
+    "verified_remote": "https://github.com/soobujmiah/adt.git",
+    "report_url": "https://github.com/soobujmiah/adt/blob/abece9e714a3bcb24d4a8dcc9f001feb421c1411/docs/ON_DEVICE_ADB_SHIZUKU_OPERATIONAL_DEPENDENCY.md",
+    "report_snapshot_date": "2026-09-13",
+    "report_content_matches_origin_main": true,
+    "relevance": "Explains the audited PRoot 5037 relay to Android-side 5555 bridge and custom Shizuku boot/watchdog relationship; current live recheck only corroborates a responding local 5037 server."
+  },
+  "actions_not_performed": [
+    "No adb client invocation, device-list request, pairing, or command execution",
+    "No ADB server start/stop/restart",
+    "No Wireless Debugging or Android setting change",
+    "No Shizuku app launch, permission grant, or service lifecycle action",
+    "No package installation or removal"
+  ],
+  "limitations": [
+    "The process's listener argument included TCP 5037 but did not establish the bind host; process presence does not prove external reachability.",
+    "The default proot-distro Debian command lookup and the observed running PRoot-loader process may refer to different guest invocation contexts; exact guest identity was not established."
+  ]
+}

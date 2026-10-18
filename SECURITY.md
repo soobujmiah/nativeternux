@@ -1,12 +1,12 @@
 # Security and privacy
 
-NativeTernux manages local desktop processes, optional network listeners, Android-facing integrations, and user-selected files. This is a high-risk local operations tool. NativeTernux must preserve Android security boundaries and must never imply that PRoot is a security sandbox.
+Ternuxx manages local desktop processes, optional network listeners, Android-facing integrations, and user-selected files. This is a high-risk local operations tool. Ternuxx must preserve Android security boundaries and must never imply that PRoot is a security sandbox.
 
 ## Scope and data
 
 The tool may inspect Termux package metadata, its own session state, process metadata needed to validate ownership, and explicitly selected files. It must not scan `/sdcard`, `/storage/emulated/0`, or other shared storage by default. User file handoff must name exact paths and actions. SSH private keys, passwords, tokens, app payloads, and unredacted private logs must never be copied to documentation, SKB, or diagnostic output.
 
-NativeTernux state and backups remain under NativeTernux-owned paths. Before reset/restore/removal, show exact affected paths and preserve user data by default. Never delete, minimize, upgrade, or repair the independent Ternux rootfs/launcher.
+Ternuxx state and backups remain under Ternuxx-owned paths. Before reset/restore/removal, show exact affected paths and preserve user data by default. Never delete, minimize, upgrade, or repair the independent Ternux rootfs/launcher.
 
 ## Service security
 

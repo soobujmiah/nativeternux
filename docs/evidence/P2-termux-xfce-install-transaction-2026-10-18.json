@@ -1,0 +1,568 @@
+{
+  "schema_version": 1,
+  "record_type": "observed-termux-apt-install-transaction",
+  "observed_time_local": {
+    "start": "2026-10-18  00:54:27",
+    "end": "2026-10-18  00:54:46",
+    "timezone": "Asia/Dhaka"
+  },
+  "device_architecture": "aarch64",
+  "commandline": "apt-get --assume-yes --no-install-recommends --no-remove --no-upgrade install xfce4-session xfce4-panel xfce4-settings xfwm4 xfdesktop xfconf thunar xfce4-terminal",
+  "requested_packages": [
+    "xfce4-session",
+    "xfce4-panel",
+    "xfce4-settings",
+    "xfwm4",
+    "xfdesktop",
+    "xfconf",
+    "thunar",
+    "xfce4-terminal"
+  ],
+  "package_count": 77,
+  "requested_package_count": 8,
+  "automatic_dependency_count": 69,
+  "upgraded": 0,
+  "removed": 0,
+  "package_origin_note": "APT history.log records package names, architectures, versions, and automatic-install marks, but not archive hashes or per-package repository URLs. Exact origin/content hashes are therefore not asserted.",
+  "packages": [
+    {
+      "name": "adwaita-icon-theme",
+      "architecture": "aarch64",
+      "version": "51.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "adwaita-icon-theme-legacy",
+      "architecture": "aarch64",
+      "version": "46.2-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "at-spi2-core",
+      "architecture": "aarch64",
+      "version": "2.62.1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "atk",
+      "architecture": "aarch64",
+      "version": "2.48.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "brotli",
+      "architecture": "aarch64",
+      "version": "1.2.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "desktop-file-utils",
+      "architecture": "aarch64",
+      "version": "0.28-3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "exo",
+      "architecture": "aarch64",
+      "version": "4.21.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "fontconfig",
+      "architecture": "aarch64",
+      "version": "2.18.3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "freetype",
+      "architecture": "aarch64",
+      "version": "2.15.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "fribidi",
+      "architecture": "aarch64",
+      "version": "1.0.17",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "garcon",
+      "architecture": "aarch64",
+      "version": "4.20.0-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "gdk-pixbuf",
+      "architecture": "aarch64",
+      "version": "2.44.8",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "graphene",
+      "architecture": "aarch64",
+      "version": "1.10.8-3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "gtk-layer-shell",
+      "architecture": "aarch64",
+      "version": "0.10.1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "gtk-update-icon-cache",
+      "architecture": "aarch64",
+      "version": "3.24.52",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "gtk3",
+      "architecture": "aarch64",
+      "version": "3.24.52",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "gtk4",
+      "architecture": "aarch64",
+      "version": "4.24.1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "harfbuzz",
+      "architecture": "aarch64",
+      "version": "14.6.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "hicolor-icon-theme",
+      "architecture": "aarch64",
+      "version": "0.18",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "iso-codes",
+      "architecture": "aarch64",
+      "version": "4.20.1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libcairo",
+      "architecture": "aarch64",
+      "version": "1.18.6",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libdav1d",
+      "architecture": "aarch64",
+      "version": "1.5.4",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libdisplay-info",
+      "architecture": "aarch64",
+      "version": "0.4.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libepoxy",
+      "architecture": "aarch64",
+      "version": "1.5.10-3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libexif",
+      "architecture": "aarch64",
+      "version": "0.6.26",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libglvnd",
+      "architecture": "aarch64",
+      "version": "1.7.0-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libgraphite",
+      "architecture": "aarch64",
+      "version": "1.3.15",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libgtop",
+      "architecture": "aarch64",
+      "version": "2.41.3-2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libicu",
+      "architecture": "aarch64",
+      "version": "78.3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libjpeg-turbo",
+      "architecture": "aarch64",
+      "version": "3.2.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "liblzo",
+      "architecture": "aarch64",
+      "version": "2.10-5",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libnotify",
+      "architecture": "aarch64",
+      "version": "0.8.8",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libpixman",
+      "architecture": "aarch64",
+      "version": "0.46.4-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libpng",
+      "architecture": "aarch64",
+      "version": "1.6.59",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "librsvg",
+      "architecture": "aarch64",
+      "version": "2.63.3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libsimdutf",
+      "architecture": "aarch64",
+      "version": "9.3.2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libtiff",
+      "architecture": "aarch64",
+      "version": "4.7.2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libvte",
+      "architecture": "aarch64",
+      "version": "2:0.84.1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libwnck",
+      "architecture": "aarch64",
+      "version": "43.3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxcomposite",
+      "architecture": "aarch64",
+      "version": "0.4.7",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxcursor",
+      "architecture": "aarch64",
+      "version": "1.2.3-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxdamage",
+      "architecture": "aarch64",
+      "version": "1.1.7",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxfce4ui",
+      "architecture": "aarch64",
+      "version": "4.20.2-2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxfce4util",
+      "architecture": "aarch64",
+      "version": "4.20.1-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxfce4windowing",
+      "architecture": "aarch64",
+      "version": "4.20.7",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxfixes",
+      "architecture": "aarch64",
+      "version": "6.0.2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxft",
+      "architecture": "aarch64",
+      "version": "2.3.9-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxi",
+      "architecture": "aarch64",
+      "version": "1.8.4",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxinerama",
+      "architecture": "aarch64",
+      "version": "1.1.6",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxkbcommon",
+      "architecture": "aarch64",
+      "version": "1.13.2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxkbfile",
+      "architecture": "aarch64",
+      "version": "1.2.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxklavier",
+      "architecture": "aarch64",
+      "version": "5.4-28",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxpresent",
+      "architecture": "aarch64",
+      "version": "1.0.2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxrandr",
+      "architecture": "aarch64",
+      "version": "1.5.5",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxrender",
+      "architecture": "aarch64",
+      "version": "0.9.13",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxres",
+      "architecture": "aarch64",
+      "version": "1.2.3",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxtst",
+      "architecture": "aarch64",
+      "version": "1.2.6",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libxxf86vm",
+      "architecture": "aarch64",
+      "version": "1.1.7",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "libyaml",
+      "architecture": "aarch64",
+      "version": "0.2.5-5",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "mesa",
+      "architecture": "aarch64",
+      "version": "26.2.5",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "opengl",
+      "architecture": "aarch64",
+      "version": "4.5",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "pango",
+      "architecture": "aarch64",
+      "version": "1.58.2",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "shared-mime-info",
+      "architecture": "aarch64",
+      "version": "2.5.1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "startup-notification",
+      "architecture": "aarch64",
+      "version": "0.12-29",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "thunar",
+      "architecture": "aarch64",
+      "version": "4.20.10",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "ttf-dejavu",
+      "architecture": "aarch64",
+      "version": "2.37-8",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "xcb-util",
+      "architecture": "aarch64",
+      "version": "0.4.1-1",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "xfce4-panel",
+      "architecture": "aarch64",
+      "version": "4.20.8",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "xfce4-session",
+      "architecture": "aarch64",
+      "version": "4.20.4-1",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "xfce4-settings",
+      "architecture": "aarch64",
+      "version": "4.20.5",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "xfce4-terminal",
+      "architecture": "aarch64",
+      "version": "1.2.0",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "xfconf",
+      "architecture": "aarch64",
+      "version": "4.20.0",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "xfdesktop",
+      "architecture": "aarch64",
+      "version": "4.20.2",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "xfwm4",
+      "architecture": "aarch64",
+      "version": "4.20.0-3",
+      "automatic": false,
+      "role": "requested"
+    },
+    {
+      "name": "xorg-iceauth",
+      "architecture": "aarch64",
+      "version": "1.0.11",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "xorg-xkbcomp",
+      "architecture": "aarch64",
+      "version": "1.5.0",
+      "automatic": true,
+      "role": "dependency"
+    },
+    {
+      "name": "xorg-xrdb",
+      "architecture": "aarch64",
+      "version": "1.2.3",
+      "automatic": true,
+      "role": "dependency"
+    }
+  ]
+}

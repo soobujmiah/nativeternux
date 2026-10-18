@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:native-ssh-diagnostic-report:v1",
+  "title": "Ternuxx native SSH read-only diagnostic report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "component",
+    "environment",
+    "observed_at",
+    "checks",
+    "safety"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "component": {
+      "const": "native_ssh_diagnostics"
+    },
+    "environment": {
+      "const": "native_termux"
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sshd_available",
+        "config_present",
+        "config_syntax",
+        "policy_context",
+        "daemon_process_present",
+        "configured_policy",
+        "configured_listener_bind_scope",
+        "managed_service",
+        "observed_tcp_listeners_all_processes",
+        "tcp_listener_observation",
+        "listener_daemon_correlation",
+        "service_supervisor",
+        "termux_boot_directory",
+        "configuration_owner",
+        "authenticated_connection_test"
+      ],
+      "properties": {
+        "sshd_available": {
+          "type": "boolean"
+        },
+        "config_present": {
+          "type": "boolean"
+        },
+        "config_syntax": {
+          "enum": [
+            "unknown",
+            "valid",
+            "invalid_or_unavailable"
+          ]
+        },
+        "policy_context": {
+          "enum": [
+            "default_without_connection_context",
+            "native_user_loopback"
+          ]
+        },
+        "daemon_process_present": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "configured_policy": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "observed_tcp_listeners_all_processes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "address",
+              "port"
+            ],
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            }
+          }
+        },
+        "tcp_listener_observation": {
+          "enum": [
+            "complete",
+            "partial",
+            "permission_denied",
+            "unavailable"
+          ]
+        },
+        "listener_daemon_correlation": {
+          "enum": ["verified", "not_verified", "unknown", "not_performed"]
+        },
+        "service_supervisor": {
+          "enum": [
+            "runit_available",
+            "not_detected"
+          ]
+        },
+        "termux_boot_directory": {
+          "enum": [
+            "present",
+            "absent"
+          ]
+        },
+        "configuration_owner": {
+          "const": "unknown"
+        },
+        "authenticated_connection_test": {
+          "const": "not_run"
+        },
+        "configured_listener_bind_scope": {
+          "enum": ["unknown", "loopback_only", "non_loopback", "wildcard"]
+        },
+        "managed_service": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "service_id",
+            "manager",
+            "status",
+            "config_present",
+            "config_syntax",
+            "effective_policy",
+            "listener_bind_scope",
+            "loopback_ssh_probe",
+            "definition_identity",
+            "startup_timing"
+          ],
+          "properties": {
+            "service_id": {
+              "const": "ternuxx-sshd"
+            },
+            "manager": {
+              "enum": [
+                "runit",
+                "not_detected"
+              ]
+            },
+            "status": {
+              "enum": [
+                "running",
+                "stopped",
+                "unknown"
+              ]
+            },
+            "config_present": {
+              "type": "boolean"
+            },
+            "config_syntax": {
+              "enum": [
+                "unknown",
+                "valid",
+                "invalid_or_unavailable"
+              ]
+            },
+            "effective_policy": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "listener_bind_scope": {
+              "enum": ["unknown", "loopback_only", "non_loopback", "wildcard"]
+            },
+            "startup_timing": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "status",
+                "kernel_uptime_seconds",
+                "runit_service_age_seconds",
+                "seconds_after_kernel_boot"
+              ],
+              "properties": {
+                "status": {"enum": ["observed", "not_running", "unavailable", "inconsistent"]},
+                "kernel_uptime_seconds": {"type": ["integer", "null"], "minimum": 0},
+                "runit_service_age_seconds": {"type": ["integer", "null"], "minimum": 0},
+                "seconds_after_kernel_boot": {"type": ["integer", "null"], "minimum": 0}
+              }
+            },
+            "definition_identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "source_sha256", "installed_sha256"],
+              "properties": {
+                "status": {"enum": ["verified", "mismatch", "unavailable", "unsafe"]},
+                "source_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+                "installed_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}
+              }
+            },
+            "loopback_ssh_probe": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "address", "port"],
+              "properties": {
+                "status": {
+                  "enum": [
+                    "not_attempted",
+                    "not_applicable",
+                    "ssh_banner",
+                    "no_banner",
+                    "unexpected_protocol",
+                    "unreachable",
+                    "timeout"
+                  ]
+                },
+                "address": {"type": ["string", "null"]},
+                "port": {"type": ["integer", "null"], "minimum": 1, "maximum": 65535}
+              }
+            }
+          }
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_only",
+        "credential_files_read",
+        "raw_config_output_included"
+      ],
+      "properties": {
+        "read_only": {
+          "const": true
+        },
+        "credential_files_read": {
+          "const": false
+        },
+        "raw_config_output_included": {
+          "const": false
+        }
+      }
+    }
+  }
+}

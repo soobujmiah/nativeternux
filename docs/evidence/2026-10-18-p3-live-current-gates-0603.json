@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T06:03:52Z",
+  "scope": "read-only native Termux P3 status, SSH, PRoot inventory, and remote policy preview",
+  "doctor": {
+    "overall": "warning",
+    "pass": 14,
+    "info": 14,
+    "warning": 1,
+    "error": 0,
+    "read_only": true,
+    "warning_reason": "SSH 8022 configured wildcard bind with password authentication; owner and external reachability unknown"
+  },
+  "managed_ssh_8023": {
+    "manager": "runit",
+    "service_status": "running",
+    "config_syntax": "valid",
+    "source_installed_definition_match": true,
+    "bind_scope": "loopback_only",
+    "loopback_probe": "ssh_banner",
+    "startup_seconds_after_kernel_boot": 40,
+    "listener_pid_correlation": "unknown_permission_denied"
+  },
+  "other_ssh_8022": {
+    "configured_bind_scope": "wildcard",
+    "password_authentication": "enabled",
+    "listener_daemon_correlation": "unknown",
+    "external_reachability": "not_tested"
+  },
+  "proot": {
+    "status": "installed",
+    "distributions": [
+      "debian"
+    ],
+    "guest_entered": false,
+    "ownership": "unverified"
+  },
+  "remote_access_preview": {
+    "mode": "disabled",
+    "active": false,
+    "public_ingress": false,
+    "network_accessed": false,
+    "services_changed": false,
+    "files_changed": false
+  },
+  "unresolved": [
+    "GUI visibility",
+    "Shizuku server/permission/watchdog state",
+    "Ternux PRoot ownership and workload contract",
+    "audible guest playback",
+    "Termux:Boot causality",
+    "8022 listener ownership",
+    "off-home private transport"
+  ],
+  "actions": {
+    "reboot": false,
+    "package_changes": false,
+    "service_changes": false,
+    "desktop_lifecycle_changes": false,
+    "guest_entered": false,
+    "network_accessed": false
+  }
+}

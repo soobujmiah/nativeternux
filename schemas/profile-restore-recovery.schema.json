@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/profile-restore-recovery.schema.json",
+  "title": "Interrupted profile restore recovery response",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "record_kind", "record_updated_at", "backup_id", "archive_integrity_sha256", "target_profile_sha256", "restore_target_sha256", "observed_outcome", "resolution", "parent_operation_id", "parent_status", "parent_updated_at", "affected_paths", "inspected_paths", "plan_id", "requires_confirmation", "changed", "read_only", "impact"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "record_kind": {"enum": ["recovery.restore.apply", "recovery.restore.rollback"]},
+        "record_updated_at": {"type": "string", "format": "date-time"},
+        "backup_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$"},
+        "archive_integrity_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "target_profile_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "restore_target_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "observed_outcome": {"enum": ["archive_target", "pre_restore_state"]},
+        "resolution": {"enum": ["complete", "failed"]},
+        "parent_operation_id": {"type": ["string", "null"], "pattern": "^[a-f0-9]{32}$"},
+        "parent_status": {"type": ["string", "null"], "enum": ["complete", "needs_recovery", null]},
+        "parent_updated_at": {"type": ["string", "null"], "format": "date-time"},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 2, "items": {"type": "string", "minLength": 1}},
+        "inspected_paths": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"type": "string", "minLength": 1}},
+        "plan_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "requires_confirmation": {"const": true}, "changed": {"const": false}, "read_only": {"const": true}, "impact": {"type": "string"}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "resolution", "observed_outcome", "changed", "read_only", "affected_paths", "profile_file_changed", "archive_changed"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "resolution": {"enum": ["complete", "failed"]},
+        "observed_outcome": {"enum": ["archive_target", "pre_restore_state"]},
+        "changed": {"const": true}, "read_only": {"const": false},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 2, "items": {"type": "string", "minLength": 1}},
+        "profile_file_changed": {"const": false}, "archive_changed": {"const": false}
+      }
+    }
+  ]
+}

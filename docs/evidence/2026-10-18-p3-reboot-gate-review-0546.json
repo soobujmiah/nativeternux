@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_reboot_gate_readonly_review",
+  "observed_at_utc": "2026-10-18T05:52:18+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "read-only boot status, sanitized reboot checkpoint status, and RB03 resume-info; checkpoint contents/nonce/boot IDs not recorded; no reboot or checkpoint mutation",
+  "boot_status": {
+    "exit_code": 0,
+    "result": {
+      "api_version": 1,
+      "data": {
+        "app": "installed",
+        "component": "termux_boot_diagnostics",
+        "non_executable_script_count": 0,
+        "package_manager_available": true,
+        "regular_script_count": 2,
+        "safety": {
+          "package_changed": false,
+          "read_only": true,
+          "script_contents_read": false
+        },
+        "script_directory": "present",
+        "startup_policy": "unknown",
+        "termux_boot_command_available": false
+      },
+      "ok": true,
+      "operation": "boot.status",
+      "request_id": "fcef43354bed4315b7a6fee4c64cdee8"
+    }
+  },
+  "reboot_status": {
+    "exit_code": 0,
+    "state": "boot_observed",
+    "pending_tests": [
+      {
+        "test_id": "TERN-20261017-RB03",
+        "state": "boot_observed",
+        "readiness": "NOT_READY",
+        "automatic_resume": false
+      },
+      {
+        "test_id": "TERN-20261017-RB02",
+        "state": "inconclusive",
+        "readiness": "NOT_READY",
+        "automatic_resume": false
+      },
+      {
+        "test_id": "TERN-20261017-RB01",
+        "state": "prepared",
+        "readiness": "NOT_READY",
+        "automatic_resume": false
+      }
+    ],
+    "automatic_resume": false
+  },
+  "rb03_resume_info": {
+    "exit_code": 0,
+    "result": {
+      "automatic_resume": false,
+      "next_action": "Review reboot verification outcome verified_reboot_partial; manually verify required service and connection evidence before continuing. Tasks will not resume automatically.",
+      "readiness": "NOT_READY",
+      "state": "boot_observed",
+      "test_id": "TERN-20261017-RB03"
+    }
+  },
+  "prior_postboot_evidence": "docs/evidence/2026-10-18-postboot-native-ssh-verification.json",
+  "interpretation": "RB03 already records a boot observation and verified_reboot_partial. Independent postboot evidence includes a successful authenticated loopback probe, but the boot observer did not establish sshd/service health at boot. Resume-info requires manual review; readiness remains NOT_READY. This does not justify a new reboot or automatic checkpoint completion."
+}

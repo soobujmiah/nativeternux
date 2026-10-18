@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:14:33Z",
+  "scope": "Repository source/fixture verification executed from the Debian PRoot shell; not native Termux runtime verification.",
+  "repository": {
+    "root": "/data/data/com.termux/files/home/ternuxx",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "origin": "https://github.com/soobujmiah/ternuxx.git"
+  },
+  "checks": [
+    {
+      "name": "full_repository_fixture_suite",
+      "command": "bash scripts/repo_test.sh",
+      "execution_runtime": "Debian PRoot in Termux",
+      "result": "passed",
+      "passed": 273,
+      "failed": 0,
+      "duration_seconds": 138.613,
+      "exit_code": 0,
+      "qualification": "Source fixture/unit tests only; not evidence that the suite ran in native Termux."
+    },
+    {
+      "name": "repository_knowledge_verify",
+      "command": "python3 -m tools.repo_knowledge.cli verify",
+      "result": "passed",
+      "findings": 0
+    },
+    {
+      "name": "python_ast_and_json_parse",
+      "result": "passed",
+      "python_files_parsed": "all repository Python files excluding .git and __pycache__",
+      "json_files_parsed": "all repository JSON files excluding .git and __pycache__"
+    },
+    {
+      "name": "phase_docs_refresh",
+      "command": "python3 tools/phase_docs.py refresh",
+      "result": "passed"
+    },
+    {
+      "name": "git_diff_check",
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "device_state": "No Android/device, package, service, desktop, boot, network, or PRoot guest mutation was performed. Test process ran in Debian PRoot; source fixtures do not establish native runtime behavior.",
+  "phase_disposition": "P3 remains in_progress. P3 ownership/workload and device-only gates remain open; P4 remains planned."
+}

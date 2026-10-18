@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_native_ssh_readonly_recheck",
+  "observed_at_utc": "2026-10-18T06:49:00Z",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "runtime": "native Termux over authenticated local SSH session",
+  "command": "./ternuxx ssh inspect --json",
+  "api_ok": true,
+  "checks": {
+    "native_sshd_process_present": true,
+    "all_process_tcp_listener_observation": "permission_denied",
+    "listener_entries_observed": 0,
+    "listener_daemon_correlation": "unknown",
+    "configured_native_ssh_bind_scope": "wildcard",
+    "managed_8023_service": {
+      "status": "running",
+      "definition_identity": "verified",
+      "listener_bind_scope": "loopback_only",
+      "loopback_ssh_probe": "ssh_banner",
+      "startup_timing": "observed"
+    }
+  },
+  "interpretation": "The managed 8023 Runit service is live with a source-matching definition and a successful loopback SSH banner probe. Procfs listener enumeration is permission-denied, so the empty listener list does not mean no listeners exist and daemon-to-port ownership remains unknown. The separately configured native SSH scope is wildcard; listener owner and external reachability remain unknown.",
+  "safety": {
+    "read_only": true,
+    "authenticated_connection_test": "not_run",
+    "service_changed": false,
+    "configuration_changed": false,
+    "desktop_changed": false,
+    "guest_entered": false
+  },
+  "mutations": []
+}

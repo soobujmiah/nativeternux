@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:shell-settings:1",
+  "title": "Ternuxx shell-neutral settings",
+  "description": "Settings safe to render across supported shells. Shell-specific startup code is not stored here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile_id", "revision", "theme_id", "completion", "history"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "profile_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "revision": {"type": "integer", "minimum": 0},
+    "theme_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "completion": {"type": "boolean"},
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "max_entries", "duplicate_policy"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "max_entries": {"type": "integer", "minimum": 100, "maximum": 200000},
+        "duplicate_policy": {"enum": ["keep", "ignore_consecutive"]}
+      }
+    }
+  }
+}

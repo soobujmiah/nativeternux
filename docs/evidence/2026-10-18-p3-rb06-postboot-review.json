@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "recorded_at_utc": "2026-10-18T10:05:27+00:00",
+  "record_type": "owner_reboot_test_review",
+  "test_id": "TERN-20261018-RB06",
+  "runtime": {
+    "layer": "native Termux Android",
+    "repository": "soobujmiah/ternuxx",
+    "branch": "main",
+    "head": "1a891fa"
+  },
+  "verification": {
+    "owner_reported_android_restart": true,
+    "boot_transition": "changed",
+    "boot_observation_matches": true,
+    "outcome": "verified_reboot_service_unqualified",
+    "readiness": "NOT_READY",
+    "automatic_resume": false,
+    "native_service_health": "unknown",
+    "sshd_process": "present",
+    "socket_binding": "not_observed",
+    "authenticated_connectivity_in_reboot_verifier": "not_tested"
+  },
+  "postboot_observations": {
+    "work_route": "native Termux work shell over loopback SSH port 8022",
+    "managed_ssh_8023": {
+      "authenticated_connection_from_this_session": "passed",
+      "ssh_inspect_banner": "reachable",
+      "service_definition_identity": "verified",
+      "config_syntax": "valid",
+      "effective_bind": "127.0.0.1:8023",
+      "runit_status": "unknown",
+      "listener_process_correlation": "unknown"
+    },
+    "native_desktop": {
+      "cli_status": "degraded",
+      "supervisor": "not_present",
+      "x11": "not_present",
+      "xfce_session": "not_present",
+      "gui_visibility": "unknown"
+    },
+    "proot": {
+      "distribution": "debian",
+      "status": "installed",
+      "guest_entered": false,
+      "ownership": "unverified",
+      "db_xgo_preservation": "not_checked"
+    },
+    "termux_boot": {
+      "package": "enabled",
+      "receiver": "enabled",
+      "observer_match": true,
+      "delivery_causality": "unknown",
+      "system_delivery_policy": "unknown",
+      "regular_scripts": 2
+    },
+    "wakelock": {
+      "registered_owners": [
+        "native.sshd"
+      ],
+      "coordinator_state": "held_by_registered_owners",
+      "android_platform_state": "unknown"
+    },
+    "native_ssh_8022": {
+      "configured_bind": "wildcard",
+      "password_authentication": "enabled",
+      "listener_correlation": "unknown",
+      "external_reachability": "unknown"
+    }
+  },
+  "repository_audit": {
+    "previous_dirty_manifest_entries_preserved": 329,
+    "previous_status_changes": 0,
+    "previous_paths_missing": 0,
+    "current_porcelain_paths": 333,
+    "current_tracked_modified": 42,
+    "current_staged": 0,
+    "current_untracked_files": 291,
+    "git_diff_check": "passed",
+    "repository_test_suite_rerun": false,
+    "four_paths_not_in_previous_manifest": [
+      "docs/evidence/2026-10-18-native-termux-repo-audit-0936.json",
+      "docs/evidence/2026-10-18-p3-reboot-rb05-prepared.json",
+      "docs/evidence/2026-10-18-p3-reboot-rb06-prepared.json",
+      "docs/evidence/2026-10-18-p3-rb06-postboot-review.json"
+    ]
+  },
+  "audit_findings": [
+    "RB06 verifier records the matching boot transition but cannot qualify managed service health or socket ownership; the later authenticated 8023 session is separate evidence and is not ingested by reboot verify.",
+    "The postboot native desktop processes were absent while the recorded session was degraded; cold-boot desktop recovery and GUI visibility remain unverified.",
+    "RB06 preparation evidence has a provenance inconsistency: its top-level test_id is RB06, but preparation_verification.command names RB05. The source command was not independently recovered, so the historical field was preserved.",
+    "RB06 required postboot checks for db/xgo preservation were not collected."
+  ],
+  "privacy": {
+    "credentials_included": false,
+    "boot_ids_included": false,
+    "private_checkpoint_paths_included": false,
+    "private_nonce_included": false
+  },
+  "limitations": [
+    "A matching boot observation does not rule out manual observer invocation or prove Android broadcast causality.",
+    "The successful authenticated 8023 connection does not establish listener PID/socket ownership.",
+    "No Android setting, package, service, desktop, PRoot guest, or rootfs state was changed during this audit."
+  ]
+}

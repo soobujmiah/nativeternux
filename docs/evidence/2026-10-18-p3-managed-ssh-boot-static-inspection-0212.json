@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-managed-ssh-boot-static-inspection",
+  "observed_at_utc": "2026-10-18T02:12:24Z",
+  "runtime": "native Termux via existing SSH shell",
+  "commands": {
+    "boot_status": "./ternuxx --json boot status",
+    "ssh_status": "./ternuxx --json ssh inspect",
+    "static_inspection": "metadata and keyword-only inspection of ~/.termux/boot regular files; no script executed"
+  },
+  "observations": {
+    "termux_boot": {
+      "app": "installed",
+      "script_directory": "present",
+      "regular_script_count": 2,
+      "startup_policy": "unknown",
+      "termux_boot_command_available": false
+    },
+    "service_boot_file": {
+      "name": "00-ternuxx-services",
+      "executable": true,
+      "sha256": "53b6745a930af57434cc046861f5df11d9a6aaf76529a857ab4c2cc978ac9b4e",
+      "references_managed_service_name": "ternuxx-sshd",
+      "file_startup_delivery_verified": false
+    },
+    "managed_ssh_8023": {
+      "service": "ternuxx-sshd",
+      "configured_bind": "127.0.0.1:8023",
+      "service_status_at_observation": "running",
+      "config_syntax": "valid",
+      "loopback_ssh_banner": "observed",
+      "kernel_listener_owner": "unverified; proc TCP observation permission denied"
+    }
+  },
+  "safety": {
+    "read_only": true,
+    "boot_file_contents_recorded": false,
+    "boot_file_executed": false,
+    "boot_config_changed": false,
+    "service_changed": false,
+    "rebooted": false,
+    "packages_changed": false
+  },
+  "interpretation": "An executable Termux:Boot script references the managed 8023 service by name, and that service is currently running and reachable on loopback. This is evidence of configured boot intent, not proof that Android delivered the script after a cold boot or that the observed listener is owned by the managed service. Cold-boot delivery, startup completion, remote reachability, and listener ownership remain open gates.",
+  "mutations": [],
+  "tests": {
+    "command": "bash scripts/repo_test.sh",
+    "result": "passed",
+    "passed": 210,
+    "failed": 0,
+    "scope": "full repository unit/fixture suite; tests make no Android boot or service changes"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:55:04Z",
+  "phase": "P3",
+  "kind": "management_http_foreground_runtime",
+  "implementation": {
+    "runtime": "lib/management_http_runtime.py",
+    "cli": "ternuxx management http serve [--port 8765]",
+    "lifecycle": "Explicit foreground invocation; process exits on Ctrl-C/SIGTERM; no Runit/Termux:Boot integration",
+    "bind": "Fixed 127.0.0.1; configurable unprivileged port 1024..65535; default 8765",
+    "bootstrap": "Generate one 256-bit URL-safe secret per run in memory; show only on an interactive stderr TTY; never save to file or environment; bootstrap is one-use",
+    "authorization": "Read-only reviewed scopes only; module invariant rejects overlap with operation mutation capabilities",
+    "mutations": "Disabled in the foreground runtime; no durable store is configured for mutation dispatch",
+    "native_boundary": "Requires Termux PREFIX and TERMUX_VERSION environment markers plus HOME"
+  },
+  "tests": {
+    "runtime_focused_command": "python3 -m unittest tests.test_management_http_runtime -q",
+    "runtime_focused_passed": 4,
+    "management_security_focused_command": "python3 -m unittest tests.test_management_http_runtime tests.test_management_http_server tests.test_management_request_store tests.test_management_http_adapter tests.test_management_request_policy tests.test_management_sessions tests.test_management_authorization -q",
+    "management_security_focused_passed": 47,
+    "cli_help_command": "bash bin/ternuxx management http serve --help",
+    "cli_help_passed": true,
+    "py_compile_command": "python3 -m py_compile lib/management_http_runtime.py lib/management_http_server.py lib/management_request_store.py",
+    "py_compile_passed": true,
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 272,
+    "full_failed": 0,
+    "full_duration_seconds": 101.661
+  },
+  "device_actions": [],
+  "limitations": [
+    "This command was not invoked to start a persistent listener; only the fixture test used an ephemeral port and closed it.",
+    "No browser UI/client provisioning, device fixed-port qualification, or off-home private transport is integrated.",
+    "No boot/service-manager integration exists; the user must run the command in a foreground terminal.",
+    "The one-use bootstrap must be reissued by restarting the foreground server after session establishment; active sessions are memory-only.",
+    "Read-only scope selection does not qualify any guest or Android ownership; it only routes through the existing bounded application API."
+  ]
+}

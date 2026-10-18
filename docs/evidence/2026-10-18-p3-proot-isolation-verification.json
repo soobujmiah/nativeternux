@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "record_type": "proot-isolated-guest-diagnostic-verification",
+  "observed_at_utc": "2026-10-18T01:55:07Z",
+  "source_changes": {
+    "guest_entry": "proot-distro login --isolated",
+    "zink_mounts": [
+      "Termux $PREFIX/tmp/.X11-unix -> guest /tmp/.X11-unix",
+      "/dev/kgsl-3d0 -> guest /dev/kgsl",
+      "/dev/dri"
+    ],
+    "virgl_exception": "--shared-tmp enabled for Ternux VirGL socket routing; default home/shared-storage bindings remain isolated",
+    "commands": "Ternux guest --version and ternux status only; no generic guest shell"
+  },
+  "tests": {
+    "command": "python3 -m unittest tests.test_proot_diagnostics tests.test_management_service -v",
+    "result": "passed",
+    "count": 37
+  },
+  "live_device_checks": {
+    "display_1": {
+      "command": "./ternuxx --json proot verify --distro debian --guest-user [redacted] --display :1 --backend zink",
+      "status": "complete",
+      "x11": "reachable",
+      "renderer": "zink Vulkan 1.4 (Adreno 825, Mesa Turnip)",
+      "audio": "reachable",
+      "native_pulseaudio_endpoint": "available",
+      "host_home_and_shared_storage_unbound": true
+    },
+    "display_0": {
+      "command": "./ternuxx --json proot verify --distro debian --guest-user [redacted] --display :0 --backend zink",
+      "status": "partial",
+      "x11": "unavailable",
+      "renderer": "unavailable",
+      "audio": "reachable",
+      "host_home_and_shared_storage_unbound": true
+    }
+  },
+  "limits": [
+    "Both are read-only capability observations; no audio stream was played, so audible output is not proven.",
+    "PRoot distro/rootfs ownership, active Ternux desktop identity, and display :0 readiness remain unverified.",
+    "The isolated diagnostic command policy does not yet authorize general agent/workload execution."
+  ],
+  "mutations": [],
+  "device_lifecycle_or_package_actions": []
+}

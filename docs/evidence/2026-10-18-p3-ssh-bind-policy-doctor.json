@@ -1,0 +1,45 @@
+{
+  "adb_listener_cross_check": "docs/evidence/2026-10-18-p3-android-listener-bind-observation.json",
+  "captured_at": "2026-10-18T00:00:21Z",
+  "doctor": {
+    "exit_code_for_warning": 1,
+    "overall": "warning",
+    "ssh_finding": {
+      "id": "NTX-SSH-001",
+      "observed": "configured native SSH bind scope=wildcard; password authentication=enabled; process owner and external reachability=unknown",
+      "severity": "warning"
+    },
+    "summary": {
+      "error": 0,
+      "info": 14,
+      "pass": 14,
+      "warning": 1
+    }
+  },
+  "external_reachability": "unknown; not tested",
+  "managed_runit_ssh": {
+    "bind_scope": "loopback_only",
+    "definition_identity": "verified",
+    "listener_daemon_correlation": "unknown",
+    "loopback_probe": {
+      "address": "127.0.0.1",
+      "port": 8023,
+      "status": "ssh_banner"
+    },
+    "manager": "runit",
+    "status": "running",
+    "tcp_listener_observation": "permission_denied"
+  },
+  "mutation": "none; diagnostics only",
+  "native_ssh_config": {
+    "configured_bind_scope": "wildcard",
+    "password_authentication": [
+      "yes"
+    ],
+    "ports": [
+      "8022"
+    ]
+  },
+  "read_only": true,
+  "schema_version": 1
+}

@@ -1,0 +1,79 @@
+{
+  "report_id": "TERN-20261017-NATIVE-CONTINUATION-01",
+  "captured_at": "2026-10-17T17:42:51Z",
+  "repository": {
+    "id": "soobujmiah/ternuxx",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "native_checkout": "$HOME/nativeternux",
+    "working_tree": "modified and untracked work preserved; no commit or push in this continuation"
+  },
+  "changes": {
+    "desktop_restart_race": "fixed: stop now re-reads the atomically published supervisor state after confirmed process exit",
+    "desktop_test_fixture": "uses Python exec semantics compatible with Termux coreutils instead of assigning an unrelated argv[0] to the sleep applet",
+    "ssh_diagnostics": "reports package-default OpenSSH policy separately from the Ternuxx runit-managed candidate config and status",
+    "repository_identity": "deterministic same-owner migration recorded soobujmiah/ternuxx; project ID and historical events retained",
+    "public_evidence": "removed PRoot host path and ADB transport alias from public evidence"
+  },
+  "tests": {
+    "repo_test_sh": "PASS",
+    "unittest": {
+      "result": "PASS",
+      "passed": 53,
+      "failed": 0,
+      "errors": 0,
+      "environment": "Native Termux Python 3.14; declared PyYAML test dependency loaded from temporary Termux tmp directory"
+    },
+    "cli_help_contract": "PASS",
+    "shell_syntax": "PASS",
+    "python_compile": "PASS",
+    "git_diff_check": "PASS",
+    "repo_knowledge_verify": {
+      "result": "PASS",
+      "findings": 0
+    },
+    "json_schema": {
+      "result": "NOT_RUN",
+      "reason": "JSON Schema validator unavailable; schema JSON syntax parsed successfully"
+    }
+  },
+  "live_native": {
+    "ssh_service": {
+      "result": "PASS",
+      "manager": "runit",
+      "service": "ternuxx-sshd",
+      "status": "running",
+      "current_authenticated_session_destination_port": 8023,
+      "managed_effective_listen_address": "127.0.0.1:8023",
+      "candidate_config_syntax": "valid",
+      "socket_table": "unavailable",
+      "external_reachability": "not_tested",
+      "default_unmanaged_config_policy": "still describes wildcard port 8022; daemon was previously stopped after candidate validation"
+    },
+    "boot": {
+      "entry_scripts": "present, executable, SHA-256 match repository copies",
+      "manual_startup_hook_log": "reports native service ready; this does not prove Android receiver execution",
+      "termux_boot_app_diagnostic": "unknown because Android package query failed; owner previously confirmed opening app once",
+      "actual_reboot": "not_performed"
+    },
+    "wakelock": {
+      "registered_owner": "native.sshd",
+      "coordinator": "held_by_registered_owners",
+      "android_global_lock_state": "unknown"
+    },
+    "continuity": {
+      "test_id": "TERN-20261017-RB03",
+      "private_checkpoint": "prepared and previously read back; nonce and boot IDs remain private",
+      "automatic_resume": false
+    }
+  },
+  "readiness": "READY FOR OWNER-OPERATED REBOOT; Android Termux:Boot receiver execution, boot ID transition, and post-reboot recovery remain pending owner-operated physical reboot",
+  "limitations": [
+    "Native procfs TCP listener enumeration remains unavailable.",
+    "Android package-manager query does not independently report Termux:Boot installed/receiver state.",
+    "No physical reboot occurred.",
+    "GUI and Web UI callers remain unimplemented; management work in this slice is CLI/API only.",
+    "JSON Schema validation was not performed."
+  ],
+  "next_action": "Owner performs the manual reboot following docs/testing/REBOOT-RECOVERY-GUIDE.md, then relaunches the agent through the existing db workflow and asks it to verify RB03."
+}

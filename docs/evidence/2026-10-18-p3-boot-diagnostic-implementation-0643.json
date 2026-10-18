@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_termux_boot_receiver_diagnostic_implementation",
+  "observed_at_utc": "2026-10-18T06:48:17Z",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "change": {
+    "implementation": "Read-only Termux:Boot diagnostics and Doctor finding NTX-APP-102 now report package enabled state and BOOT_COMPLETED receiver state separately from installation and script-directory state; Android background delivery remains explicitly unknown.",
+    "fail_closed": "If Android package-manager queries fail, the corresponding state remains unknown; system/background delivery policy is always reported unknown.",
+    "scope": [
+      "lib/runtime_diagnostics.py",
+      "schemas/termux-boot-diagnostics.schema.json",
+      "tests/test_runtime_diagnostics.py",
+      "lib/doctor_report.py",
+      "tests/test_doctor_report.py"
+    ]
+  },
+  "device_verification": {
+    "initial_readonly_probe": "See 2026-10-18-p3-boot-receiver-enabled-0640.json; independent Android package-manager queries confirmed enabled package and receiver.",
+    "final_native_recheck": {
+      "observed_at_utc": "2026-10-18T06:45:20Z",
+      "command": "./ternuxx --json boot status",
+      "api_ok": true,
+      "app": "installed",
+      "package_enabled": "enabled",
+      "boot_completed_receiver": "enabled",
+      "regular_script_count": 2,
+      "non_executable_script_count": 0,
+      "startup_policy": "unknown",
+      "system_delivery_policy": "unknown",
+      "mutations": []
+    }
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_runtime_diagnostics tests.test_doctor_report -v",
+    "focused_result": "31/31 passed",
+    "full_command": "bash scripts/repo_test.sh",
+    "full_result": "220/220 passed after Doctor NTX-APP-102 integration",
+    "full_elapsed_seconds": 75.971
+  },
+  "validation": {
+    "strict_schema_fixture_validation": "passed",
+    "python_json_validation": "passed",
+    "git_diff_check": "passed",
+    "repo_knowledge_verify_findings": 0
+  },
+  "safety": {
+    "read_only_device_queries": true,
+    "rebooted": false,
+    "package_or_service_changed": false,
+    "desktop_or_proot_changed": false
+  },
+  "remaining_limits": [
+    "AppOps/background restriction state is inaccessible to the Termux UID on this device.",
+    "An enabled receiver does not prove the operating system delivered BOOT_COMPLETED or that a script ran from that delivery.",
+    "Reboot checkpoint RB03 remains NOT_READY; manual invocation cannot be excluded."
+  ],
+  "doctor_live_recheck": {
+    "observed_at_utc": "2026-10-18T06:46:44Z",
+    "command": "./ternuxx doctor --json",
+    "overall": "warning",
+    "summary": {
+      "pass": 14,
+      "info": 14,
+      "warning": 1,
+      "error": 0
+    },
+    "finding": {
+      "id": "NTX-APP-102",
+      "severity": "info",
+      "observed": "Termux:Boot app: installed; package: enabled; BOOT_COMPLETED receiver: enabled; scripts: 2 regular, 0 non-executable; system delivery policy: unknown",
+      "interpretation": "Doctor remains read-only and explicitly says package/receiver state does not prove boot delivery."
+    }
+  }
+}

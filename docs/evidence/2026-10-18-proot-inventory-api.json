@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "date_local": "2026-10-18",
+  "evidence_type": "native_termux_tests_and_read_only_live_inventory",
+  "scope": {
+    "operation": "proot.status",
+    "guest_entered": false,
+    "package_or_guest_state_changed": false,
+    "ownership_claimed": false
+  },
+  "tests": {
+    "focused_proot_and_management_tests": {
+      "result": "passed",
+      "count": 21,
+      "duration_seconds": 0.133
+    },
+    "full_native_termux_suite": {
+      "result": "passed",
+      "count": 151,
+      "duration_seconds": 32.918
+    },
+    "cli_help_contract": "passed",
+    "compileall": "passed",
+    "shell_syntax": "passed",
+    "git_diff_check": "passed",
+    "repo_knowledge_verify": "passed_zero_findings"
+  },
+  "target_probe": {
+    "transport": "ssh_native_termux_shell",
+    "result": "installed",
+    "manager_available": true,
+    "installed_distributions": ["debian"],
+    "ownership": "unverified",
+    "guest_entered": false,
+    "read_only": true
+  },
+  "limits": [
+    "This is installed-guest inventory only; it does not establish that Ternuxx owns or may control Debian.",
+    "PRoot ownership, guest entry, workload launch, GPU proof from a same-process workload, and lifecycle control remain unverified."
+  ]
+}

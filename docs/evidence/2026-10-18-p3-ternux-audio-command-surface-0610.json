@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T06:10:24Z",
+  "scope": "read-only help inspection of the installed native Ternux CLI",
+  "installed_cli_version": "1.4.0",
+  "commands_listed": [
+    "install",
+    "start",
+    "stop",
+    "restart",
+    "doctor",
+    "repair",
+    "verify",
+    "benchmark",
+    "profile",
+    "backend",
+    "info",
+    "state",
+    "logs",
+    "update",
+    "uninstall"
+  ],
+  "supported_workload_dispatch": false,
+  "dedicated_audio_test_command": false,
+  "result": "No documented bounded audio playback/workload operation is exposed by installed CLI help.",
+  "interpretation": "This does not prove guest audio is broken. It means current Ternuxx cannot safely exercise audible PRoot playback through a supported Ternux interface; keep audible-output gate open and do not replace it with PulseAudio control reachability.",
+  "actions": {
+    "guest_entered": false,
+    "audio_stream_sent": false,
+    "desktop_lifecycle_changed": false,
+    "service_changed": false,
+    "packages_changed": false,
+    "network_accessed": false
+  }
+}

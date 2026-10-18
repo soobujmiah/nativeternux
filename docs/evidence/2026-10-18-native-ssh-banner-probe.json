@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-managed-ssh-loopback-probe",
+  "observed_at_utc": "2026-10-17T21:42:32Z",
+  "environment": "native_termux",
+  "diagnostic": {
+    "service_id": "ternuxx-sshd",
+    "manager": "runit",
+    "service_status": "running",
+    "config_syntax": "valid",
+    "effective_loopback_endpoint": "127.0.0.1:8023",
+    "loopback_probe": "ssh_banner",
+    "probe_scope": "one-second unauthenticated TCP connect and up-to-256-byte SSH banner read from the explicitly configured loopback endpoint",
+    "non_loopback_probe_performed": false,
+    "credentials_read": false,
+    "authenticated_connection_test_by_diagnostic": "not_run",
+    "tcp_listener_table": "unavailable",
+    "listener_process_ownership": "unverified"
+  },
+  "doctor": {
+    "overall": "pass",
+    "summary": {"pass": 14, "info": 14, "warning": 0, "error": 0},
+    "finding": "NTX-SVC-001",
+    "observed": "manager=runit; service=ternuxx-sshd; status=running; config syntax=valid; loopback SSH probe=ssh_banner; listener ownership=unverified"
+  },
+  "desktop": {
+    "status": "running",
+    "display": ":1",
+    "supervisor": true,
+    "x11": true,
+    "xfce4_session": true,
+    "gui_visible": "unknown",
+    "audio_owner": "external"
+  },
+  "platform_fallback_observation": {
+    "ss_command": "unavailable",
+    "netstat_tcp_support": "unavailable"
+  },
+  "tests": {
+    "targeted": "python3 -m unittest tests.test_ssh_diagnostics tests.test_doctor_report -v",
+    "targeted_result": "PASS 22/22",
+    "full_suite": "PYTHONPATH=\"$HOME/.cache/ternuxx-audit-venv/lib/python3.14/site-packages\" bash scripts/repo_test.sh",
+    "full_suite_result": "PASS 129/129"
+  },
+  "limitations": [
+    "An SSH banner proves an SSH protocol endpoint accepted a loopback connection; it does not prove that the Runit-owned PID owns the listener.",
+    "The probe is unauthenticated and is not a substitute for the separate password-authenticated probe recorded in postboot evidence.",
+    "No package, service, desktop, boot profile, or PRoot state was changed."
+  ]
+}

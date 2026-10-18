@@ -24,6 +24,12 @@ jobs:
           python-version: "3.x"
       - name: Install state-tool dependency
         run: python -m pip install --quiet -r requirements-dev.txt
+      - name: Validate CLI shell syntax and help contract
+        run: |
+          bash -n bin/ternuxx bin/nativeternux lib/help.sh lib/ssh.sh tests/test_cli_help.sh
+          bash tests/test_cli_help.sh
+      - name: Run repository unit and mock integration tests
+        run: python3 -m unittest discover -s tests -v
       - name: Validate deterministic state
         run: python3 -m tools.repo_knowledge verify
       - name: Validate README knowledge bridge

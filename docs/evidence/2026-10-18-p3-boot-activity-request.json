@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-18",
+  "source": "P3 roadmap native boot activity requirement and official Termux:X11 README",
+  "implementation": {
+    "native_profile_starts": "Ternuxx-owned native X11/XFCE through the shared manager, which then requests the Termux:X11 activity",
+    "activity_request": "the managed desktop start path invokes /system/bin/am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity after X11/XFCE reports ready",
+    "failure_fallback": "emit manual-open guidance; do not claim visible GUI",
+    "legacy_managed_script_compatibility": "v1 scripts remain recognized for safe replacement/removal"
+  },
+  "current_device_state": {
+    "owner_report": "Termux:X11 app is currently open in Android floating-window mode",
+    "boot_profile": "default cli-only",
+    "profile_changed": false,
+    "activity_launched": false,
+    "boot_files_changed": false,
+    "gui_visibility": "not verified"
+  },
+  "verification": {
+    "python_compile": "passed",
+    "shell_syntax": "passed for manager and generated boot preview",
+    "preview_check": "native and GUI-off previews ready; changed=false; activity request appears only through manager start",
+    "test_suite": "not run"
+  }
+}

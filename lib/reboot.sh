@@ -1,0 +1,133 @@
+# Native reboot-recovery and read-only runtime status commands.
+
+_nt_management_call() {
+  nt_require_termux || return 1
+  nt_require_command python3 || return 1
+  local format_args=()
+  [ "$NATIVERNUX_JSON" = "1" ] && format_args+=(--json)
+  TERNUXX_WAKELOCK_CALLER_PID="${PPID:-}" python3 "$_TN_LIB_DIR/management_service.py" "$@" "${format_args[@]}"
+}
+
+nt_cmd_reboot() {
+  local action="${1:-status}"; [ "$#" -gt 0 ] && shift
+  case "$action" in
+    status)
+      local test_id="${1:-}"
+      if [ -n "$test_id" ]; then _nt_management_call --operation continuity.status --test-id "$test_id"; else _nt_management_call --operation continuity.status; fi
+      ;;
+    prepare)
+      local test_id="" baseline=""
+      while [ "$#" -gt 0 ]; do
+        case "$1" in
+          --test-id) [ "$#" -ge 2 ] || { nt_fail "--test-id needs a value"; return 2; }; test_id="$2"; shift 2 ;;
+          --baseline-json) [ "$#" -ge 2 ] || { nt_fail "--baseline-json needs a value"; return 2; }; baseline="$2"; shift 2 ;;
+          *) nt_fail "Unknown reboot prepare option: $1"; return 2 ;;
+        esac
+      done
+      [ -n "$test_id" ] && [ -n "$baseline" ] || { nt_fail "Usage: ternuxx reboot prepare --test-id ID --baseline-json JSON"; return 2; }
+      _nt_management_call --operation continuity.prepare-reboot-test --test-id "$test_id" --baseline-json "$baseline"
+      ;;
+    verify)
+      local test_id="${1:-}"
+      [ -n "$test_id" ] && [ "$#" -eq 1 ] || { nt_fail "Usage: ternuxx reboot verify <test-id>"; return 2; }
+      _nt_management_call --operation continuity.verify-reboot-test --test-id "$test_id"
+      ;;
+    resume-info)
+      local test_id="${1:-}"
+      [ -n "$test_id" ] || { nt_fail "Usage: ternuxx reboot resume-info <test-id>"; return 2; }
+      _nt_management_call --operation continuity.resume-info --test-id "$test_id"
+      ;;
+    *) nt_fail "Supported reboot operations: status, prepare, verify, resume-info"; return 2 ;;
+  esac
+}
+
+nt_cmd_boot() {
+  local action="${1:-status}"
+  case "$action" in
+    status)
+      [ "$#" -le 1 ] || { nt_fail "Usage: ternuxx boot status"; return 2; }
+      _nt_management_call --operation boot.status ;;
+    gui)
+      local choice="${2:-}" confirmed=0 profile
+      [ "$#" -ge 2 ] || { nt_fail "Usage: ternuxx boot gui <on|off> [--yes]"; return 2; }
+      case "$choice" in
+        on) profile="native" ;;
+        off) profile="cli-only" ;;
+        *) nt_fail "GUI startup choice must be on or off"; return 2 ;;
+      esac
+      shift 2
+      while [ "$#" -gt 0 ]; do
+        case "$1" in
+          --yes) confirmed=1; shift ;;
+          *) nt_fail "Unknown boot gui option: $1"; return 2 ;;
+        esac
+      done
+      local gui_args=(--operation boot.enable --profile "$profile")
+      [ "$confirmed" -eq 1 ] && gui_args+=(--yes)
+      _nt_management_call "${gui_args[@]}" ;;
+    enable)
+      local profile="" confirmed=0
+      shift
+      while [ "$#" -gt 0 ]; do
+        case "$1" in
+          --profile) [ "$#" -ge 2 ] || { nt_fail "--profile needs a value"; return 2; }; profile="$2"; shift 2 ;;
+          --yes) confirmed=1; shift ;;
+          *) nt_fail "Unknown boot enable option: $1"; return 2 ;;
+        esac
+      done
+      [ -n "$profile" ] || { nt_fail "Usage: ternuxx boot enable --profile <cli-only|native|proot|hybrid> [--yes]"; return 2; }
+      local enable_args=(--operation boot.enable --profile "$profile")
+      [ "$confirmed" -eq 1 ] && enable_args+=(--yes)
+      _nt_management_call "${enable_args[@]}" ;;
+    disable)
+      local confirmed=0
+      shift
+      while [ "$#" -gt 0 ]; do
+        case "$1" in
+          --yes) confirmed=1; shift ;;
+          *) nt_fail "Unknown boot disable option: $1"; return 2 ;;
+        esac
+      done
+      local disable_args=(--operation boot.disable)
+      [ "$confirmed" -eq 1 ] && disable_args+=(--yes)
+      _nt_management_call "${disable_args[@]}" ;;
+    profile)
+      case "${2:-status}" in
+        status)
+          [ "$#" -le 2 ] || { nt_fail "Usage: ternuxx boot profile status"; return 2; }
+          _nt_management_call --operation boot.profile.status ;;
+        preview)
+          [ "$#" -eq 3 ] || { nt_fail "Usage: ternuxx boot profile preview <cli-only|native|proot|hybrid>"; return 2; }
+          _nt_management_call --operation boot.profile.preview --profile "$3" ;;
+        *)
+          nt_fail "Usage: ternuxx boot profile status | preview <cli-only|native|proot|hybrid>"
+          return 2 ;;
+      esac ;;
+    *)
+      nt_fail "Supported boot operations: status, profile status/preview, enable/disable (preview first; --yes applies)"
+      return 2 ;;
+  esac
+}
+
+nt_cmd_wakelock() {
+  local action="${1:-status}"
+  [ "$#" -gt 0 ] && shift
+  case "$action" in
+    status)
+      [ "$#" -eq 0 ] || { nt_fail "Usage: ternuxx wakelock status"; return 2; }
+      _nt_management_call --operation wakelock.status ;;
+    acquire|release)
+      local owner="${1:-}" persistent=0
+      [ -n "$owner" ] || { nt_fail "Usage: ternuxx wakelock $action <owner> [--persistent]"; return 2; }
+      shift
+      if [ "${1:-}" = "--persistent" ]; then persistent=1; shift; fi
+      [ "$#" -eq 0 ] || { nt_fail "Unexpected Wake Lock option"; return 2; }
+      local op="wakelock.$action"
+      if [ "$persistent" -eq 1 ]; then
+        _nt_management_call --operation "$op" --owner "$owner" --persistent
+      else
+        _nt_management_call --operation "$op" --owner "$owner"
+      fi ;;
+    *) nt_fail "Supported Wake Lock operations: status, acquire <owner>, release <owner>"; return 2 ;;
+  esac
+}

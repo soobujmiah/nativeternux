@@ -22,7 +22,7 @@ platform:
 data:
   source_types:
     - device and package metadata
-    - NativeTernux-owned service and session state
+    - Ternuxx-owned service and session state
     - user-selected workspace files
     - user-managed SSH configuration and credentials (never copied to logs or SKB)
   sensitive_data: true
@@ -33,7 +33,7 @@ capabilities:
   network_access: true
   privileged_android_apis: true
   automation: true
-  ai_inference: true
+  ai_inference: true # Project scope/risk tag only; no inference engine or backend is implemented. See docs/testing/FEATURE-MATRIX.yaml.
   file_import_export: true
 
 required_reviews:

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T07:49:54Z",
+  "phase": "P3",
+  "kind": "management_loopback_http_server",
+  "implementation": {
+    "module": "lib/management_http_server.py",
+    "bind_policy": "IPv4 127.0.0.1 only; no import-time or automatic service startup",
+    "workers": "Default 4, configurable maximum 16; excess accepted clients receive 503 and connection close",
+    "request_bounds": {
+      "header_count": 64,
+      "json_body_bytes": 65536,
+      "total_connection_seconds": "1..60 configurable, default 10"
+    },
+    "shutdown": "Stop accepting new work and wait for in-flight handlers for the requested grace period; false means work remains active",
+    "deadline_semantics": "Expired requests have their client socket shut down; already-dispatched application work is not forcibly cancelled",
+    "adapter_factory": "Receives the bound port so exact Host/Origin policy uses the selected listener port"
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_management_http_server -v",
+    "focused_passed": 8,
+    "focused_failed": 0,
+    "py_compile_command": "python3 -m py_compile lib/management_http_server.py",
+    "py_compile_passed": true,
+    "race_probe": "100 immediate ephemeral-loopback start/close cycles passed",
+    "full_command": "bash scripts/repo_test.sh",
+    "full_passed": 272,
+    "full_failed": 0,
+    "full_duration_seconds": 101.661,
+    "security_cases": [
+      "malformed request returns redacted JSON",
+      "oversized byte body rejected before dispatch",
+      "5000-digit Content-Length rejected before integer conversion"
+    ]
+  },
+  "runtime_scope": {
+    "ephemeral_test_listener": "127.0.0.1 on an automatically allocated port; closed after each fixture",
+    "persistent_device_listener": false,
+    "service_or_boot_integration": false,
+    "browser_or_remote_access_test": false,
+    "desktop_or_proot_lifecycle_change": false
+  },
+  "limitations": [
+    "The server module is not wired into a production launcher, service manager, or boot profile.",
+    "No bootstrap-secret provider or secure browser provisioning flow is integrated.",
+    "The HTTP deadline closes the connection but cannot interrupt a typed service call already executing.",
+    "Target-device fixed-port loopback, browser, client compatibility, lifecycle recovery, and private remote transport remain unqualified.",
+    "Management mutations remain disabled by default and require explicit opt-in plus the durable request store."
+  ]
+}

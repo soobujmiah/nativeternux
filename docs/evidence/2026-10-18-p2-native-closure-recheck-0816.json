@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:16:25Z",
+  "runtime": {
+    "layer": "native Termux",
+    "prefix": "/data/data/com.termux/files/usr",
+    "termux_version": "0.119.0-beta.3",
+    "uname": {
+      "system": "Android",
+      "node": "localhost",
+      "release": "16",
+      "version": "#1 SMP PREEMPT Thu Jun 12 08:20:39 UTC 2025",
+      "machine": "aarch64",
+      "processor": ""
+    }
+  },
+  "repository": {
+    "root": "/data/data/com.termux/files/home/ternuxx",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "origin": "https://github.com/soobujmiah/ternuxx.git"
+  },
+  "checks": {
+    "ternuxx_status": {
+      "exit_code": 0,
+      "result": {
+        "status": "running",
+        "display": ":1",
+        "supervisor": "yes",
+        "x11": "yes",
+        "xfce4_session": "yes",
+        "gui_visible": "unknown",
+        "audio_owner": "external"
+      }
+    },
+    "recovered_xfce_transaction": {
+      "expected_count": 77,
+      "exact_installed_count": 77,
+      "missing": [],
+      "version_mismatch": []
+    }
+  },
+  "historical_limit": "This read-only installed-package query does not reconstruct the complete pre-consent preview from the original XFCE install. The later exact-preview validation remains separate evidence.",
+  "mutations": {
+    "packages": false,
+    "desktop_or_service_lifecycle": false,
+    "boot_or_android_settings": false,
+    "proot_guest": false
+  }
+}

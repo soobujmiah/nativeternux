@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:shell-profile:1",
+  "title": "Ternuxx per-provider shell profile",
+  "description": "User-selected shell and Ternuxx-owned theme/config layer for Native Termux and the separate Debian PRoot provider. Shell-neutral settings are stored by the companion shell-settings schema and rendered by shell adapters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "revision", "providers"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "revision": {"type": "integer", "minimum": 0},
+    "providers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["native_termux", "proot_debian"],
+      "properties": {
+        "native_termux": {"$ref": "#/$defs/provider"},
+        "proot_debian": {"$ref": "#/$defs/provider"}
+      }
+    }
+  },
+  "$defs": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "selected_shell", "config_mode", "install_missing_shell", "settings_profile_id"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "selected_shell": {
+          "oneOf": [
+            {"enum": ["bash", "zsh", "fish"]},
+            {"type": "null"}
+          ]
+        },
+        "config_mode": {"const": "ternuxx_managed_overlay"},
+        "settings_profile_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "description": "Reference to a validated shell-neutral settings profile; adapters render it for the selected shell."
+        },
+        "install_missing_shell": {
+          "type": "boolean",
+          "default": false,
+          "description": "A plan preference only; package installation still requires a separate reviewed change plan and explicit confirmation."
+        },
+        "startup_hook_state": {
+          "enum": ["not_configured", "previewed", "configured", "conflict", "unsupported"]
+        },
+        "managed_config_revision": {"type": "integer", "minimum": 0}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"enabled": {"const": true}}},
+          "then": {"properties": {"selected_shell": {"enum": ["bash", "zsh", "fish"]}}}
+        }
+      ]
+    }
+  }
+}

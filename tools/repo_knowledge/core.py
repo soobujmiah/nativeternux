@@ -321,7 +321,12 @@ def build_project_state(
     elif build_status in ("failed", "timed_out"):
         last_failed_build = {"commit": head["commit"], "at": build["at"], "run_id": build_run_id}
 
-    generated_at = max(filter(None, [head.get("committed_at"), build.get("at"), test.get("at")]))
+    generated_at = max(filter(None, [
+        existing.get("generated_at"),
+        head.get("committed_at"),
+        build.get("at"),
+        test.get("at"),
+    ]))
     return {
         "schema_version": SCHEMA_VERSION,
         "project_id": project_id,

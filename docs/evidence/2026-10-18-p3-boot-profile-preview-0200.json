@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-boot-profile-readonly-preview-recheck",
+  "observed_at_utc": "2026-10-18T02:00:05Z",
+  "runtime": "native Termux via existing SSH shell",
+  "commands": {
+    "boot_status": "./ternuxx --json boot status",
+    "configured_profile": "./ternuxx --json boot profile status",
+    "native_preview": "./ternuxx --json boot profile preview native",
+    "proot_preview": "./ternuxx --json boot profile preview proot",
+    "hybrid_preview": "./ternuxx --json boot profile preview hybrid"
+  },
+  "observations": {
+    "termux_boot": {
+      "app": "installed",
+      "script_directory": "present",
+      "regular_script_count": 2,
+      "non_executable_script_count": 0,
+      "termux_boot_command_available": false,
+      "startup_policy": "unknown",
+      "script_contents_read": false
+    },
+    "configured_profile": {
+      "profile": "cli-only",
+      "configuration_source": "default",
+      "ready": true
+    },
+    "native": {
+      "ready": true,
+      "blockers": [],
+      "scope": "startup command prerequisites only; delivery/background policy/visible GUI not verified"
+    },
+    "proot": {
+      "ready": false,
+      "blocker": "Ternux Debian ownership-aware adapter is not implemented; no provider fallback will run"
+    },
+    "hybrid": {
+      "ready": false,
+      "blocker": "native XFCE plus Ternux workload-routing adapter is not implemented; no provider fallback will run"
+    }
+  },
+  "safety": {
+    "all_commands_read_only": true,
+    "boot_config_changed": false,
+    "script_installed": false,
+    "existing_proot_touched": false,
+    "silent_provider_fallback": false,
+    "packages_changed": false,
+    "services_started": false,
+    "services_stopped": false
+  },
+  "interpretation": "Native profile prerequisites pass but the current profile remains cli-only. PRoot and hybrid remain blocked exactly at their unimplemented ownership/routing adapters. Termux:Boot app and script directory presence do not prove startup delivery or GUI visibility.",
+  "mutations": [],
+  "tests": {
+    "command": "python3 -m unittest tests.test_boot_profiles tests.test_management_service -v",
+    "result": "passed",
+    "passed": 34,
+    "failed": 0,
+    "scope": "boot profile preview/readiness/fail-closed fixtures and shared management API routing; no target boot profile was applied"
+  }
+}

@@ -1,0 +1,48 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Native Ternuxx-owned OpenSSH instance. runsv owns this foreground wrapper.
+set -u
+umask 077
+
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+HOME="${HOME:?Termux HOME is required}"
+TERMUX_VERSION="${TERMUX_VERSION:-unknown}"
+NATIVERNUX_STATE_DIR="${NATIVERNUX_STATE_DIR:-$HOME/.local/share/nativeternux}"
+CONFIG="$HOME/.config/ternuxx/sshd_recovery.conf"
+LOG_DIR="$NATIVERNUX_STATE_DIR/log"
+LOG_FILE="$LOG_DIR/sshd-runit.log"
+export PREFIX HOME TERMUX_VERSION NATIVERNUX_STATE_DIR
+export PATH="$PREFIX/bin:$PATH"
+
+mkdir -p "$LOG_DIR" || exit 1
+chmod 700 "$NATIVERNUX_STATE_DIR" "$LOG_DIR" 2>/dev/null || true
+exec >>"$LOG_FILE" 2>&1
+printf 'wrapper-started-at=%s pid=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$"
+
+if ! "$PREFIX/bin/bash" "$PREFIX/bin/ternuxx" wakelock acquire native.sshd --persistent >/dev/null; then
+  printf 'wakelock-acquire=failed-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  exit 1
+fi
+printf 'wakelock-acquire=ok-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+child=""
+cleanup() {
+  trap - TERM INT EXIT
+  if [ -n "$child" ]; then
+    kill -TERM "$child" 2>/dev/null || true
+    wait "$child" 2>/dev/null || true
+  fi
+  "$PREFIX/bin/bash" "$PREFIX/bin/ternuxx" wakelock release native.sshd --persistent >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+trap 'exit 0' TERM INT
+
+if [ ! -r "$CONFIG" ] || ! "$PREFIX/bin/sshd" -t -f "$CONFIG"; then
+  printf 'sshd config validation failed at %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >>"$LOG_FILE"
+  exit 1
+fi
+
+"$PREFIX/bin/sshd" -D -e -f "$CONFIG" >>"$LOG_FILE" 2>&1 &
+child=$!
+wait "$child"
+status=$?
+exit "$status"

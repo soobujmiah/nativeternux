@@ -32,6 +32,6 @@ Each compatibility record identifies device/OS, runtime and package versions, ap
 
 ## Evidence
 
-- NativeTernux `docs/RESEARCH.md` §§8, 11, 13 and `docs/WINE-NATIVE.md`.
+- Ternuxx `docs/RESEARCH.md` §§8, 11, 13 and `docs/WINE-NATIVE.md`.
 - [Hangover upstream documentation](https://github.com/AndreRH/hangover).
 - [Android NNAPI migration guide](https://developer.android.com/ndk/guides/neuralnetworks/migration-guide).

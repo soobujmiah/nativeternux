@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:00:08Z",
+  "phase": "P3",
+  "kind": "native_termux_full_repository_test_recheck",
+  "command": "bash scripts/repo_test.sh",
+  "execution_context": "authenticated native Termux shell reached over the owner-approved loopback SSH connection",
+  "result": {
+    "passed": 272,
+    "failed": 0,
+    "duration_seconds": 39.629,
+    "exit_code": 0
+  },
+  "coverage_boundary": "Repository fixture/unit/contract tests only; this run did not exercise Android boot delivery, GUI visibility, service ownership, off-home transport, PRoot ownership, or GPU/NPU hardware.",
+  "device_actions": [],
+  "worktree_mutations": "The test suite completed without changing the existing Git status count; generated fixtures were isolated by the test runner."
+}

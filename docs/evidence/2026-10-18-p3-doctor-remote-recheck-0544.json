@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_doctor_remote_readonly_recheck",
+  "observed_at_utc": "2026-10-18T05:43:07+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "read-only Doctor and disabled-by-default remote-access policy preview; no network, credential, service, or profile action",
+  "checks": [
+    {
+      "command": [
+        "./ternuxx",
+        "--json",
+        "doctor"
+      ],
+      "exit_code": 1,
+      "result": {
+        "schema_version": 1,
+        "command": "doctor",
+        "generated_at": "2026-10-18T05:43:07.228438+00:00",
+        "read_only": true,
+        "overall": "warning",
+        "device": {
+          "model": "25053RT47C",
+          "android_release": "16",
+          "abi": "arm64-v8a",
+          "termux_version": "0.119.0-beta.3"
+        },
+        "findings": [
+          {
+            "id": "NTX-HOST-001",
+            "severity": "pass",
+            "scope": "termux-host",
+            "observed": "native Termux context; version=0.119.0-beta.3",
+            "suggested_action": "No action needed."
+          },
+          {
+            "id": "NTX-PKG-001",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "termux-x11-nightly: package 1.03.01-6; command available",
+            "suggested_action": "Review the official Termux:X11 setup guide."
+          },
+          {
+            "id": "NTX-PKG-002",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "dbus: package 1.16.2-3; command available",
+            "suggested_action": "Review the native package preview if D-Bus is needed."
+          },
+          {
+            "id": "NTX-PKG-003",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "xfce4-session: package 4.20.4-1; command available",
+            "suggested_action": "Review the native desktop package preview."
+          },
+          {
+            "id": "NTX-PKG-004",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "xfce4-panel: package 4.20.8; command available",
+            "suggested_action": "Review the native desktop package preview."
+          },
+          {
+            "id": "NTX-PKG-005",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "xfwm4: package 4.20.0-3; command available",
+            "suggested_action": "Review the native desktop package preview."
+          },
+          {
+            "id": "NTX-PKG-006",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "thunar: package 4.20.10; command available",
+            "suggested_action": "Review the native desktop package preview."
+          },
+          {
+            "id": "NTX-PKG-007",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "xfce4-terminal: package 1.2.0; command available",
+            "suggested_action": "Review the native desktop package preview."
+          },
+          {
+            "id": "NTX-PKG-008",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "pulseaudio: package 17.0-4; command available",
+            "suggested_action": "Audio is optional; choose its owner before starting it."
+          },
+          {
+            "id": "NTX-PKG-009",
+            "severity": "pass",
+            "scope": "termux-native",
+            "observed": "python: package 3.14.6-1; command available",
+            "suggested_action": "Python is required by the Ternuxx lifecycle and state tools."
+          },
+          {
+            "id": "NTX-APP-101",
+            "severity": "info",
+            "scope": "android-addons",
+            "observed": "Termux:X11 Android app: present",
+            "suggested_action": "Install/open the official companion app only if needed and after checking its signing source."
+          },
+          {
+            "id": "NTX-APP-102",
+            "severity": "info",
+            "scope": "android-addons",
+            "observed": "Termux:Boot app: present",
+            "suggested_action": "Boot integration is optional; use the official setup guide and preview generated scripts."
+          },
+          {
+            "id": "NTX-APP-103",
+            "severity": "info",
+            "scope": "android-addons",
+            "observed": "Shizuku app: present; package versionCode: 1318; rish command: not found; Ternuxx provider: not implemented; signer/release identity, server state, and permission: unknown",
+            "suggested_action": "VersionCode and rish presence are discovery hints only. Verify the app's signing source, running service, and granted permission before provider integration; no ADB-over-Wi-Fi operation is enabled."
+          },
+          {
+            "id": "NTX-API-101",
+            "severity": "info",
+            "scope": "termux-api",
+            "observed": "termux-share command: available",
+            "suggested_action": "Termux:API app, command, and permissions are separate checks; use only user-selected file actions."
+          },
+          {
+            "id": "NTX-GPU-001",
+            "severity": "info",
+            "scope": "native-graphics",
+            "observed": "device nodes present: /dev/kgsl-3d0",
+            "suggested_action": "A device node does not prove renderer access or workload acceleration."
+          },
+          {
+            "id": "NTX-GPU-002",
+            "severity": "info",
+            "scope": "native-graphics",
+            "observed": "KGSL model: Adreno825",
+            "suggested_action": "Hardware identification does not establish a supported native driver/workload."
+          },
+          {
+            "id": "NTX-NPU-001",
+            "severity": "info",
+            "scope": "native-accelerator",
+            "observed": "Termux-process NPU runtime/delegate not verified",
+            "suggested_action": "Do not infer NPU access from the device model; require a named runtime and workload proof."
+          },
+          {
+            "id": "NTX-GPU-100",
+            "severity": "info",
+            "scope": "native-graphics",
+            "observed": "renderer/Vulkan probes skipped by default",
+            "suggested_action": "Use `doctor --graphics` to query the current DISPLAY; this does not launch a desktop or workload."
+          },
+          {
+            "id": "NTX-SESSION-014",
+            "severity": "info",
+            "scope": "native-session",
+            "observed": "recorded state=running, display=:1",
+            "suggested_action": "Use start/stop only after reviewing ownership and conflicts."
+          },
+          {
+            "id": "NTX-SESSION-020",
+            "severity": "pass",
+            "scope": "native-session",
+            "observed": "supervisor: verified pid=16000; process group/session not recorded",
+            "suggested_action": "Review the session record and log; Doctor does not stop or repair processes."
+          },
+          {
+            "id": "NTX-SESSION-021",
+            "severity": "pass",
+            "scope": "native-session",
+            "observed": "x11: verified pid=16032, pgid=16032, sid=16032",
+            "suggested_action": "Review the session record and log; Doctor does not stop or repair processes."
+          },
+          {
+            "id": "NTX-SESSION-022",
+            "severity": "pass",
+            "scope": "native-session",
+            "observed": "desktop: verified pid=16127, pgid=16127, sid=16127",
+            "suggested_action": "Review the session record and log; Doctor does not stop or repair processes."
+          },
+          {
+            "id": "NTX-SESSION-030",
+            "severity": "info",
+            "scope": "desktop-process-inventory",
+            "observed": "verified Ternuxx-owned roots: desktop=1, supervisor=1, x11=1; same recorded session candidates: xfce4-panel=1, xfdesktop=1, xfwm4=1; owner unverified: dbus-daemon=1",
+            "suggested_action": "Same-session membership is not standalone lifecycle ownership. Unverified candidates may belong to Termux, Android, or PRoot; inspect before action. Hidden processes may not appear."
+          },
+          {
+            "id": "NTX-OP-001",
+            "severity": "info",
+            "scope": "native-operations",
+            "observed": "no operation journal records",
+            "suggested_action": "No action needed until a lifecycle operation is run."
+          },
+          {
+            "id": "NTX-SSH-001",
+            "severity": "warning",
+            "scope": "native-ssh-configuration",
+            "observed": "configured native SSH bind scope=wildcard; password authentication=enabled; process owner and external reachability=unknown",
+            "suggested_action": "Review the selected SSH bind and authentication policy before remote use; Doctor does not change SSH configuration or listener state."
+          },
+          {
+            "id": "NTX-SVC-001",
+            "severity": "pass",
+            "scope": "native-service-manager",
+            "observed": "manager=runit; service=ternuxx-sshd; status=running; config syntax=valid; loopback SSH probe=ssh_banner; listener ownership=unverified",
+            "suggested_action": "Service status and an SSH banner do not prove process ownership or external reachability."
+          },
+          {
+            "id": "NTX-PROOT-001",
+            "severity": "info",
+            "scope": "proot-provider",
+            "observed": "proot-distro installed distributions: debian; guest/session ownership unverified",
+            "suggested_action": "Installed distribution inventory does not prove Ternux ownership or a running guest; use an ownership-aware adapter before management."
+          },
+          {
+            "id": "NTX-BACKUP-001",
+            "severity": "info",
+            "scope": "native-recovery",
+            "observed": "no Ternuxx configuration backups found",
+            "suggested_action": "Create a preview with `ternuxx backup create` if configuration recovery is needed."
+          },
+          {
+            "id": "NTX-STORAGE-001",
+            "severity": "info",
+            "scope": "termux-home",
+            "observed": "free space on HOME filesystem: 86.5 GiB",
+            "suggested_action": "This is filesystem free space, not a package/rootfs size estimate."
+          }
+        ],
+        "summary": {
+          "pass": 14,
+          "info": 14,
+          "warning": 1,
+          "error": 0
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "command": [
+        "./ternuxx",
+        "--json",
+        "remote",
+        "access",
+        "preview"
+      ],
+      "exit_code": 0,
+      "result": {
+        "api_version": 1,
+        "data": {
+          "allowed_client_count": 0,
+          "allowed_target_count": 0,
+          "blockers": [],
+          "capability_count": 0,
+          "component": "remote_access_policy_preview",
+          "mode": "disabled",
+          "public_ingress": false,
+          "readiness": "disabled",
+          "remote_access_active": false,
+          "safety": {
+            "credentials_resolved": false,
+            "files_changed": false,
+            "network_accessed": false,
+            "public_ingress_enabled": false,
+            "services_changed": false
+          },
+          "schema_version": 1,
+          "transport_kind": null,
+          "transport_state": "not_probed"
+        },
+        "ok": true,
+        "operation": "remote.access.preview",
+        "request_id": "ef3490e6184447f685004c3c020b7530"
+      },
+      "stderr": ""
+    }
+  ]
+}

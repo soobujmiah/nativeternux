@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-18T01:14:03Z",
+  "scope": "bounded native Termux P3 gate recheck; allowlisted summaries only",
+  "device_mutations": [],
+  "commands": {
+    "doctor": {
+      "exit_code": 1,
+      "summary": {
+        "pass": 14,
+        "info": 14,
+        "warning": 1,
+        "error": 0,
+        "overall": "warning",
+        "read_only": true,
+        "finding_ids": [
+          "NTX-HOST-001",
+          "NTX-PKG-001",
+          "NTX-PKG-002",
+          "NTX-PKG-003",
+          "NTX-PKG-004",
+          "NTX-PKG-005",
+          "NTX-PKG-006",
+          "NTX-PKG-007",
+          "NTX-PKG-008",
+          "NTX-PKG-009",
+          "NTX-APP-101",
+          "NTX-APP-102",
+          "NTX-APP-103",
+          "NTX-API-101",
+          "NTX-GPU-001",
+          "NTX-GPU-002",
+          "NTX-NPU-001",
+          "NTX-GPU-100",
+          "NTX-SESSION-014",
+          "NTX-SESSION-020",
+          "NTX-SESSION-021",
+          "NTX-SESSION-022",
+          "NTX-SESSION-030",
+          "NTX-OP-001",
+          "NTX-SSH-001",
+          "NTX-SVC-001",
+          "NTX-PROOT-001",
+          "NTX-BACKUP-001",
+          "NTX-STORAGE-001"
+        ]
+      }
+    },
+    "desktop_status": {
+      "exit_code": 0,
+      "summary": {
+        "display": ":1",
+        "supervisor": "yes",
+        "x11": "yes",
+        "xfce4_session": "yes",
+        "gui_visible": "unknown",
+        "audio_owner": "external",
+        "state": "running"
+      }
+    },
+    "ssh_inspect": {
+      "exit_code": 0,
+      "summary": {
+        "native_default_policy": {
+          "bind_scope": "wildcard",
+          "port": "8022",
+          "password_authentication": "yes"
+        },
+        "managed_service": {
+          "status": "running",
+          "definition_identity": "verified",
+          "config_syntax": "valid",
+          "bind_scope": "loopback_only",
+          "port": "8023",
+          "loopback_probe": "ssh_banner"
+        },
+        "listener_observation": "permission_denied",
+        "listener_daemon_correlation": "unknown",
+        "authenticated_connection_test": "not_run"
+      }
+    },
+    "proot_status": {
+      "exit_code": 0,
+      "summary": {
+        "status": "installed",
+        "installed_distributions": [
+          "debian"
+        ],
+        "ownership": "unverified",
+        "guest_entered": false,
+        "read_only": true
+      }
+    },
+    "boot_status": {
+      "exit_code": 0,
+      "summary": {
+        "app": "installed",
+        "script_directory": "present",
+        "regular_script_count": 2,
+        "non_executable_script_count": 0,
+        "startup_policy": "unknown",
+        "termux_boot_command_available": false,
+        "read_only": true
+      }
+    },
+    "recovery_status": {
+      "exit_code": 0,
+      "summary": {
+        "unresolved_count": 0,
+        "read_only": true
+      }
+    },
+    "reboot_status": {
+      "exit_code": 0,
+      "summary": {
+        "tests": [
+          {
+            "state": "boot_observed",
+            "readiness": "NOT_READY",
+            "automatic_resume": false
+          },
+          {
+            "state": "inconclusive",
+            "readiness": "NOT_READY",
+            "automatic_resume": false
+          },
+          {
+            "state": "prepared",
+            "readiness": "NOT_READY",
+            "automatic_resume": false
+          }
+        ],
+        "automatic_resume": false
+      }
+    },
+    "wakelock_status": {
+      "exit_code": 0,
+      "summary": {
+        "registered_owners": [
+          "native.sshd"
+        ],
+        "boot_id_relation": "match",
+        "platform_lock_state": "unknown",
+        "acquire_or_release_invoked": false,
+        "read_only": true
+      }
+    }
+  },
+  "limits": [
+    "GUI visibility is not observable by CLI.",
+    "Debian PRoot ownership and session owner remain unverified; inventory does not enter the guest.",
+    "Listener PID ownership cannot be confirmed where Android denies socket-table access.",
+    "Termux:Boot delivery and Android background policy remain unverified.",
+    "Reboot checkpoint readiness is NOT_READY and automatic resume remains disabled.",
+    "This read-only snapshot does not establish audio playback, Shizuku permission, off-home connectivity, or Ternux workload ownership."
+  ]
+}

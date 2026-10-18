@@ -1,0 +1,8 @@
+event_id: test-49db2f9d4fe1-c6bef3c746b661a4
+repository: soobujmiah/ternuxx
+commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
+kind: test
+occurred_at: '2026-10-17T12:17:50Z'
+status: passed
+summary: native Termux suite 151/151 (31.404s); focused boot/service recovery API
+  and journal tests 40 passed; CLI help and static checks passed

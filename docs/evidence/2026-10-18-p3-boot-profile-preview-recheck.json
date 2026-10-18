@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-18T00:12:55Z",
+  "scope": "read-only native Termux boot profile status and previews",
+  "mutation_performed": false,
+  "commands": {
+    "status": {
+      "exit_code": 0,
+      "data": {
+        "api_version": 1,
+        "data": {
+          "actions": [
+            "start no graphical session; keep separately configured CLI services"
+          ],
+          "blockers": [],
+          "component": "boot_profile_preview",
+          "configuration_source": "default",
+          "configured_profile": "cli-only",
+          "generated_script": "#!/data/data/com.termux/files/usr/bin/bash\n# Ternuxx-managed boot profile v1\nset -eu\n# CLI-only: no desktop process is started.",
+          "managed_script_path": "/data/data/com.termux/files/home/.termux/boot/10-ternuxx-profile",
+          "readiness_scope": "startup command prerequisites only; Termux:Boot delivery and Android background policy are not verified",
+          "ready": true,
+          "requested_profile": "cli-only",
+          "safety": {
+            "boot_config_changed": false,
+            "existing_proot_touched": false,
+            "read_only": true,
+            "script_installed": false,
+            "silent_provider_fallback": false
+          },
+          "schema_version": 1
+        },
+        "ok": true,
+        "operation": "boot.profile.status",
+        "request_id": "e2aef1a332794dff9643594ea80de23a"
+      }
+    },
+    "cli-only": {
+      "exit_code": 0,
+      "data": {
+        "api_version": 1,
+        "data": {
+          "actions": [
+            "start no graphical session; keep separately configured CLI services"
+          ],
+          "blockers": [],
+          "component": "boot_profile_preview",
+          "configuration_source": "default",
+          "configured_profile": "cli-only",
+          "generated_script": "#!/data/data/com.termux/files/usr/bin/bash\n# Ternuxx-managed boot profile v1\nset -eu\n# CLI-only: no desktop process is started.",
+          "managed_script_path": "/data/data/com.termux/files/home/.termux/boot/10-ternuxx-profile",
+          "readiness_scope": "startup command prerequisites only; Termux:Boot delivery and Android background policy are not verified",
+          "ready": true,
+          "requested_profile": "cli-only",
+          "safety": {
+            "boot_config_changed": false,
+            "existing_proot_touched": false,
+            "read_only": true,
+            "script_installed": false,
+            "silent_provider_fallback": false
+          },
+          "schema_version": 1
+        },
+        "ok": true,
+        "operation": "boot.profile.preview",
+        "request_id": "139d75191fdf49f7bbc0ff09fb50b064"
+      }
+    },
+    "native": {
+      "exit_code": 0,
+      "data": {
+        "api_version": 1,
+        "data": {
+          "actions": [
+            "start Ternuxx-owned native X11/XFCE; Android activity visibility remains unverified"
+          ],
+          "blockers": [],
+          "component": "boot_profile_preview",
+          "configuration_source": "default",
+          "configured_profile": "cli-only",
+          "generated_script": "#!/data/data/com.termux/files/usr/bin/bash\n# Ternuxx-managed boot profile v1\nexport PREFIX=\"/data/data/com.termux/files/usr\"\nexec \"/data/data/com.termux/files/usr/bin/ternuxx\" start",
+          "managed_script_path": "/data/data/com.termux/files/home/.termux/boot/10-ternuxx-profile",
+          "readiness_scope": "startup command prerequisites only; Termux:Boot delivery and Android background policy are not verified",
+          "ready": true,
+          "requested_profile": "native",
+          "safety": {
+            "boot_config_changed": false,
+            "existing_proot_touched": false,
+            "read_only": true,
+            "script_installed": false,
+            "silent_provider_fallback": false
+          },
+          "schema_version": 1
+        },
+        "ok": true,
+        "operation": "boot.profile.preview",
+        "request_id": "89b37defc0be43c1b55a83b8ab9e32c7"
+      }
+    },
+    "proot": {
+      "exit_code": 0,
+      "data": {
+        "api_version": 1,
+        "data": {
+          "actions": [
+            "no startup action; resolve the listed provider prerequisites first"
+          ],
+          "blockers": [
+            "Ternux Debian ownership-aware adapter is not implemented; no provider fallback will run"
+          ],
+          "component": "boot_profile_preview",
+          "configuration_source": "default",
+          "configured_profile": "cli-only",
+          "generated_script": "",
+          "managed_script_path": "/data/data/com.termux/files/home/.termux/boot/10-ternuxx-profile",
+          "readiness_scope": "startup command prerequisites only; Termux:Boot delivery and Android background policy are not verified",
+          "ready": false,
+          "requested_profile": "proot",
+          "safety": {
+            "boot_config_changed": false,
+            "existing_proot_touched": false,
+            "read_only": true,
+            "script_installed": false,
+            "silent_provider_fallback": false
+          },
+          "schema_version": 1
+        },
+        "ok": true,
+        "operation": "boot.profile.preview",
+        "request_id": "c349bbce963f429ebe2d99cabe694c94"
+      }
+    },
+    "hybrid": {
+      "exit_code": 0,
+      "data": {
+        "api_version": 1,
+        "data": {
+          "actions": [
+            "no startup action; resolve the listed provider prerequisites first"
+          ],
+          "blockers": [
+            "native XFCE plus Ternux workload-routing adapter is not implemented; no provider fallback will run"
+          ],
+          "component": "boot_profile_preview",
+          "configuration_source": "default",
+          "configured_profile": "cli-only",
+          "generated_script": "",
+          "managed_script_path": "/data/data/com.termux/files/home/.termux/boot/10-ternuxx-profile",
+          "readiness_scope": "startup command prerequisites only; Termux:Boot delivery and Android background policy are not verified",
+          "ready": false,
+          "requested_profile": "hybrid",
+          "safety": {
+            "boot_config_changed": false,
+            "existing_proot_touched": false,
+            "read_only": true,
+            "script_installed": false,
+            "silent_provider_fallback": false
+          },
+          "schema_version": 1
+        },
+        "ok": true,
+        "operation": "boot.profile.preview",
+        "request_id": "1f9fbaa0699340b2961fcc46d7b81390"
+      }
+    }
+  },
+  "limits": [
+    "Previews do not prove Termux:Boot delivery after Android boot.",
+    "Native ready means prerequisites only; GUI visibility is not established.",
+    "PRoot and hybrid stay blocked until ownership-aware adapters exist."
+  ]
+}

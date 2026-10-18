@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_installed_ternux_cli_identity_probe",
+  "observed_at_utc": "2026-10-18T06:36:10Z",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "Read-only native Termux command path, file metadata, SHA-256, and dpkg ownership; no CLI execution, Ternux state read, guest entry, or lifecycle action.",
+  "result": {
+    "command_relative_to_prefix": "bin/ternux",
+    "file_type": "regular file",
+    "mode_octal": "755",
+    "size_bytes": 3739,
+    "sha256": "03dc25c67debde8195673f5f5594651f3e4fd4466cbcb61f57ac01b4e48c233a",
+    "dpkg_owner": "none",
+    "native_home_ternux_git_checkout": "absent"
+  },
+  "interpretation": "The installed command is a standalone, unowned executable and no local Ternux Git checkout was available for byte-for-byte comparison. Its source identity and version-to-file binding remain unverified; earlier `ternux --version` output is separate evidence.",
+  "mutations": []
+}

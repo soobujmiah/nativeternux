@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "scope": "P3 continuation regression check after typed native PulseAudio endpoint diagnostics",
+  "tests": {
+    "full_command": "bash scripts/repo_test.sh",
+    "full_result": "207/207 passed",
+    "full_elapsed_seconds": 33.461,
+    "focused_endpoint_cases": "2 passed in full suite: read-only typed endpoint and unavailable/unknown distinction"
+  },
+  "repository_checks": {
+    "repo_knowledge_verify": "PASS; 0 findings",
+    "compileall_lib_tests": "PASS",
+    "cli_help_contract": "PASS",
+    "phase_docs_refresh": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "device_mutations": [],
+  "limitations": [
+    "Fixture tests do not close P3 device-only boot, GUI visibility, listener ownership, Shizuku, or Ternux ownership/workload gates.",
+    "No device verification or lifecycle/package/service mutation was run as part of this repository regression check.",
+    "No audible guest playback was tested; endpoint metadata and control-protocol checks do not establish audible output."
+  ],
+  "recorded_at_utc": "2026-10-18T01:25:38Z"
+}

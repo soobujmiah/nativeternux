@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_shizuku_readonly_runtime_recheck",
+  "observed_at_utc": "2026-10-18T05:57:50+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "targeted Android package metadata, exact process-name probe, and Termux PATH lookup only; no app launch/UI, Shizuku permission request, ADB Wi-Fi, service, package, or network action",
+  "exact_process_probe": {
+    "exit_code": 1,
+    "observed_present": false,
+    "pid_output_recorded": false
+  },
+  "rish_command_present": false,
+  "server_permission_and_watchdog": "unknown; not exposed by these read-only checks",
+  "package_installed": {
+    "verified": true,
+    "package_path_recorded": false
+  },
+  "version_query": {
+    "parsed_version_code": 1318,
+    "query_exit_code": 0,
+    "stderr_class": "SecurityException / INTERACT_ACROSS_USERS_FULL; raw stderr omitted",
+    "interpretation": "The package path query confirms installation. The version output is corroborative only because pm emitted a permission error; the earlier independent versionCode 1318 record remains primary."
+  }
+}

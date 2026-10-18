@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/desktop-session-recovery.schema.json",
+  "title": "Native desktop session journal recovery response",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "record_kind", "record_updated_at", "requested_display", "affected_paths", "observed_session_status", "process_states", "session_sha256", "resolution", "plan_id", "requires_confirmation", "changed", "read_only", "impact"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "record_kind": {"enum": ["desktop.start", "desktop.stop"]},
+        "record_updated_at": {"type": "string", "format": "date-time"},
+        "requested_display": {"type": ["string", "null"], "pattern": "^:[0-9]{1,2}$"},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1}},
+        "observed_session_status": {"enum": ["absent", "failed", "stopped", "running", "stop_incomplete"]},
+        "process_states": {"type": "object", "additionalProperties": false, "required": ["supervisor", "x11", "desktop"], "properties": {"supervisor": {"enum": ["live", "absent"]}, "x11": {"enum": ["live", "absent"]}, "desktop": {"enum": ["live", "absent"]}}},
+        "session_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "resolution": {"enum": ["complete", "failed"]},
+        "plan_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "requires_confirmation": {"const": true}, "changed": {"const": false}, "read_only": {"const": true}, "impact": {"type": "string"}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "resolution", "observed_session_status", "changed", "read_only", "affected_paths", "desktop_processes_signaled", "session_file_changed"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "resolution": {"enum": ["complete", "failed"]},
+        "observed_session_status": {"enum": ["absent", "failed", "stopped", "stop_incomplete", "running"]},
+        "affected_paths": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "string", "minLength": 1}},
+        "changed": {"const": true}, "read_only": {"const": false},
+        "desktop_processes_signaled": {"const": false}, "session_file_changed": {"const": false}
+      }
+    }
+  ]
+}

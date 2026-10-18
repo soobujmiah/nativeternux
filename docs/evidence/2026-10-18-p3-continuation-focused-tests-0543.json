@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_continuation_focused_regression_tests",
+  "observed_at_utc": "2026-10-18T05:42:38+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "results": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_proot_diagnostics.py"
+      ],
+      "exit_code": 0,
+      "output": "....................\n----------------------------------------------------------------------\nRan 20 tests in 0.005s\n\nOK"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_management_service.py"
+      ],
+      "exit_code": 0,
+      "output": "........................\n----------------------------------------------------------------------\nRan 24 tests in 0.145s\n\nOK"
+    }
+  ],
+  "total_tests": 44,
+  "all_passed": true
+}

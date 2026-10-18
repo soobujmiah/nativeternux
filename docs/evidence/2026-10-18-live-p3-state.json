@@ -1,0 +1,65 @@
+{
+  "backups": {
+    "count": 0,
+    "read_only": true
+  },
+  "boot": {
+    "app": "installed",
+    "non_executable_script_count": 0,
+    "regular_script_count": 2,
+    "script_directory": "present",
+    "startup_policy": "unknown",
+    "termux_boot_command_available": false
+  },
+  "captured_at": "2026-10-17T23:37:33Z",
+  "desktop": {
+    "audio_owner": "external",
+    "display": ":1",
+    "gui_visible": "unknown",
+    "status": "running",
+    "supervisor": "yes",
+    "x11": "yes",
+    "xfce4_session": "yes"
+  },
+  "doctor": {
+    "overall": "pass",
+    "read_only": true,
+    "summary": {
+      "error": 0,
+      "info": 14,
+      "pass": 14,
+      "warning": 0
+    }
+  },
+  "proot": {
+    "guest_entered": false,
+    "installed_distributions": [
+      "debian"
+    ],
+    "manager_available": true,
+    "ownership": "unverified",
+    "read_only": true,
+    "status": "installed"
+  },
+  "recovery": {
+    "read_only": true,
+    "record_count": 0,
+    "unresolved_count": 0
+  },
+  "schema_version": 1,
+  "scope": "read-only native Termux state observation; no package, desktop, service, boot, or PRoot mutation",
+  "ssh": {
+    "config_syntax": "valid",
+    "definition_identity": "verified",
+    "listener_daemon_correlation": "not_performed",
+    "loopback_probe": {
+      "address": "127.0.0.1",
+      "port": 8023,
+      "status": "ssh_banner"
+    },
+    "manager": "runit",
+    "read_only": true,
+    "service_status": "running",
+    "tcp_listener_observation": "unavailable"
+  }
+}

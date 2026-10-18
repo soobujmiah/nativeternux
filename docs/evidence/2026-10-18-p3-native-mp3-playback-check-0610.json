@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "record_type": "native-termux-audio-playback-smoke-check",
+  "observed_at_utc_minute": "2026-10-18T06:10Z",
+  "input_scope": "one regular MP3 in native Termux HOME/Desktop; personal filename and content intentionally omitted",
+  "player": "termux-media-player",
+  "play_sample_seconds": 8,
+  "results": {
+    "play_command_exit_code": 0,
+    "playback_info_exit_code": 0,
+    "playback_info_returned_output": true,
+    "stop_command_exit_code": 0
+  },
+  "native_pulseaudio_endpoint": "available by separate pactl info probe; this player test does not prove the PulseAudio client path or PRoot guest audio",
+  "audible_confirmation": "pending owner confirmation",
+  "safety": {
+    "file_modified": false,
+    "file_name_recorded": false,
+    "package_changes": false,
+    "service_or_desktop_lifecycle_changes": false,
+    "network_accessed": false,
+    "proot_entered": false
+  }
+}

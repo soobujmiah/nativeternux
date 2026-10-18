@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-off-home-private-access-live-policy-recheck",
+  "observed_at_utc": "2026-10-18T02:17:18Z",
+  "runtime": "native Termux shell on attached target",
+  "commands": [
+    "./ternuxx --json remote access preview",
+    "./ternuxx --json remote access preview --policy-stdin"
+  ],
+  "default_preview": {
+    "exit_code": 0,
+    "mode": "disabled",
+    "readiness": "disabled",
+    "remote_access_active": false,
+    "public_ingress": false,
+    "transport_state": "not_probed",
+    "safety": {
+      "credentials_resolved": false,
+      "files_changed": false,
+      "network_accessed": false,
+      "public_ingress_enabled": false,
+      "services_changed": false
+    }
+  },
+  "private_preview": {
+    "exit_code": 0,
+    "mode": "private_transport",
+    "readiness": "unavailable",
+    "remote_access_active": false,
+    "public_ingress": false,
+    "transport_state": "not_probed",
+    "transport_kind": "vpn_overlay",
+    "allowed_client_count": 1,
+    "allowed_target_count": 1,
+    "capability_count": 1,
+    "blockers": [
+      "private transport adapter is not implemented",
+      "transport route and client identity are not verified"
+    ],
+    "safety": {
+      "credentials_resolved": false,
+      "files_changed": false,
+      "network_accessed": false,
+      "public_ingress_enabled": false,
+      "services_changed": false
+    }
+  },
+  "privacy_check": {
+    "dummy_credential_reference_emitted": false,
+    "client_reference_emitted": false,
+    "no_real_secret_supplied": true
+  },
+  "tests": {
+    "command": "python3 -m unittest tests.test_remote_access_policy tests.test_management_service -v",
+    "result": "passed",
+    "passed": 30,
+    "failed": 0
+  },
+  "limitations": [
+    "Preview is offline and does not persist config, resolve credential refs, probe network, or configure a transport.",
+    "No provider selected or adapter implemented; no device/router/network changes.",
+    "Private mode is unavailable; no off-home connection is qualified."
+  ],
+  "safety": {
+    "network_accessed": false,
+    "credentials_resolved": false,
+    "files_changed_by_cli": false,
+    "services_changed": false,
+    "public_ingress_enabled": false,
+    "device_mutation_performed": false
+  },
+  "mutations": []
+}

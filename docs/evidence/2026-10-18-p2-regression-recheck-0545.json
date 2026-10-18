@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "record_type": "p2_current_regression_tests",
+  "observed_at_utc": "2026-10-18T05:44:57+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "scope": "repository fixtures only; package apply argv is intercepted and desktop processes are mocks; no device APT or desktop lifecycle action",
+  "results": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_package_plan.py"
+      ],
+      "exit_code": 0,
+      "tests_run": 11,
+      "reported_duration_seconds": 4.505,
+      "output": ".......unsafe installer state path: '/data/data/com.termux/files/usr/tmp/ternuxx-outside-v0rjrh_b' is not in the subpath of '/data/data/com.termux/files/usr/tmp/ternuxx-install-path-s3i3mw4a'\nunsafe installer state path: state path contains a symbolic link\n..Package index is stale or future-dated: termux-main (epoch 1790574280)\n..\n----------------------------------------------------------------------\nRan 11 tests in 4.505s\n\nOK"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_desktop_lifecycle_fixture.py"
+      ],
+      "exit_code": 0,
+      "tests_run": 8,
+      "reported_duration_seconds": 16.673,
+      "output": "........\n----------------------------------------------------------------------\nRan 8 tests in 16.673s\n\nOK"
+    }
+  ],
+  "total_tests": 19,
+  "all_passed": true
+}

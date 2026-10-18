@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-18T10:50:53Z",
+  "phase": "P3",
+  "method": "native SSH 8022 manager; authorized PRoot-host ADB verification",
+  "xgo_alias": "am start -n com.termux.x11/com.termux.x11.MainActivity 2>/dev/null; sleep 1; ~/x.sh",
+  "xgo_scope_review": "~/x.sh broadly kills Termux:X11, VirGL, and PulseAudio processes, deletes wildcard X11/audio sockets, then starts Debian PRoot XFCE on :0; full alias was not run to preserve the active manager session.",
+  "launcher_finding": "/system/bin/am is rejected for this Termux UID; $PREFIX/bin/am is the Termux am wrapper using app_process and it successfully starts the activity.",
+  "change": "lib/desktop.sh now invokes $PREFIX/bin/am instead of /system/bin/am.",
+  "live_test": {
+    "precondition": "ADB force-stop left Termux:X11 activity closed; native Ternuxx session already healthy on :2.",
+    "command": "./ternuxx --json start via SSH 8022",
+    "result": {
+      "start": "running",
+      "display": ":2",
+      "activity_request": "accepted",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "adb_confirmation": {
+      "package_process_pid": 17642,
+      "top_resumed_activity": "com.termux.x11/.MainActivity"
+    },
+    "native_status": {
+      "status": "running",
+      "display": ":2",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown"
+    }
+  },
+  "display_1": ".X1-lock and X1 socket remain. Lock PID 24612 was absent from both Termux ps and ADB shell ps; artifacts were preserved.",
+  "boot_profile": "cli-only",
+  "outcome": "Termux activity launch works for the native manager through the Termux am wrapper. Activity is foreground; visible desktop rendering remains unverified."
+}

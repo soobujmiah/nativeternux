@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-display-process-diagnostic-implementation",
+  "observed_at_utc": "2026-10-18T02:08:12Z",
+  "implementation": {
+    "module": "lib/proot_diagnostics.py",
+    "behavior": "When guest X11 is unavailable and guest-reported display matches the requested display, perform a bounded read-only Termux-visible ps query and add a blocker only if that display is not observed.",
+    "privacy": "The process inventory query reads only PID/comm for visible processes, then retrieves argv only for matching termux-x11 PIDs (maximum 8); PID/argv are not returned or persisted.",
+    "blocker_schema": "Existing blockers field only; kept within its declared maximum of four. No response schema/API version change.",
+    "bounded_process_candidates": 8
+  },
+  "tests": {
+    "focused_command": "python3 -m unittest tests.test_proot_diagnostics tests.test_management_service -v",
+    "focused_result": "passed",
+    "focused_passed": 39,
+    "focused_failed": 0,
+    "full_suite": {
+      "command": "bash scripts/repo_test.sh",
+      "result": "passed",
+      "passed": 210,
+      "failed": 0,
+      "duration_seconds": 73.61,
+      "runtime": "local PRoot Debian test runner; fixture/unit evidence, not native Android runtime qualification"
+    }
+  },
+  "live_device_checks": {
+    "display_0": {
+      "command": "./ternuxx --json proot verify --distro debian --guest-user [redacted] --display :0 --backend zink",
+      "status": "partial",
+      "x11": "unavailable",
+      "renderer": "unavailable",
+      "audio_control": "reachable",
+      "new_blocker": "requested display :0 not observed in the Termux-visible X11 process list",
+      "profile_owner": "unverified"
+    },
+    "display_1": {
+      "command": "./ternuxx --json proot verify --distro debian --guest-user [redacted] --display :1 --backend zink",
+      "status": "complete",
+      "x11": "reachable",
+      "renderer": "zink Vulkan 1.4 / Adreno 825 / Mesa Turnip",
+      "audio_control": "reachable",
+      "profile_owner": "unverified"
+    }
+  },
+  "safety": {
+    "read_only": true,
+    "packages_changed": false,
+    "guest_write_command_invoked": false,
+    "host_lifecycle_started": false,
+    "host_lifecycle_stopped": false,
+    "services_started": false,
+    "services_stopped": false,
+    "boot_config_changed": false
+  },
+  "limits": [
+    "Process-table visibility does not prove a server is absent; hidden or differently named processes are not ruled out.",
+    "A matching display process does not prove server connectivity or Ternux ownership.",
+    "The verifier checks control reachability; it does not play audio or establish audible output."
+  ],
+  "mutations": [],
+  "post_probe_readonly_state": {
+    "native_desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "proot_inventory": {
+      "status": "installed",
+      "distributions": [
+        "debian"
+      ],
+      "guest_entered": false,
+      "ownership": "unverified"
+    },
+    "lifecycle_or_package_actions": []
+  },
+  "final_validation_at_utc": "2026-10-18T02:10:55Z"
+}

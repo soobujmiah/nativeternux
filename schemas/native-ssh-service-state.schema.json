@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ternuxx:schema:native-ssh-service-state:v1",
+  "title": "Ternuxx native SSH observed service state",
+  "description": "Sanitized observed runtime state. Never include credentials, key bytes, or raw sshd configuration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "provider",
+    "owner",
+    "state",
+    "observed_at",
+    "auth_state",
+    "observed_auth_methods",
+    "boot_state",
+    "wakelock_leases",
+    "last_operation_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "provider": {"const": "native_termux"},
+    "owner": {"enum": ["external_unmanaged", "ternuxx_managed", "unknown"]},
+    "state": {"enum": ["unconfigured", "inspecting", "plan_ready", "staging", "validating", "ready_to_apply", "starting", "health_check", "running", "stopping", "stopped", "restarting", "degraded", "failed", "recovery_required", "unknown_owner"]},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "endpoint": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["bind_class", "port", "listener_verified"],
+      "properties": {
+        "bind_class": {"enum": ["loopback", "explicit_address", "unknown"]},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "listener_verified": {"type": "boolean"}
+      }
+    },
+    "process_identity": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["pid", "start_time_token", "executable_id", "config_revision"],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "start_time_token": {"type": "string", "minLength": 1, "maxLength": 128},
+        "executable_id": {"enum": ["openssh_sshd", "unknown"]},
+        "config_revision": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "auth_state": {"enum": ["public_key_verified", "legacy_policy_preserved", "failed", "unknown", "not_tested"]},
+    "observed_auth_methods": {"type": "array", "items": {"enum": ["public_key", "password", "keyboard_interactive", "unknown"]}, "uniqueItems": true},
+    "boot_state": {"enum": ["disabled", "enabled_verified", "enabled_unverified", "unavailable", "unknown"]},
+    "wakelock_leases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["lease_id", "owner_service_id", "state"],
+        "properties": {
+          "lease_id": {"$ref": "#/$defs/opaqueRef"},
+          "owner_service_id": {"type": "string", "pattern": "^[a-z0-9_.-]{1,96}$"},
+          "state": {"enum": ["held", "released", "failed", "unknown"]}
+        }
+      }
+    },
+    "last_operation_id": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/opaqueRef"}]},
+    "last_error_code": {"type": ["string", "null"], "maxLength": 96}
+  },
+  "$defs": {
+    "opaqueRef": {"type": "string", "pattern": "^[A-Za-z0-9_-]{8,128}$"}
+  }
+}

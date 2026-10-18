@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-18T00:20:20Z",
+  "scope": "read-only live Doctor verification of Shizuku capability disclosure",
+  "command": "./ternuxx doctor --json",
+  "exit_code": 1,
+  "overall": "warning",
+  "summary": {
+    "pass": 14,
+    "info": 14,
+    "warning": 1,
+    "error": 0
+  },
+  "finding": {
+    "id": "NTX-APP-103",
+    "severity": "info",
+    "scope": "android-addons",
+    "observed": "Shizuku app: present; Ternuxx provider: not implemented; release/build identity, service, and permission: unknown",
+    "suggested_action": "No Ternuxx operation currently uses Shizuku or enables ADB-over-Wi-Fi. Verify upstream/custom build identity and permission before provider integration."
+  },
+  "device_mutations": [],
+  "source_change": "Doctor now separates Shizuku package presence from Ternuxx provider implementation and reports release/build identity, service, and permission as unknown.",
+  "limits": [
+    "Android package presence does not verify signature or upstream/custom build identity.",
+    "Shizuku service and permission state remain unverified.",
+    "No ADB-over-Wi-Fi runtime state is inferred from this source capability statement."
+  ]
+}

@@ -1,0 +1,12 @@
+event_id: test-49db2f9d4fe1-4d12654269cf6c21
+repository: soobujmiah/ternuxx
+commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
+kind: test
+occurred_at: '2026-10-17T12:17:50Z'
+status: passed
+summary: 'Native Termux full suite 158/158 passed in 32.471s; focused recovery and
+  management 47/47 passed in 1.077s. CLI help, compileall, shell syntax, all recovery
+  schemas, JSON, and diff check pass. All supported recovery previews list their single
+  affected journal path. Read-only target: unresolved 0, desktop :1 active, Debian
+  installed/ownership unverified. P2 historical 77-package closure corroborated 77/77
+  exact current installed versions.'

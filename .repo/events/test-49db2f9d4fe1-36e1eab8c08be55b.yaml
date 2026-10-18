@@ -1,0 +1,8 @@
+event_id: test-49db2f9d4fe1-36e1eab8c08be55b
+repository: soobujmiah/ternuxx
+commit: 49db2f9d4fe1a7a1fc032acbb8cb4950eaec6d83
+kind: test
+occurred_at: '2026-10-17T12:17:50Z'
+status: passed
+summary: native Termux suite 143/143 (31.110s); focused service recovery 38 passed;
+  CLI help contract passed; compileall, shell syntax, schema JSON and diff check passed

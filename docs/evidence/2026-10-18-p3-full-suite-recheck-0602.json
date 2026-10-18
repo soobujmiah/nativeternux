@@ -1,0 +1,21 @@
+{
+  "date_utc": "2026-10-18T06:02:09Z",
+  "scope": "full repository regression suite from the current working tree",
+  "command": "python3 -m unittest discover -s tests -q",
+  "result": {
+    "status": "passed",
+    "tests_run": 218,
+    "failures": 0,
+    "errors": 0,
+    "duration_seconds": 106.265
+  },
+  "notes": [
+    "The suite emitted expected fixture diagnostics for unsafe installer state paths.",
+    "A package-index staleness warning was emitted by a fixture; no package transaction or device reboot was performed."
+  ],
+  "device_actions": {
+    "reboot": false,
+    "package_changes": false,
+    "desktop_lifecycle_changes": false
+  }
+}

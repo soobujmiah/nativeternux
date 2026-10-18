@@ -1,0 +1,235 @@
+{
+  "report_id": "TERN-20261017-REBOOT-IMPL-02",
+  "captured_at": "2026-10-17T17:12:00Z",
+  "repository": {
+    "id": "soobujmiah/ternuxx",
+    "path": "$HOME/nativeternux",
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "working_tree": "dirty; 38 modified and 48 untracked paths at report time; existing work preserved; no commit or push"
+  },
+  "readiness": "READY FOR OWNER-OPERATED REBOOT",
+  "test_id": "TERN-20261017-RB03",
+  "checkpoint": {
+    "path": "$HOME/.local/share/nativeternux/continuity/reboot-tests/TERN-20261017-RB03.json",
+    "state": "prepared",
+    "readiness": "NOT_READY (checkpoint schema initializes this field; human-readable gate is READY)",
+    "mode": "0600",
+    "nonce": "stored only in native private state; not included in this report",
+    "previous_boot_id": "captured in private checkpoint; omitted here",
+    "automatic_resume": false,
+    "application_readback": "PASS",
+    "earlier_checkpoint": "RB02 retained unchanged; manually invoked observer recorded same-boot inconclusive at 2026-10-17T17:07:53Z"
+  },
+  "native_runtime": {
+    "termux_version": "0.119.0-beta.3",
+    "service_supervisor": "termux-services/runit installed",
+    "managed_ssh": {
+      "service_id": "ternuxx-sshd",
+      "service_status": "running and enabled",
+      "config_path": "$HOME/.config/ternuxx/sshd_recovery.conf",
+      "config_mode": "0600",
+      "effective_endpoint": "127.0.0.1:8023",
+      "auth_methods": [
+        "password",
+        "keyboard-interactive",
+        "publickey"
+      ],
+      "host_identity": "existing Termux host keys reused; fingerprints matched the earlier native endpoint",
+      "syntax_validation": "PASS",
+      "effective_policy": "sshd -T reported AddressFamily inet and ListenAddress 127.0.0.1:8023",
+      "daemon_log": "Server listening on 127.0.0.1 port 8023",
+      "same_device_authenticated_connection": "PASS before and after old daemon stop",
+      "native_repository_access": "PASS; path $HOME/nativeternux, branch main, commit 1a891faabc925136c1801f40194b0969d28041df; 17 modified and 8 untracked paths observed",
+      "duplicate_managed_daemons": "one exact candidate-config sshd process observed after repeated sv-enable",
+      "legacy_8022_daemon": "stopped after candidate validation; original SSH config and keys unchanged",
+      "kernel_socket_table": "UNAVAILABLE; Android procfs denied and netstat lacks TCP support; daemon log and authenticated loopback connection are the available bind evidence",
+      "external_reachability": "NOT_TESTED"
+    },
+    "boot": {
+      "service_entry": "$HOME/.termux/boot/00-ternuxx-services",
+      "continuity_observer": "$HOME/.termux/boot/ternuxx-recovery",
+      "both_executable": true,
+      "only_ternuxx_sshd_enabled": true,
+      "termux_boot_app_owner_attestation": "Owner reports opening Termux:Boot from Android launcher in this turn",
+      "official_first_launch_requirement": "owner action completed; official README says first launch allows boot execution",
+      "diagnostic_package_state": "UNKNOWN; Android package service query failed with failed transaction",
+      "startup_policy": "UNKNOWN from diagnostic API",
+      "manual_startup_hook": "PASS earlier; returned ready without changing managed SSH service PID",
+      "real_reboot_execution": "NOT_TESTED; owner-operated reboot is next action"
+    },
+    "wakelock": {
+      "coordinator_state_after_test": "native.sshd only",
+      "isolated_xgo_owner_during_test": "native.sshd and proot.desktop",
+      "proot_desktop_release": "removed only proot.desktop lease; native.sshd lease remained",
+      "android_global_holder_state": "UNKNOWN; Termux exposes app-global acquire/release and current adapter cannot observe platform holder state",
+      "recheck": "Only native.sshd lease present; platform-global lock holder unknown"
+    },
+    "ssh_diagnostic_recheck": {
+      "authenticated_connection_8023": "PASS; current session",
+      "managed_runit_service": "running, runit PID 8266 at recheck",
+      "managed_daemon": "candidate-config sshd process observed; same-device connection works",
+      "generic_ssh_inspector_caveat": "ternuxx ssh inspect reads stock Termux config (wildcard 8022 policy) and cannot correlate socket; do not treat that output as the active managed candidate. Candidate 8023 was separately validated earlier.",
+      "socket_binding": "not independently enumerated; candidate effective policy and bind log plus authenticated loopback test remain evidence",
+      "external_reachability": "NOT_TESTED"
+    }
+  },
+  "launcher": {
+    "path": "$HOME/x.sh",
+    "backup": "$HOME/x.sh.ternuxx-backup-20261017T163623Z",
+    "backup_sha256": "196edaa59a8e7990198781a3551058b0c29d67961bad47d816102374fe90734a",
+    "changes": "two Wake Lock calls use owner coordinator; all other launcher code unchanged",
+    "syntax": "PASS",
+    "isolated_xgo_start_stop": "PASS; Termux:X11 and XFCE started, then test session exited; optional DBus/systemd/colord and Android procfs warnings observed",
+    "remaining_risk": "x.sh still globally terminates X11/virgl/PulseAudio and removes their sockets; do not run while unrelated workloads are active"
+  },
+  "preservation": {
+    "proot_rootfs": "unchanged",
+    "existing_proot_process_during_xgo_test": "remained present",
+    "db_alias": "verified as direct proot-distro login without GUI; no extra db session started",
+    "xgo_alias": "preserved; isolated run exercised after x.sh Wake Lock change",
+    "separate_ternux_repositories": "not modified",
+    "native_checkout": "not modified; installed runtime is under $PREFIX and native home service/config paths",
+    "uncommitted_work": "preserved; no commit or push"
+  },
+  "tests": [
+    {
+      "id": "HOST-UNIT-01",
+      "environment": "host unittest/mocks",
+      "result": "PASS",
+      "detail": "45 tests passed in 31.682 seconds"
+    },
+    {
+      "id": "HOST-CLI-01",
+      "environment": "host shell",
+      "result": "PASS",
+      "detail": "CLI help contract script passed"
+    },
+    {
+      "id": "HOST-SYNTAX-01",
+      "environment": "host shell/Python",
+      "result": "PASS",
+      "detail": "Bash syntax checks passed; Python AST parsed 24 source/test files"
+    },
+    {
+      "id": "HOST-DATA-01",
+      "environment": "host",
+      "result": "PASS",
+      "detail": "20 JSON files parsed; YAML files parsed"
+    },
+    {
+      "id": "HOST-SCHEMA-01",
+      "environment": "host",
+      "result": "PARTIAL",
+      "detail": "JSON Schema validator unavailable; native checkpoint passed application-level _read_record validation and mode/readback checks"
+    },
+    {
+      "id": "HOST-REPO-01",
+      "environment": "host repository",
+      "result": "PASS",
+      "detail": "python3 -m tools.repo_knowledge verify reported 0 findings"
+    },
+    {
+      "id": "HOST-LINKS-01",
+      "environment": "host repository",
+      "result": "PASS",
+      "detail": "Local Markdown target scan found 0 missing targets"
+    },
+    {
+      "id": "HOST-DIFF-01",
+      "environment": "host repository",
+      "result": "PASS",
+      "detail": "git diff --check passed"
+    },
+    {
+      "id": "NATIVE-SSH-01",
+      "environment": "live Native Termux and same-device PRoot",
+      "result": "PASS",
+      "detail": "Candidate config syntax/effective loopback policy passed, daemon log showed 127.0.0.1:8023, existing host key fingerprints matched, password authentication succeeded, native checkout read succeeded, and new connection succeeded after legacy daemon stop"
+    },
+    {
+      "id": "NATIVE-RUNIT-01",
+      "environment": "live Native Termux",
+      "result": "PASS",
+      "detail": "Only Ternuxx custom service enabled; repeated enable remained idempotent; one exact candidate daemon process; stock sshd and ssh-agent services remain down"
+    },
+    {
+      "id": "NATIVE-WAKELOCK-01",
+      "environment": "live Native Termux",
+      "result": "PASS_WITH_LIMITATION",
+      "detail": "Coordinator lease behavior exercised across a separate xgo session; native.sshd lease survived proot.desktop cleanup; Android global holder remains unknown"
+    },
+    {
+      "id": "NATIVE-XGO-01",
+      "environment": "live Native Termux + existing PRoot + Termux:X11",
+      "result": "PASS_WITH_WARNINGS",
+      "detail": "New GUI session started and exited; existing PRoot process and native SSH service remained alive; optional desktop service warnings; no visual/audio quality qualification"
+    },
+    {
+      "id": "NATIVE-CHECKPOINT-01",
+      "environment": "live Native Termux",
+      "result": "PASS",
+      "detail": "RB03 private checkpoint read back through application validator; state prepared, checkpoint readiness field NOT_READY by design, nonce retained privately, mode 0600, previous boot ID present, automatic resume false. RB02 remains retained as same-boot inconclusive history."
+    },
+    {
+      "id": "NATIVE-BOOT-02",
+      "environment": "live Native Termux manual hook invocation",
+      "result": "PASS_WITH_LIMITATION",
+      "detail": "00-ternuxx-services manual invocation exited 0, returned ready, and retained same runit service PID. Observer dry-run was non-mutating; a later manual observer invocation recorded RB02 as same-boot inconclusive. This is not Termux:Boot execution evidence."
+    },
+    {
+      "id": "NATIVE-BOOT-01",
+      "environment": "live Native Termux",
+      "result": "PARTIAL",
+      "detail": "Owner opened Termux:Boot once; native package service query remains unknown and actual receiver/script execution is not run until owner reboot."
+    },
+    {
+      "id": "DEVICE-REBOOT-01",
+      "environment": "physical device",
+      "result": "NOT_RUN",
+      "detail": "NOT RUN; guide now marks pre-reboot checks READY, but only the owner may perform the physical reboot."
+    }
+  ],
+  "changed_files_this_phase": [
+    "CURRENT_STATE.md",
+    "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
+    "docs/architecture/SSH-LIFECYCLE.md",
+    "docs/evidence/2026-10-17-reboot-recovery-implementation.json",
+    "docs/testing/FEATURE-MATRIX.yaml",
+    "docs/testing/README.md",
+    "docs/testing/REBOOT-RECOVERY-GUIDE.md",
+    "lib/help.sh",
+    "lib/management_service.py",
+    "lib/reboot.sh",
+    "lib/reboot_recovery.py",
+    "lib/wakelock_manager.py",
+    "schemas/wakelock-owner-state.schema.json",
+    "scripts/termux-boot/00-ternuxx-services",
+    "scripts/termux-services/ternuxx-sshd/run",
+    "tests/test_management_service.py",
+    "tests/test_native_service_scripts.py",
+    "tests/test_reboot_recovery.py",
+    "tests/test_wakelock_manager.py"
+  ],
+  "live_device_changes": [
+    "Installed termux-services/runit through Termux package manager",
+    "Installed Ternuxx Wake Lock manager and management CLI updates under $PREFIX",
+    "Created private loopback SSH candidate config and managed runit service on 127.0.0.1:8023",
+    "Enabled only the Ternuxx SSH runit service",
+    "Installed 00-ternuxx-services Termux:Boot entry; prior continuity observer retained",
+    "Stopped old unmanaged sshd PID 11957 on port 8022 after candidate authentication and repository-access validation",
+    "Changed only Wake Lock acquire/release calls in native-home x.sh after verifying a byte-identical backup",
+    "Created private native checkpoint RB02",
+    "Installed private-nonce CLI verification update under $PREFIX/lib/nativeternux after preserving the prior four runtime files under $HOME/.local/state/ternuxx/backups/native-wakelock-20261017/private-verify; checksums matched and SSH service stayed running"
+  ],
+  "blockers": [
+    "Actual Android reboot, post-boot startup, boot ID transition, and reconnect remain unverified until owner performs reboot.",
+    "Android package service prevents independent Termux:Boot package-state query; owner attests that the app was opened. Actual receiver/script execution remains unverified until reboot.",
+    "Android global Wake Lock holder cannot be observed by current adapter.",
+    "Kernel socket enumeration and external-network reachability are unavailable/unverified.",
+    "SSH setup wizard and GUI/Web management callers remain unimplemented; this work provides bounded CLI operations only."
+  ],
+  "next_action": "Owner-operated physical reboot following docs/testing/REBOOT-RECOVERY-GUIDE.md; agent verifies RB03 after existing db and agent workflow resumes.",
+  "physical_reboot": "NOT_PERFORMED",
+  "commit_or_push": "NOT_PERFORMED"
+}

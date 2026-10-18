@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-18T08:26:14Z",
+  "runtime": {
+    "layer": "native Termux",
+    "prefix": "/data/data/com.termux/files/usr",
+    "termux_version": "0.119.0-beta.3",
+    "uname": {
+      "system": "Android",
+      "node": "localhost",
+      "release": "16",
+      "version": "#1 SMP PREEMPT Thu Jun 12 08:20:39 UTC 2025",
+      "machine": "aarch64",
+      "processor": ""
+    }
+  },
+  "repository": {
+    "branch": "main",
+    "head": "1a891faabc925136c1801f40194b0969d28041df",
+    "origin": "https://github.com/soobujmiah/ternuxx.git"
+  },
+  "command": "python3 -m unittest tests.test_operation_journal tests.test_recovery_cli tests.test_backup_recovery tests.test_boot_profile_recovery tests.test_config_recovery tests.test_desktop_session_recovery tests.test_restore_recovery tests.test_service_recovery -v",
+  "result": "passed",
+  "passed": 56,
+  "failed": 0,
+  "duration_seconds": 1.637,
+  "exit_code": 0,
+  "coverage": "current journal-kind dispatch and operation-specific recovery fixtures; service, boot profile, desktop session, backup create, and profile restore/rollback cases",
+  "mutations": {
+    "device": false,
+    "desktop_or_services": false,
+    "packages": false,
+    "boot_or_android_settings": false,
+    "proot_guest": false
+  }
+}

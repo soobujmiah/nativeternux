@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "record_type": "p3-live-readonly-followup",
+  "observed_at_utc": "2026-10-18T01:58:34Z",
+  "runtime": "native Termux shell via existing SSH session on port 8022",
+  "commands": {
+    "native_status": "./ternuxx --json status",
+    "proot_inventory": "./ternuxx --json proot status",
+    "doctor": "./ternuxx --json doctor",
+    "guest_display_1": "./ternuxx --json proot verify --distro debian --guest-user [redacted] --display :1 --backend zink",
+    "guest_display_0": "./ternuxx --json proot verify --distro debian --guest-user [redacted] --display :0 --backend zink"
+  },
+  "observations": {
+    "native_desktop": {
+      "status": "running",
+      "display": ":1",
+      "supervisor": "yes",
+      "x11": "yes",
+      "xfce4_session": "yes",
+      "gui_visible": "unknown",
+      "audio_owner": "external"
+    },
+    "proot_inventory": {
+      "status": "installed",
+      "distributions": [
+        "debian"
+      ],
+      "guest_entered_by_inventory": false,
+      "ownership": "unverified"
+    },
+    "doctor": {
+      "read_only": true,
+      "overall": "warning",
+      "pass": 14,
+      "info": 14,
+      "warning": "native SSH config is wildcard-bound with password authentication; process ownership and external reachability remain unknown",
+      "error": 0,
+      "warning_id": "NTX-SSH-001"
+    },
+    "display_1": {
+      "status": "complete",
+      "x11": "reachable",
+      "renderer": "zink Vulkan 1.4 / Adreno 825 / Mesa Turnip",
+      "audio_control": "reachable",
+      "native_pulseaudio_endpoint": "available",
+      "profile_owner": "unverified"
+    },
+    "display_0": {
+      "status": "partial",
+      "x11": "unavailable",
+      "renderer": "unavailable",
+      "audio_control": "reachable",
+      "profile_owner": "unverified"
+    }
+  },
+  "diagnostic_safety": {
+    "read_only": true,
+    "packages_changed": false,
+    "guest_write_command_invoked": false,
+    "host_lifecycle_started": false,
+    "host_lifecycle_stopped": false,
+    "services_started": false,
+    "services_stopped": false,
+    "host_home_and_shared_storage_unbound": true
+  },
+  "p3_disposition": "in_progress; gates involving Ternux rootfs/display ownership, workload/lifecycle parity, audible audio, cold-boot delivery/GUI visibility, and listener correlation remain open",
+  "p4_disposition": "planned; profile :0 still fails the read-only X11/renderer handoff while :1 passes",
+  "mutations": []
+}

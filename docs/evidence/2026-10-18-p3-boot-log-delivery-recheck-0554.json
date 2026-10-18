@@ -1,0 +1,441 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_boot_delivery_log_recheck",
+  "observed_at_utc": "2026-10-18T05:53:21+00:00",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "estimated_current_boot_time_utc": "2026-10-17T18:21:55+00:00",
+  "kernel_uptime_seconds": 41486.729548072,
+  "scope": "only exact Ternuxx boot scripts and three fixed Ternuxx-owned logs; private-file checks enforced; raw log lines, PIDs, boot IDs, checkpoint nonces, and credentials excluded",
+  "scripts": [
+    {
+      "name": "00-ternuxx-services",
+      "source_status": "read",
+      "installed_status": "read",
+      "source_sha256": "53b6745a930af57434cc046861f5df11d9a6aaf76529a857ab4c2cc978ac9b4e",
+      "installed_sha256": "53b6745a930af57434cc046861f5df11d9a6aaf76529a857ab4c2cc978ac9b4e",
+      "hash_match": true,
+      "installed_metadata": {
+        "owner_matches": true,
+        "executable": true,
+        "regular": true,
+        "symlink": false,
+        "mode": "0o700"
+      },
+      "path_chain_has_no_symlinks": true
+    },
+    {
+      "name": "ternuxx-recovery",
+      "source_status": "read",
+      "installed_status": "read",
+      "source_sha256": "4861f2145f58e3d21f0dd4619e30f4a09f555df9a78bfbe515757a567d417c26",
+      "installed_sha256": "4861f2145f58e3d21f0dd4619e30f4a09f555df9a78bfbe515757a567d417c26",
+      "hash_match": true,
+      "installed_metadata": {
+        "owner_matches": true,
+        "executable": true,
+        "regular": true,
+        "symlink": false,
+        "mode": "0o700"
+      },
+      "path_chain_has_no_symlinks": true
+    }
+  ],
+  "logs": [
+    {
+      "path": ".local/share/nativeternux/continuity/boot-logs/termux-boot.log",
+      "status": "read",
+      "mode": "0o600",
+      "size_bytes": 1403,
+      "mtime_utc": "2026-10-17T18:22:36+00:00",
+      "selected_fields": [
+        {
+          "field": "boot_script_started_at",
+          "value": "2026-10-17T16:08:31Z"
+        },
+        {
+          "field": "observer_exit",
+          "value": "0"
+        },
+        {
+          "field": "boot_script_started_at",
+          "value": "2026-10-17T17:07:41Z"
+        },
+        {
+          "field": "observer_exit",
+          "value": "0"
+        },
+        {
+          "field": "boot_script_started_at",
+          "value": "2026-10-17T17:07:53Z"
+        },
+        {
+          "field": "observer_exit",
+          "value": "0"
+        },
+        {
+          "field": "boot_script_started_at",
+          "value": "2026-10-17T17:48:44Z"
+        },
+        {
+          "field": "observer_exit",
+          "value": "0"
+        },
+        {
+          "field": "boot_script_started_at",
+          "value": "2026-10-17T18:22:35Z"
+        },
+        {
+          "field": "observer_exit",
+          "value": "0"
+        }
+      ],
+      "path_chain_has_no_symlinks": true
+    },
+    {
+      "path": ".local/share/nativeternux/continuity/boot-logs/ternuxx-services.log",
+      "status": "read",
+      "mode": "0o600",
+      "size_bytes": 530,
+      "mtime_utc": "2026-10-17T18:22:36+00:00",
+      "selected_fields": [
+        {
+          "field": "startup_at",
+          "value": "2026-10-17T17:07:32Z"
+        },
+        {
+          "field": "sshd_status",
+          "value": "running"
+        },
+        {
+          "field": "result",
+          "value": "ready; provider=native_termux; proot_dependency=false"
+        },
+        {
+          "field": "startup_at",
+          "value": "2026-10-17T17:07:53Z"
+        },
+        {
+          "field": "sshd_status",
+          "value": "running"
+        },
+        {
+          "field": "result",
+          "value": "ready; provider=native_termux; proot_dependency=false"
+        },
+        {
+          "field": "startup_at",
+          "value": "2026-10-17T17:48:44Z"
+        },
+        {
+          "field": "sshd_status",
+          "value": "running"
+        },
+        {
+          "field": "result",
+          "value": "ready; provider=native_termux; proot_dependency=false"
+        },
+        {
+          "field": "startup_at",
+          "value": "2026-10-17T18:22:35Z"
+        },
+        {
+          "field": "sshd_status",
+          "value": "running"
+        },
+        {
+          "field": "result",
+          "value": "ready; provider=native_termux; proot_dependency=false"
+        }
+      ],
+      "path_chain_has_no_symlinks": true
+    },
+    {
+      "path": ".local/share/nativeternux/log/sshd-runit.log",
+      "status": "read",
+      "mode": "0o600",
+      "size_bytes": 14166,
+      "mtime_utc": "2026-10-18T05:43:06+00:00",
+      "selected_fields": [
+        {
+          "field": "wrapper_started_at",
+          "value": "2026-10-17T18:13:52Z"
+        },
+        {
+          "field": "wakelock_acquire",
+          "value": "failed-at-2026-10-17T18:13:52Z"
+        },
+        {
+          "field": "wrapper_started_at",
+          "value": "2026-10-17T18:13:53Z"
+        },
+        {
+          "field": "wakelock_acquire",
+          "value": "failed-at-2026-10-17T18:13:53Z"
+        },
+        {
+          "field": "wrapper_started_at",
+          "value": "2026-10-17T18:13:54Z"
+        },
+        {
+          "field": "wakelock_acquire",
+          "value": "failed-at-2026-10-17T18:13:54Z"
+        },
+        {
+          "field": "wrapper_started_at",
+          "value": "2026-10-17T18:13:55Z"
+        },
+        {
+          "field": "wakelock_acquire",
+          "value": "failed-at-2026-10-17T18:13:55Z"
+        },
+        {
+          "field": "wrapper_started_at",
+          "value": "2026-10-17T18:13:57Z"
+        },
+        {
+          "field": "wakelock_acquire",
+          "value": "ok-at-2026-10-17T18:13:57Z"
+        },
+        {
+          "field": "wrapper_started_at",
+          "value": "2026-10-17T18:22:35Z"
+        },
+        {
+          "field": "wakelock_acquire",
+          "value": "ok-at-2026-10-17T18:22:36Z"
+        }
+      ],
+      "path_chain_has_no_symlinks": true
+    }
+  ],
+  "interpretation": "Current-boot aligned logs and exact installed/source script hash matches materially strengthen evidence that the boot scripts ran and the managed SSH service reached its ready check. They do not by themselves prove Android Termux:Boot invoked them (manual invocation cannot be excluded), prove GUI visibility, or identify the listener PID. Prior postboot SSH authentication evidence is separate.",
+  "current_boot_correlation": {
+    "estimated_boot_time_utc": "2026-10-17T18:21:55+00:00",
+    "termux_boot_observer_started_at_utc": "2026-10-17T18:22:35Z",
+    "termux_boot_observer_seconds_after_estimated_boot": 40,
+    "managed_service_script_started_at_utc": "2026-10-17T18:22:35Z",
+    "managed_service_script_seconds_after_estimated_boot": 40,
+    "runit_wrapper_started_at_utc": "2026-10-17T18:22:35Z",
+    "runit_wrapper_seconds_after_estimated_boot": 40,
+    "wakelock_acquire_result": "ok-at-2026-10-17T18:22:36Z",
+    "service_log_reported_running_and_ready": true,
+    "attribution_limit": "Exact executable installed scripts match repository source, and private logs are timestamped about 40 seconds after estimated kernel boot. This strongly supports current-boot script/service activity but cannot distinguish Termux:Boot delivery from an equivalent manual invocation.",
+    "service_log_result": "ready; provider=native_termux; proot_dependency=false"
+  },
+  "path_chain_metadata": [
+    {
+      "path": ".termux/boot/00-ternuxx-services",
+      "parent_chain": [
+        {
+          "component": ".termux",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "boot",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "00-ternuxx-services",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": false
+        }
+      ],
+      "chain_has_no_symlinks": true
+    },
+    {
+      "path": ".termux/boot/ternuxx-recovery",
+      "parent_chain": [
+        {
+          "component": ".termux",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "boot",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "ternuxx-recovery",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": false
+        }
+      ],
+      "chain_has_no_symlinks": true
+    },
+    {
+      "path": ".local/share/nativeternux/continuity/boot-logs/termux-boot.log",
+      "parent_chain": [
+        {
+          "component": ".local",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "share",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "nativeternux",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "continuity",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "boot-logs",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "termux-boot.log",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o600",
+          "directory": false
+        }
+      ],
+      "chain_has_no_symlinks": true
+    },
+    {
+      "path": ".local/share/nativeternux/continuity/boot-logs/ternuxx-services.log",
+      "parent_chain": [
+        {
+          "component": ".local",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "share",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "nativeternux",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "continuity",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "boot-logs",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "ternuxx-services.log",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o600",
+          "directory": false
+        }
+      ],
+      "chain_has_no_symlinks": true
+    },
+    {
+      "path": ".local/share/nativeternux/log/sshd-runit.log",
+      "parent_chain": [
+        {
+          "component": ".local",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "share",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "nativeternux",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "log",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o700",
+          "directory": true
+        },
+        {
+          "component": "sshd-runit.log",
+          "exists": true,
+          "symlink": false,
+          "owner_matches": true,
+          "mode": "0o600",
+          "directory": false
+        }
+      ],
+      "chain_has_no_symlinks": true
+    }
+  ]
+}

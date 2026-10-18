@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "record_type": "p3_termux_boot_receiver_readonly_verification",
+  "observed_at_utc": "2026-10-18T06:40:55Z",
+  "repository_head": "1a891faabc925136c1801f40194b0969d28041df",
+  "runtime": "native Termux on attached Android target",
+  "checks": {
+    "command": "./ternuxx --json boot status",
+    "exit_status": 0,
+    "api_ok": true,
+    "reported": {
+      "app": "installed",
+      "package_enabled": "enabled",
+      "boot_completed_receiver": "enabled",
+      "regular_script_count": 2,
+      "non_executable_script_count": 0,
+      "script_directory": "present",
+      "startup_policy": "unknown",
+      "system_delivery_policy": "unknown",
+      "termux_boot_command_available": false
+    },
+    "independent_android_package_manager_confirmation": {
+      "package_version_code": 1000,
+      "enabled_package_filter": "com.termux.boot present for Android user 0",
+      "disabled_package_filter": "no match",
+      "BOOT_COMPLETED_receiver_default_query": "com.termux.boot/.BootReceiver",
+      "BOOT_COMPLETED_receiver_include_disabled_query": "com.termux.boot/.BootReceiver"
+    },
+    "access_limits": {
+      "appops_background_policy": "not readable: Android denied GET_APP_OPS_STATS to Termux UID",
+      "package_dump": "not readable: Android denied DUMP permission",
+      "reboot_delivery_or_causality": "not tested"
+    }
+  },
+  "interpretation": "Termux:Boot is installed and enabled, and its BOOT_COMPLETED receiver is currently queryable as enabled. This does not prove the system delivered the broadcast, that scripts ran because of that broadcast, or that background execution restrictions permit reliable future delivery. The existing manual-invocation ambiguity and RB03 NOT_READY state remain.",
+  "safety": {
+    "read_only": true,
+    "package_changed": false,
+    "service_changed": false,
+    "desktop_changed": false,
+    "guest_entered": false,
+    "rebooted": false
+  },
+  "mutations": []
+}

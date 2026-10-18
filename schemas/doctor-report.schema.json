@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/soobujmiah/ternuxx/blob/main/schemas/doctor-report.schema.json",
+  "title": "Ternuxx Doctor report",
+  "type": "object",
+  "required": ["schema_version", "command", "generated_at", "read_only", "overall", "device", "findings", "summary"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "command": {"const": "doctor"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "read_only": {"const": true},
+    "overall": {"enum": ["pass", "warning", "error"]},
+    "device": {
+      "type": "object",
+      "required": ["model", "android_release", "abi", "termux_version"],
+      "properties": {
+        "model": {"type": "string"},
+        "android_release": {"type": "string"},
+        "abi": {"type": "string"},
+        "termux_version": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "scope", "observed", "suggested_action"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^NTX-[A-Z]+-[0-9]{3}$"},
+          "severity": {"enum": ["pass", "info", "warning", "error"]},
+          "scope": {"type": "string"},
+          "observed": {"type": "string"},
+          "suggested_action": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["pass", "info", "warning", "error"],
+      "properties": {
+        "pass": {"type": "integer", "minimum": 0},
+        "info": {"type": "integer", "minimum": 0},
+        "warning": {"type": "integer", "minimum": 0},
+        "error": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
