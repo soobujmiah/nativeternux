@@ -60,7 +60,6 @@ def resolve_proot_guest_user(*, distro: str, prefix: str) -> str:
 
 _DISPLAY = re.compile(r"^:(?:[0-9]|10)$")
 _GUEST_SOURCE = "https://github.com/soobujmiah/ternux"
-_HOST_VERSION = re.compile(r"^[0-9][A-Za-z0-9.+~-]{0,31}$")
 _PULSE_SERVER = "tcp:127.0.0.1:4713"
 _PULSE_INFO_VALUE = re.compile(r"^[A-Za-z0-9_.:+-]{1,128}$")
 _X11_DISPLAY_TOKEN = re.compile(r"^:(?:[0-9]|10)$")
@@ -266,77 +265,11 @@ def inspect_installed(*, which: Callable[[str], str | None] = shutil.which,
 
 
 
-def inspect_native_ternux(*, which: Callable[[str], str | None] = shutil.which,
-                         runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run
-                         ) -> dict[str, str | None]:
-    """Read Ternux's typed host status without treating it as ownership proof."""
-    unknown = {
-        "availability": "unavailable", "identity": "unverified", "version": None,
-        "status": "unknown", "x11_running": "unknown", "pulseaudio": "unknown",
-        "virgl": "unknown", "launcher": "unknown", "backend_availability": "unavailable",
-        "backend": "unknown", "renderer": None, "vulkan": "unknown",
-    }
-    command = which("ternux")
-    if not command:
-        return unknown
-    try:
-        result = runner([command, "--json", "status"], capture_output=True, text=True,
-                        timeout=5, check=False)
-    except (OSError, subprocess.TimeoutExpired):
-        return {**unknown, "availability": "unknown"}
-    try:
-        data = json.loads(result.stdout) if isinstance(result.stdout, str) else None
-    except (json.JSONDecodeError, TypeError):
-        data = None
-    if not isinstance(data, dict):
-        return {**unknown, "availability": "unknown"}
-    fields = (data.get("command"), data.get("status"), data.get("version"),
-              data.get("x11_running"), data.get("pulseaudio"), data.get("virgl"),
-              data.get("launcher"))
-    command_name, status, version, x11, pulse, virgl, launcher = fields
-    if (result.returncode != 0 or command_name != "status"
-            or status not in {"running", "stopped"}
-            or not isinstance(version, str) or not _HOST_VERSION.fullmatch(version)
-            or x11 not in {"yes", "no"} or pulse not in {"running", "stopped"}
-            or virgl not in {"running", "stopped"} or launcher not in {"present", "missing"}):
-        return {**unknown, "availability": "unknown"}
-    try:
-        backend_result = runner([command, "--json", "backend", "show"], capture_output=True,
-                                text=True, timeout=5, check=False)
-    except (OSError, subprocess.TimeoutExpired):
-        backend_result = None
-    backend_report = {"backend_availability": "unknown", "backend": "unknown",
-                      "renderer": None, "vulkan": "unknown"}
-    if backend_result is not None:
-        try:
-            backend_data = json.loads(backend_result.stdout) if isinstance(backend_result.stdout, str) else None
-        except (json.JSONDecodeError, TypeError):
-            backend_data = None
-        if (backend_result.returncode == 0 and isinstance(backend_data, dict)
-                and backend_data.get("command") == "backend" and backend_data.get("status") == "ok"
-                and isinstance(backend_data.get("version"), str)
-                and _HOST_VERSION.fullmatch(backend_data["version"])
-                and backend_data.get("backend") in {"auto", "zink", "virgl"}
-                and isinstance(backend_data.get("renderer"), str)
-                and len(backend_data["renderer"]) <= 1024
-                and backend_data.get("vulkan") in {"yes", "no"}):
-            backend_report = {
-                "backend_availability": "available", "backend": backend_data["backend"],
-                "renderer": backend_data["renderer"], "vulkan": backend_data["vulkan"],
-            }
-    return {
-        "availability": "available", "identity": "unverified", "version": version,
-        "status": status, "x11_running": x11, "pulseaudio": pulse,
-        "virgl": virgl, "launcher": launcher, **backend_report,
-    }
-
-
 def _verification_result(*, status: str, display: str, backend: str,
-                         guest_entered: bool = False, version: str | None = None,
+                         guest_entered: bool = False,
                          observed_display: str | None = None, x11: str = "unknown", audio: str = "unknown",
                          renderer: str | None = None, renderer_class: str = "unavailable",
                          blockers: list[str] | None = None,
-                         native_ternux_status: dict[str, str | None] | None = None,
                          native_pulseaudio_endpoint: dict[str, str | None] | None = None
                          ) -> dict[str, object]:
     return {
@@ -346,10 +279,8 @@ def _verification_result(*, status: str, display: str, backend: str,
         "display": display,
         "requested_backend": backend,
         "pulse_server": _PULSE_SERVER,
-        "companion_version": version,
         "guest_entered": guest_entered,
         "profile_owner": "unverified",
-        "native_ternux_status": native_ternux_status or inspect_native_ternux(which=lambda _name: None),
         "native_pulseaudio_endpoint": native_pulseaudio_endpoint or {
             "status": "unknown", "server_name": None, "default_sink": None},
         "checks": {"observed_display": observed_display, "x11": x11, "audio": audio,
@@ -527,12 +458,7 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
                 and display not in process_displays["observed_displays"]):
             blockers.append(f"requested display {display} not observed in the Termux-visible X11 process list")
     status = "complete" if not blockers and result.returncode == 0 else "partial" if values else "unknown"
-    empty_native = {"availability": "unavailable", "identity": "unverified", "version": None,
-                    "status": "unknown", "x11_running": "unknown", "pulseaudio": "unknown",
-                    "virgl": "unknown", "launcher": "unknown", "backend_availability": "unknown",
-                    "backend": "unknown", "renderer": None, "vulkan": "unknown"}
     return verification_result(status=status, display=display, backend=backend,
                                guest_entered=True, observed_display=observed_display,
                                x11=x11, audio=audio, renderer=renderer,
-                               renderer_class=renderer_class, blockers=blockers,
-                               native_ternux_status=empty_native)
+                               renderer_class=renderer_class, blockers=blockers)

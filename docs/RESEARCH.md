@@ -38,7 +38,7 @@ The upstream guide documents:
 **Accessed:** 2026-10-17
 **Confidence:** verified
 
-PRoot rootfs lives under `$PREFIX/var/lib/proot-distro/`. This is the existing Ternux deployment path, NOT used by Ternuxx.
+PRoot rootfs lives under the Termux PREFIX proot-distro tree. Earlier audit text called this an external Ternux deployment path; that statement is superseded by the 2026-10-20 owner direction and direct Ternuxx integration. The existing Debian rootfs remains preserved and is accessed by bounded, typed Ternuxx operations.
 
 **Evidence classification:** verified — confirmed by inspecting `proot-distro list` output and directory structure.
 
@@ -176,9 +176,7 @@ This source and its documentation support the conclusion that the **existing Ter
 
 ## 10. Ternuxx scope and evidence limits
 
-Ternuxx is a separate repository and currently has no PRoot provider adapter. The supported near-term statement is: an owner can continue using Ternux's existing PRoot desktop for guest GPU workloads; Ternuxx may later provide an opt-in integration. There is not yet a `--mode proot` or `--mode hybrid` implementation.
-
-Do not infer current package availability from an old `pkg search` snapshot. Before implementing native installation, query the official active Termux repositories and record package names, versions, and date. Do not install packages as part of read-only research.
+This section supersedes the 2026-10-17 audit snapshot. Ternuxx now verifies the selected Debian guest and hands off Native :1 display/audio plus Zink/Turnip settings without calling the separate Ternux CLI. Full interactive lifecycle, generic workload routing, and guest package installation remain unqualified or unimplemented.
 
 ## Evidence ledger
 
@@ -225,7 +223,7 @@ The product goal is a pocket mobile workstation with CPU, GPU, and NPU accelerat
 
 The independent public [`soobujmiah/ternux` main branch](https://github.com/soobujmiah/ternux/tree/9fda63162426f77ee575b5f6729d8799a30f51b7), observed at commit `9fda63162426f77ee575b5f6729d8799a30f51b7`, has AI work that should be evaluated for reuse before Ternuxx builds another runtime. Its [benchmark record](https://github.com/soobujmiah/ternux/blob/9fda63162426f77ee575b5f6729d8799a30f51b7/docs/BENCHMARKS.md) documents CPU and Adreno Vulkan llama.cpp tests from the existing Debian/PRoot workstation. A bounded Qwen2.5 1.5B Q4_0 run reports CPU `59.04` prompt / `2.38` decode tok/s, Adreno Vulkan `92.19` / `13.27` tok/s, and conservative HVX HTP `34.20` / `12.02` tok/s; one-device totals were `264.39`, `71.30`, and `129.46` seconds respectively. These are Ternux-published single-run measurements, not rerun here or Ternuxx results. Its separate [Hexagon HTP extension](https://github.com/soobujmiah/ternux/blob/9fda63162426f77ee575b5f6729d8799a30f51b7/guides/llama-htp-experimental.md) remains experimental: the bounded HVX matrix-multiply suite passed, but HMX and flash-attention correctness failures and incomplete broad operator coverage remain. The separate [QNN SD1.5 experiment](https://github.com/soobujmiah/ternux/blob/9fda63162426f77ee575b5f6729d8799a30f51b7/experiments/qnn-native/README.md) has HTP graph execution evidence, while independent tensor correctness remains open.
 
-These are Ternux-repository reports for named PRoot/Android execution routes, not Ternuxx implementation or release qualification; this audit did not rerun them. Ternuxx should first design a versioned provider adapter to existing supported Ternux interfaces, preserving Ternux ownership and artifact/license boundaries. Do not copy Ternux source, mutate its rootfs, or call its generic cleanup/start path from a Ternuxx lifecycle manager. The Ternux `main` lifecycle code includes broad host X11/PulseAudio termination and wildcard socket cleanup; keep that path outside adapter authority.
+These remain Ternux-repository reports for named PRoot/Android workloads, not Ternuxx implementation or release qualification; this audit did not rerun them. Owner direction makes Ternuxx the independent final workstation: no Ternux CLI/state adapter is required. Research may guide provider selection with attribution, but do not copy Ternux source/artifacts or call its generic cleanup/start path. Its recorded lifecycle includes broad X11/PulseAudio termination and wildcard socket cleanup.
 
 ### CPU/GPU/NPU claims policy
 
@@ -324,3 +322,8 @@ Hangover upstream describes x86/x86-64 Windows application execution on ARM64 Wi
 Android's official migration guide states NNAPI was deprecated in Android 15. Any NPU route needs an explicit Android-side inference runtime and bridge; Wine/Hangover and PRoot do not grant NPU access by themselves. Official Termux package issues include version-specific reports of x86/x86-64 launch failure and package build/update failure. These are not evidence that the current 11.16 candidate fails, but they require an actual architecture/runtime smoke test before compatibility claims.
 
 Detailed support gate: [Native Wine and Hangover](WINE-NATIVE.md). Sources: [Termux launch report](https://github.com/termux/termux-packages/issues/27663), [Termux package update report](https://github.com/termux/termux-packages/issues/29816), and [Termux X11 package source tree](https://github.com/termux/termux-packages/tree/master/x11-packages).
+### Direct Native NPU discovery — 2026-10-20
+
+A read-only `tx doctor --json` on Native Termux (`u0_a490`, Termux 0.119.0-beta.3, Android 16, aarch64) now reports evidence by layer: visible Android vendor files (`libQnnHtp.so`, `libcdsprpc.so`, `libadsprpc.so`, `libSNPE.so`); no visible `/dev/adsprpc-smd`, `/dev/adsprpc-smd-secure`, or `/dev/fastrpc-cdsp` nodes; and no checked `qnn-net-run`, `qnn-platform-validator`, `snpe-net-run`, or `llama-cli` in the Native command path. These bounded path/command checks do not prove the files cannot be accessed by another route. They also do not prove a loadable ABI, HTP permission, delegate selection, or NPU execution. The report explicitly keeps NPU execution unverified.
+
+The same `DISPLAY=:1 tx doctor --graphics --json` invocation observed Native `llvmpipe (LLVM 21.1.8, 128 bits)` and `VK_ERROR_INCOMPATIBLE_DRIVER`; this is separate from the live Debian PRoot `:1` Zink/Turnip Adreno 825 renderer and authenticated Native PulseAudio client path. CPU remains the Native baseline, with no Ternuxx inference runtime/model integration. No native graphics or NPU runtime, SDK, model, package, node permission, service, guest file, or Android setting was changed. Retain CPU, Zink/Turnip, VirGL and experimental NPU as distinct provider routes; do not strip the guest's currently working Zink/audio handoff in pursuit of a minimal host image.

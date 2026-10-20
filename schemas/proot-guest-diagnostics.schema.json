@@ -11,10 +11,8 @@
     "display",
     "requested_backend",
     "pulse_server",
-    "companion_version",
     "guest_entered",
     "profile_owner",
-    "native_ternux_status",
     "native_pulseaudio_endpoint",
     "checks",
     "blockers",
@@ -30,7 +28,6 @@
         "unavailable",
         "not_installed",
         "unknown",
-        "unsupported_companion",
         "partial",
         "complete"
       ]
@@ -51,119 +48,11 @@
     "pulse_server": {
       "const": "tcp:127.0.0.1:4713"
     },
-    "companion_version": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "pattern": "^[0-9][A-Za-z0-9.+~-]{0,31}$"
-    },
     "guest_entered": {
       "type": "boolean"
     },
     "profile_owner": {
       "const": "unverified"
-    },
-    "native_ternux_status": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "availability",
-        "identity",
-        "version",
-        "status",
-        "x11_running",
-        "pulseaudio",
-        "virgl",
-        "launcher",
-        "backend_availability",
-        "backend",
-        "renderer",
-        "vulkan"
-      ],
-      "properties": {
-        "availability": {
-          "enum": [
-            "available",
-            "unavailable",
-            "unknown"
-          ]
-        },
-        "identity": {
-          "const": "unverified"
-        },
-        "version": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^[0-9][A-Za-z0-9.+~-]{0,31}$"
-        },
-        "status": {
-          "enum": [
-            "running",
-            "stopped",
-            "unknown"
-          ]
-        },
-        "x11_running": {
-          "enum": [
-            "yes",
-            "no",
-            "unknown"
-          ]
-        },
-        "pulseaudio": {
-          "enum": [
-            "running",
-            "stopped",
-            "unknown"
-          ]
-        },
-        "virgl": {
-          "enum": [
-            "running",
-            "stopped",
-            "unknown"
-          ]
-        },
-        "launcher": {
-          "enum": [
-            "present",
-            "missing",
-            "unknown"
-          ]
-        },
-        "backend_availability": {
-          "enum": [
-            "available",
-            "unavailable",
-            "unknown"
-          ]
-        },
-        "backend": {
-          "enum": [
-            "zink",
-            "virgl",
-            "auto",
-            "unknown"
-          ]
-        },
-        "renderer": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "maxLength": 1024
-        },
-        "vulkan": {
-          "enum": [
-            "yes",
-            "no",
-            "unknown"
-          ]
-        }
-      }
     },
     "checks": {
       "type": "object",

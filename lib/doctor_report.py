@@ -55,6 +55,39 @@ def path_presence(path: Path) -> bool | None:
         return None
 
 
+def native_npu_evidence() -> str:
+    """Summarize read-only NPU hints without treating them as execution proof."""
+    vendor_paths = (
+        Path("/vendor/lib64/libQnnHtp.so"),
+        Path("/vendor/lib64/libQnnDsp.so"),
+        Path("/vendor/lib64/libcdsprpc.so"),
+        Path("/vendor/lib64/libadsprpc.so"),
+        Path("/vendor/lib64/libSNPE.so"),
+    )
+    node_paths = (
+        Path("/dev/adsprpc-smd"),
+        Path("/dev/adsprpc-smd-secure"),
+        Path("/dev/fastrpc-cdsp"),
+    )
+    runtime_names = ("qnn-net-run", "qnn-platform-validator", "snpe-net-run", "llama-cli")
+
+    visible_vendor = [p.name for p in vendor_paths if path_presence(p) is True]
+    unknown_vendor = any(path_presence(p) is None for p in vendor_paths)
+    visible_nodes = [p.name for p in node_paths if path_presence(p) is True]
+    unknown_nodes = any(path_presence(p) is None for p in node_paths)
+    runtime_tools = [name for name in runtime_names if command_path(name)]
+    if visible_vendor:
+        vendor_status = "visible=" + ",".join(visible_vendor)
+    else:
+        vendor_status = "visibility=unknown" if unknown_vendor else "none-visible"
+    if visible_nodes:
+        node_status = "visible=" + ",".join(visible_nodes)
+    else:
+        node_status = "visibility=unknown" if unknown_nodes else "none-visible"
+    runtime_status = "found=" + ",".join(runtime_tools) if runtime_tools else "no-known-runtime-cli-found"
+    return f"Android vendor libraries {vendor_status}; FastRPC candidate nodes {node_status}; Termux runtime tools {runtime_status}; NPU execution=unverified"
+
+
 def prop(name: str) -> str:
     path = command_path("getprop")
     if not path:
@@ -749,8 +782,8 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
             add("NTX-GPU-002", "info", "native-graphics", f"KGSL model: {gpu}",
                 "Hardware identification does not establish a supported native driver/workload.")
         add("NTX-NPU-001", "info", "native-accelerator",
-            "Termux-process NPU runtime/delegate not verified",
-            "Do not infer NPU access from the device model; require a named runtime and workload proof.")
+            native_npu_evidence(),
+            "Vendor libraries and device nodes are discovery hints only. Verify a supported runtime, delegate selection, and correct representative workload before claiming NPU acceleration.")
     else:
         add("NTX-GPU-001", "info", "native-graphics", "native GPU nodes not checked outside Termux",
             "Run from Termux host; compare this result with a separate PRoot workload check.")

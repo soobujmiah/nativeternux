@@ -327,5 +327,6 @@
         }
       }
     }
-  ]
+  ],
+  "$comment": "Legacy compatibility schema retained for historical evidence. Current Ternuxx PRoot diagnostics do not invoke or depend on the separate Ternux CLI."
 }

@@ -1,7 +1,7 @@
 # ADR-0006: Integrate the independent Ternux environment through a narrow provider
 
 - **Date:** 2026-10-17
-- **Status:** proposed — owner review required
+- **Status:** superseded by owner direction on 2026-10-20
 - **Type:** provider-integration
 
 ## Context
@@ -49,3 +49,7 @@ Treat Ternux as a separate execution provider. Prefer an explicit, versioned, su
 - [Ternux HTP qualification](https://github.com/soobujmiah/ternux/blob/9fda63162426f77ee575b5f6729d8799a30f51b7/guides/llama-htp-experimental.md)
 - GitHub currently reports Apache-2.0 metadata for Ternux `main`; this is not a complete third-party/artifact license review.
 - [Live installed Ternux CLI interface recheck (2026-10-18)](../../evidence/2026-10-18-p4-installed-ternux-interface-recheck-0600.json) — v1.4.0 help exposes no generic workload dispatch; backend status reports Zink/Vulkan available but renderer unknown.
+
+## Superseding owner direction — 2026-10-20
+
+Ternuxx is the independent final workstation product. The separate Ternux repository and its CLI are reference-only; they are not a required provider or install/runtime dependency. Ternuxx owns its Native host controls and its own explicit Debian PRoot handoff. Preserve the existing PRoot rootfs and compatible guest libraries/settings, adapting only Ternuxx-owned launch/config paths or a guest file after exact impact assessment and a verified rollback. Never copy Native Bionic libraries into Debian glibc paths. Existing Ternux accelerator claims remain attributed to Ternux and are not Ternuxx workload evidence. Current Ternuxx PRoot verification must not execute or query the Ternux CLI. This owner direction supersedes the proposed Ternux CLI/API adapter above; historical Ternux evidence may still inform research with attribution and licensing review.

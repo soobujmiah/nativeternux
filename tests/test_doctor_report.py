@@ -14,6 +14,32 @@ import doctor_report  # noqa: E402
 
 
 class DoctorReportTest(unittest.TestCase):
+    def test_native_npu_report_separates_vendor_libraries_nodes_and_runtime(self):
+        def present(path):
+            return path.name in {"libQnnHtp.so", "libcdsprpc.so"}
+        with patch.object(doctor_report, "path_presence", side_effect=present), \
+                patch.object(doctor_report, "command_path", return_value=None):
+            evidence = doctor_report.native_npu_evidence()
+        self.assertIn("Android vendor libraries visible=libQnnHtp.so,libcdsprpc.so", evidence)
+        self.assertIn("FastRPC candidate nodes none-visible", evidence)
+        self.assertIn("no-known-runtime-cli-found", evidence)
+        self.assertIn("NPU execution=unverified", evidence)
+
+    def test_native_npu_report_keeps_inaccessible_probes_unknown(self):
+        with patch.object(doctor_report, "path_presence", return_value=None), \
+                patch.object(doctor_report, "command_path", return_value=None):
+            evidence = doctor_report.native_npu_evidence()
+        self.assertIn("Android vendor libraries visibility=unknown", evidence)
+        self.assertIn("FastRPC candidate nodes visibility=unknown", evidence)
+        self.assertIn("NPU execution=unverified", evidence)
+
+    def test_native_npu_report_does_not_infer_access_from_runtime_name_alone(self):
+        with patch.object(doctor_report, "path_presence", return_value=False), \
+                patch.object(doctor_report, "command_path", side_effect=lambda name: "/mock/" + name if name == "qnn-net-run" else None):
+            evidence = doctor_report.native_npu_evidence()
+        self.assertIn("Termux runtime tools found=qnn-net-run", evidence)
+        self.assertIn("NPU execution=unverified", evidence)
+
     def test_pulse_probe_uses_only_explicit_loopback_tcp_endpoint(self):
         with patch.object(doctor_report, "command_path", return_value="/mock/pactl"), \
                 patch.object(doctor_report.subprocess, "run", return_value=SimpleNamespace(
@@ -104,6 +130,7 @@ class DoctorReportTest(unittest.TestCase):
                 patch.object(doctor_report, "native_termux", return_value=True),
                 patch.object(doctor_report, "prop", return_value="fixture-value"),
                 patch.object(doctor_report, "command_path", side_effect=lambda name: None if name == "rish" else f"/mock/{name}"),
+                patch.object(doctor_report, "native_npu_evidence", return_value="fixture NPU execution=unverified"),
                 patch.object(doctor_report, "app_version_code", return_value="1318"),
                 patch.object(doctor_report, "shizuku_server_process_status", return_value="not observed (process visibility unknown)"),
                 patch.object(doctor_report, "package_status", return_value=("installed", "1.0")),

@@ -149,7 +149,6 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertEqual(report["status"], "complete")
         self.assertEqual(report["component"], "proot_guest_diagnostics")
         self.assertTrue(report["guest_entered"])
-        self.assertIsNone(report["companion_version"])
         self.assertEqual(len(calls), 2)
         command = calls[1][0]
         self.assertIn("--isolated", command)
@@ -172,6 +171,7 @@ class ProotDiagnosticsTests(unittest.TestCase):
 
     def test_proot_guest_verification_does_not_probe_legacy_ternux_status(self):
         calls = []
+        which_calls = []
         outputs = [
             SimpleNamespace(returncode=0, stdout="Installed containers:\n * Debian\n"),
             SimpleNamespace(returncode=0, stdout="Display: :1\nX11: reachable\nAudio: PulseAudio reachable\nRenderer: zink Turnip\n"),
@@ -179,14 +179,20 @@ class ProotDiagnosticsTests(unittest.TestCase):
         def runner(args, **kwargs):
             calls.append(args)
             return outputs.pop(0)
+        def which(name):
+            which_calls.append(name)
+            return "/prefix/bin/proot-distro" if name == "proot-distro" else (
+                "/prefix/bin/ternux" if name == "ternux" else None)
         report = proot_diagnostics.verify_proot_guest(
             distro="debian", user="sbj", display=":1", backend="zink",
-            which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
+            which=which,
             runner=runner,
         )
         self.assertEqual(report["status"], "complete")
         self.assertEqual(len(calls), 2)
-        self.assertEqual(report["native_ternux_status"]["availability"], "unavailable")
+        self.assertNotIn("ternux", which_calls)
+        self.assertNotIn("native_ternux_status", report)
+        self.assertNotIn("companion_version", report)
 
     def test_guest_verify_fails_closed_for_unsafe_or_unsupported_inputs(self):
         calls = []
@@ -359,61 +365,6 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertNotIn("16032", json.dumps(report))
         self.assertNotIn("termux-x11", json.dumps(report))
         self.assertEqual(report["profile_owner"], "unverified")
-
-    def test_native_ternux_status_is_typed_and_keeps_identity_unverified(self):
-        calls = []
-        payload = {
-            "command": "status", "status": "running", "timestamp": "2026-10-18T01:00:13Z",
-            "version": "1.4.0", "x11_running": "yes", "pulseaudio": "stopped",
-            "virgl": "stopped", "launcher": "present",
-        }
-        backend_payload = {"command": "backend", "status": "ok", "version": "1.4.0",
-                           "backend": "zink", "renderer": "unknown", "vulkan": "yes",
-                           "available_backends": "zink,virgl"}
-        outputs = [json.dumps(payload), json.dumps(backend_payload)]
-        def runner(args, **kwargs):
-            calls.append((args, kwargs))
-            return SimpleNamespace(returncode=0, stdout=outputs.pop(0))
-        report = proot_diagnostics.inspect_native_ternux(
-            which=lambda name: "/prefix/bin/ternux" if name == "ternux" else None,
-            runner=runner,
-        )
-        self.assertEqual(report, {
-            "availability": "available", "identity": "unverified", "version": "1.4.0",
-            "status": "running", "x11_running": "yes", "pulseaudio": "stopped",
-            "virgl": "stopped", "launcher": "present", "backend_availability": "available",
-            "backend": "zink", "renderer": "unknown", "vulkan": "yes",
-        })
-        self.assertEqual(calls[0][0], ["/prefix/bin/ternux", "--json", "status"])
-        self.assertEqual(calls[1][0], ["/prefix/bin/ternux", "--json", "backend", "show"])
-        self.assertEqual(calls[0][1]["timeout"], 5)
-        self.assertTrue(calls[0][1]["capture_output"])
-
-    def test_native_backend_status_fails_unknown_without_discarding_host_status(self):
-        outputs = [
-            json.dumps({"command": "status", "status": "running", "version": "1.4.0",
-                        "x11_running": "yes", "pulseaudio": "stopped", "virgl": "stopped",
-                        "launcher": "present"}),
-            "malformed backend response",
-        ]
-        report = proot_diagnostics.inspect_native_ternux(
-            which=lambda name: "/prefix/bin/ternux" if name == "ternux" else None,
-            runner=lambda *_args, **_kwargs: SimpleNamespace(returncode=0, stdout=outputs.pop(0)),
-        )
-        self.assertEqual(report["availability"], "available")
-        self.assertEqual(report["status"], "running")
-        self.assertEqual(report["backend_availability"], "unknown")
-        self.assertEqual(report["backend"], "unknown")
-        self.assertIsNone(report["renderer"])
-
-    def test_native_ternux_status_fails_closed_on_malformed_output(self):
-        report = proot_diagnostics.inspect_native_ternux(
-            which=lambda name: "/prefix/bin/ternux" if name == "ternux" else None,
-            runner=lambda *_args, **_kwargs: SimpleNamespace(returncode=0, stdout="{}"),
-        )
-        self.assertEqual(report["availability"], "unknown")
-        self.assertEqual(report["status"], "unknown")
-        self.assertEqual(report["identity"], "unverified")
 
     def test_unavailable_manager_and_unrecognized_output_remain_unknown(self):
         absent = proot_diagnostics.inspect_installed(which=lambda _name: None)
