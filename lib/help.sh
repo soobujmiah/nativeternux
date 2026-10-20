@@ -159,9 +159,11 @@ management service with scoped reads and narrow confirmed actions: Native
 desktop lifecycle, graphics status/verification and Native backend selection,
 GUI Activity-monitoring policy, managed SSH 8023 start/stop, named PRoot app
 launch with per-app confirmation, previewed single PRoot shortcut changes, and
-Cron status/job/history reads. It does not receive every local CLI capability;
-PRoot session lifecycle, boot changes, backup/restore, timezone mutation, Cron
-job mutation, and recovery writes remain outside the Web session.
+Cron status/job/history reads, PRoot session/recovery reads, and preview-confirmed
+fixed 300-second isolated probes with exact verified-owned stop. Browser clients
+cannot start interactive PRoot login sessions or reconcile recovery records. Boot
+changes, backup/restore, timezone mutation, Cron job mutation, and other recovery
+writes remain outside the Web session.
 EOF
       ;;
     start)
@@ -273,9 +275,11 @@ fallback. Press Ctrl-C to stop. The Web client uses the shared management API
 with scoped reads, confirmed native desktop lifecycle, graphics verification and
 Native backend selection, monitoring-policy configuration, managed SSH 8023
 preview/confirmation, named PRoot app launch, single shortcut changes, and Cron
-status/job-list/history reads. It does not expose every local CLI operation;
-PRoot session lifecycle, boot changes, backup/restore, timezone mutation, Cron
-job mutation, and recovery writes remain CLI-only. Resource details list shared
+status/job-list/history reads, PRoot session/recovery reads, and preview-confirmed
+fixed 300-second isolated probes with exact verified-owned stop. It does not expose
+every local CLI operation; interactive PRoot login, recovery reconciliation, boot
+changes, backup/restore, timezone mutation, Cron job mutation, and other recovery
+writes remain unavailable in the Web client. Resource details list shared
 supported and planned operations separately.
 EOF
       ;;

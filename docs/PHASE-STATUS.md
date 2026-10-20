@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-TUI and Web now expose shared-service PRoot session reads, fixed probe preview/apply, and exact verified-owned stop; GTK parity, live interactive TTY qualification, and cold-boot delivery gates remain open.
+TUI, Web, and installed GTK now expose shared-service PRoot session reads, fixed probe preview/apply, and exact verified-owned stop; GTK visual acceptance, live interactive TTY qualification, and cold-boot delivery gates remain open.
 
-**Next action:** Add GTK session list/recovery/probe and exact-owned stop through the typed bridge, compile and test, then continue the remaining P3 live ownership and cold-boot gates without restarting the current sessions.
+**Next action:** Visually qualify the GTK session actions in an approved GUI window, then continue the remaining P3 live ownership and cold-boot gates without restarting the current sessions.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
