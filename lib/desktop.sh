@@ -167,7 +167,7 @@ nt_cmd_start() {
 
   local lock session_report session_state
   lock="$(_nt_session_lock)"
-  if ! mkdir "$lock" 2>/dev/null; then
+  if ! (umask 077 && mkdir "$lock") 2>/dev/null; then
     nt_fail "Another Ternuxx lifecycle operation holds the session lock. If no operation is running, inspect and recover the lock manually."; return 1
   fi
   _NT_ACTIVE_SESSION_LOCK="$lock"
@@ -285,7 +285,7 @@ nt_cmd_stop() {
   fi
 
   lock="$(_nt_session_lock)"
-  if ! mkdir "$lock" 2>/dev/null; then
+  if ! (umask 077 && mkdir "$lock") 2>/dev/null; then
     nt_fail "Another Ternuxx lifecycle operation holds the session lock. If no operation is running, inspect and recover the lock manually."
     return 1
   fi

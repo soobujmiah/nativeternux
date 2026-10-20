@@ -111,7 +111,8 @@ while True:
         path.write_text(content, encoding="utf-8")
         path.chmod(0o755)
 
-    def _run(self, *args: str) -> subprocess.CompletedProcess[str]:
+    def _run(self, *args: str, umask: int | None = None) -> subprocess.CompletedProcess[str]:
+        configure_umask = (lambda: os.umask(umask)) if umask is not None else None
         result = subprocess.run(
             ["bash", str(ROOT / "bin/tx"), *args],
             env=self.env,
@@ -119,6 +120,7 @@ while True:
             capture_output=True,
             timeout=12,
             check=False,
+            preexec_fn=configure_umask,
         )
         if result.returncode != 0:
             log = self.state / "desktop.log"
@@ -210,7 +212,8 @@ while True:
         self.assertEqual(json.loads(status.stdout)["reconciliation_state"], "stale")
         self.assertEqual(json.loads(record.read_text())["status"], "running")  # status is read-only
 
-        started = self._run("start")
+        # Model a permissive CI/application umask; lock creation must remain private.
+        started = self._run("start", umask=0o022)
         self.assertEqual(started.returncode, 0, started.stderr)
         self.assertIn("Reconciled the exact stale Ternuxx :1 socket/lock pair", started.stderr)
         self.assertEqual(self._state()["status"], "running")
