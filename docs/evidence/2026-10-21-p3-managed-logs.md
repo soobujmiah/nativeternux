@@ -25,6 +25,6 @@ The installed GTK Management Center was updated atomically by `scripts/install-m
 - Full Native Termux repository suite after the Native desktop source addition: **651 passed** in 101.869 seconds.
 - GTK C syntax compile, Python compilation, shell syntax, and `git diff --check`: passed.
 - Live `tx mng logs list` and `tx mng logs read` returned bounded results.
-- No service, scheduler, desktop, SSH, PRoot session, or Android setting was changed.
+- The Web read check used a temporary loopback-only server in read-only scope; it was stopped after the requests. No persistent service, scheduler, desktop, SSH, PRoot session, or Android setting was changed.
 
 P3 remains active. The operation is source-integrated across all four clients. GTK log-control visibility is visually confirmed on :1 and the TUI Cron log read succeeded; A Native loopback HTTP runtime in read-only scope served the current Web UI page (HTTP 200), including the Native desktop app-output note. A scoped diagnostics.read session listed all three sources and successfully read the empty Cron log; no browser was opened, so visual browser acceptance is not claimed. Cold-boot delivery remains unverified and must be qualified in its separate device-boot window.
