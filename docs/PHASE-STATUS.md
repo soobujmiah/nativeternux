@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-PRoot TTY ownership contract passes 34 focused fixtures; live login still fails closed on cwd/guest-UID identity. Managed SSH process identity is verified separately; TCP mapping and cold-boot delivery remain open.
+PRoot process/TTY identity contracts are fixture-covered, but live interactive login fails closed and CLI-only session controls remain absent from TUI/Web/GTK; no owner-accepted limitation is recorded. SSH TCP ownership and cold-boot delivery also remain open.
 
-**Next action:** Audit remaining P3 journal/recovery and four-client management coverage; preserve the separate owner-approved cold-boot window and keep P3 active until every exit gate passes.
+**Next action:** Implement shared PRoot session status/recovery reads and exact-preview fixed isolated-probe start/owned-stop actions across TUI, Web, and GTK; design the attached-terminal boundary before exposing interactive login beyond terminal clients.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -182,6 +182,7 @@ Evidence:
 - [docs/evidence/2026-10-21-p3-managed-8023-readonly-recheck.md](evidence/2026-10-21-p3-managed-8023-readonly-recheck.md)
 - [docs/evidence/2026-10-21-p3-managed-ssh-process-identity.md](evidence/2026-10-21-p3-managed-ssh-process-identity.md)
 - [docs/evidence/2026-10-21-p3-proot-tty-contract-audit.md](evidence/2026-10-21-p3-proot-tty-contract-audit.md)
+- [docs/evidence/2026-10-21-p3-session-client-parity-audit.md](evidence/2026-10-21-p3-session-client-parity-audit.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 

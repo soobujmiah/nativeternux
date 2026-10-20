@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Audit remaining P3 journal/recovery and four-client management coverage; preserve the separate owner-approved cold-boot window and keep P3 active until every exit gate passes.
+**Next action:** Implement shared PRoot session status/recovery reads and exact-preview fixed isolated-probe start/owned-stop actions across TUI, Web, and GTK; design the attached-terminal boundary before exposing interactive login beyond terminal clients.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
