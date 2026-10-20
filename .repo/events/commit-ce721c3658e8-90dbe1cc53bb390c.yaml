@@ -1,0 +1,7 @@
+event_id: commit-ce721c3658e8-90dbe1cc53bb390c
+repository: soobujmiah/ternuxx
+commit: ce721c3658e87aec188c4f1badf0b79dfedb00dd
+kind: commit
+occurred_at: '2026-10-20T10:58:47Z'
+status: completed
+summary: 'feat(management): align client help and graphics actions'
