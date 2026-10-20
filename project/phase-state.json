@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "TTY relay and ownership fixtures now cover the declared foreground contract; client action parity, helper drift, and cold-boot gates remain open.",
+      "summary": "TTY relay fixtures now pass; GTK PRoot shortcut inventory is live through the shared service. Cross-client Cron mutation, boot-helper drift, and cold-boot gates remain open.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -169,9 +169,10 @@
         "docs/evidence/2026-10-20-p3-owner-visual-and-boot-cron-recheck.md",
         "docs/evidence/2026-10-20-graphics-live-recheck.md",
         "docs/evidence/2026-10-20-phase-roadmap-audit.md",
-        "docs/evidence/2026-10-20-p3-tty-fixture-audit.md"
+        "docs/evidence/2026-10-20-p3-tty-fixture-audit.md",
+        "docs/evidence/2026-10-20-p3-gtk-proot-shortcut-list.md"
       ],
-      "next_action": "Add a shared preview/explicit-confirm/apply contract for Cron job create/update/remove, then expose it consistently in CLI, TUI, Web, and GTK. Keep P3 boot-helper reconciliation and authorized cold-boot gates open."
+      "next_action": "Define preview/explicit-confirm/apply for Cron job create/update/remove in the shared service, then expose that exact contract across CLI, TUI, Web, and GTK. Continue remaining client parity before boot-helper reconciliation."
     },
     {
       "id": "P4",

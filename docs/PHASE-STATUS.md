@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-TTY relay and ownership fixtures now cover the declared foreground contract; client action parity, helper drift, and cold-boot gates remain open.
+TTY relay fixtures now pass; GTK PRoot shortcut inventory is live through the shared service. Cross-client Cron mutation, boot-helper drift, and cold-boot gates remain open.
 
-**Next action:** Add a shared preview/explicit-confirm/apply contract for Cron job create/update/remove, then expose it consistently in CLI, TUI, Web, and GTK. Keep P3 boot-helper reconciliation and authorized cold-boot gates open.
+**Next action:** Define preview/explicit-confirm/apply for Cron job create/update/remove in the shared service, then expose that exact contract across CLI, TUI, Web, and GTK. Continue remaining client parity before boot-helper reconciliation.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -174,6 +174,7 @@ Evidence:
 - [docs/evidence/2026-10-20-graphics-live-recheck.md](evidence/2026-10-20-graphics-live-recheck.md)
 - [docs/evidence/2026-10-20-phase-roadmap-audit.md](evidence/2026-10-20-phase-roadmap-audit.md)
 - [docs/evidence/2026-10-20-p3-tty-fixture-audit.md](evidence/2026-10-20-p3-tty-fixture-audit.md)
+- [docs/evidence/2026-10-20-p3-gtk-proot-shortcut-list.md](evidence/2026-10-20-p3-gtk-proot-shortcut-list.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 

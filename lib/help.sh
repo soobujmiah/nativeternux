@@ -153,10 +153,10 @@ for the explicit private-terminal fallback. Browser access uses the shared
 management service with scoped reads and narrow confirmed actions: Native
 desktop lifecycle, graphics status/verification and Native backend selection,
 GUI Activity-monitoring policy, managed SSH 8023 start/stop, named PRoot app
-launch with per-app confirmation, and Cron status/job/history reads. It does not
-receive every local CLI capability; PRoot session lifecycle, shortcut edits,
-boot changes, backup/restore, timezone mutation, and recovery writes remain
-outside the Web session.
+launch with per-app confirmation, previewed single PRoot shortcut changes, and
+Cron status/job/history reads. It does not receive every local CLI capability;
+PRoot session lifecycle, boot changes, backup/restore, timezone mutation, Cron
+job mutation, and recovery writes remain outside the Web session.
 EOF
       ;;
     start)
@@ -267,9 +267,10 @@ the secret; use --show-secret-on-clipboard-failure for an explicit terminal
 fallback. Press Ctrl-C to stop. The Web client uses the shared management API
 with scoped reads, confirmed native desktop lifecycle, graphics verification and
 Native backend selection, monitoring-policy configuration, managed SSH 8023
-preview/confirmation, and Cron status/job-list reads. It does not expose every
-local CLI operation; PRoot lifecycle, boot changes, backup/restore, timezone
-mutation, and recovery writes remain CLI-only. Resource details list shared
+preview/confirmation, named PRoot app launch, single shortcut changes, and Cron
+status/job-list/history reads. It does not expose every local CLI operation;
+PRoot session lifecycle, boot changes, backup/restore, timezone mutation, Cron
+job mutation, and recovery writes remain CLI-only. Resource details list shared
 supported and planned operations separately.
 EOF
       ;;

@@ -41,7 +41,10 @@ not grant a client permission or imply that client has an action flow.
   timezone mutation, boot mutation, or backup/recovery writes. README and the
   capability matrix now state these boundaries explicitly.
 
-## Current interface reach
+## Interface reach at audit time
+
+Later same-day changes are recorded in the follow-up evidence listed in the current capability matrix. Do not treat this dated audit snapshot as the latest interface inventory.
+
 
 - **CLI:** broadest command interface; groups include Cron definitions and
   history, timezone, boot, PRoot session/shortcut operations, backup/recovery,

@@ -97,6 +97,10 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.list")
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "shortcut-list" and len(argv) == 1:
+        result = call("proot.shortcuts.list")
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "proot-app-launch" and len(argv) == 2:
         import proot_shortcuts
         if argv[1] not in proot_shortcuts.CATALOG:

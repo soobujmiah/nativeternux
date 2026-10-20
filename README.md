@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-TTY relay and ownership fixtures now cover the declared foreground contract; client action parity, helper drift, and cold-boot gates remain open.
+TTY relay fixtures now pass; GTK PRoot shortcut inventory is live through the shared service. Cross-client Cron mutation, boot-helper drift, and cold-boot gates remain open.
 
-**Next action:** Add a shared preview/explicit-confirm/apply contract for Cron job create/update/remove, then expose it consistently in CLI, TUI, Web, and GTK. Keep P3 boot-helper reconciliation and authorized cold-boot gates open.
+**Next action:** Define preview/explicit-confirm/apply for Cron job create/update/remove in the shared service, then expose that exact contract across CLI, TUI, Web, and GTK. Continue remaining client parity before boot-helper reconciliation.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

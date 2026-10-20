@@ -110,6 +110,16 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("cron.jobs.list")
         self.assertIn('"jobs": []', output.getvalue())
 
+    def test_proot_shortcut_list_bridge_uses_shared_service(self) -> None:
+        payload = {"ok": True, "data": {"items": [
+            {"id": "files", "name": "Files", "shortcut_state": "installed"}]}}
+        with mock.patch.object(bridge, "call", return_value=payload) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["shortcut-list"]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.list")
+        self.assertIn('"shortcut_state": "installed"', output.getvalue())
+
     def test_named_proot_launch_bridge_calls_shared_typed_operation(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"app_id": "files"}}) as dispatch:
             output = StringIO()
