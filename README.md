@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-Cron and boot helper updates are shared and exact-plan; boot-time Cron now shares a private lock with manager changes. Recovery/concurrency acceptance continues; cold boot remains unqualified.
+Shared Cron mutations are serialized; boot helpers match source, and current read-only Doctor found no unresolved operations. P3 recovery/ownership checks and cold-boot qualification remain open.
 
-**Next action:** Complete remaining P3 ownership and recovery checks without closing the current Termux/Codex session; cold-boot qualification requires a separate owner-approved device window.
+**Next action:** Complete remaining P3 recovery and ownership checks without closing the current Termux/Codex session; cold-boot qualification requires a separate owner-approved device window.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

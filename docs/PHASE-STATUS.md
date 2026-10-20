@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-Cron and boot helper updates are shared and exact-plan; boot-time Cron now shares a private lock with manager changes. Recovery/concurrency acceptance continues; cold boot remains unqualified.
+Shared Cron mutations are serialized; boot helpers match source, and current read-only Doctor found no unresolved operations. P3 recovery/ownership checks and cold-boot qualification remain open.
 
-**Next action:** Complete remaining P3 ownership and recovery checks without closing the current Termux/Codex session; cold-boot qualification requires a separate owner-approved device window.
+**Next action:** Complete remaining P3 recovery and ownership checks without closing the current Termux/Codex session; cold-boot qualification requires a separate owner-approved device window.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -178,6 +178,7 @@ Evidence:
 - [docs/evidence/2026-10-21-cron-mutation-client-parity.md](evidence/2026-10-21-cron-mutation-client-parity.md)
 - [docs/evidence/2026-10-21-boot-helper-reconciliation.md](evidence/2026-10-21-boot-helper-reconciliation.md)
 - [docs/evidence/2026-10-21-p3-cron-boot-concurrency.md](evidence/2026-10-21-p3-cron-boot-concurrency.md)
+- [docs/evidence/2026-10-21-p3-native-readonly-recheck.md](evidence/2026-10-21-p3-native-readonly-recheck.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 
