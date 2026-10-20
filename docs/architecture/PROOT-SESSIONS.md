@@ -31,7 +31,7 @@ A crash after starting a child can leave an unverified registry entry. tx mng pr
 - tx mng proot stop SESSION_ID prints a plan; repeat with --yes --plan-id ID to stop only that session.
 - tx mng proot reconcile SESSION_ID previews safe exit reconciliation; apply only with --yes --plan-id ID.
 
-Profiles are fixed and typed; user-supplied shell strings are not accepted. The isolated probe and interactive login build launch environments without any LD_* variables, preventing inherited host loader overrides from reaching the native launcher or guest. debian-interactive is a synchronous foreground terminal login, so it is not offered by Web UI or background callers. Browser mutation scopes do not include proot.session.manage. TUI, Web and GTK remain read-only for PRoot lifecycle in this increment.
+Profiles are fixed and typed; user-supplied shell strings are not accepted. The isolated probe and interactive login build launch environments without any LD_* variables, preventing inherited host loader overrides from reaching the native launcher or guest. The debian-interactive profile is a synchronous foreground terminal login, so it is not offered by Web UI or background callers. TUI, Web and GTK expose read-only session inventory and exact-session recovery inspection plus preview/confirmation for only the fixed 300-second isolated probe and exact verified-owned stop. Web requires the scoped proot.session.manage capability, CSRF, idempotency and confirmation; it cannot start debian-interactive or reconcile recovery records. No client offers detach/reconnect, arbitrary guest commands or a browser PTY.
 
 ## Qualification limits
 

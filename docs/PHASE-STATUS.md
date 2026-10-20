@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-CLI/TUI/Web/GTK expose bounded Native desktop, Cron scheduler, and management audit log reads; GTK controls are visually confirmed and TUI read the empty Cron log successfully. Web exercise, listener attribution, and Native cold-boot delivery remain open.
+P3 log reads now have GTK visual and TUI live evidence, plus a Native loopback HTTP page/API read check; no browser or desktop-log content was exposed. Session UI parity for bounded probes is implemented; interactive TTY remains CLI-only. Listener attribution and authorized cold-boot delivery remain open.
 
-**Next action:** Exercise the bounded-log viewer in the Native Web Console, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
+**Next action:** Audit the remaining shared-action and ownership/recovery gaps, then exercise Web in the Android browser if available; keep interactive TTY parity and cold-boot acceptance explicit, and do not advance to P4 until all P3 gates pass.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)

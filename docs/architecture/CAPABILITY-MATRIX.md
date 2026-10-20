@@ -157,7 +157,7 @@ Hermes is an optional local agent provider with a read-only scheduler-status ada
 |---|---|---|---|---|---|
 | Scheduler singleton lease and explicit event dispatch | Internal isolated core only; no public lifecycle route | unavailable | unavailable | unavailable | tests/test_cron_scheduler.py; lease/claim and harmless registered subprocess tested in temporary state; no resident scheduler |
 | Device boot and scheduler recovery delivery | unqualified | unavailable | unavailable | unavailable | Trigger policy fields remain persisted; no Termux boot delivery or recovery event source enabled |
-| Ternuxx-owned PRoot sessions | read-only inventory only; no start/stop | unavailable | unavailable | unavailable | Active processes remain unverified ownership; no session was entered or controlled |
+| Ternuxx-owned PRoot sessions | Profile/session inventory, exact-plan start/stop, health and recovery inspection/reconcile | Inventory, recovery detail, fixed 300-second probe preview/apply, exact verified-owned stop | Same bounded controls with authenticated scope, CSRF, idempotency and confirmation; no interactive login or reconcile | Same bounded controls with visible confirmation | Existing unmanaged sessions are never adopted; interactive login remains attached-TTY CLI-only and unqualified; no detach/reconnect or arbitrary commands |
 
 
 ### 2026-10-19 Cron runtime and PRoot session increment

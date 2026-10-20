@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Exercise the bounded-log viewer in the Native Web Console, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
+**Next action:** Audit the remaining shared-action and ownership/recovery gaps, then exercise Web in the Android browser if available; keep interactive TTY parity and cold-boot acceptance explicit, and do not advance to P4 until all P3 gates pass.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
