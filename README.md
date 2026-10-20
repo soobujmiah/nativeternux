@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-PRoot process/TTY identity contracts are fixture-covered, but live interactive login fails closed and CLI-only session controls remain absent from TUI/Web/GTK; no owner-accepted limitation is recorded. SSH TCP ownership and cold-boot delivery also remain open.
+TUI and Web now expose shared-service PRoot session reads, fixed probe preview/apply, and exact verified-owned stop; GTK parity, live interactive TTY qualification, and cold-boot delivery gates remain open.
 
-**Next action:** Implement shared PRoot session status/recovery reads and exact-preview fixed isolated-probe start/owned-stop actions across TUI, Web, and GTK; design the attached-terminal boundary before exposing interactive login beyond terminal clients.
+**Next action:** Add GTK session list/recovery/probe and exact-owned stop through the typed bridge, compile and test, then continue the remaining P3 live ownership and cold-boot gates without restarting the current sessions.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

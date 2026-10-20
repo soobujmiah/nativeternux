@@ -148,6 +148,65 @@ def main(argv: list[str]) -> int:
         result = call("proot.shortcuts.list")
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "proot-session-list" and len(argv) == 1:
+        result = call("proot.sessions.list")
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
+    if action == "proot-session-recovery" and len(argv) == 2:
+        if not re.fullmatch(r"proot-[0-9a-f]{32}", argv[1]):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_session_id"}}))
+            return 2
+        result = call("proot.recovery.inspect", {"session_id": argv[1]})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
+    if action == "proot-probe-preview" and len(argv) == 1:
+        result = call("proot.start.preview", {"profile": "isolated-probe"})
+        if not result.get("ok"):
+            print(json.dumps(result, ensure_ascii=False))
+            return 1
+        data = result.get("data", {})
+        plan_id = data.get("plan_id") if isinstance(data, dict) else None
+        impact = clean(data.get("impact")) if isinstance(data, dict) else ""
+        if not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_session_preview"}}))
+            return 1
+        print("P\t" + plan_id + "\t" + impact)
+        return 0
+    if action == "proot-probe-apply" and len(argv) == 2:
+        if not re.fullmatch(r"plan-[0-9a-f]{64}", argv[1]):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_plan_id"}}))
+            return 2
+        result = call("proot.start", {"profile": "isolated-probe", "confirmed": True,
+                                      "plan_id": argv[1], "timeout_seconds": 300})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
+    if action == "proot-session-stop-preview" and len(argv) == 2:
+        session_id = argv[1]
+        if not re.fullmatch(r"proot-[0-9a-f]{32}", session_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_session_id"}}))
+            return 2
+        result = call("proot.stop.preview", {"session_id": session_id})
+        if not result.get("ok"):
+            print(json.dumps(result, ensure_ascii=False))
+            return 1
+        data = result.get("data", {})
+        if (not isinstance(data, dict) or data.get("ownership") != "ternuxx_verified"
+                or data.get("action") != "signal_owned_process_group"
+                or not isinstance(data.get("plan_id"), str)
+                or not re.fullmatch(r"plan-[0-9a-f]{64}", data["plan_id"])):
+            print(json.dumps({"ok": False, "error": {"code": "session_stop_not_verified"}}))
+            return 1
+        print("P\t" + data["plan_id"] + "\t" + clean(data.get("profile")) + "\t" + clean(session_id))
+        return 0
+    if action == "proot-session-stop-apply" and len(argv) == 3:
+        session_id, plan_id = argv[1:]
+        if (not re.fullmatch(r"proot-[0-9a-f]{32}", session_id)
+                or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_session_plan"}}))
+            return 2
+        result = call("proot.stop", {"session_id": session_id, "confirmed": True, "plan_id": plan_id})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "proot-app-launch" and len(argv) == 2:
         import proot_shortcuts
         if argv[1] not in proot_shortcuts.CATALOG:

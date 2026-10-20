@@ -183,6 +183,8 @@ class ManagementHTTPAdapter:
 
     def _operation(self, headers: dict[str, object], payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:
         operation = payload.get("operation")
+        if operation == "proot.recovery.reconcile":
+            return self._response(403, {"ok": False, "error": "operation_not_available_in_web"})
         bearer = self._bearer(headers)
         csrf = headers.get("x-ternuxx-csrf")
         if not bearer:
@@ -202,6 +204,15 @@ class ManagementHTTPAdapter:
             if (not isinstance(args, dict) or "app_id" not in args
                     or set(args) - {"app_id", "display"}):
                 return self._response(400, {"ok": False, "error": "named_app_only"})
+
+        # Browser sessions can run only the fixed bounded headless probe.
+        # Interactive login requires an attached terminal and is unavailable
+        # through this HTTP transport.
+        if operation == "proot.start":
+            args = payload.get("args")
+            if (not isinstance(args, dict) or args.get("profile") != "isolated-probe"
+                    or args.get("timeout_seconds") != 300):
+                return self._response(403, {"ok": False, "error": "proot_profile_restricted"})
 
         request_id = payload.get("request_id")
         if not isinstance(request_id, str) or not REQUEST_ID_RE.fullmatch(request_id):

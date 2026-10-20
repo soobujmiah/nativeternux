@@ -34,13 +34,14 @@ _MUTATING_CAPABILITIES = {
 WEB_READ_CAPABILITIES = frozenset({
     "diagnostics.read", "guest.diagnostics.read", "remote_policy.read", "continuity.read",
 })
-WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage", "applications.launch", "applications.shortcuts.manage", "cron.manage"})
+WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage", "applications.launch", "applications.shortcuts.manage", "cron.manage", "proot.session.manage"})
 _WEB_MUTATING_OPERATIONS = {
     operation for operation in management_sessions.MUTATING_OPERATIONS
     if management_authorization.required_capability(operation) in WEB_CAPABILITIES
+    and operation != "proot.recovery.reconcile"
 }
-if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply", "cron.jobs.mutation.preview", "cron.jobs.mutation.apply"}:
-    raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy, managed SSH, typed graphics/app actions, previewed PRoot shortcuts, and previewed Cron job mutations")
+if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply", "proot.start", "proot.stop", "cron.jobs.mutation.preview", "cron.jobs.mutation.apply"}:
+    raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy, managed SSH, typed graphics/app actions, previewed PRoot session/shortcut actions, and previewed Cron job mutations")
 if READ_CAPABILITIES & _MUTATING_CAPABILITIES:
     raise RuntimeError("read-only API runtime contains a mutation capability")
 if WEB_READ_CAPABILITIES & _MUTATING_CAPABILITIES:

@@ -177,6 +177,17 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
             self.assertEqual(json.loads(response)["error"], "mutation_transport_disabled")
             dispatch.assert_not_called()
 
+    def test_web_recovery_reconcile_is_explicitly_unavailable(self) -> None:
+        dispatch = Mock()
+        adapter = make_adapter(dispatcher=dispatch, caps={"proot.session.manage"})
+        payload = {"api_version": 1, "request_id": "request-1234",
+                   "operation": "proot.recovery.reconcile", "args": {"session_id": "proot-" + "a" * 32}}
+        status, _headers, response = adapter.handle(
+            method="POST", path="/api/v1/operations", headers=headers_for(payload_bytes(payload)), body=payload_bytes(payload))
+        self.assertEqual(status, 403)
+        self.assertEqual(json.loads(response)["error"], "operation_not_available_in_web")
+        dispatch.assert_not_called()
+
     def test_mutation_idempotency_replays_and_rejects_key_reuse(self) -> None:
         dispatch = Mock(return_value={"ok": True, "api_version": 1,
                                       "request_id": "request-1234", "data": {"started": True}})

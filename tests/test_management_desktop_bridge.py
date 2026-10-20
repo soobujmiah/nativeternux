@@ -139,6 +139,59 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("proot.shortcuts.list")
         self.assertIn('"shortcut_state": "installed"', output.getvalue())
 
+    def test_proot_session_inventory_and_recovery_bridge_use_read_operations(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"sessions": []}}) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["proot-session-list"]), 0)
+        dispatch.assert_called_once_with("proot.sessions.list")
+        session_id = "proot-" + "a" * 32
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"state": "unknown"}}) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["proot-session-recovery", session_id]), 0)
+        dispatch.assert_called_once_with("proot.recovery.inspect", {"session_id": session_id})
+
+    def test_proot_probe_bridge_previews_fixed_profile_and_applies_exact_plan(self) -> None:
+        plan_id = "plan-" + "a" * 64
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
+                "plan_id": plan_id, "impact": "Starts one bounded headless Debian diagnostic process."}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["proot-probe-preview"]), 0)
+        dispatch.assert_called_once_with("proot.start.preview", {"profile": "isolated-probe"})
+        self.assertIn("P\t" + plan_id, output.getvalue())
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"state": "running"}}) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["proot-probe-apply", plan_id]), 0)
+        dispatch.assert_called_once_with("proot.start", {"profile": "isolated-probe", "confirmed": True,
+                                                          "plan_id": plan_id, "timeout_seconds": 300})
+
+    def test_proot_stop_bridge_requires_verified_preview_and_exact_plan(self) -> None:
+        session_id = "proot-" + "b" * 32
+        plan_id = "plan-" + "c" * 64
+        preview = {"ok": True, "data": {"ownership": "ternuxx_verified",
+                   "action": "signal_owned_process_group", "plan_id": plan_id,
+                   "profile": "isolated-probe"}}
+        with mock.patch.object(bridge, "call", return_value=preview) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["proot-session-stop-preview", session_id]), 0)
+        dispatch.assert_called_once_with("proot.stop.preview", {"session_id": session_id})
+        self.assertIn("P\t" + plan_id, output.getvalue())
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"stopped": True}}) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["proot-session-stop-apply", session_id, plan_id]), 0)
+        dispatch.assert_called_once_with("proot.stop", {"session_id": session_id,
+                                                          "confirmed": True, "plan_id": plan_id})
+
+    def test_proot_session_bridge_rejects_invalid_ids_before_dispatch(self) -> None:
+        for args in (["proot-session-recovery", "../../bad"],
+                     ["proot-session-stop-preview", "../../bad"],
+                     ["proot-session-stop-apply", "../../bad", "bad"]):
+            with self.subTest(args=args), mock.patch.object(bridge, "call") as dispatch:
+                with redirect_stdout(StringIO()):
+                    self.assertEqual(bridge.main(list(args)), 2)
+                dispatch.assert_not_called()
+
     def test_named_proot_launch_bridge_calls_shared_typed_operation(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"app_id": "files"}}) as dispatch:
             output = StringIO()

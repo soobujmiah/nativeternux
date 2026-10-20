@@ -216,8 +216,27 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 status, _headers, response = post("proot.start", "web-proot-session-01",
                     "web-proot-session-key1", {"profile": "debian-login"})
                 self.assertEqual(status, 403)
-                self.assertEqual(json.loads(response)["error"], "permission_denied")
+                self.assertEqual(json.loads(response)["error"], "proot_profile_restricted")
                 self.assertEqual(dispatch.call_count, 4)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-probe-start-001",
+                    "ok": True, "operation": "proot.start", "data": {
+                        "profile": "isolated-probe", "state": "running", "ownership": "ternuxx_verified"}}
+                status, _headers, response = post("proot.start", "web-probe-start-001",
+                    "web-probe-start-key-0001", {"profile": "isolated-probe", "confirmed": True,
+                                                  "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "proot.start")
+                self.assertEqual(dispatch.call_count, 5)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-probe-stop-001",
+                    "ok": True, "operation": "proot.stop", "data": {"stopped": True}}
+                status, _headers, response = post("proot.stop", "web-probe-stop-request-01",
+                    "web-probe-stop-key-0001", {"session_id": "proot-" + "a" * 32,
+                                                  "confirmed": True, "plan_id": "plan-" + "b" * 64})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "proot.stop")
+                self.assertEqual(dispatch.call_count, 6)
 
                 dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-preview-1",
                     "ok": True, "operation": "proot.shortcuts.preview", "data": {
@@ -225,7 +244,7 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 status, _headers, response = post("proot.shortcuts.preview", "web-shortcut-preview-1",
                     "web-shortcut-preview-key1", {"action": "add", "app_id": "files"})
                 self.assertEqual(status, 200, response)
-                self.assertEqual(dispatch.call_count, 5)
+                self.assertEqual(dispatch.call_count, 7)
 
                 dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-apply-01",
                     "ok": True, "operation": "proot.shortcuts.apply", "data": {"status": "complete"}}
@@ -234,13 +253,13 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                                                 "confirmed": True, "plan_id": "b" * 24})
                 self.assertEqual(status, 200, response)
                 self.assertEqual(json.loads(response)["operation"], "proot.shortcuts.apply")
-                self.assertEqual(dispatch.call_count, 6)
+                self.assertEqual(dispatch.call_count, 8)
 
                 status, _headers, response = post("proot.shortcuts.sync", "web-shortcut-sync-001",
                     "web-shortcut-sync-key1", {})
                 self.assertEqual(status, 403)
                 self.assertEqual(json.loads(response)["error"], "permission_denied")
-                self.assertEqual(dispatch.call_count, 6)
+                self.assertEqual(dispatch.call_count, 8)
 
                 dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
                     "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
@@ -274,6 +293,10 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("applications.launch", page)
         self.assertIn("applications.shortcuts.manage", page)
         self.assertIn("cron.manage", page)
+        self.assertIn("proot.session.manage", page)
+        self.assertIn("proot.recovery.inspect", page)
+        self.assertIn('run("proot.start.preview",{profile:"isolated-probe"})', page)
+        self.assertIn('run("proot.stop.preview",{session_id:item.session_id})', page)
         self.assertIn('run("cron.jobs.mutation.preview",args)', page)
         self.assertIn('run("cron.jobs.mutation.apply",{plan_id:plan.plan_id,confirmed:true})', page)
         self.assertIn('run("proot.shortcuts.preview",{action,app_id:select.value})', page)

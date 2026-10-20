@@ -54,6 +54,49 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertEqual(result["error"]["code"], "cancelled")
         call.assert_called_once_with("proot.shortcuts.preview", {"action": "remove", "app_id": "files"})
 
+    def test_proot_session_start_is_fixed_previewed_and_confirmed(self) -> None:
+        inventory = {"ok": True, "data": {"sessions": []}}
+        preview = {"ok": True, "data": {"profile": "isolated-probe", "impact": "Fixed probe",
+                                             "plan_id": "plan-" + "a" * 64}}
+        applied = {"ok": True, "data": {"profile": "isolated-probe", "state": "running"}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["start-probe", "yes"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
+            result = terminal_ui._manage_proot_sessions(mock.Mock())
+        self.assertIs(result, applied)
+        self.assertEqual(call.call_args_list, [
+            mock.call("proot.sessions.list"),
+            mock.call("proot.start.preview", {"profile": "isolated-probe"}),
+            mock.call("proot.start", {"profile": "isolated-probe", "confirmed": True,
+                                      "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300}),
+        ])
+
+    def test_proot_session_stop_requires_verified_inventory_and_exact_plan(self) -> None:
+        session_id = "proot-" + "b" * 32
+        inventory = {"ok": True, "data": {"sessions": [{"session_id": session_id,
+                     "profile": "isolated-probe", "state": "running", "ownership": "ternuxx_verified"}]}}
+        preview = {"ok": True, "data": {"ownership": "ternuxx_verified", "confirmation_required": True,
+                                             "plan_id": "plan-" + "c" * 64}}
+        applied = {"ok": True, "data": {"stopped": True}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["stop", session_id, "yes"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
+            result = terminal_ui._manage_proot_sessions(mock.Mock())
+        self.assertIs(result, applied)
+        self.assertEqual(call.call_args_list, [
+            mock.call("proot.sessions.list"),
+            mock.call("proot.stop.preview", {"session_id": session_id}),
+            mock.call("proot.stop", {"session_id": session_id, "confirmed": True,
+                                     "plan_id": "plan-" + "c" * 64}),
+        ])
+
+    def test_proot_session_stop_never_targets_unverified_inventory(self) -> None:
+        inventory = {"ok": True, "data": {"sessions": [{"session_id": "proot-" + "d" * 32,
+                     "profile": "debian-interactive", "state": "unverified", "ownership": "unverified"}]}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["stop"]), \
+             mock.patch.object(terminal_ui, "_call", return_value=inventory) as call:
+            result = terminal_ui._manage_proot_sessions(mock.Mock())
+        self.assertEqual(result["error"]["code"], "no_verified_live_session")
+        call.assert_called_once_with("proot.sessions.list")
+
     def test_catalog_categories_and_resources_define_navigation(self) -> None:
         with mock.patch.dict(os.environ, {"PREFIX": "/data/data/com.termux/files/usr",
                                           "TERMUX_VERSION": "fixture"}):
