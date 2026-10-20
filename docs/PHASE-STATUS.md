@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-Phase audit complete: visual review is accepted; PRoot TTY ownership, client action parity, boot helper drift, and cold-boot qualification remain open.
+TTY ownership fixtures strengthened; interactive runtime mismatch and PTY relay remain open, alongside client parity, boot helper drift, and cold-boot gates.
 
-**Next action:** Define and fixture-verify interactive PRoot TTY ownership (host PID/start identity, guest UID, cwd, argv/environment, attach/detach, output, and exact signal target) before any P4 guest lifecycle implementation.
+**Next action:** Add isolated PTY-relay fixtures for input/output, window-size propagation, terminal restoration, and foreground behavior; then diagnose the recorded cwd/guest-ID mismatch from read-only runtime evidence before any safe live retry.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -173,6 +173,7 @@ Evidence:
 - [docs/evidence/2026-10-20-p3-owner-visual-and-boot-cron-recheck.md](evidence/2026-10-20-p3-owner-visual-and-boot-cron-recheck.md)
 - [docs/evidence/2026-10-20-graphics-live-recheck.md](evidence/2026-10-20-graphics-live-recheck.md)
 - [docs/evidence/2026-10-20-phase-roadmap-audit.md](evidence/2026-10-20-phase-roadmap-audit.md)
+- [docs/evidence/2026-10-20-p3-tty-fixture-audit.md](evidence/2026-10-20-p3-tty-fixture-audit.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 

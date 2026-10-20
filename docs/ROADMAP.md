@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Define and fixture-verify interactive PRoot TTY ownership (host PID/start identity, guest UID, cwd, argv/environment, attach/detach, output, and exact signal target) before any P4 guest lifecycle implementation.
+**Next action:** Add isolated PTY-relay fixtures for input/output, window-size propagation, terminal restoration, and foreground behavior; then diagnose the recorded cwd/guest-ID mismatch from read-only runtime evidence before any safe live retry.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

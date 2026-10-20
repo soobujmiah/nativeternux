@@ -126,6 +126,20 @@ class PRootSessionRegistryTests(unittest.TestCase):
             proc.terminate()
             proc.wait(timeout=5)
 
+    def test_stop_signals_only_the_recorded_process_group(self):
+        root, path, _lock = proot_sessions._paths(self.state, create=True)
+        record = self.make_record(pid=4312, process_start="fixture-start", process_group=4312)
+        proot_sessions._write_registry(root, path, [record])
+        with mock.patch.object(proot_sessions, "_verified", return_value=True), \
+             mock.patch.object(proot_sessions, "_members", return_value=[]), \
+             mock.patch.object(proot_sessions, "_proc", return_value=None), \
+             mock.patch.object(proot_sessions.os, "killpg") as signal_group:
+            result = proot_sessions.stop_session(
+                self.state, record["session_id"], confirmed=True,
+                plan_id=proot_sessions._plan_id(record), timeout=0)
+        self.assertTrue(result["stopped"])
+        signal_group.assert_called_once_with(4312, proot_sessions.signal.SIGTERM)
+
     def test_readonly_inventory_does_not_create_registry_lock(self):
         root, path, lock_path = proot_sessions._paths(self.state, create=True)
         proot_sessions._write_registry(root, path, [])
@@ -198,116 +212,6 @@ class PRootSessionRegistryTests(unittest.TestCase):
         finally:
             proc.terminate()
             proc.wait(timeout=5)
-
-    def test_missing_process_identity_is_not_reconciled_or_replaced(self):
-        root, path, _lock = proot_sessions._paths(self.state, create=True)
-        record = self.make_record(pid=0, process_start="", state="starting", process_group=0)
-        proot_sessions._write_registry(root, path, [record])
-        preview = proot_sessions.preview_reconcile(self.state, record["session_id"])
-        self.assertEqual(preview["evidence"], "recorded_process_identity_missing")
-        self.assertFalse(preview["confirmation_required"])
-        self.assertEqual(preview["action"], "retain_record_no_signal")
-        with mock.patch.object(proot_sessions.os, "fork") as fork:
-            with mock.patch.object(proot_sessions, "discover_debian", return_value={
-                    "rootfs": str(self.rootfs), "rootfs_device": self.rootfs.stat().st_dev,
-                    "rootfs_inode": self.rootfs.stat().st_ino, "launcher": str(self.launcher),
-                    "launcher_device": self.launcher.stat().st_dev, "launcher_inode": self.launcher.stat().st_ino}):
-                with self.assertRaisesRegex(proot_sessions.SessionError, "incomplete identity"):
-                    proot_sessions.start_probe(self.state, prefix=str(self.base))
-            fork.assert_not_called()
-        self.assertEqual(proot_sessions.show_session(self.state, record["session_id"])["recorded_state"], "starting")
-
-    def test_pid_reuse_can_reconcile_original_without_signaling_replacement(self):
-        root, path, _lock = proot_sessions._paths(self.state, create=True)
-        record = self.make_record()
-        proot_sessions._write_registry(root, path, [record])
-        replacement = {"start": "new-start", "state": "S", "pgrp": record["pid"], "session": record["pid"]}
-        with mock.patch.object(proot_sessions, "_proc", return_value=replacement), \
-             mock.patch.object(proot_sessions.os, "kill") as kill:
-            preview = proot_sessions.preview_reconcile(self.state, record["session_id"])
-            self.assertEqual(preview["evidence"], "pid_reused_original_exited")
-            self.assertTrue(preview["confirmation_required"])
-            result = proot_sessions.reconcile_session(
-                self.state, record["session_id"], confirmed=True, plan_id=preview["plan_id"])
-            self.assertEqual(result["evidence"], "pid_reused_original_exited")
-            self.assertFalse(result["signal_sent"])
-            kill.assert_not_called()
-
-    def test_start_preview_rejects_changed_rootfs_identity_before_fork(self):
-        original = {"rootfs": str(self.rootfs), "rootfs_device": self.rootfs.stat().st_dev,
-                    "rootfs_inode": self.rootfs.stat().st_ino, "launcher": str(self.launcher),
-                    "launcher_device": self.launcher.stat().st_dev, "launcher_inode": self.launcher.stat().st_ino}
-        changed = dict(original)
-        changed["rootfs_inode"] += 1
-        plan_id = proot_sessions._start_plan("isolated-probe", original)
-        with mock.patch.object(proot_sessions, "discover_debian", return_value=changed), \
-             mock.patch.object(proot_sessions.os, "fork") as fork:
-            with self.assertRaisesRegex(proot_sessions.SessionError, "preview is stale"):
-                proot_sessions.start_probe(self.state, prefix=str(self.base), expected_plan_id=plan_id)
-            fork.assert_not_called()
-        self.assertFalse((self.state / "proot").exists())
-
-    def test_permission_hidden_process_is_not_treated_as_absent(self):
-        root, path, _lock = proot_sessions._paths(self.state, create=True)
-        record = self.make_record()
-        proot_sessions._write_registry(root, path, [record])
-        with mock.patch.object(proot_sessions, "_proc", return_value=None), \
-             mock.patch.object(proot_sessions.os, "kill", side_effect=PermissionError):
-            preview = proot_sessions.preview_reconcile(self.state, record["session_id"])
-        self.assertEqual(preview["evidence"], "identity_unreadable")
-        self.assertFalse(preview["confirmation_required"])
-        self.assertFalse(preview["signal_allowed"])
-
-    def test_same_process_with_changed_session_group_is_not_reconciled(self):
-        root, path, _lock = proot_sessions._paths(self.state, create=True)
-        record = self.make_record()
-        proot_sessions._write_registry(root, path, [record])
-        changed = {"start": record["process_start"], "state": "S",
-                   "pgrp": record["process_group"] + 1, "session": record["process_group"] + 1}
-        with mock.patch.object(proot_sessions, "_proc", return_value=changed):
-            preview = proot_sessions.preview_reconcile(self.state, record["session_id"])
-        self.assertEqual(preview["evidence"], "same_process_identity_changed")
-        self.assertFalse(preview["confirmation_required"])
-
-    def test_recovery_retains_sanitized_historical_start_failure_evidence(self):
-        root, path, _lock = proot_sessions._paths(self.state, create=True)
-        record = self.make_record(state="unverified")
-        record["transitions"] = [{"state": "unverified", "at": "2026-10-20T00:00:00+00:00",
-                                  "source": "login-start-failed-evidence:entry=same-process-live;grp=1;mark=0;sig=0;cwd=u;fs=1;bin=1"}]
-        proot_sessions._write_registry(root, path, [record])
-        diagnosis = proot_sessions.inspect_recovery(self.state, record["session_id"])
-        self.assertEqual(diagnosis["historical_start_failure_evidence"]["mark"], False)
-        self.assertEqual(diagnosis["historical_start_failure_evidence"]["sig"], False)
-        self.assertEqual(diagnosis["historical_start_failure_evidence"]["grp"], True)
-        self.assertEqual(diagnosis["historical_start_failure_evidence"]["cwd"], None)
-
-    def test_health_reports_exit_and_explicitly_disclaims_reattach(self):
-        root, path, _lock = proot_sessions._paths(self.state, create=True)
-        record = self.make_record(state="stopped")
-        record["last_exit_code"] = 0
-        proot_sessions._write_registry(root, path, [record])
-        health = proot_sessions.session_health(self.state, record["session_id"])
-        self.assertEqual(health["exit_code"], 0)
-        self.assertFalse(health["reattach_supported"])
-        self.assertEqual(health["attachment"], "none")
-        self.assertTrue(health["read_only"])
-        self.assertLessEqual(len(health["diagnostics"]), 16)
-
-    def test_malformed_record_types_and_symlinked_registry_fail_closed(self):
-        root, path, _lock = proot_sessions._paths(self.state, create=True)
-        record = self.make_record()
-        record["profile"] = []
-        proot_sessions._write_registry(root, path, [record])
-        with self.assertRaises(proot_sessions.SessionError):
-            proot_sessions.list_sessions(self.state)
-        path.unlink()
-        valid = self.make_record()
-        target = self.base / "outside-registry.json"
-        target.write_text(json.dumps({"schema_version": proot_sessions.SCHEMA, "sessions": [valid]}), encoding="utf-8")
-        target.chmod(0o600)
-        path.symlink_to(target)
-        with self.assertRaisesRegex(proot_sessions.SessionError, "identity or permissions are unsafe"):
-            proot_sessions.list_sessions(self.state)
 
     def test_missing_process_identity_is_not_reconciled_or_replaced(self):
         root, path, _lock = proot_sessions._paths(self.state, create=True)
@@ -607,6 +511,14 @@ class PRootVerificationFixtureTests(unittest.TestCase):
                 (self.proc / "cmdline").write_bytes(
                     ("proot --rootfs=. --change-id=1000:1000 --cwd=/home/sbj /usr/bin/env "
                      + self.marker + " /bin/bash --login").encode().replace(b" ", b"\0") + b"\0")
+
+    def test_guest_numeric_identity_mismatch_fails_closed(self):
+        from unittest.mock import patch
+        original = (self.proc / "cmdline").read_bytes()
+        wrong_uid = original.replace(b"--change-id=1000:1000", b"--change-id=1001:1000")
+        (self.proc / "cmdline").write_bytes(wrong_uid)
+        with patch.object(proot_sessions, "_proc", return_value=dict(self.identity)):
+            self.assertFalse(proot_sessions._verified(self.record, proc_root=self.proc_root))
 
     def test_marker_launcher_rootfs_and_working_directory_mismatches_fail(self):
         from unittest.mock import patch

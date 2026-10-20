@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-Phase audit complete: visual review is accepted; PRoot TTY ownership, client action parity, boot helper drift, and cold-boot qualification remain open.
+TTY ownership fixtures strengthened; interactive runtime mismatch and PTY relay remain open, alongside client parity, boot helper drift, and cold-boot gates.
 
-**Next action:** Define and fixture-verify interactive PRoot TTY ownership (host PID/start identity, guest UID, cwd, argv/environment, attach/detach, output, and exact signal target) before any P4 guest lifecycle implementation.
+**Next action:** Add isolated PTY-relay fixtures for input/output, window-size propagation, terminal restoration, and foreground behavior; then diagnose the recorded cwd/guest-ID mismatch from read-only runtime evidence before any safe live retry.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
