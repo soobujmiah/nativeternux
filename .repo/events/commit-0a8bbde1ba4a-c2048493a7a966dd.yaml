@@ -1,0 +1,7 @@
+event_id: commit-0a8bbde1ba4a-c2048493a7a966dd
+repository: soobujmiah/ternuxx
+commit: 0a8bbde1ba4af1fc5753597fa892e7be543b6247
+kind: commit
+occurred_at: '2026-10-20T09:19:11Z'
+status: completed
+summary: 'feat(proot): manage standalone and nested Debian desktop'
