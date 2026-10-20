@@ -1,0 +1,7 @@
+event_id: commit-b9a29e5dca24-02d56b07fec54290
+repository: soobujmiah/ternuxx
+commit: b9a29e5dca247c1a5f9f624486dfb088d0f19dbb
+kind: commit
+occurred_at: '2026-10-20T11:21:16Z'
+status: completed
+summary: 'feat(management): add timezone controls to native clients'
