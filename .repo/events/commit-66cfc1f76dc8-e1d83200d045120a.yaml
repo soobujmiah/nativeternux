@@ -1,0 +1,7 @@
+event_id: commit-66cfc1f76dc8-e1d83200d045120a
+repository: soobujmiah/ternuxx
+commit: 66cfc1f76dc887de36c81a62f150919aabe82cd8
+kind: commit
+occurred_at: '2026-10-20T19:20:13Z'
+status: completed
+summary: 'feat: add PRoot sessions to GTK center'
