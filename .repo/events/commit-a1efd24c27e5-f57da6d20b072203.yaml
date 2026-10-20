@@ -1,0 +1,7 @@
+event_id: commit-a1efd24c27e5-f57da6d20b072203
+repository: soobujmiah/ternuxx
+commit: a1efd24c27e598fea54223fca5597b9db57d5918
+kind: commit
+occurred_at: '2026-10-20T06:07:04Z'
+status: completed
+summary: 'fix(proot): isolate graphics backend per session'
