@@ -97,6 +97,14 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.list")
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "proot-app-launch" and len(argv) == 2:
+        import proot_shortcuts
+        if argv[1] not in proot_shortcuts.CATALOG:
+            print(json.dumps({"ok": False, "error": {"code": "unknown_proot_app"}}))
+            return 2
+        result = call("proot.app.launch", {"app_id": argv[1]})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "timezone-set" and len(argv) == 2:
         result = call("timezone.set", {"timezone": argv[1]})
         print(json.dumps(result, ensure_ascii=False, indent=2))

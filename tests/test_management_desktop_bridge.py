@@ -110,6 +110,22 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("cron.jobs.list")
         self.assertIn('"jobs": []', output.getvalue())
 
+    def test_named_proot_launch_bridge_calls_shared_typed_operation(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"app_id": "files"}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["proot-app-launch", "files"]), 0)
+        dispatch.assert_called_once_with("proot.app.launch", {"app_id": "files"})
+        self.assertIn("files", output.getvalue())
+
+    def test_named_proot_launch_bridge_rejects_unknown_app_before_dispatch(self) -> None:
+        with mock.patch.object(bridge, "call") as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["proot-app-launch", "arbitrary-shell-command"]), 2)
+        dispatch.assert_not_called()
+        self.assertIn("unknown_proot_app", output.getvalue())
+
     def test_timezone_set_bridge_calls_typed_preference_operation(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"timezone": "UTC"}}) as dispatch:
             output = StringIO()
