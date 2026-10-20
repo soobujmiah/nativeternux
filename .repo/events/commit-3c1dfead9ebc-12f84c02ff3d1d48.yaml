@@ -1,0 +1,7 @@
+event_id: commit-3c1dfead9ebc-12f84c02ff3d1d48
+repository: soobujmiah/ternuxx
+commit: 3c1dfead9ebc50ea9565792c25aa020e5db28f79
+kind: commit
+occurred_at: '2026-10-20T00:21:48Z'
+status: completed
+summary: 'fix: isolate workstation tests from host dependencies'
