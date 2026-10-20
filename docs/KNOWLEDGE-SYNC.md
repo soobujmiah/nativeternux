@@ -7,7 +7,7 @@ Ternuxx uses three related records, each with one owner. This keeps product deci
 | Record | Authority | Update method |
 |---|---|---|
 | Architecture, product decisions, evidence, operating guidance | Human-authored project docs and evidence under `docs/` | Reviewed edits; preserve source links, date, evidence class, and limitations |
-| Phase order and gate progress | `project/phase-state.json` | `python3 tools/phase_docs.py update` for active-phase progress, `annotate` for planned-phase preparation, `complete` for reviewed gate transitions, or `refresh`; generated README/roadmap/status blocks are never edited directly |
+| Phase order and gate progress | `project/phase-state.json` | `python3 tools/phase_docs.py update` for active-phase progress, `annotate` for planned-phase preparation and optional metadata, `complete` for reviewed gate transitions, `skip` for an evidence-backed active optional-phase skip, or `refresh`; generated README/roadmap/status blocks are never edited directly |
 | Commit, branch, version, CI build/test results, synchronization events | `.repo/project.yaml`, `.repo/events/`, `.repo/STATUS.md` | SKB `tools/repo_knowledge` only; never hand-write these facts |
 | Cross-project durable owner knowledge | Canonical SKB topic/project files | Session-level knowledge return under SKB's [knowledge-return protocol](https://github.com/soobujmiah/skb/blob/main/governance/KNOWLEDGE_RETURN_PROTOCOL.md); never copy ordinary commits or transient logs |
 

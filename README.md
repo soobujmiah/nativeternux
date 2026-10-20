@@ -14,11 +14,11 @@
 <!-- generated:phase-status:start -->
 **Current phase:** P3 — Doctor, management, and recovery
 
-**Progress:** 3/11 phases complete
+**Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-Installed GTK/TUI/Web/PRoot Apps visual acceptance was owner-confirmed on 2026-10-20; Native boot-Cron exact-script integration is configured and duplicate-safe in a live/manual run. Desktop lifecycle lock contention is covered in fixtures. Cold-boot delivery and Android startup/background policy remain unverified, so P3 stays in progress.
+Phase audit complete: visual review is accepted; PRoot TTY ownership, client action parity, boot helper drift, and cold-boot qualification remain open.
 
-**Next action:** Keep the accepted visual review closed. Preserve the running session; qualify Termux:Boot delivery only during a separately scheduled reboot window, then resolve remaining Android startup policy and review the P3 exit gate. Continue non-disruptive P4/P6 implementation work without claiming their phase gates complete.
+**Next action:** Define and fixture-verify interactive PRoot TTY ownership (host PID/start identity, guest UID, cwd, argv/environment, attach/detach, output, and exact signal target) before any P4 guest lifecycle implementation.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

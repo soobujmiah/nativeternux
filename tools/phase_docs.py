@@ -35,9 +35,11 @@ def load_state() -> dict:
     ids = [p.get("id") for p in phases]
     if len(ids) != len(set(ids)):
         raise ValueError("Phase IDs must be unique")
-    allowed = {"planned", "in_progress", "completed"}
+    allowed = {"planned", "in_progress", "completed", "skipped"}
     if any(p.get("status") not in allowed for p in phases):
         raise ValueError("Each phase must have a valid status")
+    if any("optional" in p and not isinstance(p["optional"], bool) for p in phases):
+        raise ValueError("Optional phase metadata must be boolean")
     active = data.get("active_phase")
     active_rows = [p for p in phases if p["status"] == "in_progress"]
     if active is None:
@@ -45,7 +47,22 @@ def load_state() -> dict:
             raise ValueError("active_phase is missing while phases remain")
     elif len(active_rows) != 1 or active_rows[0]["id"] != active:
         raise ValueError("active_phase must identify the sole in-progress phase")
+    validate_phase_order(phases, active)
     return data
+
+
+def validate_phase_order(phases: list[dict], active: str | None) -> None:
+    if any(p["status"] == "skipped" and p.get("optional") is not True for p in phases):
+        raise ValueError("Only explicitly optional phases may be skipped")
+    if active is None:
+        if any(p["status"] == "planned" for p in phases):
+            raise ValueError("active_phase is missing while phases remain")
+        return
+    active_index = next(i for i, phase in enumerate(phases) if phase["id"] == active)
+    if any(p["status"] not in {"completed", "skipped"} for p in phases[:active_index]):
+        raise ValueError("Every earlier phase must be completed or explicitly skipped")
+    if any(p["status"] != "planned" for p in phases[active_index + 1:]):
+        raise ValueError("Every later phase must remain planned until its turn")
 
 
 def replace_block(document: str, start: str, end: str, body: str, label: str) -> str:
@@ -59,24 +76,27 @@ def replace_block(document: str, start: str, end: str, body: str, label: str) ->
 def render(state: dict) -> dict[Path, str]:
     phases = state["phases"]
     complete = sum(p["status"] == "completed" for p in phases)
+    skipped = sum(p["status"] == "skipped" for p in phases)
+    resolved = complete + skipped
     active = next((p for p in phases if p["status"] == "in_progress"), None)
-    progress = f"{complete}/{len(phases)} phases complete"
+    progress = f"{resolved}/{len(phases)} phases resolved ({complete} completed, {skipped} skipped)"
     if active:
         current = f"**Current phase:** {active['id']} — {active['title']}"
         detail = active.get("summary") or "Work is in progress; no completion evidence has been accepted yet."
         if active.get("next_action"):
             detail += f"\n\n**Next action:** {active['next_action']}"
     else:
-        current = "**Current phase:** All roadmap phases are complete."
-        detail = "See the evidence records below for completed gates."
+        current = ("**Current phase:** All required roadmap phases are resolved." if skipped
+                   else "**Current phase:** All roadmap phases are complete.")
+        detail = "See the evidence records below for completed gates and any optional phases skipped with evidence." if skipped else "See the evidence records below for completed gates."
 
     readme_body = f"{current}\n\n**Progress:** {progress}\n\n{detail}\n\n[Phase status and evidence](docs/PHASE-STATUS.md)"
     readme = replace_block(README.read_text(encoding="utf-8"), README_START, README_END, readme_body, "README")
 
-    table_rows = ["| ID | Phase | Status | Completed |", "|---|---|---|---|"]
+    table_rows = ["| ID | Phase | Status | Completed / skipped |", "|---|---|---|---|"]
     for phase in phases:
         table_rows.append(
-            f"| {phase['id']} | {phase['title']} | {phase['status']} | {phase.get('completed_on') or '—'} |"
+            f"| {phase['id']} | {phase['title']} | {phase['status']} | {phase.get('completed_on') or ('skipped ' + phase['skipped_on'] if phase.get('skipped_on') else '—')} |"
         )
     roadmap = replace_block(
         ROADMAP.read_text(encoding="utf-8"),
@@ -92,7 +112,8 @@ def render(state: dict) -> dict[Path, str]:
             "Complete this item and update its evidence before moving to the next item or phase."
         )
     else:
-        active_work = "All phases are complete; see their evidence records for accepted gates."
+        active_work = ("All required phases are resolved; see evidence for completed gates and skipped optional phases."
+                       if skipped else "All phases are complete; see their evidence records for accepted gates.")
     roadmap = replace_block(roadmap, ACTIVE_START, ACTIVE_END, active_work, "ROADMAP active work")
 
     status_lines = [
@@ -140,22 +161,47 @@ def write_all(outputs: dict[Path, str], state: dict | None = None) -> None:
             temp.unlink(missing_ok=True)
 
 
-def evidence_path(value: str, phase_id: str, *, completion: bool = True) -> tuple[str, Path]:
+def validate_evidence_content(content: str, phase_id: str, *, completion: bool = True,
+                              skip: bool = False) -> None:
+    required = [f"Phase: {chr(96)}{phase_id}{chr(96)}", "## Evidence"]
+    if skip:
+        required += ["Gate: SKIP", "## Acceptance criteria"]
+    elif completion:
+        required += ["Gate: PASS", "## Acceptance criteria"]
+    if any(marker not in content for marker in required):
+        detail = ("Gate: SKIP, '## Acceptance criteria', and " if skip else
+                  "Gate: PASS, '## Acceptance criteria', and " if completion else "")
+        raise ValueError(f"Evidence must identify {phase_id} and include {detail}'## Evidence'")
+
+
+def evidence_path(value: str, phase_id: str, *, completion: bool = True,
+                 skip: bool = False) -> tuple[str, Path]:
     candidate = Path(value)
     if candidate.is_absolute() or ".." in candidate.parts:
         raise ValueError("Evidence paths must stay inside the repository")
     resolved = (ROOT / candidate).resolve(strict=True)
     if not resolved.is_relative_to(ROOT) or not resolved.is_file():
         raise ValueError("Evidence must be a file inside the repository")
-    content = resolved.read_text(encoding="utf-8")
-    required = [f"Phase: `{phase_id}`", "## Evidence"]
-    if completion:
-        required += ["Gate: PASS", "## Acceptance criteria"]
-    if any(marker not in content for marker in required):
-        detail = "Gate: PASS, '## Acceptance criteria', and " if completion else ""
-        raise ValueError(f"Evidence must identify {phase_id} and include {detail}'## Evidence'")
+    validate_evidence_content(resolved.read_text(encoding="utf-8"), phase_id,
+                              completion=completion, skip=skip)
     return candidate.as_posix(), resolved
 
+
+def skip_optional_phase(state: dict, phase_id: str, summary: str, evidence: list[str],
+                        *, skipped_on: str | None = None) -> None:
+    phase = next(p for p in state["phases"] if p["id"] == phase_id)
+    if phase.get("status") != "in_progress" or phase.get("optional") is not True:
+        raise ValueError("Only the active phase explicitly marked optional can be skipped")
+    phase.update(status="skipped",
+                 skipped_on=skipped_on or dt.datetime.now(dt.timezone.utc).date().isoformat(),
+                 summary=summary, evidence=evidence)
+    index = state["phases"].index(phase)
+    next_phase = next((p for p in state["phases"][index + 1:] if p["status"] == "planned"), None)
+    if next_phase:
+        next_phase["status"] = "in_progress"
+        state["active_phase"] = next_phase["id"]
+    else:
+        state["active_phase"] = None
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -171,6 +217,11 @@ def main() -> int:
     annotate.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
     annotate.add_argument("--summary", required=True, help="one-line preparatory progress summary")
     annotate.add_argument("--next-action", help="next action to take when this phase becomes active")
+    annotate.add_argument("--optional", action="store_true", help="mark this planned phase as explicitly skippable")
+    skip = sub.add_parser("skip", help="skip the active optional phase with reviewed evidence")
+    skip.add_argument("phase_id")
+    skip.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
+    skip.add_argument("--summary", required=True, help="short evidence-backed reason the optional phase is not selected")
     complete = sub.add_parser("complete", help="record a reviewed completion for the active phase")
     complete.add_argument("phase_id")
     complete.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
@@ -191,13 +242,15 @@ def main() -> int:
         if args.command != "annotate" and state.get("active_phase") != args.phase_id:
             raise ValueError(f"Only the active phase can be updated (active: {state.get('active_phase') or 'none'})")
         phase = next(p for p in state["phases"] if p["id"] == args.phase_id)
-        evidence = [evidence_path(item, args.phase_id, completion=args.command == "complete")[0]
-                    for item in args.evidence]
+        evidence = [evidence_path(item, args.phase_id, completion=args.command == "complete",
+                                  skip=args.command == "skip")[0] for item in args.evidence]
         if args.command == "annotate":
             if phase["status"] != "planned":
                 raise ValueError("Preparatory annotations require a planned phase")
             merged = list(dict.fromkeys([*phase.get("evidence", []), *evidence]))
             phase.update(summary=summary, evidence=merged)
+            if args.optional:
+                phase["optional"] = True
             if args.next_action:
                 action = args.next_action.strip()
                 if not action or "\n" in action or "\r" in action:
@@ -205,6 +258,11 @@ def main() -> int:
                 phase["next_action"] = action
             write_all(render(state), state)
             print(f"Recorded preparatory {args.phase_id} evidence without changing phase status.")
+            return 0
+        if args.command == "skip":
+            skip_optional_phase(state, args.phase_id, summary, evidence)
+            write_all(render(state), state)
+            print(f"Skipped optional {args.phase_id} with reviewed evidence and advanced the active phase.")
             return 0
         if args.command == "update":
             if phase["status"] != "in_progress":

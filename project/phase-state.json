@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Installed GTK/TUI/Web/PRoot Apps visual acceptance was owner-confirmed on 2026-10-20; Native boot-Cron exact-script integration is configured and duplicate-safe in a live/manual run. Desktop lifecycle lock contention is covered in fixtures. Cold-boot delivery and Android startup/background policy remain unverified, so P3 stays in progress.",
+      "summary": "Phase audit complete: visual review is accepted; PRoot TTY ownership, client action parity, boot helper drift, and cold-boot qualification remain open.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -167,16 +167,17 @@
         "docs/evidence/2026-10-20-management-client-parity-audit.md",
         "docs/evidence/2026-10-20-proot-shortcut-client-parity.md",
         "docs/evidence/2026-10-20-p3-owner-visual-and-boot-cron-recheck.md",
-        "docs/evidence/2026-10-20-graphics-live-recheck.md"
+        "docs/evidence/2026-10-20-graphics-live-recheck.md",
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
       ],
-      "next_action": "Keep the accepted visual review closed. Preserve the running session; qualify Termux:Boot delivery only during a separately scheduled reboot window, then resolve remaining Android startup policy and review the P3 exit gate. Continue non-disruptive P4/P6 implementation work without claiming their phase gates complete."
+      "next_action": "Define and fixture-verify interactive PRoot TTY ownership (host PID/start identity, guest UID, cwd, argv/environment, attach/detach, output, and exact signal target) before any P4 guest lifecycle implementation."
     },
     {
       "id": "P4",
       "title": "Existing Ternux PRoot feature-parity provider",
       "status": "planned",
       "completed_on": null,
-      "summary": "Added a separate tx pgui adapter for the existing Debian XFCE desktop: identity-checked standalone :0 and foreground nested Xephyr :2; both routes verified Zink/Turnip and authenticated Native PulseAudio on device. xserver-xephyr is recorded in the versioned Debian package profile. P4 remains planned pending P3 gates and a reproducible fresh-guest package/config replay.",
+      "summary": "Existing Debian routes are partially verified; nested :2 GPU presentation and disposable fresh-guest replay remain open.",
       "evidence": [
         "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
         "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
@@ -198,64 +199,82 @@
         "docs/architecture/NATIVE-GRAPHICS-AUDIO.md",
         "docs/evidence/2026-10-20-ternuxx-proot-consolidation.md",
         "docs/evidence/2026-10-20-proot-full-gui.md",
-        "docs/evidence/2026-10-20-graphics-live-recheck.md"
+        "docs/evidence/2026-10-20-graphics-live-recheck.md",
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
       ],
-      "next_action": "After P3 passes, integrate this dedicated GUI lifecycle with the existing Debian provider and shared management contract; implement previewed package/config replay and verify fresh-guest setup without replacing the existing rootfs."
+      "next_action": "After P3, verify standalone :0, selected-app :1, nested :2, exact process/audio ownership, and fresh replay on a separate disposable guest."
     },
     {
       "id": "P5",
       "title": "Distro and display compatibility profiles",
       "status": "planned",
       "completed_on": null,
-      "summary": "",
-      "evidence": []
+      "summary": "Only the current Android 16/aarch64/Termux and existing Debian provider profile has device evidence; other combinations remain unqualified.",
+      "evidence": [
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+      ],
+      "next_action": "After P4, freeze a dated supported profile matrix with exact host, Termux, ABI, distro, display, audio, and graphics versions."
     },
     {
       "id": "P6",
       "title": "CPU/GPU/NPU capability, optimization, and fallback",
       "status": "planned",
       "completed_on": null,
-      "summary": "Native off-screen OpenGL, GLES 3 shader draw, and selected-candidate 120-frame Vulkan draw are verified on Adreno 825. OpenGL verification has llvmpipe then softpipe software fallback. Debian GLX/Zink/Turnip draw is separately verified. P6 remains open: ordinary API-aware workload routing, nested Xephyr presentation, clean-install provider reproduction, and NPU workload are not qualified.",
+      "summary": "Native GL/GLES/Vulkan and direct Debian Zink/Turnip draws exist; ordinary workload fallback, clean-install setup, nested presentation, and NPU remain open.",
       "evidence": [
         "docs/evidence/2026-10-20-shared-graphics-manager.md",
         "docs/evidence/2026-10-20-native-offscreen-glmark2.md",
         "docs/evidence/2026-10-20-graphics-live-recheck.md",
         "docs/evidence/2026-10-20-native-vulkan-draw.md",
-        "docs/evidence/2026-10-20-native-gles-draw.md"
+        "docs/evidence/2026-10-20-native-gles-draw.md",
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
       ],
-      "next_action": "Connect API-aware backend assessment and software fallback to named workload launch paths; qualify nested Xephyr presentation and fresh-device provider reproduction while keeping unsupported APIs fail-closed. Keep NPU runtime/workload as unverified."
+      "next_action": "After P5, connect API-safe backend choice and verified CPU fallback to named workloads, reproduce setup from clean install, and record NPU feasibility."
     },
     {
       "id": "P7",
       "title": "Native apps and curated software catalog",
       "status": "planned",
       "completed_on": null,
-      "summary": "",
-      "evidence": []
+      "summary": "Catalog browse/shortcuts exist, but a supported install/update/remove lifecycle and exact client parity are not complete.",
+      "evidence": [
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+      ],
+      "next_action": "After P6, select a small official app set and implement preview, consent, progress, update, remove, and result reporting through the shared service and clients."
     },
     {
       "id": "P8",
       "title": "Hybrid workload and accelerator routing",
       "status": "planned",
       "completed_on": null,
-      "summary": "",
-      "evidence": []
+      "summary": "Native, standalone PRoot, and Hybrid features exist separately; accepted boot-to-workload-to-result flows are still missing.",
+      "evidence": [
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+      ],
+      "next_action": "After P7, verify Native-only, PRoot :0, and Hybrid :1 with selected app and nested :2 workflows, file handoff, audio/display ownership, logs, and recovery."
     },
     {
       "id": "P9",
       "title": "Optional isolated PRoot profile",
       "status": "planned",
       "completed_on": null,
-      "summary": "",
-      "evidence": []
+      "summary": "Optional only: no separate isolated rootfs need is selected; never target the existing Debian installation.",
+      "evidence": [
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+      ],
+      "optional": true,
+      "next_action": "After P8, proceed only for an owner-approved workload gap; otherwise create Gate: SKIP evidence and use the reviewed skip transition."
     },
     {
       "id": "P10",
       "title": "Hardening, release, and support",
       "status": "planned",
       "completed_on": null,
-      "summary": "",
-      "evidence": []
+      "summary": "Internal completion and public release are separate; supported-profile reproducibility, final docs/security review, license, and provenance remain release gates.",
+      "evidence": [
+        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+      ],
+      "next_action": "After required phases, run reproducibility and support checks, update handoff/state, and keep public release blocked until license and provenance are resolved."
     }
   ]
 }
