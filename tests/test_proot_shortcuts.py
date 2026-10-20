@@ -245,7 +245,7 @@ class ProotShortcutTests(unittest.TestCase):
         )
         self.assertEqual(result["discovered"], 1)
         launcher = data / "applications/ternuxx-proot-app-org.example.Editor.desktop"
-        self.assertIn("Categories=Utility;X-Ternuxx-PRoot;", launcher.read_text())
+        self.assertIn("Categories=X-Ternuxx-PRoot;", launcher.read_text())
         self.assertIn("--desktop-id", launcher.read_text())
         self.assertIn(str(self.repo / "tx"), launcher.read_text())
         self.assertIn("PRoot Apps", (config / "menus/xfce-applications.menu").read_text())

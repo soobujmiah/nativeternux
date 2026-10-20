@@ -8,7 +8,7 @@ Ternuxx scans the installed Debian rootfs application directory (`/usr/share/app
 ./tx mng papps sync
 ```
 
-The sync includes visible GUI application entries, skips hidden, terminal-only, malformed, and session-logout entries, and preserves conflicting files that it does not own. Generated entries route by Debian desktop-entry ID through `proot.app.launch`; the service expands documented desktop field codes into an argument vector and starts the guest command directly without a shell. The menu overlay is stored in Ternuxx's private Native XFCE XDG paths, merges the system menu, excludes PRoot entries from the generic Accessories category, and groups them under **PRoot Apps**. The parent-merge behavior follows the [freedesktop Desktop Menu Specification](https://specifications.freedesktop.org/menu/latest-single/).
+The sync includes visible GUI application entries, skips hidden, terminal-only, malformed, and session-logout entries, and preserves conflicting files that it does not own. Generated entries route by Debian desktop-entry ID through `proot.app.launch`; the service expands documented desktop field codes into an argument vector and starts the guest command directly without a shell. The menu overlay is stored in Ternuxx's private Native XFCE XDG paths, merges the system menu, assigns generated launchers only to the custom PRoot category, excludes them from generic Accessories and Accessibility menus, and groups them under **PRoot Apps**. The parent-merge behavior follows the [freedesktop Desktop Menu Specification](https://specifications.freedesktop.org/menu/latest-single/).
 
 A single menu entry can also be launched from Native Termux:
 

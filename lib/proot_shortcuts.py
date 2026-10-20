@@ -187,7 +187,9 @@ def _available(app_id: str, *, prefix: str, home: str, path: str, repo_root: str
 
 
 
-DESKTOP_APP_CATEGORIES = "Utility;X-Ternuxx-PRoot;"
+# Keep generated guest launchers out of XFCE's generic Utility/Accessories
+# menu. They belong only in the explicit PRoot Apps menu below.
+DESKTOP_APP_CATEGORIES = "X-Ternuxx-PRoot;"
 _DESKTOP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,199}\.desktop\Z")
 
 
@@ -381,6 +383,10 @@ def sync_desktop_applications(*, home: str, prefix: str, repo_root: str,
   <MergeFile type="parent">xfce-applications.menu</MergeFile>
   <Menu>
     <Name>Accessories</Name>
+    <Exclude><Category>X-Ternuxx-PRoot</Category></Exclude>
+  </Menu>
+  <Menu>
+    <Name>Accessibility</Name>
     <Exclude><Category>X-Ternuxx-PRoot</Category></Exclude>
   </Menu>
   <Menu>
