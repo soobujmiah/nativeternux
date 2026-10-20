@@ -1,0 +1,7 @@
+event_id: commit-2058236504f0-2f2b6b0cb862ffd7
+repository: soobujmiah/ternuxx
+commit: 2058236504f019f65d00f4360e15cc4aa60bc371
+kind: commit
+occurred_at: '2026-10-20T00:26:05Z'
+status: completed
+summary: 'fix: enforce private desktop lifecycle lock mode'
