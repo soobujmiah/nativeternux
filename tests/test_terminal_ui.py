@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import sys
 import unittest
 from unittest import mock
@@ -29,7 +30,9 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertNotIn("ternux or ternuxx", " ".join(labels).lower())
 
     def test_catalog_categories_and_resources_define_navigation(self) -> None:
-        result = terminal_ui._call("management.catalog")
+        with mock.patch.dict(os.environ, {"PREFIX": "/data/data/com.termux/files/usr",
+                                          "TERMUX_VERSION": "fixture"}):
+            result = terminal_ui._call("management.catalog")
         self.assertTrue(result["ok"])
         categories = result["data"]["categories"]
         resources = result["data"]["resources"]

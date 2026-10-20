@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
@@ -11,6 +13,18 @@ import hermes_adapter
 
 
 class HermesAdapterTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="ternuxx-hermes-")
+        self.addCleanup(self.temp.cleanup)
+        self.prefix = Path(self.temp.name) / "prefix"
+        executable = self.prefix / "bin/hermes"
+        executable.parent.mkdir(parents=True)
+        executable.write_text("#!/bin/sh\\nexit 0\\n", encoding="utf-8")
+        executable.chmod(0o700)
+        patcher = mock.patch.object(hermes_adapter, "_NATIVE_PREFIX", self.prefix)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def _fake(self, responses):
         calls = []
         def runner(command, **kwargs):
@@ -22,7 +36,7 @@ class HermesAdapterTests(unittest.TestCase):
         return runner, calls
 
     def _prefix(self):
-        return "/data/data/com.termux/files/usr"
+        return str(self.prefix)
 
     def _response(self, stdout="", code=0):
         return subprocess.CompletedProcess([], code, stdout, "sensitive stderr must not escape")

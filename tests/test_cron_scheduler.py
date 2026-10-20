@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 from pathlib import Path
+import os
 import sys
+from unittest import mock
 import tempfile
 import unittest
 
@@ -77,6 +79,10 @@ class CronSchedulerLeaseTests(unittest.TestCase):
                 cron_scheduler.status(self.state)
 
     def test_registered_no_side_effect_action_uses_real_subprocess_runner(self):
+        patcher = mock.patch.dict(os.environ, {"PREFIX": "/data/data/com.termux/files/usr",
+                                               "TERMUX_VERSION": "fixture"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         cron_registry.update_job(self.state, self.job["job_id"], {"action_id": "scheduler.self_test"})
         with cron_scheduler.SchedulerLease(self.state) as lease:
             result = cron_scheduler.dispatch_claimed_event(

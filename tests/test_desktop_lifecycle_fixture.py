@@ -197,6 +197,7 @@ while True:
         stale_lock = self.tmp / ".X1-lock"
         stale_socket = self.tmp / ".X11-unix/X1"
         stale_lock.write_text(f"{missing_pid + 1}\n", encoding="ascii")
+        stale_lock.chmod(0o600)
         stale_listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         stale_listener.bind(str(stale_socket))
         stale_listener.close()

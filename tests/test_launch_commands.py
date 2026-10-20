@@ -20,6 +20,8 @@ class LaunchCommandTests(unittest.TestCase):
         stub = self.bin / "proot-distro"
         stub.write_text('#!/bin/sh\nif [ -n \"${PROOT_ENV_CAPTURE:-}\" ]; then env > \"$PROOT_ENV_CAPTURE\"; fi\nprintf \"%s\\n\" \"$@\"\n')
         stub.chmod(0o755)
+        prefix_bash = self.bin / "bash"
+        prefix_bash.symlink_to(shutil.which("bash"))
         self.env = {**os.environ, "HOME": str(self.root), "PREFIX": str(self.root),
                     "PATH": f"{self.bin}:{os.environ['PATH']}",
                     "TERNUXX_STATE_DIR": str(self.root / "state"),

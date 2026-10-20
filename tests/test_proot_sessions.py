@@ -449,8 +449,9 @@ class PRootSessionRegistryTests(unittest.TestCase):
             executable.write_text("#!/bin/sh\\n", encoding="utf-8")
             executable.chmod(0o700)
         (root / "etc/passwd").write_text("sbj:x:1000:1000::/home/sbj:/bin/bash\\n", encoding="utf-8")
-        first = proot_sessions.preview_start("isolated-probe", prefix=str(prefix))
-        second = proot_sessions.preview_start("debian-interactive", prefix=str(prefix))
+        with mock.patch("shutil.which", return_value=str(self.launcher)):
+            first = proot_sessions.preview_start("isolated-probe", prefix=str(prefix))
+            second = proot_sessions.preview_start("debian-interactive", prefix=str(prefix))
         self.assertNotEqual(first["plan_id"], second["plan_id"])
         self.assertTrue(first["confirmation_required"])
         with self.assertRaisesRegex(proot_sessions.SessionError, "unsupported"):
@@ -645,7 +646,13 @@ class PRootVerificationFixtureTests(unittest.TestCase):
         self.assertEqual(guest["PULSE_SERVER"], "tcp:127.0.0.1:4713")
         self.assertEqual(guest["DISPLAY"], ":1")
         self.assertNotIn("VK_ICD_FILENAMES", guest)
-        args = proot_sessions._native_pulse_login_args(source)
+        with tempfile.TemporaryDirectory(prefix="ternuxx-pulse-cookie-") as home:
+            cookie = Path(home) / ".config/pulse/cookie"
+            cookie.parent.mkdir(parents=True, mode=0o700)
+            cookie.write_bytes(b"c" * 256)
+            cookie.chmod(0o600)
+            source["HOME"] = home
+            args = proot_sessions._native_pulse_login_args(source)
         self.assertIn("PULSE_SERVER=tcp:127.0.0.1:4713", args)
         self.assertIn("DISPLAY=:1", args)
         self.assertIn("GALLIUM_DRIVER=zink", args)

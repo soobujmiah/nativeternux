@@ -1,10 +1,12 @@
 from __future__ import annotations
 import datetime as dt
+import os
 from pathlib import Path
 import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
@@ -15,6 +17,10 @@ import cron_registry
 
 class CronDaemonRuntimeTests(unittest.TestCase):
     def test_isolated_daemon_dispatches_due_registered_action_once_and_stops_owned_process(self):
+        patcher = mock.patch.dict(os.environ, {"PREFIX": "/data/data/com.termux/files/usr",
+                                               "TERMUX_VERSION": "fixture"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         with tempfile.TemporaryDirectory(prefix="ternuxx-cron-daemon-") as tmp:
             state = Path(tmp) / "state"
             state.mkdir(mode=0o700)

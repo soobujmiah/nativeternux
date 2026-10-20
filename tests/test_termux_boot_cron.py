@@ -123,7 +123,8 @@ class TermuxBootCronTest(unittest.TestCase):
     def test_repository_boot_script_is_same_as_manager_template(self):
         source = ROOT / "scripts/termux-boot" / termux_boot_cron.SCRIPT_NAME
         self.assertEqual(source.read_bytes(), termux_boot_cron.script_bytes())
-        self.assertEqual(source.stat().st_mode & 0o777, 0o700)
+        # Git stores only the executable bit; apply() separately verifies 0700.
+        self.assertEqual(source.stat().st_mode & 0o100, 0o100)
 
     def test_management_authorization_keeps_mutation_narrow(self):
         import management_authorization

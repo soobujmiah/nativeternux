@@ -14,6 +14,7 @@ from typing import Callable
 
 
 Runner = Callable[..., subprocess.CompletedProcess[str]]
+_NATIVE_PREFIX = Path("/data/data/com.termux/files/usr")
 _VERSION = re.compile(r"^Hermes Agent (v\S+)", re.MULTILINE)
 _NOT_SERVING = re.compile(r"""No scheduler is serving profile ['"]([^'"]+)['"]""")
 _READY = "Gateway is running — cron jobs will fire automatically"
@@ -23,7 +24,7 @@ def inspect(*, prefix: str, home: str, runner: Runner = subprocess.run) -> dict[
     """Inspect Hermes version and scheduler health without exposing CLI output."""
     checked_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     root = Path(prefix)
-    expected_root = Path("/data/data/com.termux/files/usr")
+    expected_root = _NATIVE_PREFIX
     if str(root) != str(expected_root) or not home:
         return _unavailable("native_termux_required", checked_at)
 

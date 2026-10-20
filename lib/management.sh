@@ -42,7 +42,6 @@ nt_cmd_management() {
           [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng center"; return 2; }
           nt_require_termux || return 1
           local app="$PREFIX/bin/tx-management-center"
-          [ -x "$app" ] || { nt_fail "GTK management client is not installed; run 'tx mng center install'."; return 1; }
           nt_require_command python3 || return 1
           _nt_use desktop || return 1
           _nt_adopt_live_session_state
@@ -69,6 +68,7 @@ nt_cmd_management() {
             nt_fail "Cannot open the selected Native Termux display: $display_result"
             return 1
           }
+          [ -x "$app" ] || { nt_fail "GTK management client is not installed; run 'tx mng center install'."; return 1; }
           _nt_use audio || return 1
           nt_audio_ensure || true
           DISPLAY="$selected_display" "$app"

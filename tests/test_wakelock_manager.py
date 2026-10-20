@@ -103,6 +103,7 @@ class WakeLockManagerTests(unittest.TestCase):
                       "owners": {"native.sshd": {"pid": 99999999, "process_start": "1",
                                                    "persistent": True, "reason": "native_sshd"}}}
             (root / "owners.json").write_text(json.dumps(record))
+            (root / "owners.json").chmod(0o600)
             with patch.object(wakelock_manager, "_process_start", side_effect=lambda pid: "caller-start" if pid == self.pid else None), \
                  patch.object(wakelock_manager, "_pid_is_absent", return_value=True):
                 result = self.acquire("native.sshd", persistent=True)
@@ -117,6 +118,7 @@ class WakeLockManagerTests(unittest.TestCase):
                       "owners": {"native.sshd": {"pid": 99999999, "process_start": "1",
                                                    "persistent": True, "reason": "native_sshd"}}}
             (root / "owners.json").write_text(json.dumps(record))
+            (root / "owners.json").chmod(0o600)
             with patch.object(wakelock_manager, "_process_start", side_effect=lambda pid: "caller-start" if pid == self.pid else None), \
                  patch.object(wakelock_manager, "_pid_is_absent", return_value=False):
                 with self.assertRaisesRegex(wakelock_manager.WakeLockError, "identity is unavailable"):
