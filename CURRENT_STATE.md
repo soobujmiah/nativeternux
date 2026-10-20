@@ -678,3 +678,8 @@ Native `virglrenderer-android` 1.3.0-1 server started on `:1`; status matched Te
 ### VirGL stop ownership limitation — 2026-10-20
 
 Tightened `tx virgl stop` diagnostics and added fixtures for Android lsof path misses and incomplete process visibility. Native Termux still cannot enumerate AF_UNIX peers: lsof has no exact path PID, fuser and `/proc/net/unix` are permission-denied, and `NETLINK_SOCK_DIAG` socket creation returns `PermissionError`. `tx virgl stop --display :1` exits 1 with an actionable refusal and leaves exact owner PID 21034 and its socket intact. Active PRoot PID 14360 remains running. Full Native Termux suite passed 560/560; latest targeted suite passed 20/20. The source of truth and Linux UAPI probe evidence are in the workstation execution record.
+
+
+### Stop-guard verification — 2026-10-20
+
+The Android-specific stop diagnostic and fixtures passed the 560-test Native suite. GitHub Contract 39375369245 and Knowledge Sync 39375369134 succeeded on `9df52d5`; sync commit `d660c92` contained only generated `.repo` state and was fast-forwarded. The VirGL service is still running and stop remains fail-closed because Android denies Unix-socket client enumeration.
