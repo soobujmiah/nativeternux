@@ -256,3 +256,7 @@ CLI/backend contract clarification after the direct probe: updated `lib/help.sh`
 ### CI qualification for Native/PRoot acceleration contract — 2026-10-20
 
 The focused CLI/docs changes were pushed as source `f7d5fc151c57f9e5eb872ff29f5c25285ec522dc`. Repository State Contract run `39351208832` succeeded, including CLI syntax/help and the full repository unit/mock-integration suite. Repository Knowledge Sync run `39351230147` succeeded, including repo knowledge verification, strict README bridge, and repository tests. Its generated-state-only commit is `a2c3df9d3226149da371d1ecaf3478a04c431a79`; its diff was limited to `.repo/STATUS.md`, `.repo/project.yaml`, and four `.repo/events/*` records and was fast-forwarded locally. These workflows qualify repository source/contracts, not device-bound VirGL activation, Native Vulkan compatibility, visible GUI, audible audio, NPU/CPU workloads, or PRoot lifecycle.
+
+### Project scope aligned with Native host authority — 2026-10-20
+
+Updated `PROJECT_MANIFEST.yaml` to identify the existing Debian PRoot as Ternuxx's preserved workload environment, permit only narrow reversible host-handoff configuration changes after impact/recovery assessment, and keep the separate Ternux repository/launcher out of scope. This records the owner's direction; no guest/rootfs/package change was made. `python3 -m tools.repo_knowledge verify` reported 0 findings and `git diff --check` passed. The generated `.repo` state and `.superdesign/` owner directory were not edited.
