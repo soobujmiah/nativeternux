@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-Managed 8023 process identity and config are verified separately from still-unknown TCP listener ownership; 638/638 Native tests pass. P3 recovery/ownership and cold-boot qualification remain open.
+PRoot TTY ownership contract passes 34 focused fixtures; live login still fails closed on cwd/guest-UID identity. Managed SSH process identity is verified separately; TCP mapping and cold-boot delivery remain open.
 
-**Next action:** Continue remaining P3 recovery and ownership gates; keep cold-boot qualification in a separate owner-approved window and do not close the active Termux/Codex session.
+**Next action:** Audit remaining P3 journal/recovery and four-client management coverage; preserve the separate owner-approved cold-boot window and keep P3 active until every exit gate passes.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

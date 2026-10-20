@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Continue remaining P3 recovery and ownership gates; keep cold-boot qualification in a separate owner-approved window and do not close the active Termux/Codex session.
+**Next action:** Audit remaining P3 journal/recovery and four-client management coverage; preserve the separate owner-approved cold-boot window and keep P3 active until every exit gate passes.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
