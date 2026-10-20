@@ -2,14 +2,14 @@
 # ternuxx -- deterministic status
 
 - Repository: `soobujmiah/ternuxx`
-- Generated at: 2026-10-20T08:33:57Z (by `tools/repo_knowledge collect`)
+- Generated at: 2026-10-20T08:34:56Z (by `tools/repo_knowledge collect`)
 - Version: `a1beb3f`
 - Head: `a1beb3fc413ba566be3e815e2632cbf429f492be` on `main` (2026-10-20T08:33:57Z)
 
 ## Build / test
 
-- Build: **unknown**
-- Test: **unknown** -- Local repository suite passed 572/572; GitHub CI has not yet reported this source head.
+- Build: **unknown** (run `39394338207`)
+- Test: **passed**
 - Last failed build: `69e378eb33247678437bda4b2de9ab25f6bcb91d` at 2026-10-18T19:42:44Z
 
 ## Phases
@@ -18,5 +18,5 @@
 ## Sync
 
 - Status: ok
-- Source: local
-- Last synced at: 2026-10-20T08:33:57Z
+- Source: ci
+- Last synced at: 2026-10-20T08:34:56Z
