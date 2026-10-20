@@ -4,7 +4,7 @@
 
 ## Context-separated evidence
 
-The recorded native Termux Mesa Freedreno/Turnip probe on Adreno 825 returned `VK_ERROR_INCOMPATIBLE_DRIVER`. There is no `glxinfo` native renderer result and no Ternuxx inference test. Existing Ternux Debian PRoot configures a separate Zink/Turnip graphics route; that is not evidence of native GPU support or AI operator delegation. It also is not an inference report.
+The recorded native Termux Mesa Freedreno/Turnip probe on Adreno 825 returned `VK_ERROR_INCOMPATIBLE_DRIVER`. A direct Native Termux `DISPLAY=:1 glxinfo -B` run on 2026-10-20 reported `llvmpipe (LLVM 21.1.8, 128 bits)`, `Accelerated: no`; the Native XFCE/`xfce4-about` context therefore is not GPU-rendered by the current observed path. The installed Native DRI directory contains `zink_dri.so` but no `kgsl_dri.so`; Zink cannot initialize because the current Native Turnip ICD rejects GPU ID 6830. The separate Debian PRoot Mesa 25.0.7 Zink/Turnip route does render Adreno 825, but its glibc libraries cannot be substituted into Native Termux/Bionic. No package/driver change has been applied. Native GPU workload/inference remains unverified.
 
 Upstream llama.cpp's Snapdragon backend docs describe GPUOpenCL on Adreno alongside CPU and Hexagon HTP, and contain Android target build/run examples. This makes Snapdragon/OpenCL a research candidate distinct from the failing Vulkan probe. It remains untested on this exact SM8735 device, native Termux app context and Ternuxx code. See [upstream Snapdragon backend](https://github.com/ggml-org/llama.cpp/tree/master/docs/backend/snapdragon) and [general Android/Termux instructions](https://github.com/ggml-org/llama.cpp/blob/master/docs/android.md).
 
