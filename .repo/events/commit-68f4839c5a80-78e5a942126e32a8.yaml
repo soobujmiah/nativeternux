@@ -1,0 +1,7 @@
+event_id: commit-68f4839c5a80-78e5a942126e32a8
+repository: soobujmiah/ternuxx
+commit: 68f4839c5a80dd9bd26244af39e49856bba6da62
+kind: commit
+occurred_at: '2026-10-20T18:35:16Z'
+status: completed
+summary: 'feat: unify Cron and boot helper management'
