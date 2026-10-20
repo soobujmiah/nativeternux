@@ -1,0 +1,7 @@
+event_id: commit-609dbbd5a679-8e60935a5d96725c
+repository: soobujmiah/ternuxx
+commit: 609dbbd5a679981b8b5d44326fefa123ef39ac97
+kind: commit
+occurred_at: '2026-10-20T05:41:55Z'
+status: completed
+summary: Document native acceleration provider boundaries
