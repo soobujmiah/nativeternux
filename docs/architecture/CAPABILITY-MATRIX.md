@@ -175,7 +175,7 @@ A disposable PRoot probe was started and stopped with an isolated temporary regi
 | Resource/context | Current observation | Qualification boundary |
 |---|---|---|
 | Native CPU | Native CPU baseline; inference integration not implemented | Baseline only, no model/runtime workload claim |
-| Native GUI graphics | The read-only `:1` GUI bridge reports `llvmpipe`; Native Vulkan reports `VK_ERROR_INCOMPATIBLE_DRIVER` for this package/device | Native GTK is not currently GPU-rendered by this route |
+| Native GUI graphics | Default/current `:1` session uses `llvmpipe`; a process-scoped third-party Mesa/KGSL candidate on `:1` reported Freedreno Adreno 825, accelerated=yes, and drew 602 glxgears frames in 5 sec with the live compositor confirmed on | Candidate is extracted under a test-only private prefix; current XFCE/GTK session was not restarted and continues using llvmpipe; no inference workload proof |
 | Debian PRoot GPU | Isolated read-only verify on `:1` reports Zink/Vulkan 1.4, Adreno 825, `MESA_TURNIP`; X11 reachable | Renderer evidence for this guest process/display, not a general workload benchmark; guest profile ownership remains unverified |
 | VirGL | Native Ternuxx vtest server PID 21034 is running on :1; the earlier read-only renderer request observed Zink/Turnip and returned a mismatch | Server startup is live-verified, but no guest VirGL renderer/workload is qualified; Android socket ownership restrictions prevent verified stop; `tx proot verify --backend virgl` remains an expectation, while `tx db --backend virgl` activates the host handoff |
 | NPU | Native GUI reports runtime/delegate unverified | Experimental only; no package/runtime/model/workload installed or run |
