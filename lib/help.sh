@@ -131,6 +131,7 @@ The debian-interactive profile requires a TTY and opens a foreground login shell
 tx mng hermes status — Inspect optional Hermes scheduler (read-only)
 tx mng cron status/start/stop — Inspect or explicitly manage the lease-guarded scheduler
 tx mng cron jobs list|show|validate|next-runs|create|update|enable|disable|remove — Manage validated job definitions
+tx mng cron executions list|show — Read saved execution history (does not run jobs)
 tx mng boot cron status|validate — Inspect the opt-in official Termux:Boot Cron entry
 tx mng boot cron preview {enable|disable} — Preview exact script changes
 tx mng boot cron enable|disable --yes --plan-id ID — Apply the reviewed boot-script plan
