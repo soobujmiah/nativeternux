@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Continue P3 recovery/ownership acceptance without closing the current Termux/Codex session; actual cold-boot qualification requires a separate owner-approved device window.
+**Next action:** Continue P3 ownership/recovery acceptance; do not close the active Termux/Codex session. Cold-boot qualification remains a separate owner-approved window.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

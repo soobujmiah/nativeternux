@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Cron boot and boot-helper mutations serialize against exact plans; concurrent boot-helper applies have one winner. Read-only Doctor found no unresolved operations. P3 recovery/ownership and cold-boot qualification remain open.",
+      "summary": "Cron boot and boot-helper mutations have concurrency fixtures; Native helpers and managed 8023 read-only checks pass. P3 recovery/ownership and cold-boot qualification remain open.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -174,9 +174,10 @@
         "docs/evidence/2026-10-21-cron-mutation-client-parity.md",
         "docs/evidence/2026-10-21-boot-helper-reconciliation.md",
         "docs/evidence/2026-10-21-p3-cron-boot-concurrency.md",
-        "docs/evidence/2026-10-21-p3-native-readonly-recheck.md"
+        "docs/evidence/2026-10-21-p3-native-readonly-recheck.md",
+        "docs/evidence/2026-10-21-p3-managed-8023-readonly-recheck.md"
       ],
-      "next_action": "Continue P3 recovery/ownership acceptance without closing the current Termux/Codex session; actual cold-boot qualification requires a separate owner-approved device window."
+      "next_action": "Continue P3 ownership/recovery acceptance; do not close the active Termux/Codex session. Cold-boot qualification remains a separate owner-approved window."
     },
     {
       "id": "P4",

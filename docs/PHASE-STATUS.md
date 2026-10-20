@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-Cron boot and boot-helper mutations serialize against exact plans; concurrent boot-helper applies have one winner. Read-only Doctor found no unresolved operations. P3 recovery/ownership and cold-boot qualification remain open.
+Cron boot and boot-helper mutations have concurrency fixtures; Native helpers and managed 8023 read-only checks pass. P3 recovery/ownership and cold-boot qualification remain open.
 
-**Next action:** Continue P3 recovery/ownership acceptance without closing the current Termux/Codex session; actual cold-boot qualification requires a separate owner-approved device window.
+**Next action:** Continue P3 ownership/recovery acceptance; do not close the active Termux/Codex session. Cold-boot qualification remains a separate owner-approved window.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -179,6 +179,7 @@ Evidence:
 - [docs/evidence/2026-10-21-boot-helper-reconciliation.md](evidence/2026-10-21-boot-helper-reconciliation.md)
 - [docs/evidence/2026-10-21-p3-cron-boot-concurrency.md](evidence/2026-10-21-p3-cron-boot-concurrency.md)
 - [docs/evidence/2026-10-21-p3-native-readonly-recheck.md](evidence/2026-10-21-p3-native-readonly-recheck.md)
+- [docs/evidence/2026-10-21-p3-managed-8023-readonly-recheck.md](evidence/2026-10-21-p3-managed-8023-readonly-recheck.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 

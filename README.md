@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-Cron boot and boot-helper mutations serialize against exact plans; concurrent boot-helper applies have one winner. Read-only Doctor found no unresolved operations. P3 recovery/ownership and cold-boot qualification remain open.
+Cron boot and boot-helper mutations have concurrency fixtures; Native helpers and managed 8023 read-only checks pass. P3 recovery/ownership and cold-boot qualification remain open.
 
-**Next action:** Continue P3 recovery/ownership acceptance without closing the current Termux/Codex session; actual cold-boot qualification requires a separate owner-approved device window.
+**Next action:** Continue P3 ownership/recovery acceptance; do not close the active Termux/Codex session. Cold-boot qualification remains a separate owner-approved window.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

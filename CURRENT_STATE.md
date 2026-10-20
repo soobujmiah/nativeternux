@@ -788,3 +788,6 @@ Latest read-only Native status at 2026-10-20 18:44 UTC (2026-10-21 00:44 Asia/Dh
 ## 2026-10-21 — boot-helper recovery concurrency acceptance
 
 Added a fixture for two simultaneous applies of the same exact boot-helper plan. One deploy wins under the helper lock; the second fails closed after the plan is consumed; only one private rollback snapshot exists and the target matches the source. Focused boot-helper tests passed 7/7 and the final full Native suite passed 636/636 in 96.086 seconds. No live helper or boot file was changed. Updated evidence: [P3 Cron boot and helper concurrency](docs/evidence/2026-10-21-p3-cron-boot-concurrency.md). P3 remains open for outstanding recovery/ownership and actual boot delivery qualification.
+
+
+Managed 8023 read-only recheck at 2026-10-20 18:45 UTC: key-authenticated loopback SSH succeeded; helper/source hashes and Cron boot script identity matched; scheduler reported running. This does not verify listener PID ownership or device boot delivery. No state changed. Evidence: [managed 8023 read-only recheck](docs/evidence/2026-10-21-p3-managed-8023-readonly-recheck.md).
