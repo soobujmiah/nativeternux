@@ -1,11 +1,11 @@
 # Current testing and acceleration limitations
 
-**Last reconciled:** 2026-10-17 against repository source and dated evidence. Refresh these statements after accepted test reports or code changes.
+**Last reconciled:** 2026-10-20 against repository source and dated evidence. Refresh these statements after accepted test reports or code changes.
 
 - Ternuxx is a Bash desktop/lifecycle manager; no inference runtime, model loading, CPU/GPU/NPU backend, public inference API, or model example is implemented.
 - The repository contains no product tests or inference benchmark harness. Existing CI checks deterministic repository metadata, bridge content and classification only; it cannot validate Android device behavior.
 - CPU inference has no selected or integrated runtime and has no correctness/performance evidence. CPU is the free-core target, not a currently shipped feature.
-- Native Vulkan/Turnip returned `VK_ERROR_INCOMPATIBLE_DRIVER` for the recorded Adreno 825, Termux Mesa 26.2.4, and process probe. No native OpenGL renderer check or GPU inference test is recorded.
+- The stock Native Turnip ICD probe returned `VK_ERROR_INCOMPATIBLE_DRIVER`; the selected experimental KGSL/Freedreno candidate has since passed a bounded 120-frame Vulkan draw on `:1`. This is not Vulkan inference, broad application qualification, sustained/thermal qualification, or clean-install reproducibility.
 - Upstream llama.cpp documents Android/Snapdragon OpenCL and experimental Hexagon backends, but exact SM8735 support, Termux-app operation, Ternuxx integration, correctness and stability are unverified.
 - Qualcomm's product brief confirms Hexagon NPU silicon for SM8735 platform. Runtime presence, FastRPC/session permission, selected operators, model correctness and performance in Termux are unknown. Android app LiteRT/QAIRT requirements do not transfer automatically to native shell or PRoot.
 - Existing Ternux PRoot Zink/Turnip is a separately configured desktop graphics path; its current live renderer was not rerun in this project, and it provides no AI inference proof.

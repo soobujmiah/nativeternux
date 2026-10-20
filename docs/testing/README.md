@@ -15,6 +15,10 @@ The repository's recorded native `vulkaninfo --summary` result rejected Adreno 8
 
 Current platform snapshot in the research record: device `[redacted device serial]` / `onyx`, Android 16, ABI `aarch64`, Snapdragon SM8735 / Adreno 825, Termux `0.119.0-beta.3`; native Termux Vulkan ICD package recorded as Mesa `26.2.4`. This is dated prior observation, not rechecked in this documentation audit. The platform brief lists Hexagon NPU silicon, and current upstream projects document experimental Qualcomm HTP inference backends, but Ternuxx has no backend integration or workload result. See [research](../RESEARCH.md) and the per-backend pages below.
 
+## Post-snapshot graphics update — 2026-10-20
+
+The selected experimental Native KGSL/Freedreno candidate passed a bounded 120-frame Vulkan `vkcube` workload on X11 `:1`; the shared verifier requires the draw GPU to match the `vulkaninfo` device. The stock ICD failure remains separately documented. This is desktop graphics evidence only: no Vulkan inference, broad application, sustained/thermal, or clean-install qualification follows from it. See [Native Vulkan draw evidence](../evidence/2026-10-20-native-vulkan-draw.md).
+
 ## Canonical evidence and matrix
 
 - [`FEATURE-MATRIX.yaml`](FEATURE-MATRIX.yaml) is the versioned feature/offer classification source, dated to its 2026-10-17 audit snapshot. The post-snapshot boot and P3 changes below are authoritative for those items until the matrix receives a full refresh. It is not yet rendered by a website.

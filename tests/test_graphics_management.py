@@ -122,6 +122,41 @@ class GraphicsManagementTests(unittest.TestCase):
         self.assertFalse(result["render_verified"])
         self.assertFalse(result["fallback_attempts"][0]["status"] == "rendered")
 
+    def test_vulkan_verification_requires_bounded_draw_on_enumerated_device(self) -> None:
+        with patch.object(graphics_manager.shutil, "which", side_effect=["/fixture/vulkaninfo", "/fixture/vkcube"]), \
+             patch.object(graphics_manager, "_native_env", return_value={"PATH": "/fixture", "DISPLAY": ":1"}), \
+             patch.object(graphics_manager, "_run", side_effect=[
+                 (0, "deviceName = Adreno (TM) 825\n"),
+                 (0, "Selected WSI platform: xcb\nSelected GPU 0: Adreno (TM) 825, type: IntegratedGpu\n"),
+             ]):
+            result = graphics_manager.verify("native", "vulkan", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(result["status"], "rendered")
+        self.assertTrue(result["render_verified"])
+        self.assertEqual(result["draw_frames"], 120)
+
+    def test_vulkan_verification_rejects_draw_from_a_different_device(self) -> None:
+        with patch.object(graphics_manager.shutil, "which", side_effect=["/fixture/vulkaninfo", "/fixture/vkcube"]), \
+             patch.object(graphics_manager, "_native_env", return_value={"PATH": "/fixture", "DISPLAY": ":1"}), \
+             patch.object(graphics_manager, "_run", side_effect=[
+                 (0, "deviceName = Adreno (TM) 825\n"),
+                 (0, "Selected GPU 0: llvmpipe (LLVM fixture), type: Cpu\n"),
+             ]):
+            result = graphics_manager.verify("native", "vulkan", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(result["status"], "failed")
+        self.assertFalse(result["render_verified"])
+
+    def test_vulkan_enumeration_without_display_does_not_claim_a_draw(self) -> None:
+        with patch.object(graphics_manager.shutil, "which", side_effect=["/fixture/vulkaninfo", "/fixture/vkcube"]), \
+             patch.object(graphics_manager, "_native_env", return_value={"PATH": "/fixture"}), \
+             patch.object(graphics_manager, "_run", return_value=(0, "deviceName = Adreno (TM) 825\n")) as runner:
+            result = graphics_manager.verify("native", "vulkan", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(result["status"], "enumerated")
+        self.assertFalse(result["render_verified"])
+        self.assertEqual(runner.call_count, 1)
+
     def test_modified_candidate_file_fails_hash_validation(self) -> None:
         driver = self.prefix / "lib/libvulkan_freedreno.so"
         driver.write_text("modified candidate", encoding="utf-8")

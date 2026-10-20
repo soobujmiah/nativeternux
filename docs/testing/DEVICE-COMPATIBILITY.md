@@ -6,7 +6,7 @@
 
 | Device/profile | Android / ABI | CPU | GPU | NPU silicon | Native graphics evidence | Inference evidence | Qualification |
 |---|---|---|---|---|---|---|---|
-| `[redacted device serial]` (`onyx`), owner device | Android 16 / `aarch64` (Termux `0.119.0-beta.3` in dated record) | Present; no Ternuxx inference runtime/test | Adreno 825, SoC SM8735 | Qualcomm product brief identifies Hexagon NPU for Snapdragon 8s Gen 4 / SM8735 platform; device runtime access untested | Native Termux `vulkaninfo --summary` failed with `VK_ERROR_INCOMPATIBLE_DRIVER` on recorded Mesa 26.2.4; native live OpenGL renderer not recorded | No CPU, GPU, or NPU inference test/report in this repo | `DETECTED`; no inference `WORKLOAD_VERIFIED` or `RELEASE_QUALIFIED` |
+| `[redacted device serial]` (`onyx`), owner device | Android 16 / `aarch64` (Termux `0.119.0-beta.3` in dated record) | Present; no Ternuxx inference runtime/test | Adreno 825, SoC SM8735 | Qualcomm product brief identifies Hexagon NPU for Snapdragon 8s Gen 4 / SM8735 platform; device runtime access untested | Native stock ICD probe failed with `VK_ERROR_INCOMPATIBLE_DRIVER` on recorded Mesa 26.2.4; selected experimental KGSL/Freedreno candidate later rendered 120 `vkcube` frames on `:1`; no GPU inference test | No CPU, GPU, or NPU inference test/report in this repo | `DETECTED`; no inference `WORKLOAD_VERIFIED` or `RELEASE_QUALIFIED` |
 
 The device row is based on the dated read-only observation in [`RESEARCH.md`](../RESEARCH.md), not a new physical-device session. Android/Termux version, package version, or driver may have changed since then. It must not be generalized to other Adreno/Qualcomm devices.
 

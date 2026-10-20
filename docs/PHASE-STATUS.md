@@ -210,12 +210,13 @@ Evidence:
 
 **Status:** planned
 
-Native off-screen OpenGL is verified; the existing Debian GLX workload on :1 rendered 486 frames on Zink/Turnip Adreno 825. GLES context is detected but GLES draw is unverified, and nested Xephyr :2 draw/presentation remains unqualified. Deliberate OpenGL verification failure falls back to verified llvmpipe. Ordinary workload routing, Vulkan draw, clean-device setup, and NPU runtime remain open.
+Native off-screen OpenGL is verified; the selected experimental KGSL/Freedreno candidate also rendered a bounded 120-frame Vulkan vkcube workload on :1. The stock ICD route separately fails with VK_ERROR_INCOMPATIBLE_DRIVER. Existing Debian GLX rendered 486 frames on Zink/Turnip Adreno 825. GLES draw, nested Xephyr :2 draw/presentation, ordinary workload routing, clean-device setup, and NPU runtime remain open.
 
 Evidence:
 - [docs/evidence/2026-10-20-shared-graphics-manager.md](evidence/2026-10-20-shared-graphics-manager.md)
 - [docs/evidence/2026-10-20-native-offscreen-glmark2.md](evidence/2026-10-20-native-offscreen-glmark2.md)
 - [docs/evidence/2026-10-20-graphics-live-recheck.md](evidence/2026-10-20-graphics-live-recheck.md)
+- [docs/evidence/2026-10-20-native-vulkan-draw.md](evidence/2026-10-20-native-vulkan-draw.md)
 
 ## P7 — Native apps and curated software catalog
 

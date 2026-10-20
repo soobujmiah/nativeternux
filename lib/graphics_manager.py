@@ -212,9 +212,29 @@ def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: d
         code, output = _run([tool, "--summary"], env, 15)
         device = next((m.group(1).strip() for line in output.splitlines()
                        if (m := re.search(r"deviceName\s*=\s*(.*)", line))), None)
-        return {"provider": provider, "api": api, "status": "enumerated" if code == 0 and device else "unavailable",
-                "render_verified": False, "device": device,
-                "proof": "vulkaninfo device enumeration only; a Vulkan draw was not exercised"}
+        if code != 0 or not device:
+            return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
+                    "device": device, "enumeration_exit_code": code,
+                    "proof": "Vulkan device enumeration failed; no draw was attempted"}
+        cube = shutil.which("vkcube", path=env.get("PATH"))
+        if not cube:
+            return {"provider": provider, "api": api, "status": "enumerated", "render_verified": False,
+                    "device": device, "proof": "Vulkan device enumerated; vkcube is not installed"}
+        if not env.get("DISPLAY"):
+            return {"provider": provider, "api": api, "status": "enumerated", "render_verified": False,
+                    "device": device, "proof": "Vulkan device enumerated; no active X11 display for bounded vkcube draw"}
+        draw_code, draw_output = _run([cube, "--c", "120"], env, 20)
+        selected = next((m.group(1).strip() for line in draw_output.splitlines()
+                         if (m := re.search(r"Selected GPU \d+: (.*?), type:", line))), None)
+        same_device = bool(selected and re.sub(r"\s+", " ", selected).casefold()
+                           == re.sub(r"\s+", " ", device).casefold())
+        rendered = draw_code == 0 and same_device
+        return {"provider": provider, "api": api, "status": "rendered" if rendered else "failed",
+                "render_verified": rendered, "device": device, "draw_renderer": selected,
+                "draw_frames": 120 if rendered else None, "display": env["DISPLAY"],
+                "enumeration_exit_code": code, "draw_exit_code": draw_code,
+                "proof": "bounded vkcube X11 draw; selected GPU must match vulkaninfo device" if rendered
+                         else "vkcube draw failed or selected a different device; no Vulkan success claimed"}
     raise ValueError("api must be opengl, gles, or vulkan")
 
 
