@@ -284,7 +284,7 @@ nt_cmd_install() {
 
   nt_require_termux || return 1
   if [ "$consent" = "1" ] && [ -z "$plan_id" ]; then
-    nt_fail "Apply requires the ID from a saved preview: run 'ternuxx install --preview', review it, then pass --yes --plan-id ID."
+    nt_fail "Apply requires the ID from a saved preview: run 'tx install --preview', review it, then pass --yes --plan-id ID."
     return 2
   fi
   if [ -n "$plan_id" ] && [ "$consent" != "1" ]; then
@@ -335,7 +335,7 @@ nt_cmd_install() {
     local plan_id
     plan_id="$( _nt_compute_plan_id )" || return 1
     nt_info "Preview ID: $plan_id"
-    nt_info "After reviewing this exact transaction, apply with: ternuxx install --yes --plan-id $plan_id"
+    nt_info "After reviewing this exact transaction, apply with: tx install --yes --plan-id $plan_id"
     if [ "$TERNUXX_JSON" = "1" ]; then
       local package_json
       package_json="$(nt_json_array "${_NT_PLAN_VERSIONS[@]}")"

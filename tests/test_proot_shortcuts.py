@@ -21,6 +21,7 @@ class ProotShortcutTests(unittest.TestCase):
         (self.repo / "scripts").mkdir(parents=True)
         (self.repo / "scripts" / "proot-x11-app.sh").touch()
         (self.repo / "scripts" / "proot-x11-shortcut-manager.sh").touch()
+        (self.repo / "tx").touch()
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -30,6 +31,12 @@ class ProotShortcutTests(unittest.TestCase):
             action, app_id, home=str(self.home), prefix="/termux",
             repo_root=str(self.repo), path="/bin",
         )
+
+    def test_x11_launch_wrappers_use_the_supported_checkout_entrypoint(self) -> None:
+        for name in ("proot-x11-app.sh", "proot-x11-shortcut-manager.sh", "proot-x11-shortcuts.sh"):
+            source = (ROOT / "scripts" / name).read_text()
+            self.assertIn('"$ROOT/tx"', source, name)
+            self.assertNotIn('"$ROOT/ternuxx"', source, name)
 
     def test_list_reports_provider_and_does_not_claim_guest_app_availability(self) -> None:
         result = proot_shortcuts.list_shortcuts(home=str(self.home), prefix="/termux", repo_root=str(self.repo))
@@ -70,6 +77,8 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertIn("X-Ternuxx-App-ID=terminal", text)
         self.assertEqual(target.stat().st_mode & 0o777, 0o644)
         self.assertIn('management app launch terminal', text)
+        self.assertIn(str(self.repo / "tx"), text)
+        self.assertNotIn(str(self.repo / "ternuxx"), text)
         self.assertNotIn('proot-x11-app.sh', text)
 
     def test_stale_preview_is_rejected_and_existing_unowned_file_is_preserved(self) -> None:
@@ -160,34 +169,23 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertEqual(result["data"]["resource_id"], "proot.x11.shortcuts")
         self.assertEqual({item["provider"] for item in result["data"]["items"]}, {"proot_debian"})
 
-    def test_management_launch_routes_explicit_native_ternux_display(self) -> None:
+    def test_management_launch_routes_explicit_ternuxx_display(self) -> None:
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
                "HOME": str(self.home), "PATH": "/bin"}
-        request = {"api_version": 1, "request_id": "request-proot-ternux-01",
-                   "operation": "proot.app.launch",
-                   "args": {"app_id": "files", "session_owner": "ternux", "display": ":1"}}
+        request = {"api_version": 1, "request_id": "request-proot-ternuxx-01",
+                   "operation": "proot.app.launch", "args": {"app_id": "files", "display": ":1"}}
         with patch.object(proot_shortcuts, "launch", return_value={"status": "process_exited"}) as launch:
             result = management_service.dispatch(request, env=env)
         self.assertTrue(result["ok"])
-        self.assertEqual(launch.call_args.kwargs["session_owner"], "ternux")
         self.assertEqual(launch.call_args.kwargs["display"], ":1")
+        self.assertNotIn("session_owner", launch.call_args.kwargs)
 
-    def test_management_launch_requires_explicit_native_ternux_display(self) -> None:
+    def test_management_launch_rejects_legacy_ternux_session_owner(self) -> None:
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
                "HOME": str(self.home), "PATH": "/bin"}
-        request = {"api_version": 1, "request_id": "request-proot-ternux-02",
+        request = {"api_version": 1, "request_id": "request-proot-legacy-owner-01",
                    "operation": "proot.app.launch",
-                   "args": {"app_id": "files", "session_owner": "ternux"}}
-        result = management_service.dispatch(request, env=env)
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"]["code"], "invalid_arguments")
-
-    def test_management_launch_rejects_non_string_session_owner(self) -> None:
-        env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
-               "HOME": str(self.home), "PATH": "/bin"}
-        request = {"api_version": 1, "request_id": "request-proot-ternux-04",
-                   "operation": "proot.app.launch",
-                   "args": {"app_id": "files", "session_owner": ["ternux"]}}
+                   "args": {"app_id": "files", "session_owner": "ternux", "display": ":1"}}
         result = management_service.dispatch(request, env=env)
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "invalid_arguments")
@@ -195,9 +193,8 @@ class ProotShortcutTests(unittest.TestCase):
     def test_management_launch_rejects_malformed_display(self) -> None:
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
                "HOME": str(self.home), "PATH": "/bin"}
-        request = {"api_version": 1, "request_id": "request-proot-ternux-03",
-                   "operation": "proot.app.launch",
-                   "args": {"app_id": "files", "session_owner": "ternux", "display": "$(bad)"}}
+        request = {"api_version": 1, "request_id": "request-proot-display-01",
+                   "operation": "proot.app.launch", "args": {"app_id": "files", "display": "$(bad)"}}
         result = management_service.dispatch(request, env=env)
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "invalid_arguments")

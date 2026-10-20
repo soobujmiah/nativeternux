@@ -4,87 +4,79 @@
 # shellcheck source=lib/core.sh
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
-nt_help() {
+_nt_help_raw() {
   local cmd="${1:-}"
   case "$cmd" in
     "")
       cat <<'EOF'
-Ternuxx — native Termux desktop management
+Ternuxx — native Termux workstation management
 
 Usage:
-  ternuxx <command> [options]
+  tx <command> [options]
+
+Quick launch:
+  tx db              Open the configured Debian PRoot shell
+  tx gui             Open the Native Termux GTK management center
+  tx start           Start the native Termux:X11/XFCE desktop
+  tx tui             Interactive terminal management
+  tx web             Open the shared Web UI in Android browser
 
 Commands:
-  check     Inspect device and package readiness (read-only)
-  info      Show system, renderer, Vulkan, package, and session information
-  start     Start the Native Termux:X11/XFCE session
-  stop      Stop only the recorded Ternuxx-owned session
-  restart   Stop the recorded session, then start it again
-  status    Show recorded session and process-identity status
-  doctor    Run the available diagnostic checks
-  checkpoint Prepare or verify a private reboot-continuity record (native only)
-  ssh       inspect or manage the fixed native SSH service
-  remote    preview optional off-home private-access policy (read-only)
-  management  Manage shared services and PRoot shortcuts, or run the optional local API
-  proot     inspect PRoot inventory or verify an explicitly selected Ternux guest
-  reboot    inspect or manage a bounded reboot-test checkpoint
-  boot      inspect Termux:Boot availability (read-only)
-  wakelock  inspect Wake Lock command/ownership limits (read-only)
-  install   Preview the base desktop package transaction
-  guides    Show documentation links
-  help      Show this help
-  --version Show version
+  start       Start the Native Termux:X11/XFCE session
+  stop        Stop recorded native desktop
+  restart     Restart native desktop
+  status      Show desktop status
+  check       Inspect device and package readiness
+  info        Show system, renderer, Vulkan, package, and session information
+  doctor      Run diagnostic checks
+  mng         Shared management operations and local Web service
+  proot       Inspect and manage PRoot integrations
+  audio       Manage Native PulseAudio used by Debian PRoot
+  ssh         Inspect and manage the fixed native SSH service
+  checkpoint  Prepare or verify reboot-continuity records
+  remote      Preview off-home access policy
+  reboot      Inspect or manage reboot-test checkpoints
+  boot        Inspect Termux:Boot availability and profile
+  wakelock    Inspect or manage Wake Lock ownership
+  install     Preview or apply native desktop package setup
+  backup      Backup operations
+  recovery    Recovery journal operations
+  restore     Restore preview or apply
+  guides      Show documentation links
+  help        Show this help
 
 Options:
   --json      Machine-readable output
   --verbose   Extra diagnostic messages
   --quiet     Suppress informational output
-  --help, -h  Show help
+  --help, -h  Show command help
 
 Examples:
-  ternuxx check             # Inspect readiness; no package changes
-  ternuxx info              # Show renderer and Vulkan information
-  ternuxx start             # Starts X11/XFCE and writes session state
-  ternuxx stop              # Stops only processes verified from session state
-  ternuxx install           # Preview packages; does not install
-  ternuxx checkpoint prepare --test-id reboot-check
-  ternuxx ssh inspect --json
-  ternuxx remote access preview
-  ternuxx management catalog list                # Shared providers, operations, and support status
-  ternuxx management doctor [--graphics]         # Read-only system Doctor through shared service
-  ternuxx management app launch files            # Launch a named PRoot GUI app
-  ternuxx management shortcuts list              # Provider-aware PRoot app shortcuts
-  ternuxx management shortcuts plan add files    # Preview a menu change
-  ternuxx management http serve --port 8765      # Foreground, read-only, loopback only
-  printf '%s\n' '{"schema_version":2,"mode":"disabled","public_ingress":false}' | ternuxx remote access preview --policy-stdin
-  ternuxx proot status
-  ternuxx boot status
-  ternuxx wakelock status
-  ternuxx reboot status
-  ternuxx backup create --name NAME # Preview, then confirm with its plan ID
-  ternuxx backup list
-  ternuxx backup inspect BACKUP_ID
-  ternuxx recovery status
-  ternuxx recovery inspect OPERATION_ID
-  ternuxx recovery resolve OPERATION_ID # Reconcile a supported desktop, service, boot, backup, or profile-restore journal
-  ternuxx recovery rollback OPERATION_ID # Preview, then confirm with --plan-id
-  ternuxx restore --preview BACKUP_ID
-  ternuxx restore BACKUP_ID --yes --plan-id ID
-  # Backups and restore rollback cover only the validated native boot profile.
-  # Recovery resolve updates only a reviewed journal; it never signals desktop processes or edits backups.
-  ternuxx install --preview # Save an exact dependency plan and show its ID
-  ternuxx install --yes --plan-id ID  # Apply only that unchanged saved plan
+  tx check
+  tx info
+  tx start
+  tx mng app launch files
+  tx tui
+  tx web
+  tx ssh inspect --json
+  tx proot status
+  tx backup list
+  tx recovery status
+  tx recovery resolve OPERATION_ID
+  tx remote access preview
+  tx proot verify --distro debian --guest-user-from rootfs --display :1 --backend zink
 
 Safety:
   start/stop/restart change process and session state. install --yes requires
-an exact saved preview ID and installs
-  packages. Review the command-specific help before running either operation.
-  Lifecycle behavior is verified only on the recorded target; other devices may differ.
+  an exact preview plan ID. Recovery apply operations require their preview ID.
+  Remote access defaults to disabled and never enables public ingress.
+
+Short command spellings remain accepted as aliases. Help uses the full names.
 EOF
       ;;
     remote)
       cat <<'EOF'
-ternuxx remote access preview — Preview optional off-home access policy
+tx remote access preview — Preview optional off-home access policy
 
 Without input, reports remote access disabled. With --policy-stdin, reads one
 secret-free schema-v2 desired-policy JSON object from stdin. Preview never
@@ -96,31 +88,46 @@ EOF
       ;;
     management)
       cat <<'EOF'
-ternuxx management catalog list — List shared domains and providers
-ternuxx management doctor [--graphics] — Run read-only Doctor via the shared service
-ternuxx management app launch APP_ID — Launch a named PRoot app on native X11
-ternuxx management shortcuts list — View PRoot app launchers
-ternuxx management shortcuts plan {add|remove} APP_ID — Preview a launcher change
-ternuxx management shortcuts apply {add|remove} APP_ID --plan-id ID --yes — Confirm the exact preview
-ternuxx management http serve — Run the optional read-only API in the foreground
+tx mng center [install] — Open/install the native GTK management app
+tx mng catalog list — Browse shared categories and resources
+tx mng proot status — Inspect installed guest and Ternuxx session ownership
+tx mng proot profiles list|show — Inspect validated headless and interactive profiles
+tx mng proot sessions list|show|health — Inspect owned sessions, liveness, exit and attachment capability
+tx mng proot start --profile ID — Preview a start; repeat with --yes --plan-id ID to confirm
+tx mng proot stop SESSION_ID — Preview exact-session stop; repeat with --yes --plan-id ID to confirm
+The debian-interactive profile requires a TTY and opens a foreground login shell; it does not start GUI or services.
+tx mng hermes status — Inspect optional Hermes scheduler (read-only)
+tx mng cron status/start/stop — Inspect or explicitly manage the lease-guarded scheduler
+tx mng cron jobs list|show|validate|next-runs|create|update|enable|disable|remove — Manage validated job definitions
+tx mng boot cron status|validate — Inspect the opt-in official Termux:Boot Cron entry
+tx mng boot cron preview {enable|disable} — Preview exact script changes
+tx mng boot cron enable|disable --yes --plan-id ID — Apply the reviewed boot-script plan
+tx mng timezone status|list — Inspect configured timezone and available IANA zones
+tx mng timezone set IANA_NAME — Persist an explicitly selected timezone
+tx mng doctor [--graphics] — Run read-only Doctor via the shared service
+tx mng app launch APP_ID — Launch a named PRoot app on native X11
+tx mng shortcuts list — View PRoot app launchers
+tx mng shortcuts plan {add|remove} APP_ID — Preview a launcher change
+tx mng shortcuts apply {add|remove} APP_ID --plan-id ID --yes — Confirm the exact preview
+tx mng http serve — Run the read-only management API in foreground
+tx web — Open the browser UI over the same shared service
 
-This explicit command binds only 127.0.0.1 (default port 8765), prints one
-ephemeral bootstrap secret to the controlling terminal, and runs until Ctrl-C.
-The secret is not saved; restart the command to establish a new browser/client
-session. The API grants read-only scopes and does not start at boot or manage
-ADB/Shizuku. Mutations, browser UI, fixed-port device qualification, and
-off-home access are not enabled by this command.
+The Web UI binds only to 127.0.0.1 (default port 8765), copies the one-time
+bootstrap secret to the Termux clipboard, opens the local browser, and runs until Ctrl-C. The secret is not saved. If clipboard copy fails,
+the server stops without revealing it; use --show-secret-on-clipboard-failure
+for the explicit private-terminal fallback. The browser client uses the shared management service. It can read catalogued diagnostics, edit GUI Activity-monitoring policy, and start/stop/restart the verified native desktop after confirmation. Other mutations stay unavailable until their preview and authorization flows are implemented.
 EOF
       ;;
     start)
       cat <<'EOF'
-ternuxx start — Start the native Termux XFCE session
+tx start — Start the native Termux XFCE session
 
 Starts the Ternuxx-owned Termux:X11 server and XFCE session on an
-available display, then requests the Termux:X11 Android activity and records
+available display, keeps Android Activity launch disabled by default, and records
 session state and logs under the configured state directory. If Android blocks
 the request, open the app manually. A successful request does not prove that
-the GUI is visible. This command does not start or stop PulseAudio.
+the GUI is visible. It attempts to start Native PulseAudio; failure does not
+block desktop startup. `tx stop` leaves audio running for active PRoot clients.
 
 Requirements include Termux, termux-x11, dbus-launch, xfce4-session, python3,
 and nohup. Use --display N to request a specific display number; startup fails
@@ -129,13 +136,12 @@ searches displays :0 through :10.
 
 This command starts processes and writes private session state/log files.
 If startup fails, inspect the reported log and state paths. Do not remove X11
-sockets or stop untracked processes. Physical-device behavior is not yet
-release-qualified.
+sockets or stop untracked processes. The Android Activity is never launched by status or diagnostic requests. `tx gui monitor status` is read-only; configure polling with `tx gui monitor configure --enabled on --interval N seconds|minutes|hours`. Monitoring stays disabled by default.
 EOF
       ;;
     stop)
       cat <<'EOF'
-ternuxx stop — Stop the recorded native desktop session
+tx stop — Stop the recorded native desktop session
 
 Stops only the supervisor or child processes whose PID, process start time,
 and command marker match the saved session record. It sends SIGTERM and does
@@ -149,33 +155,100 @@ EOF
       ;;
     restart)
       cat <<'EOF'
-ternuxx restart — Restart the native desktop session
+tx restart — Restart the native desktop session
 
 Runs stop, then start. It changes process and session state, and start options
-such as --display N are accepted. See 'ternuxx stop --help' and
-'ternuxx start --help' for lifecycle boundaries and requirements.
+such as --display N are accepted. See 'tx stop --help' and
+'tx start --help' for lifecycle boundaries and requirements.
 EOF
       ;;
     status)
       cat <<'EOF'
-ternuxx status — Inspect the recorded native desktop session
+tx status — Inspect the recorded native desktop session
 
 Reads session state and verifies recorded process identities. It does not
 start or stop processes. GUI visibility is reported as unknown because the
 Termux:X11 Android app's visible state is not inferred by the CLI.
 EOF
       ;;
+    db)
+      cat <<'EOF'
+tx db — Open a Debian PRoot shell (independent of any desktop)
+
+  tx db                  # as the configured guest user
+  tx db --root           # as root
+  tx db --user NAME      # as an explicit guest user
+  tx db -- CMD [ARG ...] # run one command instead of a shell
+  tx db --distro NAME    # another installed proot-distro guest
+
+Run from native Termux. Ternuxx ensures its Native PulseAudio endpoint and
+passes the loopback server and private cookie path to Debian. Audio failure is
+reported but does not block the shell. The guest user is resolved from the installed Debian account database; ambiguous accounts fail closed. It starts no desktop or X11 service. Ternuxx filters inherited Android/ART host variables, then passes only explicit display, audio, and selected graphics settings; proot-distro writes those guest settings to its generated login profile.
+EOF
+      ;;
+    audio)
+      cat <<'EOF'
+tx audio — Manage the Native PulseAudio server used by PRoot
+
+  tx audio status     Inspect Ternuxx ownership and authenticated loopback readiness
+  tx audio start      Start one identity-checked Native server if no owner conflicts
+  tx audio stop       Stop only the exact process recorded as Ternuxx-owned
+  tx audio restart    Restart only the exact Ternuxx-owned server
+
+The service listens only on 127.0.0.1:4713 and uses the Native PulseAudio
+cookie for Debian clients. Live or unknown servers and lock artifacts are
+preserved. tx start, tx gui, and tx db attempt an idempotent start; audio
+failure never prevents the desktop or PRoot CLI from opening. tx stop leaves
+audio running so active PRoot clients are not disconnected.
+EOF
+      ;;
+    web)
+      cat <<'EOF'
+tx web — Open the shared local management Web UI
+
+Starts a loopback-only service, copies the one-time secret to the Termux clipboard,
+and opens the Android browser. Clipboard failure stops safely without revealing
+the secret; use --show-secret-on-clipboard-failure for an explicit terminal
+fallback. Press Ctrl-C to stop. The Web client uses the shared management API
+with its authorized desktop, monitoring-policy, and managed SSH 8023 operations.
+EOF
+      ;;
+    tui)
+      cat <<'EOF'
+tx tui — Interactive terminal client
+
+Overview, PRoot, SSH, and recovery views use the shared typed service. Press
+1–5 to switch views, arrows/j/k to scroll, PageUp/PageDown for larger jumps,
+Enter to refresh, l to choose and launch a named PRoot app, o to run an
+allowlisted operation, and q to exit. The guided launch asks for the X11 session
+and display, then requires confirmation. Text wraps to fit the terminal width.
+EOF
+      ;;
+    gui)
+      cat <<'EOF'
+tx gui — Native Termux GTK management center
+
+  tx gui                              Open the installed GTK management center
+  tx gui start|stop|restart|status    Preserve native desktop lifecycle aliases
+  tx gui monitor status|enable|disable|configure OPTIONS
+
+Run from Native Termux with a local X11 display selected. Install the graphical
+client with 'tx mng center install'. Desktop lifecycle remains available as
+'tx start|stop|restart|status'; it does not enter Debian PRoot or launch the
+Termux:X11 Android Activity. Monitoring is configured separately.
+EOF
+      ;;
     checkpoint)
       cat <<'EOF'
-ternuxx checkpoint — Prepare or verify reboot continuity evidence
+tx checkpoint — Prepare or verify reboot continuity evidence
 
 Native Termux only. Records a private checkpoint beneath the configured
 Ternuxx state directory. Verification compares boot IDs when available and
 records service readiness as not collected until a separate live check runs.
 Pending tests are never executed automatically.
 
-  ternuxx checkpoint prepare --test-id <id> [--pending-test <id> ...]
-  ternuxx checkpoint verify <checkpoint-id>
+  tx checkpoint prepare --test-id <id> [--pending-test <id> ...]
+  tx checkpoint verify <checkpoint-id>
 
 This writes private evidence to the native Termux home. It does not configure
 boot startup, start services, acquire Wake Lock, or interact with PRoot.
@@ -183,14 +256,14 @@ EOF
       ;;
     ssh)
       cat <<'EOF'
-ternuxx ssh inspect/start/stop - Native SSH diagnostics and fixed Runit service control
+tx ssh inspect/start/stop - Native SSH diagnostics and fixed Runit service control
 
-  ternuxx ssh inspect
-  ternuxx proot status # Inventory installed guests without entering them
-  ternuxx ssh start                         # read-only preview
-  ternuxx ssh start --yes --plan-id <id>    # apply exact preview
-  ternuxx ssh stop                          # read-only preview
-  ternuxx ssh stop --yes --plan-id <id>     # apply exact preview
+  tx ssh inspect
+  tx proot status # Inventory installed guests without entering them
+  tx ssh start                         # read-only preview
+  tx ssh start --yes --plan-id <id>    # apply exact preview
+  tx ssh stop                          # read-only preview
+  tx ssh stop --yes --plan-id <id>     # apply exact preview
 
 Reports whether OpenSSH/configuration is present, whether sshd accepts the
 current config, allowlisted effective authentication/bind policy, observed
@@ -206,28 +279,29 @@ EOF
       ;;
     proot)
       cat <<'EOF'
-ternuxx proot status — Read-only installed guest inventory
-ternuxx proot verify --distro debian (--guest-user USER|--guest-user-from ternux-state) --display :N --backend zink|virgl
+tx proot status — Read-only installed guest inventory
+tx proot gui {start|status|stop} — legacy session status/stop; separate :0 start disabled
+tx proot verify --distro debian (--guest-user USER|--guest-user-from rootfs) --display :N --backend zink|virgl
 
-`status` lists installed distributions without entering a guest. `verify` enters
-the selected Debian guest only to run the identified Ternux guest companion's
-version and read-only status checks with the selected display/backend and Ternux
-audio endpoint. `--guest-user-from ternux-state` reads only the non-root `user`
-key from Ternux's private, Termux-owned state file; the account value is not
-returned or logged. It fails closed on unsafe paths or file permissions. The
-verifier does not start/stop a desktop, host service, or package operation.
-Profile ownership remains unverified; this is diagnostic handoff only, not
-general guest command execution.
+gui start currently fails closed because a full Debian desktop must be nested
+inside the native Termux :1 desktop; it must not open a separate :0 Activity.
+Specific GUI apps remain available through tx mng app launch APP_ID. No guest
+reinstall or rootfs replacement is part of this route. Status lists installed
+distributions. Verify enters Debian only to run a fixed Ternuxx read-only
+display/audio/renderer probe. The rootfs source resolves the unique ordinary
+non-root account from Debian passwd; unsafe paths or ambiguous accounts fail
+closed. This route does not invoke the separate Ternux CLI or change guest
+packages, services, or desktop lifecycle.
 EOF
       ;;
     reboot)
       cat <<'EOF'
-ternuxx reboot — Native reboot-test evidence (no reboot command is provided)
+tx reboot — Native reboot-test evidence (no reboot command is provided)
 
-  ternuxx reboot status [test-id]
-  ternuxx reboot prepare --test-id <id> --baseline-json <object>
-  ternuxx reboot verify <test-id>
-  ternuxx reboot resume-info <test-id>
+  tx reboot status [test-id]
+  tx reboot prepare --test-id <id> --baseline-json <object>
+  tx reboot verify <test-id>
+  tx reboot resume-info <test-id>
 
 Preparation writes a private, atomic checkpoint and always records
 NOT_READY. It does not arm Termux:Boot, start/stop services, or reboot.
@@ -236,19 +310,22 @@ EOF
       ;;
     boot)
       cat <<'EOF'
-ternuxx boot status — Read-only Termux:Boot capability inspection
-ternuxx boot profile status
-ternuxx boot profile preview <cli-only|native|proot|hybrid>
-ternuxx boot gui <on|off> [--yes]
-ternuxx boot enable --profile <mode> [--yes]
-ternuxx boot disable [--yes]
+tx boot status — Read-only Termux:Boot capability inspection
+tx boot profile status
+tx boot profile preview <cli-only|native|proot|hybrid>
+tx mng boot cron status|validate
+tx mng boot cron preview {enable|disable}
+tx mng boot cron enable|disable --yes --plan-id PLAN_ID
+tx boot gui <on|off> [--yes]
+tx boot enable --profile <mode> [--yes]
+tx boot disable [--yes]
 
 The default profile is cli-only, so GUI startup after reboot stays off.
 Use the direct GUI toggle; it previews by default and --yes applies the plan:
-  ternuxx boot gui on
-  ternuxx boot gui on --yes
-  ternuxx boot gui off
-  ternuxx boot gui off --yes
+  tx boot gui on
+  tx boot gui on --yes
+  tx boot gui off
+  tx boot gui off --yes
 These commands preview first; --yes applies only the shown Ternuxx-owned file
 changes and preserves unrelated boot scripts. Native starts Ternuxx-owned
 X11/XFCE processes; opening the Android Termux:X11 app and visible GUI remain
@@ -258,15 +335,15 @@ EOF
       ;;
     wakelock)
       cat <<'EOF'
-ternuxx wakelock status — Read-only Wake Lock capability inspection
+tx wakelock status — Read-only Wake Lock capability inspection
 
 Reports command availability and the ownership limitation. It never invokes
 termux-wake-lock or termux-wake-unlock; Android lock-holder state remains
 unknown unless a verified platform API is added.
 
-  ternuxx wakelock acquire <owner>
-  ternuxx wakelock release <owner>
-  ternuxx wakelock acquire native.sshd --persistent
+  tx wakelock acquire <owner>
+  tx wakelock release <owner>
+  tx wakelock acquire native.sshd --persistent
 
 Acquire/release tracks a Ternuxx-owned lease in private native state. Only the
 owner process can release its non-persistent lease. Persistent leases are
@@ -277,7 +354,7 @@ EOF
       ;;
     install)
       cat <<'EOF'
-ternuxx install — Preview or install the native desktop packages
+tx install — Preview or install the native desktop packages
 
 By default, validates recent official Termux package indexes and prints a
 constrained APT simulation. It does not refresh package indexes or change
@@ -295,7 +372,7 @@ EOF
       ;;
     check)
       cat <<'EOF'
-ternuxx check — Inspect device readiness
+tx check — Inspect device readiness
 
 Reports available commands, package readiness, and Termux:X11 presence. It
 does not install packages or intentionally modify files. Device interfaces
@@ -304,7 +381,7 @@ EOF
       ;;
     doctor)
       cat <<'EOF'
-ternuxx doctor — Run the available diagnostics
+tx doctor — Run the available diagnostics
 
 Runs the read-only Doctor report with stable finding IDs, severity, scope, and
 suggested actions. Use --json for structured output. Add --graphics to probe the
@@ -314,7 +391,7 @@ EOF
       ;;
     info)
       cat <<'EOF'
-ternuxx info — Show system information
+tx info — Show system information
 
 Shows available renderer, Vulkan, package, and recorded session information.
 Missing diagnostic tools are reported as unavailable; hardware detection is
@@ -330,10 +407,38 @@ EOF
         '' 'Opening these links is left to the user; this command installs nothing.'
       ;;
     *)
-      nt_fail "No help available for '$cmd'. Run 'ternuxx help' for usage."
+      nt_fail "No help available for '$cmd'. Run 'tx help' for usage."
       return 1
       ;;
   esac
 }
 
 nt_cmd_help() { nt_help "${1:-}"; }
+
+# Color is used only for an interactive capable terminal. Redirected help,
+# scripts, and terminals opting out with NO_COLOR receive plain text.
+nt_help() {
+  local body line first=1
+  body="$(_nt_help_raw "$1")" || return $?
+  if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ] || [ "${TERM:-dumb}" = dumb ]; then
+    printf '%s\n' "$body"
+    return 0
+  fi
+  while IFS= read -r line; do
+    if [ "$first" -eq 1 ] && [[ "$line" == Ternuxx* ]]; then
+      printf '\033[1;36m╭────────────────────────────────────────────────────────────────────╮\033[0m\n'
+      printf '\033[1;36m│\033[0m \033[1;97m%-66s\033[0m \033[1;36m│\033[0m\n' "$line"
+      printf '\033[1;36m╰────────────────────────────────────────────────────────────────────╯\033[0m\n'
+      first=0
+      continue
+    fi
+    first=0
+    case "$line" in
+      Usage:*|Options:*|Commands:*|Examples:*|Safety:*|Quick\ launch:*|Short\ forms:*)
+        printf '\033[1;35m%s\033[0m\n' "$line" ;;
+      "  "*)
+        printf '  \033[1;32m%s\033[0m\n' "${line#  }" ;;
+      *) printf '%s\n' "$line" ;;
+    esac
+  done <<< "$body"
+}

@@ -25,7 +25,7 @@
     {
       "requirement_id": "LIVE-SSH-02",
       "component": "Native SSH listener exposure",
-      "environment": "Android shell via connected ADB device authorized local ADB observation (model 25053RT47C)",
+      "environment": "Android shell via connected ADB device authorized local ADB observation (model [redacted device serial])",
       "test_case": "Observe TCP listeners on the configured SSH port",
       "method": "Read-only `ss -ltnp` query through adb shell",
       "expected": "Report observed bind addresses without inferring reachability",
@@ -126,7 +126,7 @@
     "status": "PASS"
   },
   "live_device": {
-    "device": "Redmi Turbo 4 Pro / 25053RT47C",
+    "device": "Redmi Turbo 4 Pro / [redacted device serial]",
     "adb_connected": true,
     "native_ssh_authenticated": true,
     "termux_boot_package_present": true,

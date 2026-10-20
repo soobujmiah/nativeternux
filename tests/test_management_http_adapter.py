@@ -38,7 +38,7 @@ def make_adapter(dispatcher=None, *, caps=None, allow_mutations=False, request_s
     return management_http_adapter.ManagementHTTPAdapter(
         expected_origin=ORIGIN,
         bootstrap_secret=BOOTSTRAP,
-        bootstrap_capabilities=caps if caps is not None else {"diagnostics.read", "services.manage"},
+        bootstrap_capabilities=caps if caps is not None else {"diagnostics.read", "ssh.managed.lifecycle"},
         env={"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
              "HOME": "/tmp/home", "TERNUXX_STATE_DIR": "/tmp/home/.state"},
         dispatcher=dispatcher or Mock(return_value={"ok": True, "api_version": 1,
@@ -80,7 +80,7 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
 
     def test_bootstrap_rejects_wider_scopes_and_duplicate_json_fields(self) -> None:
         adapter = make_adapter(caps={"diagnostics.read"})
-        status, response = bootstrap(adapter, ["services.manage"])
+        status, response = bootstrap(adapter, ["ssh.managed.lifecycle"])
         self.assertEqual(status, 401)
         self.assertEqual(response["error"], "authentication_failed")
         body = b'{"bootstrap_secret":"' + BOOTSTRAP.encode() + b'","bootstrap_secret":"x","capabilities":[]}'
@@ -123,7 +123,7 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
         dispatch.assert_not_called()
 
         adapter = make_adapter(dispatcher=dispatch)
-        _status, issued = bootstrap(adapter, ["services.manage"])
+        _status, issued = bootstrap(adapter, ["ssh.managed.lifecycle"])
         session = issued["session"]
         headers = headers_for(body, Authorization=f"Bearer {session['bearer_token']}",
                               **{"Idempotency-Key": "mutation-key-0001"})
@@ -136,7 +136,7 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
     def test_mutation_transport_defaults_disabled(self) -> None:
         dispatch = Mock()
         adapter = make_adapter(dispatcher=dispatch, allow_mutations=True)
-        _status, issued = bootstrap(adapter, ["services.manage"])
+        _status, issued = bootstrap(adapter, ["ssh.managed.lifecycle"])
         session = issued["session"]
         payload = {"api_version": 1, "request_id": "request-1234",
                    "operation": "ssh.service.stop", "args": {"confirmed": True}}
@@ -190,7 +190,7 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
             self._assert_mutation_idempotency(adapter, dispatch)
 
     def _assert_mutation_idempotency(self, adapter, dispatch):
-        _status, issued = bootstrap(adapter, ["services.manage"])
+        _status, issued = bootstrap(adapter, ["ssh.managed.lifecycle"])
         session = issued["session"]
         payload = {"api_version": 1, "request_id": "request-1234",
                    "operation": "ssh.service.start", "args": {"confirmed": True}}

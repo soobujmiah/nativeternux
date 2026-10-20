@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-19T00:39:27Z",
+  "evidence_type": "native_termux_read_only_doctor_shizuku_identity_disclosure_and_full_suite",
+  "repository": {
+    "branch": "main",
+    "base_commit": "69e378eb33247678437bda4b2de9ab25f6bcb91d",
+    "working_tree_dirty": true
+  },
+  "runtime": {
+    "layer": "native_termux",
+    "architecture": "aarch64",
+    "transport": "owner_started_ssh_8022"
+  },
+  "doctor": {
+    "command": "./tx doctor --json",
+    "exit_code": 1,
+    "overall": "warning",
+    "read_only": true,
+    "summary": {"error": 0, "info": 15, "pass": 11, "warning": 4},
+    "shizuku_finding": {
+      "id": "NTX-APP-103",
+      "severity": "info",
+      "package_id": "moe.shizuku.privileged.api",
+      "package_version_code": "1318",
+      "rish": "not found",
+      "process_name_signal": "not observed (process visibility unknown)",
+      "provider_identity": "upstream/custom unverified",
+      "ternuxx_provider": "not implemented",
+      "signer_release_binder_permission_watchdog": "unknown"
+    }
+  },
+  "repository_tests": {
+    "command": "bash scripts/repo_test.sh",
+    "result": "passed",
+    "count": 346,
+    "duration_seconds": 75.339
+  },
+  "device_mutations": [],
+  "limits": [
+    "Package ID, versionCode, rish presence, and process-name signal do not establish upstream/custom signing identity or service health.",
+    "No Android settings, Shizuku service, ADB transport, SSH service, desktop, or PRoot guest was changed or started.",
+    "P3 reboot/cold-boot and provider ownership gates remain open; this evidence does not complete P3."
+  ]
+}

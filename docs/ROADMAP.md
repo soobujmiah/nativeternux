@@ -1,6 +1,6 @@
 # Ternuxx roadmap
 
-This roadmap defines the product sequence, acceptance gates, and safety boundaries. Ternuxx is independent from `soobujmiah/ternux`; its existing Debian rootfs, launcher, processes, and state are never Ternuxx-owned by default. I explain what I want from Ternuxx in [What I want Ternuxx to become](PRODUCT-VISION.md). The roadmap below turns that into work we can verify phase by phase. Native and hybrid capabilities are additive: all useful, working Ternux PRoot capabilities must remain available, with no regression or forced migration.
+This roadmap defines the product sequence, acceptance gates, and safety boundaries. Ternuxx is independent from `soobujmiah/ternux`; the existing Debian rootfs and legacy launcher state remain separately owned. Ternuxx may reuse that rootfs for an explicitly started, uniquely tracked process/session, but never adopts or cleans up legacy/unknown processes. I explain what I want from Ternuxx in [What I want Ternuxx to become](PRODUCT-VISION.md). The roadmap below turns that into work we can verify phase by phase. Native and hybrid capabilities are additive: all useful, working Ternux PRoot capabilities must remain available, with no regression or forced migration.
 
 ## Live phase status
 
@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Continue remaining P3 provider/diagnostics and recovery acceptance from the current roadmap. Keep 8022 active, preserve the existing Debian PRoot/X11 workstation, and leave reboot readiness UNVERIFIED until explicit owner-approved post-reboot qualification.
+**Next action:** Continue P3 provider, diagnostics, and recovery acceptance from the roadmap. Keep 8022 and the existing Debian/X11 workstation intact; do not qualify reboot readiness without explicit owner-approved post-reboot checks.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
@@ -118,7 +118,7 @@ Phase state is recorded in [`project/phase-state.json`](../project/phase-state.j
 - Operation serialization and a durable journal written before mutations; interrupted steps are reported for explicit recovery.
 - Owner-controlled Termux:Boot profiles for native, PRoot, hybrid, and CLI-only modes; preview generated script and expose profile/status/enable/disable CLI controls. Native starts native XFCE; PRoot starts the existing Debian guest via an ownership-aware adapter; hybrid starts one native XFCE and routes selected guest workloads to that display. Request the X11 Android activity and report GUI visibility separately from service readiness.
 - The fixed native SSH Runit unit has CLI preview/apply deployment and start/stop with exact source/installed run identity, exact sv target, pre-action journal, and post-action status verification. On 2026-10-18, loopback listener inode-to-sshd FD/Runit ancestry and authenticated readiness were verified for 8023; 8022 was independently correlated and preserved. Reboot readiness remains UNVERIFIED. Evidence: [current continuation](evidence/2026-10-18-cli-entrypoint-state-reconciliation.md).
-- Interrupted SSH service, native boot-profile, native desktop-session, backup-create, and profile restore/rollback operations can now be reconciled through exact-preview, explicit-confirmation CLI paths. Each preview lists the exact journal paths it may update; service, boot, session, profile, and archive state are inspection-only. Desktop recovery refuses active locks or ambiguous states and never signals processes. Unsupported recovery kinds remain open; see [recovery evidence](evidence/2026-10-18-desktop-session-recovery.json) and [Doctor progress](evidence/P3-doctor-progress.md).
+- Interrupted SSH service, native boot-profile, native desktop-session, backup-create, and profile restore/rollback operations can now be reconciled through exact-preview, explicit-confirmation CLI paths. Each preview lists the exact journal paths it may update; service, boot, session, profile, and archive state are inspection-only. Desktop recovery refuses active locks or ambiguous states and never signals processes. All currently declared journal kinds have operation-specific resolution; future unregistered kinds remain inspect-only; see [recovery evidence](evidence/2026-10-18-desktop-session-recovery.json) and [Doctor progress](evidence/P3-doctor-progress.md).
 - `proot status` exposes the read-only installed-guest inventory and a bounded `/proc` snapshot of readable host PRoot executables through the shared management API. Process candidates include PID/parent PID but remain unassociated with any distro; both process and guest ownership are explicitly unverified. It never enters Debian; provider launch/control still requires the P3/P4 ownership contract.
 - A fixed-unit native SSH service lifecycle slice is implemented for CLI preview/apply. SSH setup/migration, separate PRoot provider controls, Web/X11 parity, and owner-approved reboot qualification remain pending. Follow the [SSH lifecycle contract](architecture/SSH-LIFECYCLE.md).
 - PRoot auto-start preserves the existing Ternux Zink/Turnip environment and never invokes the current `~/x.sh` as a boot command, because its cleanup is global and can terminate native or unrelated sessions. Use a separate adapter that owns only the processes it started.
@@ -145,7 +145,7 @@ See [Doctor, management, and recovery](OPERATIONS.md) for command and safety con
 
 **Depends on:** P1 and the accepted P3 ownership contract. This is the first phase that may implement an ownership-aware adapter for the existing Ternux guest.
 
-**Goal:** let users opt into the existing Ternux Debian environment without losing any working Ternux capability. Preserve feature parity with its established desktop and workloads, including its configured Zink/Turnip GPU route where the live renderer confirms it, while leaving lifecycle and rootfs ownership with Ternux.
+**Goal:** let users opt into the existing Ternux Debian environment without losing any working capability. Ternuxx may reuse the existing rootfs and independently manage only guest processes/sessions it launches and can verify. Preserve the legacy Ternux lifecycle and its configured Zink/Turnip route; rootfs sharing alone never transfers ownership of a running session.
 
 **Deliverables:**
 - Source-reviewed capability/behavior matrix of the existing Ternux setup: desktop/session, display/audio, configured graphics backend, and owner-demonstrated Linux workloads. The pinned source baseline is recorded in [P4 Ternux source and capability matrix](evidence/P4-ternux-source-capability-matrix-2026-10-18.md); this is not yet a live parity qualification.
@@ -154,8 +154,8 @@ See [Doctor, management, and recovery](OPERATIONS.md) for command and safety con
 - Preserve the existing Ternux launch environment and configured Zink/Turnip or VirGL path; do not substitute a different backend or silently reduce capabilities. Record GPU rendering from the live workload context.
 - Keep CPU execution available as the baseline; do not imply PRoot can access an Android NPU. NPU use requires a separately proven runtime/integration path.
 - Refuse missing/ambiguous setup, absent active display, or display/audio ownership conflicts.
-- Provide a separate Ternuxx-owned PRoot start adapter using the reviewed Ternux environment. Do not use `~/x.sh` as a service/boot entry because its broad cleanup would terminate unrelated sessions. Never call Ternux stop/cleanup; never rewrite `~/x.sh`; never install/upgrade/remove packages or prune the existing rootfs.
-- Ternuxx status says whether it invoked a guest workload; Ternux remains owner of desktop lifecycle.
+- Provide a Ternuxx-owned PRoot adapter using the reviewed Ternux environment, with both selected guest apps and the full guest desktop presented inside the already-running native Termux:X11 display `:1`. Full XFCE must be isolated behind a nested X server window; do not start a second Termux:X11 Activity or a separate PRoot `:0` desktop. Do not use `~/x.sh` as a service/boot entry because its broad cleanup would terminate unrelated sessions. Never call Ternux stop/cleanup; never rewrite `~/x.sh`; never reinstall, upgrade, remove packages, or prune/replace the existing rootfs. Any additive guest dependency needs an exact preview and owner-confirmed plan.
+- Ternuxx records the instance identity and process start identities for each workload it starts; legacy `db`/`x.sh`/`xgo`/`killx` continue to own only their own operations. Ternuxx never invokes legacy broad cleanup.
 
 **Exit gate:**
 - Read-only discovery matches current Ternux source/configuration.
@@ -306,6 +306,12 @@ python3 tools/phase_docs.py complete P0 --evidence docs/evidence/P0-foundation.m
 ```
 
 Completion is an explicit reviewed transition, never inferred from a commit or checklist alone. The tool requires a repo-local evidence document containing `Gate: PASS`, `## Acceptance criteria`, and `## Evidence` sections, completes only the active phase, activates the next phase, and regenerates all status views. It does not commit or push. If docs are edited manually or a transition is interrupted, `refresh` restores them from the state file.
+
+## Management Center interface milestone — in progress (2026-10-19)
+
+The shared catalog v2 now drives categorized resource browsing in the Web Console, keyboard-first TUI, and installed Native GTK4 Management Center. Current verified actions include catalog-backed inspection, GUI monitoring-policy configuration, authorized desktop lifecycle controls (Web: start/stop/restart; TUI/GTK: start/stop), preview-first start/stop of the fixed managed SSH service on 127.0.0.1:8023 across Web/TUI/GTK, and an advanced read-only recovery-history view across clients. Port 8022 stays read-only. The Web API applies scoped authorization, CSRF checks, durable idempotency, and a dedicated `ssh.managed.lifecycle` grant. The GTK bridge exposes fixed typed actions only. Native Termux focused tests (Web runtime 7/7, HTTP adapter 10/10, auth 5/5, sessions 9/9, TUI 14/14, bridge 8/8), GTK build/install identity checks, and the full suite (405/405 in 127.417 seconds) passed.
+
+The milestone remains in progress: visually launch and exercise the GTK window; add guided parity for SSH deployment/rollback, boot profiles, PRoot shortcut add/remove, service logs, and recovery apply operations only as their API authorization and safety contracts permit; add operation progress tracking; and keep future server deployment, AI, and other adapters explicitly planned until implemented. The current capability matrix is `docs/architecture/CAPABILITY-MATRIX.md`. P3 remains unqualified and P4 remains gated by existing device ownership, boot, Shizuku, and PRoot evidence gaps.
 
 ## Dependency order
 

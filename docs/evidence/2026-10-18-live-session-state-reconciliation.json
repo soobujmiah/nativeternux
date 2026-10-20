@@ -2,7 +2,7 @@
   "test_id": "P3-STATE-IDENTITY-2026-10-18",
   "requirement": "Default native status and Doctor identify the existing active session without changing native processes; separately inspect 8022/8023 live bind scope and ownership evidence.",
   "tested_source": "working tree based on 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a; not committed",
-  "environment": "Native Termux over owner-started SSH 8022; ADB shell observation on Redmi Turbo 4 Pro model 25053RT47C; existing Debian PRoot host process remains active.",
+  "environment": "Native Termux over owner-started SSH 8022; ADB shell observation on Redmi Turbo 4 Pro model [redacted device serial]; existing Debian PRoot host process remains active.",
   "automated_verification": {
     "command": "bash scripts/repo_test.sh",
     "result": "PASS",

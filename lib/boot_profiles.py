@@ -48,8 +48,12 @@ def selected_profile(*, home: str | os.PathLike[str], state_dir: str | os.PathLi
 
 def status(*, home: str | os.PathLike[str], state_dir: str | os.PathLike[str],
            prefix: str, which=shutil.which) -> dict[str, object]:
-    profile, _source = selected_profile(home=home, state_dir=state_dir)
-    return preview(profile, home=home, state_dir=state_dir, prefix=prefix, which=which)
+    profile, source = selected_profile(home=home, state_dir=state_dir)
+    result = preview(profile, home=home, state_dir=state_dir, prefix=prefix, which=which)
+    result["managed_script_identity"] = _managed_script_identity(
+        home=home, profile=profile, configuration_source=source,
+    )
+    return result
 
 
 def preview(
@@ -65,17 +69,17 @@ def preview(
     if prefix != "/data/data/com.termux/files/usr":
         raise ValueError("native Termux prefix is invalid")
     configured, source = selected_profile(home=home, state_dir=state_dir)
-    cli = which("ternuxx")
+    cli = which("tx")
     x11 = which("termux-x11")
     xfce = which("xfce4-session")
     if profile == "cli-only":
         ready = True
         blockers: list[str] = []
-        command = f"#!/data/data/com.termux/files/usr/bin/bash\n{SCRIPT_MARKER}\nset -eu\n# CLI-only: no desktop process is started."
+        command = f"#!/data/data/com.termux/files/usr/bin/bash\n{SCRIPT_MARKER}\nset -eu\n# CLI-only: no desktop process is started.\n"
     elif profile == "native":
         blockers = []
         if not cli:
-            blockers.append("installed ternuxx command is unavailable")
+            blockers.append("installed tx command is unavailable")
         if not x11:
             blockers.append("termux-x11 command is unavailable")
         if not xfce:
@@ -86,7 +90,7 @@ def preview(
             f"{SCRIPT_MARKER}\n"
             "set -eu\n"
             f'export PREFIX="{prefix}"\n'
-            f'exec "{prefix}/bin/ternuxx" start'
+            f'exec "{prefix}/bin/tx" start\n'
         )
     else:
         ready = False
@@ -95,7 +99,7 @@ def preview(
         command = ""
     return {
         "component": "boot_profile_preview",
-        "schema_version": 1,
+        "schema_version": 2,
         "requested_profile": profile,
         "configured_profile": configured,
         "configuration_source": source,
@@ -105,12 +109,13 @@ def preview(
         "actions": (
             ["start no graphical session; keep separately configured CLI services"]
             if profile == "cli-only" else
-            ["start Ternuxx-owned native X11/XFCE", "desktop manager requests Termux:X11 Android activity; visibility remains unverified"]
+            ["start Ternuxx-owned native X11/XFCE", "desktop manager keeps Android Activity launch disabled by default; open Termux:X11 manually"]
             if profile == "native" and ready else
             ["no startup action; resolve the listed provider prerequisites first"]
         ),
         "generated_script": command,
         "managed_script_path": str(_boot_script_path(home)),
+        "managed_script_identity": "not_checked",
         "safety": {
             "read_only": True,
             "script_installed": False,
@@ -136,6 +141,61 @@ def _boot_script_path(home: str | os.PathLike[str]) -> Path:
     return boot_dir / BOOT_SCRIPT_NAME
 
 
+def _managed_script_identity(
+    *, home: str | os.PathLike[str], profile: str, configuration_source: str,
+) -> str:
+    """Inspect only Ternuxx's fixed boot entry without following links or changing it."""
+    import stat
+
+    try:
+        path = _boot_script_path(home)
+        metadata = path.lstat()
+    except FileNotFoundError:
+        return "missing" if configuration_source == "configured" else "not_configured"
+    except (OSError, ValueError):
+        return "unsafe"
+    if stat.S_ISLNK(metadata.st_mode):
+        return "unsafe"
+    try:
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(path, flags)
+    except OSError:
+        return "unsafe"
+    try:
+        opened = os.fstat(fd)
+        if (not stat.S_ISREG(opened.st_mode) or opened.st_uid != os.getuid()
+                or stat.S_IMODE(opened.st_mode) != 0o700
+                or (opened.st_dev, opened.st_ino) != (metadata.st_dev, metadata.st_ino)):
+            return "unsafe"
+        if opened.st_size > 65536:
+            return "mismatch"
+        chunks = []
+        remaining = 65537
+        while remaining:
+            chunk = os.read(fd, remaining)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        actual = b"".join(chunks)
+    except OSError:
+        return "unsafe"
+    finally:
+        os.close(fd)
+    if len(actual) > 65536:
+        return "mismatch"
+    if configuration_source != "configured":
+        return "mismatch"
+    try:
+        if actual == _managed_script(profile):
+            return "match"
+        if actual == _legacy_managed_script(profile):
+            return "legacy_match"
+    except ValueError:
+        pass
+    return "mismatch"
+
+
 def _managed_script(profile: str) -> bytes:
     if profile == "cli-only":
         body = f"#!/data/data/com.termux/files/usr/bin/bash\n{SCRIPT_MARKER}\nset -eu\n# CLI-only: no desktop process is started.\n"
@@ -145,7 +205,7 @@ def _managed_script(profile: str) -> bytes:
             f"{SCRIPT_MARKER}\n"
             "set -eu\n"
             'export PREFIX="/data/data/com.termux/files/usr"\n'
-            'exec "/data/data/com.termux/files/usr/bin/ternuxx" start\n'
+            'exec "/data/data/com.termux/files/usr/bin/tx" start\n'
         )
     else:
         raise ValueError("this profile does not have a supported boot adapter")
@@ -160,7 +220,7 @@ def _legacy_managed_script(profile: str) -> bytes:
             "#!/data/data/com.termux/files/usr/bin/bash\n"
             "# Ternuxx-managed boot profile v1\n"
             'export PREFIX="/data/data/com.termux/files/usr"\n'
-            'exec "/data/data/com.termux/files/usr/bin/ternuxx" start\n'
+            'exec "/data/data/com.termux/files/usr/bin/tx" start\n'
         )
     else:
         raise ValueError("unsupported legacy boot profile")

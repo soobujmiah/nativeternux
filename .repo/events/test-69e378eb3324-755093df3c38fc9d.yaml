@@ -1,0 +1,9 @@
+event_id: test-69e378eb3324-755093df3c38fc9d
+repository: soobujmiah/ternuxx
+commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+kind: test
+occurred_at: '2026-10-18T19:42:15Z'
+status: passed
+summary: 'Native Termux full suite: 346/346 passed in 82.494 seconds over SSH 8022;
+  TUI guided PRoot launch routes named apps through shared proot.app.launch with explicit
+  session/display selection and confirmation'

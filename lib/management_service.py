@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Versioned, local application-service boundary for Ternuxx CLI operations.
+"""Versioned, local application-service boundary for Ternuxx CLI and TUI operations.
 
 This is an in-process/local CLI backend, not an HTTP server. It deliberately
 accepts a narrow operation allowlist and has no generic shell or file API.
@@ -11,10 +11,12 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import uuid
 
 import boot_profiles
+import termux_boot_cron
 import continuity
 import config_recovery
 import operation_journal
@@ -30,15 +32,58 @@ import remote_access_policy
 import proot_shortcuts
 import doctor_report
 import management_catalog
+import gui_monitoring
+import hermes_adapter
+import cron_registry
+import cron_execution
+import cron_scheduler
+import cron_daemon
+import proot_sessions
+import timezone_support
 
 
 API_VERSION = 1
 OPERATIONS = {
-    "management.catalog": {"args": set()},
+    "management.catalog": {"args": {"category", "query", "status"}},
+    "agent.hermes.status": {"args": set()},
+    "cron.status": {"args": set()},
+    "cron.scheduler.start": {"args": {"poll_seconds", "confirmed"}},
+    "cron.scheduler.stop": {"args": {"confirmed"}},
+    "cron.executor.self_test": {"args": set()},
+    "cron.jobs.list": {"args": set()},
+    "cron.jobs.show": {"args": {"job_id"}},
+    "cron.jobs.validate": {"args": {"job", "job_id"}},
+    "cron.jobs.next_runs": {"args": {"job_id", "count"}},
+    "cron.jobs.create": {"args": {"job"}},
+    "cron.jobs.update": {"args": {"job_id", "changes"}},
+    "cron.jobs.remove": {"args": {"job_id"}},
+    "cron.executions.list": {"args": {"job_id", "limit"}},
+    "cron.executions.show": {"args": {"execution_id"}},
+    "timezone.status": {"args": set()},
+    "timezone.list": {"args": set()},
+    "timezone.set": {"args": {"timezone"}},
+    "desktop.status": {"args": set()},
+    "desktop.monitor.status": {"args": set()},
+    "desktop.monitor.configure": {"args": {"enabled", "interval_value", "unit", "activity_launch", "focus_check"}},
+    "desktop.start": {"args": {"display"}},
+    "desktop.stop": {"args": set()},
+    "desktop.restart": {"args": {"display"}},
     "doctor.report": {"args": {"graphics"}},
     "ssh.inspect": {"args": set()},
     "proot.status": {"args": set()},
-    "proot.app.launch": {"args": {"app_id", "session_owner", "display"}},
+    "proot.profiles.list": {"args": set()},
+    "proot.profiles.show": {"args": {"profile"}},
+    "proot.sessions.list": {"args": set()},
+    "proot.sessions.show": {"args": {"session_id"}},
+    "proot.sessions.health": {"args": {"session_id"}},
+    "proot.recovery.inspect": {"args": {"session_id"}},
+    "proot.recovery.reconcile.preview": {"args": {"session_id"}},
+    "proot.recovery.reconcile": {"args": {"session_id", "confirmed", "plan_id"}},
+    "proot.start.preview": {"args": {"profile"}},
+    "proot.start": {"args": {"profile", "confirmed", "plan_id", "timeout_seconds"}},
+    "proot.stop.preview": {"args": {"session_id"}},
+    "proot.stop": {"args": {"session_id", "confirmed", "plan_id"}},
+    "proot.app.launch": {"args": {"app_id", "display"}},
     "proot.shortcuts.list": {"args": set()},
     "proot.shortcuts.preview": {"args": {"action", "app_id"}},
     "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
@@ -55,6 +100,11 @@ OPERATIONS = {
     "boot.profile.preview": {"args": {"profile"}},
     "boot.enable": {"args": {"profile", "confirmed"}},
     "boot.disable": {"args": {"confirmed"}},
+    "boot.cron.status": {"args": set()},
+    "boot.cron.validate": {"args": set()},
+    "boot.cron.preview": {"args": {"action"}},
+    "boot.cron.enable": {"args": {"confirmed", "plan_id"}},
+    "boot.cron.disable": {"args": {"confirmed", "plan_id"}},
     "backup.create": {"args": {"name", "confirmed", "plan_id"}},
     "backup.list": {"args": set()},
     "backup.inspect": {"args": {"backup_id"}},
@@ -99,18 +149,170 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "invalid_arguments", "operation arguments are invalid")
     if caller != "local_cli":
         return _error(request_id, "unauthorized", "this local backend accepts only its trusted CLI adapter")
+    if operation == "cron.scheduler.start" and (
+            set(args) - {"poll_seconds", "confirmed"} or type(args.get("poll_seconds", 5)) is not int
+            or not 1 <= args.get("poll_seconds", 5) <= 60):
+        return _error(request_id, "invalid_arguments", "scheduler poll interval must be 1..60 seconds")
+    if operation == "cron.scheduler.start" and args.get("confirmed") is not True:
+        return _error(request_id, "confirmation_required", "scheduler start requires explicit confirmation")
+    if operation == "cron.scheduler.stop" and (set(args) != {"confirmed"} or args.get("confirmed") is not True):
+        return _error(request_id, "confirmation_required", "scheduler stop requires explicit confirmation")
+    if operation in {"proot.sessions.show", "proot.sessions.health"} and (set(args) != {"session_id"} or not isinstance(args.get("session_id"), str)):
+        return _error(request_id, "invalid_arguments", "a Ternuxx session ID is required")
+    if operation in {"proot.recovery.inspect", "proot.recovery.reconcile.preview"} and (
+            set(args) != {"session_id"} or not isinstance(args.get("session_id"), str)):
+        return _error(request_id, "invalid_arguments", "a Ternuxx session ID is required")
+    if operation == "proot.recovery.reconcile" and (
+            set(args) != {"session_id", "confirmed", "plan_id"}
+            or not isinstance(args.get("session_id"), str) or args.get("confirmed") is not True
+            or not isinstance(args.get("plan_id"), str)):
+        return _error(request_id, "confirmation_required", "reconciliation requires an exact preview plan and confirmation")
+    if operation in {"proot.profiles.show", "proot.start.preview"} and (
+            set(args) != {"profile"} or not isinstance(args.get("profile"), str)):
+        return _error(request_id, "invalid_arguments", "a supported PRoot profile is required")
+    if operation == "proot.start" and (
+            set(args) != {"profile", "confirmed", "plan_id", "timeout_seconds"}
+            or not isinstance(args.get("profile"), str) or args.get("confirmed") is not True
+            or not isinstance(args.get("plan_id"), str) or type(args.get("timeout_seconds")) is not int
+            or not 30 <= args["timeout_seconds"] <= 1800):
+        return _error(request_id, "confirmation_required", "PRoot start requires a profile, exact preview plan, confirmation, and bounded timeout")
+    if operation == "proot.stop.preview" and (
+            set(args) != {"session_id"} or not isinstance(args.get("session_id"), str)):
+        return _error(request_id, "invalid_arguments", "a Ternuxx session ID is required")
+    if operation == "proot.stop" and (
+            set(args) != {"session_id", "confirmed", "plan_id"}
+            or not isinstance(args.get("session_id"), str) or args.get("confirmed") is not True
+            or not isinstance(args.get("plan_id"), str)):
+        return _error(request_id, "confirmation_required", "PRoot stop requires an exact preview plan and confirmation")
+    if operation == "timezone.set" and (set(args) != {"timezone"} or not isinstance(args.get("timezone"), str)):
+        return _error(request_id, "invalid_arguments", "timezone.set requires one IANA timezone name")
+    if operation == "cron.jobs.validate":
+        if (set(args) not in ({"job"}, {"job_id"})
+                or ("job" in args and not isinstance(args["job"], dict))
+                or ("job_id" in args and not isinstance(args["job_id"], str))):
+            return _error(request_id, "invalid_arguments", "validation requires one typed job or job ID")
+    if operation in {"cron.jobs.show", "cron.jobs.remove"} and (set(args) != {"job_id"} or not isinstance(args.get("job_id"), str)):
+        return _error(request_id, "invalid_arguments", "a job ID is required")
+    if operation == "cron.jobs.next_runs" and (set(args) - {"job_id", "count"} or not isinstance(args.get("job_id"), str) or type(args.get("count", 5)) is not int):
+        return _error(request_id, "invalid_arguments", "job ID and bounded run count are required")
+    if operation in {"cron.jobs.create"} and (set(args) != {"job"} or not isinstance(args.get("job"), dict)):
+        return _error(request_id, "invalid_arguments", "a typed job object is required")
+    if operation == "cron.jobs.update" and (set(args) != {"job_id", "changes"} or not isinstance(args.get("job_id"), str) or not isinstance(args.get("changes"), dict)):
+        return _error(request_id, "invalid_arguments", "job ID and typed changes are required")
 
     process_env = os.environ if env is None else env
     if process_env.get("TERMUX_VERSION") is None or process_env.get("PREFIX") != "/data/data/com.termux/files/usr":
         return _error(request_id, "native_termux_required", "operation requires the native Termux shell")
     home = process_env.get("HOME", "")
     state_dir = process_env.get("TERNUXX_STATE_DIR", "")
-    if not home or ((operation.startswith(("continuity.", "wakelock.", "boot.profile.", "backup.", "restore.", "recovery.rollback.", "recovery.service.", "recovery.resolve", "ssh.service."))) and not state_dir):
+    if not home or ((operation.startswith(("continuity.", "wakelock.", "boot.profile.", "backup.", "restore.", "recovery.rollback.", "recovery.service.", "recovery.resolve", "ssh.service.")) or operation == "desktop.monitor.configure") and not state_dir):
         return _error(request_id, "configuration_missing", "HOME and the native state directory must be configured")
 
     try:
-        if operation == "management.catalog":
-            data = management_catalog.build_catalog(set(OPERATIONS))
+        if operation == "agent.hermes.status":
+            data = hermes_adapter.inspect(prefix=process_env["PREFIX"], home=home)
+        elif operation == "timezone.status":
+            data = timezone_support.status(state_dir or os.path.join(home, ".local/share/ternuxx"),
+                                          prefix=process_env["PREFIX"])
+        elif operation == "timezone.list":
+            data = {"timezones": timezone_support.available_timezones(prefix=process_env["PREFIX"]),
+                    "database": timezone_support.database_status(prefix=process_env["PREFIX"])}
+        elif operation == "timezone.set":
+            data = timezone_support.set_timezone(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["timezone"],
+                prefix=process_env["PREFIX"])
+        elif operation == "cron.status":
+            cron_state = state_dir or os.path.join(home, ".local/share/ternuxx")
+            data = cron_registry.status(cron_state)
+            runtime = cron_scheduler.status(cron_state)
+            data["scheduler"] = runtime["status"]
+            data["process"] = "running" if runtime.get("process_alive") else "not_running"
+            data["execution"] = ("dispatch_healthy" if runtime.get("dispatch_healthy") else
+                                 "scheduler_stopped" if runtime["status"] == "stopped" else "dispatch_unqualified")
+            data["scheduler_runtime"] = runtime
+            data["execution_ledger"] = cron_execution.status(cron_state)
+        elif operation == "cron.scheduler.start":
+            data = cron_daemon.start(state_dir or os.path.join(home, ".local/share/ternuxx"),
+                                     poll_seconds=args.get("poll_seconds", 5))
+        elif operation == "cron.scheduler.stop":
+            data = cron_daemon.stop(state_dir or os.path.join(home, ".local/share/ternuxx"),
+                                    confirmed=args["confirmed"])
+        elif operation == "cron.executor.self_test":
+            data = {"status": "ok", "action": "scheduler.self_test",
+                    "side_effects": False, "execution": "diagnostic-only"}
+        elif operation == "cron.executions.list":
+            if set(args) - {"job_id", "limit"} or ("job_id" in args and not isinstance(args["job_id"], str)) or type(args.get("limit", 100)) is not int:
+                return _error(request_id, "invalid_arguments", "execution history query is invalid")
+            data = {"executions": cron_execution.list_executions(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), job_id=args.get("job_id"), limit=args.get("limit", 100))}
+        elif operation == "cron.executions.show":
+            if set(args) != {"execution_id"} or not isinstance(args.get("execution_id"), str):
+                return _error(request_id, "invalid_arguments", "execution ID is required")
+            data = {"execution": cron_execution.show_execution(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["execution_id"])}
+        elif operation == "cron.jobs.list":
+            data = {"jobs": cron_registry.list_jobs(state_dir or os.path.join(home, ".local/share/ternuxx"))}
+        elif operation == "cron.jobs.show":
+            data = {"job": cron_registry.show_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])}
+        elif operation == "cron.jobs.validate":
+            job = args.get("job")
+            if job is None and isinstance(args.get("job_id"), str):
+                job = cron_registry.show_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])
+            data = {"valid": True, "job": cron_registry.validate_job(job)}
+        elif operation == "cron.jobs.next_runs":
+            count = args.get("count", 5)
+            job = cron_registry.show_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])
+            data = {"job_id": args["job_id"], "runs": cron_registry.next_runs(job, count=count)}
+        elif operation == "cron.jobs.create":
+            data = {"job": cron_registry.create_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job"])}
+        elif operation == "cron.jobs.update":
+            data = {"job": cron_registry.update_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"], args["changes"])}
+        elif operation == "cron.jobs.remove":
+            data = cron_registry.remove_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])
+        elif operation == "management.catalog":
+            data = management_catalog.build_catalog(
+                set(OPERATIONS), category=args.get("category"),
+                query=args.get("query"), status=args.get("status"))
+        elif operation in {"desktop.status", "desktop.start", "desktop.stop", "desktop.restart"}:
+            action = operation.removeprefix("desktop.")
+            display = args.get("display")
+            if display is not None and (not isinstance(display, str)
+                                        or not re.fullmatch(r":?[0-9]{1,2}", display)):
+                return _error(request_id, "invalid_arguments", "desktop display must be a numeric X11 display")
+            command = [process_env["PREFIX"] + "/bin/bash",
+                       os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin", "tx"),
+                       "--json", action]
+            if action in {"start", "restart"} and display is not None:
+                command.extend(("--display", display.lstrip(":")))
+            completed = subprocess.run(command, env=dict(process_env), capture_output=True,
+                                       text=True, timeout=180, check=False)
+            if completed.returncode != 0:
+                return _error(request_id, "desktop_operation_failed", "desktop action did not complete")
+            try:
+                data = json.loads(completed.stdout)
+            except json.JSONDecodeError:
+                return _error(request_id, "desktop_operation_failed", "desktop command returned no structured result")
+        elif operation == "desktop.monitor.status":
+            data = gui_monitoring.status(state_dir or os.path.join(home, ".local/share/ternuxx"),
+                                        home=home, tmp_root=process_env.get("TMPDIR"))
+        elif operation == "desktop.monitor.configure":
+            values = {}
+            for key in ("enabled", "activity_launch", "focus_check"):
+                if key in args:
+                    if type(args[key]) is not bool:
+                        return _error(request_id, "invalid_arguments", f"{key} must be boolean")
+                    values[key] = args[key]
+            interval_value = args.get("interval_value")
+            unit = args.get("unit")
+            if interval_value is not None and type(interval_value) is not int:
+                return _error(request_id, "invalid_arguments", "interval_value must be an integer")
+            if unit is not None and not isinstance(unit, str):
+                return _error(request_id, "invalid_arguments", "unit must be a string")
+            data = gui_monitoring.configure(state_dir or os.path.join(home, ".local/share/ternuxx"),
+                                            interval_value=interval_value, unit=unit, **values)
+            data["linux_gui_health"] = gui_monitoring._linux_gui_state(
+                home, state_dir or os.path.join(home, ".local/share/ternuxx"),
+                process_env.get("TMPDIR", "/data/data/com.termux/files/usr/tmp"))
         elif operation == "doctor.report":
             graphics = args.get("graphics", False)
             if type(graphics) is not bool:
@@ -122,22 +324,56 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = ssh_diagnostics.inspect_native(prefix=process_env["PREFIX"], home=home)
         elif operation == "proot.status":
             data = proot_diagnostics.inspect_installed()
+            data["ternuxx_sessions"] = proot_sessions.list_sessions(
+                state_dir or os.path.join(home, ".local/share/ternuxx"))
+        elif operation == "proot.profiles.list":
+            data = proot_sessions.profile_inventory(prefix=process_env["PREFIX"])
+        elif operation == "proot.profiles.show":
+            data = proot_sessions.show_profile(args["profile"], prefix=process_env["PREFIX"])
+        elif operation == "proot.sessions.list":
+            data = {"sessions": proot_sessions.list_sessions(
+                state_dir or os.path.join(home, ".local/share/ternuxx"))}
+        elif operation == "proot.sessions.show":
+            data = {"session": proot_sessions.show_session(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["session_id"])}
+        elif operation == "proot.sessions.health":
+            data = proot_sessions.session_health(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["session_id"])
+        elif operation == "proot.recovery.inspect":
+            data = proot_sessions.inspect_recovery(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["session_id"])
+        elif operation == "proot.recovery.reconcile.preview":
+            data = proot_sessions.preview_reconcile(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["session_id"])
+        elif operation == "proot.recovery.reconcile":
+            data = proot_sessions.reconcile_session(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["session_id"],
+                confirmed=args["confirmed"], plan_id=args["plan_id"])
+        elif operation == "proot.start.preview":
+            data = proot_sessions.preview_start(args["profile"], prefix=process_env["PREFIX"])
+        elif operation == "proot.start":
+            data = proot_sessions.start_profile(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), prefix=process_env["PREFIX"],
+                profile=args["profile"], confirmed=args["confirmed"], plan_id=args["plan_id"],
+                timeout_seconds=args["timeout_seconds"])
+        elif operation == "proot.stop.preview":
+            data = proot_sessions.preview_stop(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["session_id"])
+        elif operation == "proot.stop":
+            data = proot_sessions.stop_session(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), args["session_id"],
+                confirmed=args["confirmed"], plan_id=args["plan_id"])
         elif operation == "proot.app.launch":
             app_id = args.get("app_id")
             if not isinstance(app_id, str):
                 return _error(request_id, "invalid_arguments", "app ID is required")
-            session_owner = args.get("session_owner", "ternuxx")
             display = args.get("display")
-            if not isinstance(session_owner, str) or session_owner not in {"ternuxx", "ternux"}:
-                return _error(request_id, "invalid_arguments", "session owner must be ternuxx or ternux")
             if display is not None and (not isinstance(display, str) or not re.fullmatch(r":[0-9]{1,2}", display)):
                 return _error(request_id, "invalid_arguments", "display must be an X11 display such as :1")
-            if session_owner == "ternux" and display is None:
-                return _error(request_id, "invalid_arguments", "Ternux session selection requires an explicit display")
             data = proot_shortcuts.launch(
                 app_id, prefix=process_env["PREFIX"],
                 repo_root=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                env=process_env, session_owner=session_owner, display=display,
+                env=process_env, display=display,
             )
         elif operation == "proot.shortcuts.list":
             data = proot_shortcuts.list_shortcuts(
@@ -170,17 +406,17 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             if (not isinstance(args.get("distro"), str)
                     or not isinstance(args.get("display"), str)
                     or not isinstance(args.get("backend"), str)
-                    or not isinstance(source, str) or source not in {"explicit", "ternux-state"}
+                    or not isinstance(source, str) or source not in {"explicit", "rootfs"}
                     or (source == "explicit" and not isinstance(args.get("user"), str))
-                    or (source == "ternux-state" and "user" in args)):
+                    or (source == "rootfs" and "user" in args)):
                 return _error(request_id, "invalid_arguments", "PRoot guest verification requires a supported, unambiguous profile and display/backend selection")
             try:
                 user = args.get("user")
-                if source == "ternux-state":
-                    user = proot_diagnostics.resolve_ternux_guest_user(
-                        home=home, path=process_env.get("PATH", ""),
+                if source == "rootfs":
+                    user = proot_diagnostics.resolve_proot_guest_user(
+                        distro=args["distro"], prefix=process_env["PREFIX"],
                     )
-                data = proot_diagnostics.verify_ternux_guest(
+                data = proot_diagnostics.verify_proot_guest(
                     distro=args["distro"], user=user, display=args["display"], backend=args["backend"],
                     prefix=process_env["PREFIX"],
                 )
@@ -246,6 +482,24 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             if type(confirmed) is not bool:
                 return _error(request_id, "invalid_arguments", "confirmation is invalid")
             data = boot_profiles.disable(home=home, state_dir=state_dir, confirmed=confirmed)
+        elif operation == "boot.cron.status":
+            data = termux_boot_cron.status(home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"))
+        elif operation == "boot.cron.validate":
+            data = termux_boot_cron.validate(home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), prefix=process_env["PREFIX"])
+        elif operation == "boot.cron.preview":
+            action = args.get("action")
+            if action not in {"enable", "disable"}:
+                return _error(request_id, "invalid_arguments", "action must be enable or disable")
+            data = termux_boot_cron.preview(action, home=home)
+        elif operation in {"boot.cron.enable", "boot.cron.disable"}:
+            confirmed = args.get("confirmed", False)
+            plan_id = args.get("plan_id")
+            if type(confirmed) is not bool or (plan_id is not None and not isinstance(plan_id, str)):
+                return _error(request_id, "invalid_arguments", "boot integration confirmation is invalid")
+            if confirmed and not plan_id:
+                return _error(request_id, "confirmation_required", "apply requires --yes and the exact preview --plan-id")
+            action = "enable" if operation.endswith("enable") else "disable"
+            data = termux_boot_cron.apply(action, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), confirmed=confirmed, plan_id=plan_id)
         elif operation == "wakelock.status":
             data = wakelock_manager.status(state_dir=state_dir)
         elif operation in {"wakelock.acquire", "wakelock.release"}:
@@ -350,8 +604,16 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                                                   current_boot_id=args.get("current_boot_id"))
         else:
             data = reboot_recovery.resume_info(home=home, state_dir=state_dir, test_id=args["test_id"])
+    except timezone_support.TimezoneError as exc:
+        return _error(request_id, "timezone_configuration_error", str(exc))
+    except cron_execution.ExecutionError as exc:
+        return _error(request_id, "cron_execution_error", str(exc))
+    except cron_registry.CronError as exc:
+        return _error(request_id, "cron_registry_error", str(exc))
     except runit_deployment.DeploymentError as exc:
         return _error(request_id, "deployment_failed", str(exc))
+    except proot_sessions.SessionError as exc:
+        return _error(request_id, "proot_operation_failed", str(exc))
     except proot_shortcuts.ShortcutError as exc:
         return _error(request_id, "shortcut_operation_failed", str(exc))
     except config_recovery.RecoveryError as exc:
@@ -364,7 +626,11 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "operation_failed", str(exc))
     except wakelock_manager.WakeLockError as exc:
         return _error(request_id, "operation_failed", str(exc))
-    except (KeyError, TypeError, ValueError, OSError, RuntimeError) as exc:
+    except ValueError as exc:
+        if operation == "management.catalog":
+            return _error(request_id, "invalid_arguments", str(exc))
+        return _error(request_id, "operation_failed", f"operation could not complete ({exc.__class__.__name__})")
+    except (KeyError, TypeError, OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
         return _error(request_id, "operation_failed", f"operation could not complete ({exc.__class__.__name__})")
     return {"api_version": API_VERSION, "request_id": request_id, "ok": True, "operation": operation, "data": data}
 
@@ -387,26 +653,131 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--baseline-json")
     parser.add_argument("--distro", choices=("debian",))
     parser.add_argument("--guest-user")
-    parser.add_argument("--guest-user-source", choices=("ternux-state",))
+    parser.add_argument("--guest-user-source", choices=("rootfs",))
     parser.add_argument("--display", choices=tuple(f":{number}" for number in range(11)))
     parser.add_argument("--backend", choices=("zink", "virgl"))
     parser.add_argument("--policy-stdin", action="store_true",
                         help="read a secret-free remote-access desired policy JSON object from stdin")
     parser.add_argument("--current-boot-id")
     parser.add_argument("--owner")
-    parser.add_argument("--profile", choices=boot_profiles.PROFILES)
+    parser.add_argument("--profile", choices=tuple(sorted(set(boot_profiles.PROFILES) | set(proot_sessions.PROFILES))))
+    parser.add_argument("--boot-action", choices=("enable", "disable"))
     parser.add_argument("--name")
     parser.add_argument("--backup-id")
     parser.add_argument("--operation-id")
+    parser.add_argument("--job-id")
+    parser.add_argument("--execution-id")
+    parser.add_argument("--limit", type=int, default=100)
+    parser.add_argument("--poll-seconds", type=int, default=5)
+    parser.add_argument("--job-name")
+    parser.add_argument("--job-description", default="Scheduled Ternuxx action")
+    parser.add_argument("--job-action", choices=sorted(cron_registry._ALLOWED_ACTIONS))
+    parser.add_argument("--schedule-type", choices=sorted(cron_registry._SCHEDULE_TYPES))
+    parser.add_argument("--cron-expression")
+    parser.add_argument("--timezone")
+    parser.add_argument("--interval-seconds", type=int)
+    parser.add_argument("--anchor-at")
+    parser.add_argument("--calendar-mode", choices=("daily", "specific"))
+    parser.add_argument("--calendar-time")
+    parser.add_argument("--datetime")
+    parser.add_argument("--at")
+    parser.add_argument("--job-environment", choices=("native-termux", "debian-proot"), default="native-termux")
+    parser.add_argument("--timeout-seconds", type=int, default=300)
+    parser.add_argument("--max-attempts", type=int, default=1)
+    parser.add_argument("--retry-delay-seconds", type=int, default=0)
+    parser.add_argument("--retry-backoff", choices=("fixed", "exponential"), default="fixed")
+    parser.add_argument("--missed-run-policy", choices=sorted(cron_registry._MISSED), default="skip")
+    parser.add_argument("--concurrency-policy", choices=sorted(cron_registry._CONCURRENCY), default="skip_overlap")
+    job_toggle = parser.add_mutually_exclusive_group()
+    job_toggle.add_argument("--job-enabled", dest="job_enabled", action="store_true", default=None)
+    job_toggle.add_argument("--job-disabled", dest="job_enabled", action="store_false")
+    boot_toggle = parser.add_mutually_exclusive_group()
+    boot_toggle.add_argument("--run-after-device-boot", dest="device_boot", action="store_true", default=None)
+    boot_toggle.add_argument("--no-device-boot", dest="device_boot", action="store_false")
+    recovery_toggle = parser.add_mutually_exclusive_group()
+    recovery_toggle.add_argument("--run-after-scheduler-recovery", dest="scheduler_recovery", action="store_true", default=None)
+    recovery_toggle.add_argument("--no-scheduler-recovery", dest="scheduler_recovery", action="store_false")
+    parser.add_argument("--job-json-stdin", action="store_true", help="read typed job/changes JSON from stdin")
+    parser.add_argument("--count", type=int, default=5)
     parser.add_argument("--shortcut-action", choices=("add", "remove"))
     parser.add_argument("--app-id")
-    parser.add_argument("--session-owner", choices=("ternuxx", "ternux"))
     parser.add_argument("--plan-id")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--persistent", action="store_true")
     parser.add_argument("--graphics", action="store_true")
+    parser.add_argument("--category")
+    parser.add_argument("--query")
+    parser.add_argument("--status", choices=("implemented", "partial", "external", "unverified", "unavailable", "planned"))
+    monitor_toggle = parser.add_mutually_exclusive_group()
+    monitor_toggle.add_argument("--monitor-enabled", dest="monitor_enabled", action="store_true", default=None)
+    monitor_toggle.add_argument("--monitor-disabled", dest="monitor_enabled", action="store_false")
+    parser.add_argument("--monitor-interval", type=int)
+    parser.add_argument("--monitor-unit", choices=("seconds", "minutes", "hours"))
+    parser.add_argument("--monitor-activity-launch", action="store_true", default=None)
+    parser.add_argument("--monitor-no-activity-launch", action="store_false", dest="monitor_activity_launch", default=None)
+    parser.add_argument("--monitor-focus-check", action="store_true", default=None)
+    parser.add_argument("--monitor-no-focus-check", action="store_false", dest="monitor_focus_check", default=None)
     parser.add_argument("--json", action="store_true")
     return parser
+
+
+def _cli_job(args: argparse.Namespace) -> dict[str, object] | None:
+    if not all((args.job_name, args.job_action, args.schedule_type)):
+        return None
+    if args.timezone is not None and args.schedule_type not in {"cron", "calendar"}:
+        return None
+    if args.schedule_type == "calendar" and args.calendar_mode == "specific" and args.timezone is not None:
+        return None
+    schedule: dict[str, object]
+    if args.schedule_type == "cron":
+        if not args.cron_expression: return None
+        schedule = {"expression": args.cron_expression}
+        if args.timezone is not None:
+            schedule["timezone"] = args.timezone
+    elif args.schedule_type == "interval":
+        if args.interval_seconds is None or not args.anchor_at: return None
+        schedule = {"interval_seconds": args.interval_seconds, "anchor_at": args.anchor_at}
+    elif args.schedule_type == "calendar":
+        if args.calendar_mode == "daily" and args.calendar_time:
+            schedule = {"mode": "daily", "time": args.calendar_time}
+            if args.timezone is not None:
+                schedule["timezone"] = args.timezone
+        elif args.calendar_mode == "specific" and args.datetime:
+            schedule = {"mode": "specific", "datetime": args.datetime}
+        else: return None
+    else:
+        if not args.at: return None
+        schedule = {"at": args.at}
+    try:
+        timezone_name = args.timezone
+        if timezone_name is None and args.schedule_type in {"cron", "calendar"}:
+            home = os.environ.get("HOME", "")
+            state_dir = os.environ.get("TERNUXX_STATE_DIR") or os.path.join(home, ".local/share/ternuxx")
+            timezone_name = timezone_support.current_timezone(
+                state_dir, installation_timezone=os.environ.get("TERNUXX_INSTALL_TIMEZONE"))
+        if args.schedule_type == "cron" and schedule.get("timezone") is None:
+            schedule["timezone"] = timezone_name
+        if args.schedule_type == "calendar" and schedule.get("mode") == "daily" and schedule.get("timezone") is None:
+            schedule["timezone"] = timezone_name
+        return cron_registry.new_job(name=args.job_name, description=args.job_description,
+            action_id=args.job_action, schedule_type=args.schedule_type, schedule=schedule,
+            enabled=bool(args.job_enabled), run_after_device_boot=bool(args.device_boot),
+            run_after_scheduler_recovery=bool(args.scheduler_recovery), timeout_seconds=args.timeout_seconds,
+            retry_policy={"max_attempts": args.max_attempts, "delay_seconds": args.retry_delay_seconds,
+                          "backoff": args.retry_backoff}, missed_run_policy=args.missed_run_policy,
+            concurrency_policy=args.concurrency_policy, environment=args.job_environment)
+    except ValueError:
+        return None
+
+
+def _cli_job_changes(args: argparse.Namespace) -> dict[str, object]:
+    changes: dict[str, object] = {}
+    if args.job_name is not None: changes["name"] = args.job_name
+    if args.job_description != "Scheduled Ternuxx action": changes["description"] = args.job_description
+    if args.job_enabled is not None: changes["enabled"] = args.job_enabled
+    if args.device_boot is not None: changes["run_after_device_boot"] = args.device_boot
+    if args.scheduler_recovery is not None: changes["run_after_scheduler_recovery"] = args.scheduler_recovery
+    return changes
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -438,10 +809,10 @@ def main(argv: list[str] | None = None) -> int:
             payload = {}
     elif args.operation == "proot.guest.verify":
         explicit_user = bool(args.guest_user)
-        state_user = args.guest_user_source == "ternux-state"
+        rootfs_user = args.guest_user_source == "rootfs"
         if (not all((args.distro, args.display, args.backend))
-                or explicit_user == state_user):
-            response = _error(request_id, "invalid_arguments", "proot guest verify requires exactly one of --guest-user USER or --guest-user-source ternux-state")
+                or explicit_user == rootfs_user):
+            response = _error(request_id, "invalid_arguments", "proot guest verify requires exactly one of --guest-user USER or --guest-user-source rootfs")
             if args.json:
                 print(json.dumps(response, sort_keys=True))
             else:
@@ -451,11 +822,130 @@ def main(argv: list[str] | None = None) -> int:
         if explicit_user:
             payload["user"] = args.guest_user
         else:
-            payload["user_source"] = "ternux-state"
-    elif args.operation in {"management.catalog", "ssh.inspect", "proot.status", "native.ssh.status", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "backup.list", "recovery.status"}:
+            payload["user_source"] = "rootfs"
+    elif args.operation == "management.catalog":
+        payload = {key: value for key, value in (("category", args.category), ("query", args.query), ("status", args.status)) if value is not None}
+    elif args.operation == "cron.scheduler.start":
+        payload = {"poll_seconds": args.poll_seconds, "confirmed": bool(args.yes)}
+    elif args.operation == "cron.scheduler.stop":
+        payload = {"confirmed": bool(args.yes)}
+    elif args.operation in {"proot.sessions.list", "proot.profiles.list"}:
+        payload = {}
+    elif args.operation in {"proot.profiles.show", "proot.start.preview"}:
+        if not args.profile:
+            response = _error(request_id, "invalid_arguments", "--profile is required")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide --profile.", file=sys.stderr)
+            return 1
+        payload = {"profile": args.profile}
+    elif args.operation == "proot.start":
+        if not args.profile or not args.yes or not args.plan_id:
+            response = _error(request_id, "confirmation_required", "start requires --profile, --yes, and the exact --plan-id")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Preview first, then provide --profile, --yes, and --plan-id.", file=sys.stderr)
+            return 1
+        payload = {"profile": args.profile, "confirmed": True, "plan_id": args.plan_id,
+                   "timeout_seconds": args.timeout_seconds}
+    elif args.operation == "proot.stop.preview":
+        if not args.operation_id:
+            response = _error(request_id, "invalid_arguments", "session ID is required")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide a Ternuxx session ID.", file=sys.stderr)
+            return 1
+        payload = {"session_id": args.operation_id}
+    elif args.operation == "proot.stop":
+        if not args.operation_id or not args.yes or not args.plan_id:
+            response = _error(request_id, "confirmation_required", "stop requires a session ID, --yes, and exact --plan-id")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Preview first, then provide SESSION_ID, --yes, and --plan-id.", file=sys.stderr)
+            return 1
+        payload = {"session_id": args.operation_id, "confirmed": True, "plan_id": args.plan_id}
+    elif args.operation == "proot.recovery.reconcile":
+        if not args.operation_id or not args.yes or not args.plan_id:
+            response = _error(request_id, "confirmation_required", "reconciliation requires session ID, --yes, and exact --plan-id")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Preview first, then provide SESSION_ID, --yes, and --plan-id.", file=sys.stderr)
+            return 1
+        payload = {"session_id": args.operation_id, "confirmed": True, "plan_id": args.plan_id}
+    elif args.operation in {"proot.sessions.show", "proot.sessions.health", "proot.recovery.inspect",
+                                   "proot.recovery.reconcile.preview"}:
+        if not args.operation_id:
+            response = _error(request_id, "invalid_arguments", "--operation-id must contain the session ID")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide the Ternuxx PRoot session ID.", file=sys.stderr)
+            return 1
+        payload = {"session_id": args.operation_id}
+    elif args.operation == "timezone.set":
+        if not args.timezone:
+            response = _error(request_id, "invalid_arguments", "--timezone is required")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide --timezone IANA_NAME.", file=sys.stderr)
+            return 1
+        payload = {"timezone": args.timezone}
+    elif args.operation in {"timezone.status", "timezone.list"}:
+        payload = {}
+    elif args.operation == "cron.executions.list":
+        payload = {"limit": args.limit}
+        if args.job_id:
+            payload["job_id"] = args.job_id
+    elif args.operation == "cron.executions.show":
+        if not args.execution_id:
+            response = _error(request_id, "invalid_arguments", "--execution-id is required")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide --execution-id.", file=sys.stderr)
+            return 1
+        payload = {"execution_id": args.execution_id}
+    elif args.operation.startswith("cron."):
+        payload = {}
+        if args.operation in {"cron.jobs.show", "cron.jobs.update", "cron.jobs.remove", "cron.jobs.validate", "cron.jobs.next_runs"}:
+            if args.job_id:
+                payload["job_id"] = args.job_id
+            elif args.operation not in {"cron.jobs.validate"}:
+                response = _error(request_id, "invalid_arguments", "--job-id is required")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
+                return 1
+        if args.operation == "cron.jobs.next_runs":
+            payload["count"] = args.count
+        if args.operation == "cron.jobs.create" or (args.operation == "cron.jobs.validate" and not args.job_id):
+            job = _cli_job(args)
+            if job is None:
+                response = _error(request_id, "invalid_arguments", "typed job fields are incomplete or invalid")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print("Provide the documented typed job fields and schedule options.", file=sys.stderr)
+                return 1
+            payload["job"] = job
+        if args.operation == "cron.jobs.update":
+            changes = _cli_job_changes(args)
+            if not changes:
+                response = _error(request_id, "invalid_arguments", "at least one typed update option is required")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print("Choose a new name, enabled state, or a startup trigger option.", file=sys.stderr)
+                return 1
+            payload["changes"] = changes
+    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "native.ssh.status", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
         payload = {}
         if args.operation == "continuity.status" and args.test_id:
             payload["test_id"] = args.test_id
+    elif args.operation == "desktop.monitor.configure":
+        payload = {}
+        for source, target in ((args.monitor_enabled, "enabled"),
+                               (args.monitor_activity_launch, "activity_launch"),
+                               (args.monitor_focus_check, "focus_check")):
+            if source is not None:
+                payload[target] = source
+        if args.monitor_interval is not None:
+            payload["interval_value"] = args.monitor_interval
+            payload["unit"] = args.monitor_unit or "seconds"
+        elif args.monitor_unit is not None:
+            response = _error(request_id, "invalid_arguments", "--monitor-unit requires --monitor-interval")
+            if args.json:
+                print(json.dumps(response, sort_keys=True))
+            else:
+                print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
+            return 1
+    elif args.operation == "desktop.monitor.status":
+        payload = {}
     elif args.operation == "doctor.report":
         payload = {"graphics": bool(args.graphics)}
     elif args.operation in {"ssh.service.deploy.rollback.preview", "ssh.service.deploy.rollback.apply"}:
@@ -513,6 +1003,16 @@ def main(argv: list[str] | None = None) -> int:
         payload = {"profile": args.profile, "confirmed": args.yes}
     elif args.operation == "boot.disable":
         payload = {"confirmed": args.yes}
+    elif args.operation == "boot.cron.preview":
+        if not args.boot_action:
+            response = _error(request_id, "invalid_arguments", "--boot-action is required")
+            print(json.dumps(response, sort_keys=True) if args.json else "Ternuxx operation failed [invalid_arguments]: --boot-action is required", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"action": args.boot_action}
+    elif args.operation in {"boot.cron.enable", "boot.cron.disable"}:
+        payload = {"confirmed": args.yes}
+        if args.plan_id is not None:
+            payload["plan_id"] = args.plan_id
     elif args.operation in {"wakelock.acquire", "wakelock.release"}:
         if not args.owner:
             response = _error(request_id, "invalid_arguments", "--owner is required")
@@ -643,8 +1143,6 @@ def main(argv: list[str] | None = None) -> int:
                 print("Ternuxx operation failed [invalid_arguments]: --app-id is required", file=sys.stderr)
             return 1
         payload = {"app_id": args.app_id}
-        if args.session_owner is not None:
-            payload["session_owner"] = args.session_owner
         if args.display is not None:
             payload["display"] = args.display
     elif args.operation == "proot.shortcuts.list":

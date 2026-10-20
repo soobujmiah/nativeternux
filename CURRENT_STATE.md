@@ -1,16 +1,70 @@
+# Current continuation - isolated scheduler core and ownership gate (2026-10-19)
+
+Native Termux HOME/ternuxx, branch main, starting HEAD 69e378eb33247678437bda4b2de9ab25f6bcb91d. The existing dirty worktree was preserved. New code adds an isolated Cron scheduler lease and lease-guarded durable event dispatch; a real registered no-side-effect subprocess action passed under temporary state. No resident scheduler, production job, boot/recovery delivery, or retry/cancellation engine is enabled.
+
+PRoot read-only inventory still shows Debian installed and guest process ownership unverified. The existing Debian development session and floating X11 GUI were not entered, stopped, or restarted. Ternuxx-owned PRoot lifecycle remains unavailable pending a supported isolated launch identity and verified stop target. P3 remains in progress; P4 remains unqualified. See docs/evidence/2026-10-19-cron-scheduler-lease-proot-gate.md.
+
+# Native management UI audit — 2026-10-19
+
+The CLI currently has the broadest controls. The TUI is read-view-focused and its generic operation path asks for raw operation IDs/JSON, then prints verbose nested payloads. The Web UI has diagnostics/status actions and GUI monitoring settings; Web transport permits diagnostic reads and only the monitoring-policy mutation. No standalone Native Ternuxx management GUI app exists yet; XFCE is the managed desktop, not a Ternuxx console. User wants all four clients categorized, professional, full-featured, concise by default, and backed by the shared management core, including server deployment and service lifecycle. This is a product-scope record; current UI implementation has not yet been redesigned.
+
+
+## Management Center implementation update — 2026-10-19
+
+This entry supersedes the initial UI-audit paragraph above for current client state. Work continued in the already-dirty Native Termux checkout `$HOME/ternuxx` on `main` at HEAD `69e378eb33247678437bda4b2de9ab25f6bcb91d`; no prior owner changes were discarded. The shared catalog v2 remains authoritative for 12 categories, resource identities, capability status, and supported/planned operations.
+
+The Web Console now renders catalog categories, searchable/status-filtered resource cards, resource ownership/readiness/dependency details, supported/planned actions, diagnostics, and a read-only latest-response view. It can run catalog-backed reads, configure GUI Activity/focus monitoring, and start/stop/restart the native desktop after browser confirmation. Web authorization remains loopback-only and session-scoped; writes require CSRF and durable idempotency. SSH, boot, PRoot, recovery, and deployment mutations are not exposed through Web.
+
+The TUI is now category-first with keyboard navigation and search, concise resource maturity/current-state labels, live status inspection, guided PRoot app launch, confirmed native desktop start/stop, and the GUI monitoring form. Its ordinary UI no longer requests raw operation IDs or arbitrary JSON. The Native GTK4 management app is installed at `$PREFIX/libexec/ternuxx/management-center`, launched by `tx management center`; the source, typed bridge, launcher, and installed binary are recorded by `management-center.identity`. It provides resource categories/search/details, live status operations, confirmed desktop start/stop, and the monitoring-policy form. GTK 4.24.1 `--self-check` and the installed launcher's `--version` passed. The full window was not opened, so visual/touch interaction remains pending owner-side qualification.
+
+Verified so far: Web runtime tests 7/7, TUI 10/10, and bridge 5/5 focused tests pass; the complete Native Termux suite passed 398/398 in 130.181 seconds (bounded runner exit 0 after confirming no worker threads remained). Native Termux source compiled with GTK4 and the installed artifact's SHA-256 matched its identity record. Live read-only checks reported GUI :1 running with supervisor/X11/XFCE live, PRoot installed with host process ownership unverified, and monitoring disabled (300-second configured interval, no Activity launch/focus polling). SSH inspection showed 8023 Runit-managed and SSH-banner-ready; socket PID mapping is permission-denied, while 8022 daemon/config evidence exists but ownership remains unknown. No Activity was requested, no focus polling was enabled, and no GUI/SSH/PRoot lifecycle mutation occurred. Management UI limitations: no Web/TUI/GTK log/history screen or asynchronous operation identity; only desktop lifecycle and monitoring mutations are enabled in Web; SSH 8023, boot, recovery, and PRoot add/remove workflows remain for the next parity milestone. P3 remains unqualified and P4 remains gated by prior live ownership/boot evidence.
+
+# Latest continuation — monitoring, Shizuku, and graphics audit (2026-10-19)
+
+Implementation and validation ran in Native Termux at `$HOME/ternuxx` on branch `main`, HEAD `69e378eb33247678437bda4b2de9ab25f6bcb91d`; the worktree remains intentionally dirty with ongoing owner changes. The installed `$PREFIX/bin/tx` shim hash matches `scripts/tx-installed` and dispatches to this checkout.
+
+The native GUI on `:1` is running with verified supervisor/X11/XFCE process identities; independent Android visibility remains unknown. One live repeated `tx gui` returned “already running”, exit 0, with the session record hash unchanged. The shared Activity/focus monitor policy defaults disabled at 300 seconds; repeated live status calls report no Activity request/focus probe. The scheduler unit exists in source but is not installed on-device, so live opt-in scheduling remains unqualified. No Activity launch or focus polling was performed during this monitoring follow-up.
+
+Native Termux tests passed **387/387 in 112.759 seconds**, exit 0 after the latest Doctor probe-safety change. Focused Doctor passed **24/24**; shell syntax, Python compilation, JSON validation, `git diff --check`, and `python3 -m tools.repo_knowledge verify` passed (0 findings). Doctor reports PulseAudio protocol readiness unknown and skips `pactl` because client autospawn suppression is unverified. An earlier manual query observed `OpenSL_ES_sink`; it does not prove playback or PRoot connectivity. The existing Debian PRoot is installed and was not entered or modified.
+
+The owner-specified `/sdcard/Others/rish` and `rish_shizuku.dex` were copied to the Native Termux home with SHA-256 matches. The copied wrapper is mode 700 and DEX mode 400; `rish.sh` is absent. Shizuku package metadata is present, but provider/Binder health and authorization remain unknown; no privileged command was run.
+
+No live identifier uses the reported double-x spelling. Single-x legacy paths and `NATIVERNUX_STATE_DIR` remain intentional compatibility aliases: their installed command/module and distinct state tree still contain records and were preserved. Installed Termux:Boot scripts still differ from source; no redeployment or reboot occurred. Port 8022 remains manually managed; 8023 remains Runit-managed and loopback SSH banner-ready, with current socket PID ownership unavailable. P3 is not qualified; P4 remains gated. The in-scope target is a shared managed-resource catalog across CLI/TUI/Web/GUI: add/remove SSH and other supported resources; configure bind/authentication and other validated settings; start/stop/restart foreground/background as supported; enable/disable autostart at boot; inspect dependencies, readiness, logs, and recovery. One supervisor/owner record and idempotent start must prevent duplicate instances. This general catalog is not yet implemented; proven managed coverage is narrower, notably the 8023 runit service and GUI session. The catalog must remain categorized and easy to navigate (stable categories/IDs, short descriptions, category listing/search, context-valid actions, concise guided flows, and previews for disruptive changes) consistently across all four interfaces. Port 8022 remains external/manual and excluded. Duplicate or unowned audio processes remain inspect-only; Ternuxx will not kill/adopt them based on process name. Detailed evidence: [2026-10-19 native monitoring, Shizuku, naming, and graphics follow-up](docs/evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md).
+
+## Initial stale-session audit checkpoint — 2026-10-19 10:14 UTC
+
+The native `:1` session record still says `running`, but read-only reconciliation verifies that its supervisor, X11, and XFCE process identities are absent and no display artifacts remain. `tx gui status` now reports `stale`; a fixture verifies safe reconciliation before a new start. The old false-block came from refusing every non-`stopped` record without comparing current process identities. Full Native Termux suite: **370/370 in 86.766 seconds**. No live GUI lifecycle action or reboot was run. Full evidence and limitations: [GUI session recovery and P3 recheck](docs/evidence/2026-10-19-gui-session-recovery.md).
+
+P3 remains unqualified: 8022 socket ownership and 8023 socket ownership are not observable, installed boot-service/recovery scripts differ from repository source in native state/module paths, Android boot delivery/cold-boot behavior is unknown, Shizuku provider health is unverified, and GUI visibility was not tested. 8022 remains manually used for development; 8023 remains Runit-managed and loopback-only by effective config. P4 was not started because the P3 ownership gates are unmet. Existing Debian PRoot paths were not touched; live PRoot usability was not retested.
+
 # Current continuation - installed CLI and shared service state reconciled (2026-10-18 19:05 UTC)
 
 Native implementation remains in `$HOME/ternuxx` over the owner-started 8022 development channel. Tested base HEAD is `5232a20b63c5f9f66d8f3e74208ed5bff8c4340a`; the working tree is dirty with earlier ongoing work and this gate's changes. Nothing was committed or pushed.
 
 The 8023 managed-service gate passed for this boot. Source and installed service definitions are identical after preview-first deployment operation `92c2a0c0155345b9b1e7d8e3060a81d5`; its rollback snapshot remains available and a read-only rollback preview verified the reverse diff. Live stop/start and a second stop/start cycle passed; repeated start is an idempotent no-op. Password-authenticated loopback SSH returned `authenticated-loopback-ok` with exit 0. ADB socket inode `2273711` for `127.0.0.1:8023` maps to the current managed sshd FD and Runit ancestry. Port 8022 stayed listening with the existing session throughout.
 
-The installed CLI mismatch is resolved by a preview-first source-backed shim at `$PREFIX/bin/ternuxx`; `$PREFIX/bin/nativeternux` and `$PREFIX/lib/nativeternux` remain preserved. The shim invokes the checkout through `$PREFIX/bin/bash` because native Termux lacks `/usr/bin/env`. A lifecycle check exposed a stale lease for absent PID 12951; recovery now clears a lease only after the kernel confirms PID absence and fails closed if identity is unreadable. Current Runit service is running, source/installed hashes match, and 8023 loopback returns an SSH banner. Both CLI paths report one active `native.sshd` lease in `~/.local/share/ternuxx`. Follow-up at 2026-10-18 19:05 UTC: owner-provided interactive authentication returned `authenticated-loopback-ok`; ADB socket inode 2372520 maps to managed sshd PID 22443 FD 6 and its Runit ancestry, so current authenticated readiness and listener ownership are VERIFIED. 8022 inode 135149 maps to PID 16337 FD 7 and stayed active. Reboot remains UNVERIFIED. Android global wakelock status remains unobservable.
+The installed CLI mismatch is resolved by a preview-first source-backed shim at `$PREFIX/bin/tx`; `$PREFIX/bin/nativeternux` and `$PREFIX/lib/nativeternux` remain preserved. The shim invokes the checkout through `$PREFIX/bin/bash` because native Termux lacks `/usr/bin/env`. A lifecycle check exposed a stale lease for absent PID 12951; recovery now clears a lease only after the kernel confirms PID absence and fails closed if identity is unreadable. Current Runit service is running, source/installed hashes match, and 8023 loopback returns an SSH banner. Both CLI paths report one active `native.sshd` lease in `~/.local/share/ternuxx`. Follow-up at 2026-10-18 19:05 UTC: owner-provided interactive authentication returned `authenticated-loopback-ok`; ADB socket inode 2372520 maps to managed sshd PID 22443 FD 6 and its Runit ancestry, so current authenticated readiness and listener ownership are VERIFIED. 8022 inode 135149 maps to PID 16337 FD 7 and stayed active. Reboot remains UNVERIFIED. Android global wakelock status remains unobservable.
 
 `bash scripts/repo_test.sh` passed 315/315 in 67.132 seconds. The existing Debian PRoot process PID 16526, native GUI `:1`, and owner-started 8022 shell remained present. No reboot or SSH exposure/authentication policy change occurred. Reboot readiness remains **UNVERIFIED** pending explicit owner approval; external/LAN reachability was not tested. Lifecycle evidence: [8023 qualification](docs/evidence/2026-10-18-8023-lifecycle-qualification.md); [CLI/state reconciliation](docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md). P3 remains in progress; next action is remaining P3 provider/diagnostics acceptance from the roadmap.
 
 ## Current continuation — P3 host PRoot process visibility (2026-10-19 19:21 UTC)
 
 Base HEAD remains `5232a20b63c5f9f66d8f3e74208ed5bff8c4340a`; native working tree contains pre-existing uncommitted changes plus this gate. Over 8022, read-only `proot status --json` confirmed Debian installed while omitting a visible native `/proc` PRoot process. PID 16526 was observed as `/data/data/com.termux/files/usr/bin/proot`; its args reference `--rootfs=.` and Debian sysdata bind paths. This is only a process candidate; ownership remains unverified. Added bounded read-only process observation with fixture coverage. Focused diagnostics/management tests passed 46/46; live `proot status --json` observed candidate PID 16526 and kept ownership unverified; full Native Termux suite passed 326/326 in 61.451 seconds. Docs/state synchronization and final diff review are complete below. Evidence: `docs/evidence/2026-10-19-proot-process-inventory.md`. Reboot remains unverified; 8022 and 8023 were untouched.
+
+
+## Current continuation — shared-management shortcut contract cleanup (2026-10-19 Asia/Dhaka)
+
+Native Termux work was performed in `$HOME/ternuxx` over SSH port 8022, based on `69e378eb33247678437bda4b2de9ab25f6bcb91d` (`main` matched `origin/main` before edits). Removed the direct top-level `tx app` / `tx apps` shortcuts because they bypassed the shared-management operation contract; retained the shared-service app/shortcut operations, X11 shortcut manager, `tx` wrapper, and `db`/`gui`/`tui`/`web` entry points. A follow-up removed the `tx pgui` alias; canonical `ternuxx proot gui` delegates to the repository-owned `scripts/proot-gui0.sh`. Deleted only `lib/proot_apps.py` and `tests/test_proot_apps.py`; added a regression test that app/apps are not registered. Full native suite passed **333/333 in 73.396 seconds**; focused launch tests passed **7/7**. Syntax/JSON checks and `git diff --check` passed. Evidence: [shortcut contract cleanup](docs/evidence/2026-10-19-noncontract-cli-shortcut-removal.md). P3 remains active; no GUI, boot, reboot, PRoot workload, commit, or push action occurred. Existing unrelated dirty files were preserved.
+
+
+## Follow-up — remove the non-contract PRoot GUI alias (2026-10-19 Asia/Dhaka)
+
+Removed `tx pgui` from dispatch/help and its direct launch wrapper. Kept the existing Debian launcher at `scripts/proot-gui0.sh` and routed canonical `ternuxx proot gui` directly through that owned script. `tx pgui`, `tx app`, and `tx apps` each return `Unknown command`; shared-management app/shortcut operations remain available. Focused launch suite passed **6/6** and full native suite passed **332/332 in 78.206 seconds**. No PRoot launch, stop, reinstall, package operation, rootfs write, or GUI lifecycle action occurred.
+
+
+## Current continuation — PRoot GUI on native :1 (2026-10-19 Asia/Dhaka)
+
+Owner direction is to use the native Termux:X11 desktop on `:1` for both individual PRoot app windows and a nested full Debian XFCE session; no separate PRoot `:0` Activity. Read-only checks found managed `:1` down (`status=degraded`, X11/supervisor absent), Debian installed with `startxfce4`/`xfce4-session`, and no `Xephyr`/`Xnest`. Disabled new starts through the legacy separate-display script while preserving status and ownership-checked stop; canonical `ternuxx proot gui` remains script-backed and now clearly reports the missing shared-display adapter. Updated the P4 roadmap requirement. The existing shared-service app path remains for individual windows. Full XFCE-on-`:1` is not implemented yet and stays behind P3; no package/rootfs or runtime GUI action occurred. Full native suite passed **333/333 in 76.890 seconds**. Evidence: [native-display PRoot GUI direction](docs/evidence/2026-10-19-native-display-proot-full-gui.md).
 
 # Current state
 
@@ -392,6 +446,212 @@ The shared service now has read-only `management.catalog` and `doctor.report` op
 
 ## Canonical identity cleanup — 2026-10-18
 
-The repository now ships only the `ternuxx` CLI and uses `ternuxx` consistently for repository metadata, state/log defaults, library paths, environment variables, tests, workflow checks, and documentation. The source fallback paths and project-state key now match. This change updated repository files only; the already-installed Termux runtime and its private data were not changed or migrated in this pass. Deploy and verify the updated source before relying on the new installed paths.
+Historical note (superseded 2026-10-19): the repository at this date used a `ternuxx` executable. The current public executable is `tx`; Ternuxx remains the project identity and internal state namespace. The source fallback paths and project-state key now match. The 2026-10-18 note below describes an earlier source-only state and is superseded by the 2026-10-19 native Termux update documented later in this file.
 
 Historical evidence references in this repository now use the canonical Ternuxx labels. This normalization is documentation-only; it does not assert that existing private device state was moved.
+
+
+## Current continuation — `tx` quick launch, Web UI, and interactive TUI (2026-10-19)
+
+Native Termux CLI/help now exposes `tx db` for the existing Debian login flow, full command names in help (short spellings remain accepted aliases), `tx tui`, and `tx web`. The managed `tdb` shell shortcut was removed from the owned `.bashrc` block; existing `db` and `droot` aliases and the `gui` function remain. `tx db -- printf ...` completed inside the existing Debian guest. No PRoot installation or rootfs replacement occurred.
+
+`tx web` starts the loopback-only authenticated server, opens `http://127.0.0.1:<port>/` with `termux-open-url`, and presents a one-time secret in the terminal for browser sign-in. The browser page provides read-only management catalog, native desktop status, Doctor, PRoot, SSH, and recovery views over the existing typed management service. `tx tui` has responsive curses redraw, text wrapping, and scrolling on terminal resize and an `o` operation runner for the typed service allowlist, including native desktop lifecycle operations; it accepts JSON arguments and asks explicit confirmation for mutations. Both remain partial clients; GUI lifecycle management is incomplete.
+
+Verification: focused CLI/TUI tests passed 22/22; CLI help contract passed; full repository suite passed 342/342 in 67.458 seconds; Web UI and authenticated catalog API returned success on an ephemeral loopback server; `tx web` opened the browser and its server stopped with Ctrl-C; `tx db` executed a command in the existing Debian guest. P3 remains active. No reboot, commit, or push occurred.
+
+
+## 2026-10-19 — Full repository audit and documentation reconciliation
+
+The native unit suite passed 343/343 in 73.964 seconds over SSH 8022. Full repo audit found architecture/status drift and a Web-mode HTTP mutation path that conflicted with the P3 rule that HTTP mutations remain off. Updated architecture/management docs and P3 phase state; disabled HTTP mutations in every runtime mode, narrowed Web sessions to diagnostics.read, removed browser mutation controls, and added a regression test for the environment-variable bypass. Generated phase blocks were refreshed. P3 remains open; no phase gate was marked complete. No service, boot, SSH configuration, Android UI, or Debian PRoot lifecycle action was performed. See docs/evidence/2026-10-19-full-repo-audit-followup.md. Existing dirty work was preserved; no commit or push.
+
+
+## 2026-10-19 — Native PRoot process inventory acceptance follow-up
+
+Read the current project instructions and state, then verified the new `tx proot status` host-process field in Native Termux over SSH 8022. The read-only result reported Debian installed and one host PRoot process candidate; process ownership remained unverified, no guest was entered, and no PID/parent PID/command line was persisted in the evidence. The full Native Termux suite passed 343/343 in 86.969 seconds. P3 remains open; reboot readiness remains unverified. See [sanitized live and test evidence](docs/evidence/2026-10-19-p3-proot-process-inventory-native.json).
+
+
+## 2026-10-19 — Guided PRoot app launch from TUI
+
+Native Termux `tx tui` now has a guided named-app launcher through the existing shared operation. It requires explicit session selection, requires `:N` for the Ternux session, validates display syntax, and confirms before dispatch. Focused TUI tests passed 10/10 and the full Native Termux suite passed 346/346 in 82.494 seconds. No live guest app was launched; the existing Debian PRoot/rootfs and desktop lifecycle were left untouched. P3 remains active and P4 remains planned. See [implementation and verification evidence](docs/evidence/2026-10-19-tui-guided-proot-launch.md).
+
+## Current continuation — P3 Shizuku identity disclosure (2026-10-19 Asia/Dhaka)
+
+The Shizuku Doctor output now names the observed package ID and calls `shizuku_server` only a process-name signal. It keeps upstream/custom identity, signer/release identity, Binder permission, and watchdog health unknown unless directly observable. Native Doctor returned read-only `overall=warning`; the full native Termux suite passed 346/346 in 75.339 seconds. Evidence: [Shizuku identity and suite recheck](docs/evidence/2026-10-19-p3-doctor-shizuku-identity-recheck.json). P3 remains in progress: provider ownership and reboot/cold-boot gates are still open. No Android settings, Shizuku service, SSH service, desktop, or PRoot guest action occurred.
+
+## 2026-10-19 — Native source-checkout CLI entrypoint
+
+The native `./tx` wrapper now starts through Android `/system/bin/sh` and invokes the checkout CLI with Termux Bash, falling back to `bash` on `PATH` when `$PREFIX` points to a fixture/alternate prefix. Updated `AI_ASSISTANT.md` to match the current `tx` source entrypoint and added direct invocation regression coverage. The first full native suite run found eight launch-command fixture failures because the wrapper trusted the temporary `PREFIX`; after the fallback fix, focused launch tests passed 8/8, focused entrypoint tests passed 8/8, and the full native suite passed 347/347 in 64.557 seconds via managed loopback SSH 8023. The test suite used fixtures; no device/service/desktop/PRoot state changed. Evidence: `docs/evidence/2026-10-19-native-source-cli-entrypoint.md`. P3 remains in progress; reboot remains unqualified.
+
+## 2026-10-19 — Native Runit service status diagnostics
+
+Native `tx ssh inspect` reported managed SSH status `unknown` because it called `sv status ternuxx-sshd`, which this Termux Runit installation cannot resolve from its default service directory. A read-only call using `$PREFIX/var/service/ternuxx-sshd` returned `running`; Runit emits the full service path, which the old parser did not recognize. Diagnostics now request that exact fixed path and parse/normalize its output. Focused SSH diagnostics tests passed 11/11; live `./tx ssh inspect --json` reports the 8023 service running, source/install definition identity verified, loopback-only policy and banner observed, while listener PID correlation remains unknown due native procfs permissions. Full Native Termux suite passed 347/347 in 66.165 seconds via 8023. No service/config change or other device mutation occurred. Evidence: `docs/evidence/2026-10-19-native-runit-status-diagnostics.md`. P3 remains active; the native :1 desktop is currently down/stale, PRoot ownership and reboot readiness remain unresolved.
+
+## 2026-10-19 — SSH endpoint roles and repo test route
+
+Owner clarified endpoint responsibilities: SSH 8022 is the native Termux repo development shell for inspection, implementation, and tests; SSH 8023 is the loopback Runit-managed Ternuxx CLI/SSH endpoint and part of the product under development. Both reach the same checkout, but 8023 is reserved for exercising managed endpoint behavior rather than the default repo test shell. The latest full Native Termux suite via 8022 passed 347/347 in 70.217 seconds. Earlier 8023 suite runs remain accurately recorded as historical runs. No runtime state was changed by the suite. See [source entrypoint evidence](docs/evidence/2026-10-19-native-source-cli-entrypoint.md) and [Runit diagnostics evidence](docs/evidence/2026-10-19-native-runit-status-diagnostics.md).
+
+## 2026-10-19 — Native boot-profile preview/apply parity
+
+The supported `cli-only` and `native` boot-profile previews now match their managed script bytes exactly, including the terminating newline. This keeps the preview consent artifact aligned with the file written on apply. Focused boot-profile tests passed 12/12; the full Native Termux suite through SSH 8022 passed 347/347 in 69.117 seconds. No profile or device state was changed. See [boot-profile parity evidence](docs/evidence/2026-10-19-native-boot-profile-preview-parity.md). P3 remains active; reboot qualification remains unverified.
+
+## 2026-10-19 — Native X11 activity request and manual fallback coverage
+
+Added fixture coverage for the native desktop manager requesting the fixed Termux:X11 activity, reporting accepted requests without claiming GUI visibility, and showing manual-open instructions when the Android launcher rejects or is unavailable. Focused desktop-lifecycle tests passed 16/16; the full Native Termux suite via SSH 8022 passed 350/350 in 71.566 seconds. Tests did not start Android UI or alter runtime state. See [activity fallback evidence](docs/evidence/2026-10-19-native-x11-activity-fallback-tests.md). P3 remains active; cold-boot/background-policy qualification remains open.
+
+## 2026-10-19 — Native boot-profile identity diagnostics
+
+`tx boot profile status` now compares the configured profile with only the fixed Ternuxx boot script, using a bounded identity-safe read. It reports current/legacy match, missing, mismatch, unsafe, not-configured, or not-checked preview states; it never repairs files or reads unrelated scripts. The response schema is v2. Boot-profile tests passed 14/14, management-service tests 24/24, and the full Native Termux suite via SSH 8022 passed 352/352 in 71.703 seconds. Live status says profile `cli-only`, script identity `match`, `read_only=true`. No runtime state changed. See [identity diagnostics evidence](docs/evidence/2026-10-19-native-boot-profile-identity.md). P3 remains active; boot delivery/cold-boot behavior remain unverified.
+
+
+## 2026-10-19 — categorized resource catalog continuation
+
+Added a schema-v2 resource catalog to the existing shared management API/core. It groups existing and future resources in 12 categories, labels maturity/availability, ownership, current-state query source, config/defaults, operations, dependencies, boot/background behavior, logs, recovery, identity, and security. Category, text, and status filters are available through API and `tx management catalog list`. Catalog reads are non-probing and read-only. Port 8022 remains external/read-only; port 8023 is Ternuxx-managed. Generic deployment and AI resources are explicitly planned. Native GUI/Web/TUI category-first parity is still incomplete; no claim of full product completion.
+
+
+## Management Center follow-up — managed SSH 8023 interface parity (2026-10-19)
+
+Extended the existing catalog-driven clients and shared authorization contract to expose preview-first start/stop for the fixed Runit-owned `ternuxx-sshd` service on `127.0.0.1:8023`. Port 8022 stays inspect-only. Web adds only the dedicated `ssh.managed.lifecycle` scope for these two operations; deployment/rollback and all other service scopes remain unavailable. Web, TUI, and GTK show the service impact and require the fresh plan ID before apply. The Native GTK client was rebuilt and installed through `./tx management center install`; the source C, bridge, installed binary, and launcher hashes match `management-center.identity`.
+
+Focused Native Termux tests passed: Web runtime 7/7; HTTP adapter 10/10; capability authorization 5/5; session authorization 9/9; TUI 12/12; desktop bridge 7/7. The complete suite passed **402/402 in 125.064 seconds**, bounded wrapper exit 0 with no remaining worker threads. Live read-only preview through the installed source bridge reported `start` as already running/no change and returned a stop impact plan warning connected clients may disconnect. No apply call was sent. GUI :1, 8022, 8023, audio, and PRoot lifecycle remained unchanged; no Activity/focus polling or GUI app window launch occurred. GTK visual interaction remains unverified. P3 remains in progress/unqualified and P4 remains gated. Evidence: [managed SSH client parity](docs/evidence/2026-10-19-management-center-ssh-parity.md).
+
+
+## Management Center follow-up — recovery operation history (2026-10-19)
+
+Added a bounded read-only view of the existing sanitized `recovery.status` journal to the Web Console, TUI, and GTK Management Center. Web exposes it only on the recovery resource and renders journal fields as text. TUI uses `h` on the recovery resource and `v` to open advanced structured details. GTK offers a contextual “View operation history” button on that same resource. No filesystem/service log reader was invented; service logs remain unavailable in the current API.
+
+Native Termux focused tests passed: Web runtime 7/7, TUI 14/14, and bridge 8/8. The full suite passed **405/405 in 127.417 seconds**, bounded runner exit 0 and no remaining worker threads. A real loopback Web-mode API call using a temporary isolated home returned `recovery.status` with `read_only=true` (0 fixture records); the Native bridge read the live journal (20 records, unresolved 0, read_only true). GTK source was rebuilt and installed; current identity hashes match. No GUI window opened and no service mutation occurred. P3 remains unqualified; P4 remains gated. See [Management Center recovery history evidence](docs/evidence/2026-10-19-management-center-history.md).
+
+## 2026-10-19 — XFCE launch path, TUI controls, and Web mobile rules
+
+A Native Termux audit found stale executable naming in the owned PRoot launch path: the user-owned x.sh delegates to scripts/proot-x11-app.sh, and that wrapper plus shortcut-manager scripts queried the removed $ROOT/ternuxx executable before PRoot dispatch. The supported source entrypoint is $ROOT/tx. I updated the source wrappers and generated .desktop Exec path to use tx. Existing custom terminal/files menu entries validate but remain catalog conflict entries, so I preserved them rather than overwriting them. The current GUI status and a read-only guest xdpyinfo check pass, but no application was launched; actual application/window verification is outstanding. The screenshot's other (PRoot) labels could not be mapped to matching .desktop files in the inspected paths.
+
+The TUI now displays only the guided actions it actually implements for the selected catalog resource. Its handlers remain shared-service operations; managed SSH controls are restricted to 8023 and preview-confirmed, while 8022 remains read-only. The Web UI gained narrow-screen layout, control wrapping, bounded horizontal category scrolling, and touch-target rules. These are structurally tested but browser viewport rendering and actual overflow remain unverified because no browser automation/runtime is installed and the local Web server was not running.
+
+Focused Native Termux tests passed 36/36; the full suite passed 408/408 in 80.718 seconds. GTK source and installed hashes match their identity record; its window was not opened. No GUI app, Activity, service, PRoot lifecycle, or boot operation was changed. P3 remains in progress/unqualified and P4 remains incomplete. See [launcher/TUI/Web follow-up evidence](docs/evidence/2026-10-19-launcher-tui-web-followup.md).
+
+
+## 2026-10-19 — Independent runtime, clipboard bootstrap, and branding continuation
+
+Implementation stayed in Native Termux `$HOME/ternuxx` over the owner-managed 8022 development shell. Baseline branch `main`, HEAD `69e378e`, worktree had 133 entries (70 tracked dirty); all pre-existing changes were preserved. The current PRoot inventory lists Debian installed, ownership unverified, and a host process candidate with unverified association. `proot-distro` identifies the existing rootfs at `$PREFIX/var/lib/proot-distro/containers/debian/rootfs`. Full Ternuxx-owned guest start remains disabled; do not allow concurrent legacy/Ternuxx use until rootfs/process ownership and cleanup semantics are qualified.
+
+The recorded Ternuxx `:0` GUI state file reports `running`, but its recorded supervisor, X11, and desktop PIDs were absent at inspection. The record is regular, owner-matched, and mode 0600; it was not changed. `tx proot gui status` now explicitly labels this as recorded state with live identity unverified. No stale-state reconciliation or process action occurred.
+
+`tx web` browser mode now passes its memory-only bootstrap secret to `termux-clipboard-set` via stdin, never routine output or a URL; generic `tx management http serve` behavior remains unchanged. If clipboard copy fails, it stops without revealing the secret; an explicit `--show-secret-on-clipboard-failure` option enables manual terminal fallback. The Web footer, TUI header, and GTK footer use “Workstation in your pocket — by Sobuj Miah”; the Web and GTK link to `https://soobujmiah.github.io/`.
+
+GTK source was deployed with `scripts/install-management-center.sh`; installed binary/launcher hashes match `management-center.identity` and `--self-check` reports GTK 4.24.1. Focused tests passed 30/30 in 0.750s; full Native Termux suite passed 414/414 in 85.753s. Python, shell, HTML, diff, and repository-knowledge checks passed; knowledge verification found 0 findings. Evidence: [independent runtime, clipboard, and branding follow-up](docs/evidence/2026-10-19-independent-runtime-clipboard-branding.md).
+
+Actual clipboard copy, browser authentication/mobile rendering, GTK window interaction, PRoot application window, PRoot lifecycle, and reboot qualification remain unverified. A passive check found `127.0.0.1:8765` accepting connections, without attributing or changing the listener. P3 remains in progress/unqualified; P4 independent PRoot lifecycle remains blocked on guest ownership/concurrency qualification. SSH 8022 remains manual with owner/listener correlation unknown; 8023 remains the fixed managed loopback service, while procfs listener-to-PID correlation is currently permission denied.
+
+
+## 2026-10-19 — Native Hermes read-only provider and scheduling discovery
+
+Native Termux Hermes Agent was verified at `$PREFIX/bin/hermes` (installed package version `v0.22.0+canary.20261014T070054Z`). Read-only Hermes status reports no scheduler serving `default`; read-only job listing reports no scheduled jobs. Ternuxx now exposes only `agent.hermes.status` through the shared API and `tx management hermes status`; task content, history, execution, scheduler changes, and bridging remain unsupported. Ternuxx Cron itself is not implemented. The full suite passed 423/423 in 109.763 seconds. P3 remains in progress and P4 remains blocked by unresolved independent PRoot ownership/concurrency. Full evidence: [Hermes provider slice](docs/evidence/2026-10-19-hermes-readonly-provider.md).
+
+## 2026-10-19 — Canonical `mng`, persistent Cron definitions, and PRoot inspection
+
+This increment continued on Native Termux `$HOME/ternuxx`, branch `main`, HEAD `69e378eb33247678437bda4b2de9ab25f6bcb91d`, preserving the already dirty worktree. `tx mng` is the canonical namespace; `tx management` remains a warning-emitting deprecated compatibility alias. `tx mng proot status` now exposes the existing read-only PRoot inventory through the shared service; legacy `tx proot`, `tx db`, and shell aliases remain unchanged.
+
+A versioned persistent Cron Job Registry (schema v1) now provides typed job definitions, atomic/private persistence, CLI/API list/show/validate/next-run/create/update/remove operations, and deterministic previews for numeric cron, fixed interval, daily/specific calendar, and one-time schedules. Device boot and scheduler recovery are stored as separate trigger flags. Policy validates bounded timeout/retry/missed-run/concurrency/output settings. The pure startup-event planner is fixture-tested only: there is no production scheduler, executor, durable execution history, Android boot delivery, scheduler-recovery delivery, or watchdog. New definitions default disabled. Web auth does not receive `cron.manage`; Web, TUI and GTK currently provide registry status/list only. Their real API-backed state was covered by tests; browser/window interaction was not performed.
+
+Read-only Native Termux status reports an empty registry, scheduler `not_installed`, process `not_running`, device boot delivery `not_qualified`, and recovery delivery `not_installed`. A live typed Cron validation returned valid without saving a job. The current Python runtime has no IANA timezone database; UTC previews work, named-zone daily schedules report unavailable. No job ran.
+
+The installed GTK client was rebuilt through `./tx mng center install` after source/bridge hashes differed from its recorded identity. The installed client `--self-check` passed; the binary and launcher identities match the refreshed identity record. No GTK window was opened.
+
+PRoot reinspection found `proot-distro` Debian installed at `$PREFIX/var/lib/proot-distro/containers/debian/rootfs`; `db` is a `.bashrc` alias to `proot-distro login debian --shared-tmp --user sbj`, `xgo` aliases `~/x.sh`, and `killx` is advisory text only. One existing Debian login session is active (PID 12830); its session role/owner was not attributed and it was left intact. `~/db/droot` and `~/ternuxx/db/droot` are absent; installed `proot-distro info` is unsupported. PRoot rootfs reuse is allowed by the updated design, but Ternuxx start/stop/recovery still requires an owned instance record, process identity and concurrency policy. No PRoot operation or legacy launcher was invoked.
+
+Focused Cron tests passed 15/15 and CLI command tests passed 9/9. The full Native Termux suite passed 441/441 in 94.684 seconds, exit 0. Evidence: [canonical mng and Cron foundation](docs/evidence/2026-10-19-mng-cron-foundation.md). P3 remains in progress and P4 remains unqualified.
+
+
+## 2026-10-19 — Native timezone foundation
+
+A fresh Native Termux check confirms the current checkout remains on `main` at `69e378eb33247678437bda4b2de9ab25f6bcb91d`, with the pre-existing dirty worktree preserved (144 status entries before this timezone change). The active GUI `:1` and Debian login PID 12830 remain present; no process, service, rootfs or GUI lifecycle action was taken.
+
+Python 3.14.6 had no `tzdata` module or unpacked Termux zone files, but Android exposes read-only packed tzdata 2025a at `/system/usr/share/zoneinfo/tzdata`. The new bounded adapter resolves the Android index and hands the selected TZif entry to Python `ZoneInfo.from_file`; a live conversion of 2026-10-19 16:00 UTC produced 22:00 +06:00 for `Asia/Dhaka`. No package was installed. The default preference is `Asia/Dhaka`; CLI commands `tx mng timezone status|list|set` use the shared API, and user selections persist atomically in a private versioned file. Cron CLI creation now uses that preference when a cron-expression or daily schedule omits `--timezone`. Explicit schedule timezones remain unchanged.
+
+Timezone preference controls are implemented in the CLI/shared service and represented in catalog/API scope mapping. Web mutations remain disabled, and TUI/GTK have no timezone form. IP suggestions are not implemented. Scheduler process lifecycle, execution records/executor, timeout/retry/cancellation, persistent boot/recovery delivery, and Ternuxx-owned PRoot start/stop remain unimplemented or unqualified. P3 remains in progress; P4 remains unqualified. Test evidence is recorded in `docs/evidence/2026-10-19-timezone-foundation.md`.
+
+
+## 2026-10-19 — Cron execution ledger and typed-action core
+
+Current follow-up from the timezone foundation: Native Termux $HOME/ternuxx, main at 69e378eb33247678437bda4b2de9ab25f6bcb91d. Initial worktree count was 149 entries, preserved; after this slice it was 153. Cron now has a separate private atomic v1 execution ledger and serialized event claims, bounded history reads through tx mng cron executions, and fixed typed read-only action definitions. Claim/transition behavior is fixture-tested; no production job or resident scheduler ran. The CLI/API expose read-only history, while TUI/Web/GTK history views remain unavailable. Retry count above one and queue_one are refused; missed-run delivery, cancellation, scheduler lifecycle, boot/recovery delivery and crash reconciliation remain unimplemented. See [Cron ledger evidence](docs/evidence/2026-10-19-cron-ledger-executor-core.md).
+
+Verification: focused cross-layer tests 95/95 in 1.379 s; full suite 464/464 in 82.567 s; compile/syntax/schema checks, diff check and repo knowledge verification passed. Live status showed an empty registry/ledger and scheduler not installed. No job, service, GUI, PRoot session, Hermes task, boot hook or listener was touched. P3 remains in progress; P4 remains unqualified.
+
+
+## 2026-10-19  Cron runtime and constrained PRoot probe
+
+Current implementation update (not a rewrite): the scheduler runtime is now
+explicitly startable through tx mng cron start, with an exact-owner confirmed
+graceful stop via tx mng cron stop --yes. Status distinguishes process_alive,
+lease_held and dispatch_healthy. Polling uses existing v1 jobs, timezone
+calculation, durable event claims, and the typed allowlist. Only skip missed
+runs, one attempt, and skip_overlap are dispatchable. Retry, queue-one,
+cancellation, uncertain-worker recovery and boot/recovery delivery remain
+unqualified; no production scheduler was started and no boot integration was
+installed.
+
+The existing Debian rootfs was revalidated at
+$PREFIX/var/lib/proot-distro/containers/debian/rootfs. A private session registry
+now records Ternuxx-created probe ownership. A harmless proot-distro
+--minimal /bin/sleep session was started with isolated temporary state, previewed,
+and stopped using an exact plan after verifying its session ID, PID start-time,
+environment marker, process-group/session identity, rootfs inode and launcher
+inode. This does not qualify a user-facing interactive PRoot workstation or GUI
+lifecycle. The existing Codex PRoot PID and floating X11 GUI were not touched.
+See docs/evidence/2026-10-19-cron-runtime-proot-probe.md.
+
+
+## 2026-10-19 — Official Termux:Boot Cron integration manager
+
+Implemented an explicit opt-in manager for the official Termux:Boot convention at `$HOME/.termux/boot/`. It owns only the dedicated `20-ternuxx-cron` filename and refuses to overwrite or delete unrecognized content. The generated entrypoint starts only `tx mng cron start --yes`, uses Native Termux paths/environment, a bounded CLI timeout, private bounded append logging, and the existing scheduler lease for idempotency. `tx mng boot cron status|validate|preview|enable|disable` use the shared service; mutations require the narrow `boot.manage` capability and a fresh preview plan ID plus `--yes`.
+
+Live read-only diagnostics confirmed `com.termux.boot` installed on this device, reported the dedicated script as not configured, and the scheduler as stopped. Existing `$HOME/.termux/boot/00-ternuxx-services`, `ternuxx-recovery`, and `10-ternuxx-profile` were listed and hashed, not modified. The exact preview targets only `$HOME/.termux/boot/20-ternuxx-cron`; no enable operation was applied. A manual isolated safe-mode run invoked the generated script twice against an empty temporary registry: the first started one scheduler instance and the second returned `already_running`; the same PID/start identity was observed, then that fixture scheduler was stopped through its exact ownership record. No production jobs, boot settings, package install, app launch, reboot, live Cron daemon, PRoot session, GUI, SSH endpoint, Hermes task, or unknown listener was touched. Actual device-boot delivery remains unverified until owner reboot qualification.
+
+
+## 2026-10-20 - Profile-based Ternuxx PRoot lifecycle
+
+Current Native Termux PRoot inventory reports the Debian rootfs at $PREFIX/var/lib/proot-distro/containers/debian/rootfs (device/inode 65086:3240111) and launcher $PREFIX/bin/proot-distro. The shared API exposes two fixed profiles: a bounded headless probe and a foreground sbj Debian login shell. The latter is preview-bound, requires an attached TTY, and does not start GUI/services. Start and exact-session stop require proot.session.manage and fresh confirmation plans; Web remains read-only. Read-only tx mng proot recover SESSION_ID classifies records and does not signal or repair them.
+
+A disposable headless PRoot session completed a live start/show/preview/stop cycle, including process-start, marker, session group and rootfs/launcher identity checks. The active Codex PRoot session was not controlled. A failed early probe remains explicitly unverified; recovery inspection confirms its process identity is absent and authorizes no signal. Interactive login, detached workstation supervision, GUI lifecycle, guest applications and boot-time PRoot remain unqualified. Legacy db, tx db, x.sh, xgo, killx, rootfs contents, floating X11, Cron production runtime, and Termux:Boot configuration were left untouched. See [dated PRoot evidence](docs/evidence/2026-10-20-proot-lifecycle.md).
+
+### Interactive workstation follow-up - 2026-10-20
+
+In Native Termux, I preserved the existing dirty checkout at main/69e378eb33247678437bda4b2de9ab25f6bcb91d (170 status entries at start, 172 after this slice) and recorded a local pre-work snapshot ref. The shared management API now provides read-only PRoot session health with bounded transition diagnostics, exit status, ownership identity summary, and explicit non-reattachable state. Recovery validation and fixture coverage now distinguish PID reuse, absent processes, permission-hidden state, group mismatch, marker loss, malformed metadata, and identity-less records; reconcile remains preview-first and signal-free.
+
+Three TTY-bound disposable Debian login attempts failed closed before exposing a guest shell. On the last attempt, process-start, process group, marker, fixed login argv, rootfs and launcher evidence matched, but expected cwd and numeric guest identity did not. The absent PIDs were reconciled through fresh plans without signaling; audit records remain. Installed proot-distro source includes a normal login hook that may rewrite /etc/profile.d/termux-profile.sh in the rootfs. Its observed mtime predated the attempts, but no before-hash exists; attribution cannot be resolved. No further guest login/rootfs action was taken after discovering the hook. Therefore interactive login is not qualified for current code.
+
+No terminal multiplexer was available, so reattachment remains unsupported. PRoot had no usable DISPLAY; candidate :0/:1 connections failed. No guest GUI test/window was launched and the existing floating X11 session was untouched. Cron remains stopped with zero jobs/executions; Termux:Boot remains enabled but the dedicated 20-ternuxx-cron script is missing. No production Cron, boot configuration, reboot, protected service, unknown listener, or port 8023 action was performed. Legacy db/tx db/x.sh/xgo/killx source was not changed or invoked.
+
+Focused lifecycle, authorization/API/catalog, legacy launch, Cron scheduler/ledger, and Termux:Boot tests passed 109/109. Full suite passed 506/506. Compilation, shell syntax, schema parsing, diff check, and repository knowledge verification passed (0 findings). P3 remains in progress and P4 remains incomplete/unqualified. See [interactive workstation follow-up evidence](docs/evidence/2026-10-20-interactive-workstation-followup.md).
+
+## 2026-10-20 full repository/runtime audit
+
+Read-only audit evidence: [Full repository and runtime audit](docs/evidence/2026-10-20-full-repository-audit.md). Audit source changes: none. The existing dirty worktree was preserved; no live service, GUI, PRoot session, rootfs, database, boot configuration, or Git history was changed. P3 remains in progress and workstation/GUI lifecycle remains unqualified. Principal blockers include the installed proot-distro login write contract, unresolved interactive ownership verification, PRoot LD_PRELOAD inheritance, unsupported Cron policy fields, and Termux:Boot state-path containment. AJ-managed peer-to-login and TXDB were not found in this repository and remain unidentified.
+
+## 2026-10-20 post-audit safety remediation
+
+See [post-audit remediation evidence](docs/evidence/2026-10-20-post-audit-remediation.md). PRoot loader overrides are filtered; Termux:Boot state containment and Cron executable policy validation are tightened and isolated-tested. Synthetic ownership fixtures cover matching and mismatch cases; the historical live login failure remains unresolved. No live PRoot, rootfs, production Cron, installed boot file, GUI, service, listener, database or Git history was changed. P3 remains in progress; P4 and workstation/GUI qualification remain incomplete.
+
+
+## 2026-10-20 workstation qualification checkpoint
+
+Native Termux implementation remains in the canonical checkout. tx gui now targets the Native GTK management center with fail-closed local-display checks; native XFCE lifecycle remains under tx start. The bare gui() helper is no longer generated, and the helper can remove only its exact managed block. See docs/evidence/2026-10-20-workstation-qualification-execution.md. Full local fixture/unit suite: 528/528 passed on the dirty worktree; GitHub CI still fails on committed source 69e378e and has not been rerun. Port 8023 is loopback and key-only after verified key access and recovery through unchanged 8022. PRoot live lifecycle, GTK visual acceptance, production boot/reboot, desktop race, owner shell-profile cleanup, licensing and release readiness remain open. Overall status: NOT RELEASE-READY.
+
+
+Qualification checkpoint 2026-10-20: Desktop stale-session reconciliation now requires the private lifecycle lock (owner UID, directory type, and private mode checked). Targeted session-state tests (16), lifecycle fixture tests (20), and full Native Termux suite (530) passed. See docs/evidence/2026-10-20-workstation-qualification-execution.md. This remains fixture evidence, not CI or visual GUI qualification.
+
+
+2026-10-20 compute GUI update: Native GTK catalog now includes a read-only CPU/GPU/NPU qualification resource. Native Termux currently reports CPU baseline (aarch64, 8 logical CPUs), KGSL Adreno825 node/model, Native Vulkan ICD rejection, and NPU runtime/delegate unverified. No inference runtime/model integration is implemented. Debian PRoot Zink/Turnip renderer evidence is dated and separate. See docs/evidence/2026-10-20-workstation-qualification-execution.md and docs/testing/GPU-ACCELERATION.md.
+
+## 2026-10-20 - Stable Native Ternuxx display :1
+
+I clarified that Native Ternuxx management must use :1 consistently and the existing Debian PRoot keeps :0. The desktop allocator now fails closed on a busy/ambiguous :1 instead of silently starting a duplicate session on :2. Stale socket/lock cleanup requires the private stale session record's exact X11 PID, that PID to be absent, the owned socket to refuse connections, and unchanged artifact identities. I migrated the Ternuxx session from :2 to :1 with `tx restart`; status verified the supervisor, X11, and XFCE live on :1, and :2 is available. A repeated `tx start` kept the same display and supervisor/X11 PIDs. The Native GTK management-center process is running on :1 and its window is mapped in X11, but Android-visible presentation and human usability remain unverified. The active Codex `tx db` PRoot shell was preserved. Full Native Termux suite passed 538/538; exact commands/results and limitations are in [workstation qualification evidence](docs/evidence/2026-10-20-workstation-qualification-execution.md). Release status remains NOT RELEASE-READY.
+
+
+## 2026-10-20 Native workstation qualification — latest checkpoint
+
+This section supersedes earlier local test counts in this file. On Native Termux checkout HEAD 69e378eb33247678437bda4b2de9ab25f6bcb91d with the pre-existing dirty work preserved, the final local suite passed 550/550; CLI help, deterministic repository verify (0 findings), and strict README bridge passed. The result is recorded as local test event `native-20261020-w7-native-only-550`; no GitHub CI pass is claimed.
+
+Ternuxx PRoot launchers now strip proot-distro-injected Android ART/classpath/storage environment values and pass the explicit `:1`, authenticated Native PulseAudio, and selected graphics handoff. Live Debian PRoot `tx db` reported Zink/Turnip Adreno 825 and accelerated GL; Native PulseAudio was reachable. Default named-app routing is Native Ternuxx-only; the old separate Ternux session-owner route is removed. The exact Ternuxx-managed bare `gui()` shortcut was removed from `~/.bashrc`; `tx gui` remains canonical and its GTK management-center process is running on verified `:1`.
+
+Release status remains NOT RELEASE-READY. Native GTK logged `VK_ERROR_INCOMPATIBLE_DRIVER`, Android-visible GUI usability is pending human observation, PRoot session attach/detach and production boot/reboot remain unqualified, VirGL is not live-qualified, NPU is unverified, and GitHub Contract/Knowledge Sync have no successful run for this dirty revision (last observed runs 39159994935 and 39159994930 remain failed). Port 8022 was left unchanged. Debian rootfs/packages, active PRoot PID 14360, Native XFCE `:1`, and PulseAudio were preserved. The generated proot-distro profile is 635 bytes with zero Android runtime exports; a current-state mode-0600 rollback copy now exists, but the earlier 4847-byte profile was not backed up before the login-time regeneration. Detailed evidence: `docs/evidence/2026-10-20-workstation-qualification-execution.md`.

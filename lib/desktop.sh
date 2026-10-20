@@ -100,7 +100,7 @@ _nt_display_available() {
   local helper="${_TN_LIB_DIR:-}/x11_display.py" result
   if [ -f "$helper" ]; then
     result="$(python3 "$helper" "$tmp_root" "$number" 2>/dev/null)" || return 1
-    [ "$result" = "available" ] || [ "$result" = "recovered" ]
+    [ "$result" = "available" ]
     return $?
   fi
   [ ! -e "$tmp_root/.X11-unix/X$number" ] || return 1
@@ -137,6 +137,7 @@ _nt_session_active() {
 
 nt_cmd_start() {
   local display_number="" arg state_root supervisor owned_exec log_file tmp_root operation_id
+  local stale_display="" stale_display_number="" stale_x11_pid="" stale_artifact_state=""
   while [ $# -gt 0 ]; do
     arg="$1"; shift
     case "$arg" in
@@ -160,46 +161,68 @@ nt_cmd_start() {
 
   _nt_adopt_live_session_state
   state_root="$TERNUXX_STATE_DIR"
-  _nt_state_path_is_private || { nt_fail "State path must resolve inside Termux HOME"; return 1; }
-  mkdir -p "$state_root" || { nt_fail "Cannot create Ternuxx state directory"; return 1; }
-  chmod 700 "$state_root" 2>/dev/null || { nt_fail "Cannot protect Ternuxx state directory"; return 1; }
+  python3 "$_TN_LIB_DIR/desktop_session_state.py" ensure-state "$HOME" "$state_root" >/dev/null 2>&1 || {
+    nt_fail "Ternuxx state path is unsafe or cannot be made private; no session file or process was changed."; return 1;
+  }
 
-  if _nt_session_active; then
-    local active_display activity_request
-    active_display="$(_nt_state_value display)"
-    nt_ok "Ternuxx desktop is already running."
-    nt_info "Display: $active_display"
-    if _nt_request_termux_x11_activity; then activity_request="accepted"; else activity_request="not_confirmed"; fi
-    if [ "$TERNUXX_JSON" = "1" ]; then
-      nt_json_object "start" "running" "display" "$active_display" "activity_request" "$activity_request" "gui_visible" "unknown" "audio_owner" "external"
-    fi
-    return 0
-  fi
-  if [ -f "$(_nt_session_file)" ]; then
-    local previous
-    previous="$(_nt_state_value status 2>/dev/null || printf unknown)"
-    case "$previous" in
-      stopped) ;;
-      *) nt_fail "A prior Ternuxx session is not verifiably stopped (state: $previous). Inspect its log and session state before starting again."; return 1 ;;
-    esac
-  fi
-
-  state_root="$TERNUXX_STATE_DIR"
-  local lock
+  local lock session_report session_state
   lock="$(_nt_session_lock)"
   if ! mkdir "$lock" 2>/dev/null; then
     nt_fail "Another Ternuxx lifecycle operation holds the session lock. If no operation is running, inspect and recover the lock manually."; return 1
   fi
-  # Keep lock ownership in module scope because EXIT fires after local variables
-  # have gone out of scope; a local captured by the old trap leaked the lock.
   _NT_ACTIVE_SESSION_LOCK="$lock"
   trap '_nt_release_session_lock' EXIT
 
+  session_report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" inspect "$HOME" "$state_root" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null)" || {
+    nt_fail "Session ownership or process identity is unknown or unsafe. Processes and state were preserved; inspect session.json and desktop.log."; return 1;
+  }
+  session_state="$(printf '%s' "$session_report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state", "unknown"))')"
+  case "$session_state" in
+    running)
+      local active_display
+      active_display="$(_nt_state_value display)"
+      _nt_use audio && nt_audio_ensure || true
+      nt_ok "Ternuxx desktop is already running and its recorded process and display identities are verified."
+      nt_info "Display: $active_display"
+      if [ "$TERNUXX_JSON" = "1" ]; then
+        nt_json_object "start" "running" "display" "$active_display" "activity_request" "disabled_by_default" "gui_visible" "unknown" "audio_owner" "ternuxx-native"
+      fi
+      return 0 ;;
+    stale)
+      stale_display="$(_nt_state_value display 2>/dev/null || true)"
+      stale_x11_pid="$(_nt_state_value x11.pid 2>/dev/null || true)"
+      session_report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" reconcile-stale "$HOME" "$state_root" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null)" || {
+        nt_fail "Stale session evidence changed or could not be reconciled safely; no process was started."; return 1;
+      }
+      case "$stale_display" in
+        :1|:2|:3|:4|:5|:6|:7|:8|:9|:10) stale_display_number="${stale_display#:}" ;;
+      esac
+      if [ -n "$stale_display_number" ] && [[ "$stale_x11_pid" =~ ^[0-9]+$ ]]; then
+        stale_artifact_state="$(python3 "$_TN_LIB_DIR/x11_display.py" recover "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" "$stale_display_number" "$stale_x11_pid" 2>/dev/null)" || stale_artifact_state=busy
+        case "$stale_artifact_state" in
+          recovered) nt_warn "Reconciled the exact stale Ternuxx :$stale_display_number socket/lock pair using its recorded, absent X11 PID." ;;
+          available) nt_warn "Reconciled the stale Ternuxx session; its recorded display artifacts were already absent." ;;
+          *) nt_fail "Stale session record was reconciled, but display :$stale_display_number artifacts did not match the exact recorded dead X11 PID; no display was started."; return 1 ;;
+        esac
+      else
+        nt_fail "Stale session display/PID evidence is not eligible for automatic cleanup; no display was started."; return 1
+      fi ;;
+    stopped) ;;
+    starting|stopping)
+      nt_fail "A Ternuxx desktop lifecycle operation is $session_state; no duplicate session was started."; return 1 ;;
+    failed)
+      nt_fail "The prior Ternuxx session is failed. Review $state_root/desktop.log and session.json; no process was signaled."; return 1 ;;
+    *)
+      nt_fail "Session state is $session_state and cannot be safely reconciled. Processes and files were preserved."; return 1 ;;
+  esac
+
   tmp_root="${TMPDIR:-/data/data/com.termux/files/usr/tmp}"
   if [ -z "$display_number" ]; then
-    display_number="$(nt_find_free_display)" || { nt_fail "No free Termux:X11 display found in :1 through :10"; return 1; }
+    display_number="$(nt_find_free_display)" || { nt_fail "Canonical Native Termux display :1 is occupied or ambiguous; inspect its owner instead of starting a duplicate display."; return 1; }
   fi
   _nt_display_available "$display_number" || { nt_fail "Display :$display_number has a socket or lock; refusing to reuse it"; return 1; }
+
+  _nt_use audio && nt_audio_ensure || true
 
   operation_id="$(_nt_journal_begin desktop.start "display :$display_number")" || { nt_fail "Could not write durable operation journal; no desktop process was started"; return 1; }
   log_file="$state_root/desktop.log"
@@ -243,12 +266,11 @@ nt_cmd_start() {
 
   _nt_journal_update "$operation_id" complete "desktop reported running on :$display_number" || { nt_fail "Desktop is running but journal completion failed; Doctor will report recovery required"; return 1; }
   nt_ok "Ternuxx desktop session is running on :$display_number."
-  local activity_request
-  if _nt_request_termux_x11_activity; then activity_request="accepted"; else activity_request="not_confirmed"; fi
+  nt_info "Termux:X11 Activity launch is disabled by default; open the app manually if needed."
   nt_info "GUI visibility remains unknown until the Termux:X11 window is actually visible."
-  nt_info "Ternuxx does not start or stop PulseAudio; existing audio services remain independently owned."
+  nt_info "Native PulseAudio is managed independently; tx stop leaves it running for active PRoot clients."
   if [ "$TERNUXX_JSON" = "1" ]; then
-    nt_json_object "start" "running" "display" ":$display_number" "activity_request" "$activity_request" "gui_visible" "unknown" "audio_owner" "external"
+    nt_json_object "start" "running" "display" ":$display_number" "activity_request" "disabled_by_default" "gui_visible" "unknown" "audio_owner" "ternuxx-native"
   fi
 }
 
@@ -269,6 +291,20 @@ nt_cmd_stop() {
   fi
   _NT_ACTIVE_SESSION_LOCK="$lock"
   trap '_nt_release_session_lock' EXIT
+
+  local ownership_report ownership_state
+  ownership_report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" inspect "$HOME" "$TERNUXX_STATE_DIR" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null)" || {
+    nt_fail "Session ownership is unknown or unsafe; stop sent no signals and preserved all state."; _nt_release_session_lock; return 1;
+  }
+  ownership_state="$(printf '%s' "$ownership_report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state", "unknown"))')"
+  case "$ownership_state" in
+    unknown|unsafe)
+      nt_fail "Session ownership is $ownership_state; stop sent no signals and preserved all state."; _nt_release_session_lock; return 1 ;;
+    stale)
+      python3 "$_TN_LIB_DIR/desktop_session_state.py" reconcile-stale "$HOME" "$TERNUXX_STATE_DIR" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" >/dev/null 2>&1 || {
+        nt_fail "Stale session changed during reconciliation; stop sent no signals."; _nt_release_session_lock; return 1;
+      } ;;
+  esac
 
   status="$(_nt_state_value status 2>/dev/null || printf unknown)"
   supervisor_pid="$(_nt_state_value supervisor.pid 2>/dev/null || true)"
@@ -353,32 +389,29 @@ nt_cmd_restart() {
 
 nt_cmd_status() {
   _nt_adopt_live_session_state
-  local file status display supervisor_live x11_live desktop_live
+  local file report lifecycle reason display supervisor_live x11_live desktop_live
   file="$(_nt_session_file)"
-  if [ ! -f "$file" ]; then
-    status=stopped; display=none; supervisor_live=no; x11_live=no; desktop_live=no
-  else
-    status="$(_nt_state_value status 2>/dev/null || printf unknown)"
-    display="$(_nt_state_value display 2>/dev/null || printf unknown)"
-    _nt_state_process_live supervisor && supervisor_live=yes || supervisor_live=no
-    _nt_state_process_live x11 && x11_live=yes || x11_live=no
-    _nt_state_process_live desktop && desktop_live=yes || desktop_live=no
-    if [ "$status" = "running" ] && { [ "$supervisor_live" != yes ] || [ "$x11_live" != yes ] || [ "$desktop_live" != yes ]; }; then
-      status=degraded
-    fi
-  fi
+  report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" inspect "$HOME" "$TERNUXX_STATE_DIR" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null || true)"
+  lifecycle="$(printf '%s' "$report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state", "unknown"))' 2>/dev/null || printf unknown)"
+  reason="$(printf '%s' "$report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("reason", "classification unavailable"))' 2>/dev/null || printf 'classification unavailable')"
+  display="$(_nt_state_value display 2>/dev/null || printf none)"
+  supervisor_live="$(printf '%s' "$report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("processes", {}).get("supervisor", "absent"))' 2>/dev/null || printf unknown)"
+  x11_live="$(printf '%s' "$report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("processes", {}).get("x11", "absent"))' 2>/dev/null || printf unknown)"
+  desktop_live="$(printf '%s' "$report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("processes", {}).get("desktop", "absent"))' 2>/dev/null || printf unknown)"
 
   if [ "$TERNUXX_JSON" = "1" ]; then
-    nt_json_object "status" "$status" "display" "$display" \
+    nt_json_object "status" "$lifecycle" "display" "$display" \
       "supervisor" "$supervisor_live" "x11" "$x11_live" \
-      "xfce4_session" "$desktop_live" "gui_visible" "unknown" \
-      "audio_owner" "external"
+      "xfce4_session" "$desktop_live" "reconciliation_state" "$lifecycle" \
+      "reconciliation_reason" "$reason" "gui_visible" "unknown" \
+      "audio_owner" "ternuxx-native"
   else
-    printf '  %-18s %s\n' "Ternuxx:" "$status"
+    printf '  %-18s %s\n' "Ternuxx:" "$lifecycle"
     printf '  %-18s %s\n' "Display:" "$display"
     printf '  %-18s %s\n' "Supervisor:" "$supervisor_live"
     printf '  %-18s %s\n' "Termux:X11:" "$x11_live"
     printf '  %-18s %s\n' "XFCE session:" "$desktop_live"
+    printf '  %-18s %s\n' "Reconciliation:" "$reason"
     printf '  %-18s %s\n' "GUI visible:" "unknown (open/check Termux:X11)"
     printf '  %-18s %s\n' "Audio owner:" "external (not managed)"
   fi

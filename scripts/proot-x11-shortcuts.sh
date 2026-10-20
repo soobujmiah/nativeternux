@@ -11,7 +11,7 @@ USAGE
 }
 
 service() {
-  "$ROOT/ternuxx" management shortcuts "$@"
+  "$ROOT/tx" management shortcuts "$@"
 }
 
 confirm_change() {

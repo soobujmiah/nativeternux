@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import tempfile
 import unittest
@@ -27,6 +28,12 @@ class DesktopLifecycleFixtureTests(unittest.TestCase):
 
         self.lib_dir = self.base / "lib"
         shutil.copytree(ROOT / "lib", self.lib_dir)
+        pulse_fixture = self.lib_dir / "pulse_lifecycle.py"
+        pulse_fixture.write_text(
+            "#!/usr/bin/env python3\nimport json,sys\nprint(json.dumps({'command':'audio','state':'running','server':'tcp:127.0.0.1:4713'}))\n",
+            encoding="utf-8",
+        )
+        pulse_fixture.chmod(0o755)
         supervisor = self.lib_dir / "desktop-supervisor.sh"
         lines = supervisor.read_text(encoding="utf-8").splitlines()
         lines[0] = "#!/usr/bin/env bash"  # Termux shebang is unavailable in Linux CI.
@@ -90,7 +97,7 @@ while True:
         # Best-effort, scoped cleanup: ask only this fixture's session manager.
         if (self.state / "session.json").exists():
             subprocess.run(
-                ["bash", str(ROOT / "bin/ternuxx"), "stop"],
+                ["bash", str(ROOT / "bin/tx"), "stop"],
                 env=self.env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -106,7 +113,7 @@ while True:
 
     def _run(self, *args: str) -> subprocess.CompletedProcess[str]:
         result = subprocess.run(
-            ["bash", str(ROOT / "bin/ternuxx"), *args],
+            ["bash", str(ROOT / "bin/tx"), *args],
             env=self.env,
             text=True,
             capture_output=True,
@@ -125,6 +132,135 @@ while True:
     def _state(self) -> dict[str, object]:
         return json.loads((self.state / "session.json").read_text(encoding="utf-8"))
 
+    def _run_activity_request(self, *, launcher_available: bool, launcher_exit: int = 0):
+        prefix = self.base / "termux-prefix"
+        launcher = prefix / "bin/am"
+        if launcher_available:
+            launcher.parent.mkdir(parents=True, exist_ok=True)
+            launcher.write_text(
+                "#!/usr/bin/env python3\n"
+                "import json, os, sys\n"
+                "with open(os.environ[\"ACTIVITY_ARGS_FILE\"], \"w\", encoding=\"utf-8\") as stream: \n"
+                "    json.dump(sys.argv[1:], stream)\n"
+                "raise SystemExit(int(os.environ.get(\"ACTIVITY_EXIT_CODE\", \"0\")))\n",
+                encoding="utf-8",
+            )
+            launcher.chmod(0o755)
+        env = self.env.copy()
+        env.update({
+            "PREFIX": str(prefix),
+            "ACTIVITY_ARGS_FILE": str(self.base / "activity-args.json"),
+            "ACTIVITY_EXIT_CODE": str(launcher_exit),
+            "TERNUXX_QUIET": "0",
+            "TERNUXX_VERBOSE": "0",
+            "TERNUXX_JSON": "0",
+        })
+        return subprocess.run(
+            ["bash", "-c", 'source "$TERNUXX_LIB_DIR/desktop.sh"; _nt_request_termux_x11_activity'],
+            env=env, text=True, capture_output=True, timeout=5, check=False,
+        )
+
+    def test_x11_activity_request_uses_fixed_component_and_keeps_visibility_unknown(self) -> None:
+        result = self._run_activity_request(launcher_available=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Requested the Termux:X11 activity", result.stderr)
+        self.assertIn("actual GUI visibility remains unknown", result.stderr)
+        self.assertEqual(
+            json.loads((self.base / "activity-args.json").read_text(encoding="utf-8")),
+            ["start", "--user", "0", "-n", "com.termux.x11/com.termux.x11.MainActivity"],
+        )
+
+    def test_x11_activity_rejection_reports_manual_open_fallback(self) -> None:
+        result = self._run_activity_request(launcher_available=True, launcher_exit=1)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("did not accept the Termux:X11 activity request", result.stderr)
+        self.assertIn("Open Termux:X11 manually", result.stderr)
+
+    def test_missing_x11_activity_launcher_reports_manual_open_fallback(self) -> None:
+        result = self._run_activity_request(launcher_available=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("activity launcher is unavailable", result.stderr)
+        self.assertIn("Open Termux:X11 manually", result.stderr)
+        self.assertFalse((self.base / "activity-args.json").exists())
+
+    def test_stale_running_record_is_read_as_stale_then_reconciled_before_start(self) -> None:
+        self.state.mkdir(parents=True, mode=0o700)
+        missing_pid = 2**30
+        self.state.chmod(0o700)
+        session = {
+            "schema": 2, "owner": "ternuxx", "provider": "native", "display": ":1",
+            "status": "running", "error": None,
+            "supervisor": {"pid": missing_pid, "start_ticks": "1", "command_marker": "desktop-supervisor.sh"},
+            "x11": {"pid": missing_pid + 1, "start_ticks": "1", "pgid": missing_pid + 1, "sid": missing_pid + 1, "command_marker": "termux-x11"},
+            "desktop": {"pid": missing_pid + 2, "start_ticks": "1", "pgid": missing_pid + 2, "sid": missing_pid + 2, "command_marker": "xfce4-session"},
+        }
+        stale_lock = self.tmp / ".X1-lock"
+        stale_socket = self.tmp / ".X11-unix/X1"
+        stale_lock.write_text(f"{missing_pid + 1}\n", encoding="ascii")
+        stale_listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        stale_listener.bind(str(stale_socket))
+        stale_listener.close()
+        record = self.state / "session.json"
+        record.write_text(json.dumps(session), encoding="utf-8")
+        record.chmod(0o600)
+
+        status = self._run("--json", "gui", "status")
+        self.assertEqual(status.returncode, 0, status.stderr)
+        self.assertEqual(json.loads(status.stdout)["reconciliation_state"], "stale")
+        self.assertEqual(json.loads(record.read_text())["status"], "running")  # status is read-only
+
+        started = self._run("start")
+        self.assertEqual(started.returncode, 0, started.stderr)
+        self.assertIn("Reconciled the exact stale Ternuxx :1 socket/lock pair", started.stderr)
+        self.assertEqual(self._state()["status"], "running")
+        self.assertEqual(self._state()["display"], ":1")
+        self.assertNotEqual(stale_lock.read_text(encoding="ascii").strip(), str(missing_pid + 1))
+        self.assertTrue(stale_socket.exists())
+
+    def test_session_symlink_is_unsafe_and_never_replaced(self) -> None:
+        self.state.mkdir(parents=True, mode=0o700)
+        self.state.chmod(0o700)
+        target = self.home / "session-target.json"
+        original = '{"owner":"external"}\n'
+        target.write_text(original, encoding="utf-8")
+        target.chmod(0o600)
+        (self.state / "session.json").symlink_to(target)
+
+        status = self._run("--json", "gui", "status")
+        self.assertEqual(status.returncode, 0, status.stderr)
+        self.assertEqual(json.loads(status.stdout)["reconciliation_state"], "unsafe")
+        start = self._run("start")
+        self.assertNotEqual(start.returncode, 0)
+        self.assertIn("unsafe", start.stderr)
+        self.assertTrue((self.state / "session.json").is_symlink())
+        self.assertEqual(target.read_text(encoding="utf-8"), original)
+
+    def test_start_lock_contention_preserves_session_and_starts_nothing(self) -> None:
+        self.state.mkdir(parents=True, mode=0o700)
+        self.state.chmod(0o700)
+        lock = self.state / ".session.lock"
+        lock.mkdir()
+        result = self._run("start")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("holds the session lock", result.stderr)
+        self.assertFalse((self.state / "session.json").exists())
+
+    def test_start_repeat_and_status_do_not_request_android_activity(self) -> None:
+        marker = self.base / "activity-requested"
+        env = self.env.copy()
+        env["ACTIVITY_MARKER"] = str(marker)
+        command = '''set -e
+runner='source "$TERNUXX_LIB_DIR/core.sh"; source "$TERNUXX_LIB_DIR/desktop.sh"; _TN_LIB_DIR="$TERNUXX_LIB_DIR"; _nt_request_termux_x11_activity() { : > "$ACTIVITY_MARKER"; }; case "$1" in start) nt_cmd_start ;; status) nt_cmd_status ;; esac'
+bash -c "$runner" _ start
+bash -c "$runner" _ start
+bash -c "$runner" _ status
+'''
+        result = subprocess.run(["bash", "-c", command], env=env,
+                                text=True, capture_output=True, timeout=12, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(marker.exists())
+        self.assertEqual(self._state()["status"], "running")
+
     def test_default_start_prefers_native_display_one(self) -> None:
         result = self._run("start")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -132,13 +268,14 @@ while True:
         self.assertFalse((self.tmp / ".X0-lock").exists())
         self.assertFalse((self.tmp / ".X11-unix/X0").exists())
 
-    def test_default_display_fallback_skips_proot_display_zero(self) -> None:
+    def test_default_start_fails_closed_when_canonical_display_one_is_busy(self) -> None:
         lock_path = self.tmp / ".X1-lock"
         lock_path.write_text("external-owner\n", encoding="ascii")
 
         result = self._run("start")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self._state()["display"], ":2")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Canonical Native Termux display :1 is occupied or ambiguous", result.stderr)
+        self.assertFalse((self.state / "session.json").exists())
         self.assertEqual(lock_path.read_text(encoding="ascii"), "external-owner\n")
         self.assertFalse((self.tmp / ".X0-lock").exists())
         self.assertFalse((self.tmp / ".X11-unix/X0").exists())
@@ -214,20 +351,20 @@ while True:
         env = self.env.copy()
         env.pop("TERNUXX_STATE_DIR")
         status = subprocess.run(
-            ["bash", str(ROOT / "bin/ternuxx"), "--json", "status"],
+            ["bash", str(ROOT / "bin/tx"), "--json", "status"],
             env=env, text=True, capture_output=True, timeout=8, check=False,
         )
         self.assertEqual(status.returncode, 0, status.stderr)
         self.assertEqual(json.loads(status.stdout)["status"], "running")
         self.assertEqual(json.loads(status.stdout)["display"], ":7")
         repeated = subprocess.run(
-            ["bash", str(ROOT / "bin/ternuxx"), "start", "--display", "7"],
+            ["bash", str(ROOT / "bin/tx"), "start", "--display", "7"],
             env=env, text=True, capture_output=True, timeout=8, check=False,
         )
         self.assertEqual(repeated.returncode, 0, repeated.stderr)
         self.assertEqual(self._state()["supervisor"], original["supervisor"])
         stopped = subprocess.run(
-            ["bash", str(ROOT / "bin/ternuxx"), "stop"],
+            ["bash", str(ROOT / "bin/tx"), "stop"],
             env=env, text=True, capture_output=True, timeout=8, check=False,
         )
         self.assertEqual(stopped.returncode, 0, stopped.stderr)
@@ -266,7 +403,7 @@ while True:
         default_env = self.env.copy()
         default_env.pop("TERNUXX_STATE_DIR")
         status = subprocess.run(
-            ["bash", str(ROOT / "bin/ternuxx"), "--json", "status"],
+            ["bash", str(ROOT / "bin/tx"), "--json", "status"],
             env=default_env, text=True, capture_output=True, timeout=8, check=False,
         )
         self.assertEqual(status.returncode, 0, status.stderr)
@@ -306,7 +443,7 @@ while True:
         env.pop("PREFIX", None)
         for command in ("stop", "restart"):
             result = subprocess.run(
-                ["bash", str(ROOT / "bin/ternuxx"), command],
+                ["bash", str(ROOT / "bin/tx"), command],
                 env=env, text=True, capture_output=True, timeout=5, check=False,
             )
             self.assertNotEqual(result.returncode, 0, command)
@@ -324,7 +461,7 @@ while True:
         env.pop("TERMUX_VERSION", None)
         env.pop("PREFIX", None)
         result = subprocess.run(
-            ["bash", str(ROOT / "bin/ternuxx"), "start"],
+            ["bash", str(ROOT / "bin/tx"), "start"],
             env=env,
             text=True,
             capture_output=True,
@@ -352,7 +489,7 @@ while True:
         env = self.env.copy()
         env.pop("TERMUX_VERSION", None)
         blocked = subprocess.run(
-            ["bash", str(ROOT / "bin/ternuxx"), "checkpoint", "prepare", "--test-id", "blocked"],
+            ["bash", str(ROOT / "bin/tx"), "checkpoint", "prepare", "--test-id", "blocked"],
             env=env, text=True, capture_output=True, timeout=5, check=False,
         )
         self.assertNotEqual(blocked.returncode, 0)

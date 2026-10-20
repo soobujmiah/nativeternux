@@ -2,14 +2,15 @@
 # ternuxx -- deterministic status
 
 - Repository: `soobujmiah/ternuxx`
-- Generated at: 2026-10-18T16:11:50Z (by `tools/repo_knowledge collect`)
-- Version: `45b276a`
-- Head: `45b276ae687364a9cf375e8e92ba607ff39c315d` on `main` (2026-10-18T14:14:30Z)
+- Generated at: 2026-10-20T00:07:14Z (by `tools/repo_knowledge collect`)
+- Version: `69e378e`
+- Head: `69e378eb33247678437bda4b2de9ab25f6bcb91d` on `main` (2026-10-18T19:42:15Z)
 
 ## Build / test
 
-- Build: **unknown**
-- Test: **passed** -- Native Termux full suite: 324/324 passed in 67.025 seconds on dirty working tree based at HEAD 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a; see docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md.
+- Build: **failed** (run `39159994935`)
+- Test: **passed** -- Native Termux dirty worktree HEAD 69e378e after native-only PRoot GUI routing: repo_test.sh 550/550 passed in 93.732s; CLI help contract passed; deterministic knowledge verify 0 findings; strict README bridge passed. Local only, no GitHub workflow run.
+- Last failed build: `69e378eb33247678437bda4b2de9ab25f6bcb91d` at 2026-10-18T19:42:44Z
 
 ## Phases
 - Not configured (no `.repo/phases.yaml`).
@@ -18,4 +19,4 @@
 
 - Status: ok
 - Source: local
-- Last synced at: 2026-10-18T16:11:50Z
+- Last synced at: 2026-10-20T00:07:14Z

@@ -1,0 +1,13 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Single opt-in scheduler. No Android Activity/focus probes run unless policy enables them.
+set -u
+umask 077
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+HOME="${HOME:?Termux HOME is required}"
+TERNUXX_STATE_DIR="${TERNUXX_STATE_DIR:-$HOME/.local/share/ternuxx}"
+export PREFIX HOME TERNUXX_STATE_DIR
+export PATH="$PREFIX/bin:$PATH"
+MODULE="$PREFIX/lib/ternuxx/gui_monitoring.py"
+if [ ! -r "$MODULE" ]; then MODULE="$HOME/ternuxx/lib/gui_monitoring.py"; fi
+[ -r "$MODULE" ] || exit 1
+exec "$PREFIX/bin/python3" "$MODULE" run --home "$HOME" --state-dir "$TERNUXX_STATE_DIR"

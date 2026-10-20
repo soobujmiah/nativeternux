@@ -1,7 +1,7 @@
-"""Ephemeral bearer sessions for a future local management transport.
+"""Ephemeral bearer sessions for the authenticated local management transport.
 
 This module does not open sockets, persist credentials, or dispatch operations.
-The transport must call ``authorize_request`` before using the application
+The HTTP adapter must call ``authorize_request`` before using the application
 service. It must keep the issued bearer and CSRF values out of URLs and logs.
 """
 from __future__ import annotations
@@ -25,18 +25,27 @@ MAX_TOKEN_LENGTH = 256
 # Every known operation must be explicitly classified. Mutations also require
 # the session-specific CSRF proof in a custom header.
 MUTATING_OPERATIONS = frozenset({
-    "ssh.service.start", "ssh.service.stop", "ssh.service.deploy", "ssh.service.deploy.rollback.apply", "boot.enable", "boot.disable",
+    "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure",
+    "ssh.service.start", "ssh.service.stop", "ssh.service.deploy", "ssh.service.deploy.rollback.apply", "boot.enable", "boot.disable", "boot.cron.enable", "boot.cron.disable",
     "backup.create", "restore.apply", "recovery.resolve",
     "recovery.rollback.apply", "wakelock.acquire", "wakelock.release",
     "continuity.prepare", "continuity.verify", "continuity.prepare-reboot-test",
     "continuity.verify-reboot-test", "proot.app.launch", "proot.shortcuts.apply",
+    "cron.jobs.create", "cron.jobs.update", "cron.jobs.remove",
+    "proot.start", "proot.stop", "proot.recovery.reconcile",
+    "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",
 })
 READ_ONLY_OPERATIONS = frozenset({
-    "management.catalog", "doctor.report",
+    "management.catalog", "agent.hermes.status", "cron.status", "cron.executor.self_test",
+    "proot.sessions.list", "proot.sessions.show", "proot.sessions.health", "proot.recovery.inspect",
+    "proot.recovery.reconcile.preview", "proot.profiles.list", "proot.profiles.show",
+    "proot.start.preview", "proot.stop.preview", "cron.jobs.list",
+    "timezone.status", "timezone.list",
+    "cron.jobs.show", "cron.jobs.validate", "cron.jobs.next_runs", "cron.executions.list", "cron.executions.show", "desktop.status", "desktop.monitor.status", "doctor.report",
     "ssh.inspect", "ssh.service.deploy.rollback.preview", "native.ssh.status", "proot.status", "proot.guest.verify",
     "proot.shortcuts.list", "proot.shortcuts.preview",
     "remote.access.preview", "boot.status", "boot.profile.status",
-    "boot.profile.preview", "backup.list", "backup.inspect", "restore.preview",
+    "boot.profile.preview", "boot.cron.status", "boot.cron.validate", "boot.cron.preview", "backup.list", "backup.inspect", "restore.preview",
     "recovery.status", "recovery.inspect", "recovery.rollback.preview",
     "wakelock.status", "continuity.status", "continuity.resume-info",
 })

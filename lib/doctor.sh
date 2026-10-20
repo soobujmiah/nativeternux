@@ -85,7 +85,7 @@ nt_cmd_check() {
   if [ $rc -eq 0 ]; then
     nt_ok "Required readiness checks passed; this command checks prerequisites, not full lifecycle qualification."
   else
-  nt_warn "$((${#missing[@]})) required item(s) are missing. Review 'ternuxx install' for the current package plan; --yes applies changes."
+  nt_warn "$((${#missing[@]})) required item(s) are missing. Review 'tx install' for the current package plan; --yes applies changes."
   fi
 
   if [ "$TERNUXX_JSON" = "1" ]; then

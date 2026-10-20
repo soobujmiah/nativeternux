@@ -1,0 +1,15 @@
+event_id: test-69e378eb3324-native-20261020-551-1
+repository: soobujmiah/ternuxx
+commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+kind: test
+occurred_at: '2026-10-19T23:31:57Z'
+run_id: native-20261020-551
+run_attempt: '1'
+status: passed
+summary: Native Termux full suite 551/551 passed in 81.537 seconds via scripts/repo_test.sh
+  on dirty working tree at source HEAD 69e378eb33247678437bda4b2de9ab25f6bcb91d. Read-only
+  Debian PRoot verify on :1 reports Zink/Turnip Adreno 825, X11 reachable, authenticated
+  Native PulseAudio client reachable after scoped cookie bind. GitHub State Contract
+  39159994935 failed on Termux-only launcher; Knowledge Sync 39159994930 verified
+  0 findings, pushed generated-only 89a2a0b, then deliberately failed on 326 tests
+  with 2 wakelock fixture errors.

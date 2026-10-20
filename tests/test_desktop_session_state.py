@@ -1,0 +1,186 @@
+"""Ownership-aware native desktop session classification fixtures."""
+from __future__ import annotations
+import json
+import os
+from pathlib import Path
+import socket
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "lib"))
+import desktop_session_state  # noqa: E402
+
+
+class DesktopSessionStateTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory(prefix="ternuxx-session-state-")
+        root = Path(self.temp.name)
+        self.home = root / "home"
+        self.home.mkdir()
+        self.state = self.home / ".local/share/ternuxx"
+        self.state.mkdir(parents=True, mode=0o700)
+        self.state.chmod(0o700)
+        self.proc = root / "proc"
+        self.proc.mkdir()
+        self.tmp = root / "tmp"
+        (self.tmp / ".X11-unix").mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def _role(self, name: str, pid: int, *, ticks: str = "456", actual_ticks: str | None = None) -> dict:
+        markers = desktop_session_state.MARKERS
+        proc = self.proc / str(pid)
+        proc.mkdir()
+        pgid = pid
+        fields = ["S", "1", str(pgid), str(pid)] + ["0"] * 15 + [actual_ticks or ticks]
+        (proc / "stat").write_text(f"{pid} (fixture) {' '.join(fields)}\n", encoding="ascii")
+        (proc / "cmdline").write_bytes(f"/fixture/{markers[name]}\0".encode())
+        (proc / "status").write_text(f"Name:\tfixture\nUid:\t{os.getuid()}\t{os.getuid()}\t{os.getuid()}\t{os.getuid()}\n", encoding="ascii")
+        record = {"pid": pid, "start_ticks": ticks, "command_marker": markers[name]}
+        if name != "supervisor":
+            record.update(pgid=pid, sid=pid)
+        return record
+
+    def _session(self, status: str = "running", *, process_ticks: str | None = None) -> dict:
+        pids = {"supervisor": 101, "x11": 102, "desktop": 103}
+        roles = {name: self._role(name, pid, actual_ticks=process_ticks)
+                 for name, pid in pids.items()}
+        session = {"schema": 2, "owner": "ternuxx", "provider": "native", "display": ":1",
+                   "status": status, **roles, "error": None}
+        path = self.state / "session.json"
+        path.write_text(json.dumps(session), encoding="utf-8")
+        path.chmod(0o600)
+        return session
+
+    def _inspect(self) -> dict:
+        return desktop_session_state.inspect(self.home, self.state, self.proc, self.tmp)
+
+    def test_healthy_running_requires_all_identities_and_responsive_display(self) -> None:
+        self._session()
+        sock_path = self.tmp / ".X11-unix/X1"
+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        listener.bind(str(sock_path))
+        listener.listen(2)
+        self.addCleanup(listener.close)
+        (self.tmp / ".X1-lock").write_text("102\n", encoding="ascii")
+        result = self._inspect()
+        self.assertEqual(result["state"], "running")
+        self.assertEqual(result["display"], ":1")
+        self.assertEqual(result["display_state"], "ready")
+
+    def test_reused_pids_with_mismatched_start_ticks_are_stale(self) -> None:
+        self._session(process_ticks="999")
+        self.assertEqual(self._inspect()["state"], "stale")
+
+    def test_starting_is_not_mistaken_for_stopped_or_running(self) -> None:
+        self._session("starting")
+        self.assertEqual(self._inspect()["state"], "starting")
+
+    def test_shutdown_in_progress_is_reported_without_becoming_stopped(self) -> None:
+        self._session("stopping")
+        self.assertEqual(self._inspect()["state"], "stopping")
+
+    def test_supervisor_child_disagreement_is_failed(self) -> None:
+        self._session()
+        import shutil
+        shutil.rmtree(self.proc / "102")
+        self.assertEqual(self._inspect()["state"], "failed")
+
+    def test_interrupted_shutdown_with_absent_processes_is_failed(self) -> None:
+        self._session("stop_incomplete", process_ticks="999")
+        self.assertEqual(self._inspect()["state"], "failed")
+
+    def test_failed_lifecycle_state_is_reported_as_failed(self) -> None:
+        self._session("failed", process_ticks="999")
+        self.assertEqual(self._inspect()["state"], "failed")
+
+    def test_unavailable_process_inventory_is_unknown(self) -> None:
+        self._session()
+        self.assertEqual(desktop_session_state.inspect(self.home, self.state, self.proc / "missing", self.tmp)["state"], "unknown")
+
+    def test_symlinked_display_artifact_is_unsafe(self) -> None:
+        self._session()
+        (self.tmp / ".X1-lock").write_text("102\n", encoding="ascii")
+        (self.tmp / ".X11-unix/X1").symlink_to(self.temp.name)
+        self.assertEqual(self._inspect()["state"], "unsafe")
+
+    def test_missing_display_socket_does_not_report_healthy(self) -> None:
+        self._session()
+        (self.tmp / ".X1-lock").write_text("102\n", encoding="ascii")
+        self.assertEqual(self._inspect()["state"], "failed")
+
+    def test_unresponsive_owned_display_is_stale_without_deleting_artifacts(self) -> None:
+        self._session(process_ticks="999")
+        socket_path = self.tmp / ".X11-unix/X1"
+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        listener.bind(str(socket_path))
+        listener.close()
+        lock_path = self.tmp / ".X1-lock"
+        lock_path.write_text("102\n", encoding="ascii")
+        result = self._inspect()
+        self.assertEqual(result["state"], "stale")
+        self.assertEqual(result["display"], ":1")
+        self.assertEqual(result["display_state"], "stale")
+        self.assertTrue(socket_path.exists())
+        self.assertEqual(lock_path.read_text(encoding="ascii"), "102\n")
+
+    def test_symlinked_tmp_root_is_unsafe(self) -> None:
+        self._session(process_ticks="999")
+        linked_tmp = self.home / "tmp-link"
+        linked_tmp.symlink_to(self.tmp, target_is_directory=True)
+        result = desktop_session_state.inspect(self.home, self.state, self.proc, linked_tmp)
+        self.assertEqual(result["state"], "unsafe")
+
+    def test_malformed_and_symlinked_session_records_are_unsafe(self) -> None:
+        path = self.state / "session.json"
+        path.write_text("{", encoding="utf-8")
+        path.chmod(0o600)
+        self.assertEqual(self._inspect()["state"], "unsafe")
+        path.unlink()
+        target = self.home / "target.json"
+        target.write_text("{}", encoding="utf-8")
+        target.chmod(0o600)
+        path.symlink_to(target)
+        self.assertEqual(self._inspect()["state"], "unsafe")
+
+    def test_ensure_state_directory_refuses_symlink_components(self) -> None:
+        unsafe_home = self.home / "unsafe-home"
+        unsafe_home.mkdir()
+        outside = unsafe_home / "outside"
+        outside.mkdir(mode=0o755)
+        outside.chmod(0o755)
+        (unsafe_home / ".local").symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(desktop_session_state.StateError, "ownership or type is unsafe"):
+            desktop_session_state.ensure_state_dir(unsafe_home, unsafe_home / ".local/share/ternuxx")
+        self.assertEqual((outside.stat().st_mode & 0o777), 0o755)
+        self.assertFalse((outside / "share").exists())
+
+    def test_stale_reconciliation_requires_private_lifecycle_lock(self) -> None:
+        self._session(process_ticks="999")
+        with self.assertRaisesRegex(desktop_session_state.StateError, "requires the lifecycle session lock"):
+            desktop_session_state.reconcile_stale(self.home, self.state, self.proc, self.tmp)
+        lock = self.state / ".session.lock"
+        lock.mkdir(mode=0o700)
+        lock.chmod(0o700)
+        result = desktop_session_state.reconcile_stale(self.home, self.state, self.proc, self.tmp)
+        self.assertEqual(result["state"], "stopped")
+        self.assertEqual(json.loads((self.state / "session.json").read_text())["status"], "stopped")
+
+    def test_stale_reconciliation_rejects_unsafe_lifecycle_lock(self) -> None:
+        self._session(process_ticks="999")
+        lock = self.state / ".session.lock"
+        lock.mkdir(mode=0o755)
+        lock.chmod(0o755)
+        with self.assertRaisesRegex(desktop_session_state.StateError, "permissions are unsafe"):
+            desktop_session_state.reconcile_stale(self.home, self.state, self.proc, self.tmp)
+        self.assertEqual(json.loads((self.state / "session.json").read_text())["status"], "running")
+
+    def test_missing_session_record_is_stopped(self) -> None:
+        self.assertEqual(self._inspect()["state"], "stopped")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -22,7 +22,7 @@ class CliEntrypointTests(unittest.TestCase):
         self.home = self.root / "home"
         (self.prefix / "bin").mkdir(parents=True)
         self.home.mkdir()
-        self.target = self.prefix / "bin/ternuxx"
+        self.target = self.prefix / "bin/tx"
         (self.prefix / "bin/bash").symlink_to(shutil.which("bash"))
         self.old = b"#!/bin/sh\necho old-cli\n"
         self.target.write_bytes(self.old)
@@ -103,13 +103,20 @@ class CliEntrypointTests(unittest.TestCase):
                             confirmed=True, plan_id=plan["plan_id"])
         self.assertEqual(self.target.read_bytes(), b"changed after preview")
 
+    def test_source_checkout_entrypoint_runs_directly_in_native_termux(self) -> None:
+        checkout = Path(__file__).resolve().parents[1]
+        result = subprocess.run([str(checkout / "tx"), "--version"], cwd=checkout,
+                                capture_output=True, text=True, check=False, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Ternuxx v", result.stdout)
+
     def test_installed_shim_uses_android_native_shell_interpreter(self) -> None:
         self.assertTrue(installer.SOURCE.read_text(encoding="utf-8").startswith("#!/system/bin/sh\n"))
 
     def test_installed_shim_forwards_arguments_to_selected_checkout(self) -> None:
         checkout = self.root / "checkout"
         checkout.mkdir()
-        command = checkout / "ternuxx"
+        command = checkout / "tx"
         command.write_text("#!/bin/sh\nprintf '<%s>\\n' \"$@\"\n", encoding="utf-8")
         command.chmod(0o755)
         result = subprocess.run(["bash", str(installer.SOURCE), "status", "--json"],

@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ternuxx.local/schemas/cron-execution-v1.schema.json",
+  "title": "Ternuxx Cron execution ledger v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "records": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "execution_id",
+          "job_id",
+          "event_id",
+          "trigger_source",
+          "scheduled_at",
+          "status",
+          "scheduler_instance_id",
+          "attempt",
+          "created_at",
+          "claimed_at",
+          "started_at",
+          "completed_at",
+          "exit_code",
+          "failure_category",
+          "duration_ms",
+          "output_summary",
+          "recovered"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "execution_id": {
+            "type": "string",
+            "pattern": "^exec-[A-Za-z0-9_.:-]{1,160}$"
+          },
+          "job_id": {
+            "type": "string",
+            "pattern": "^job-[0-9a-f]{32}$"
+          },
+          "event_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "trigger_source": {
+            "enum": [
+              "schedule",
+              "device_boot",
+              "scheduler_recovery",
+              "manual"
+            ]
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "enum": [
+              "claimed",
+              "running",
+              "succeeded",
+              "failed",
+              "timed_out",
+              "cancelled",
+              "skipped",
+              "blocked"
+            ]
+          },
+          "scheduler_instance_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "attempt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "claimed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "exit_code": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -255,
+            "maximum": 255
+          },
+          "failure_category": {
+            "enum": [
+              "action_failed",
+              "action_unavailable",
+              "timeout",
+              "executor_error",
+              "interrupted",
+              null
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "output_summary": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "recovered": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -140,7 +140,7 @@ def write_all(outputs: dict[Path, str], state: dict | None = None) -> None:
             temp.unlink(missing_ok=True)
 
 
-def evidence_path(value: str, phase_id: str) -> tuple[str, Path]:
+def evidence_path(value: str, phase_id: str, *, completion: bool = True) -> tuple[str, Path]:
     candidate = Path(value)
     if candidate.is_absolute() or ".." in candidate.parts:
         raise ValueError("Evidence paths must stay inside the repository")
@@ -148,16 +148,12 @@ def evidence_path(value: str, phase_id: str) -> tuple[str, Path]:
     if not resolved.is_relative_to(ROOT) or not resolved.is_file():
         raise ValueError("Evidence must be a file inside the repository")
     content = resolved.read_text(encoding="utf-8")
-    if (
-        f"Phase: `{phase_id}`" not in content
-        or "Gate: PASS" not in content
-        or "## Acceptance criteria" not in content
-        or "## Evidence" not in content
-    ):
-        raise ValueError(
-            f"Evidence must identify {phase_id} and include 'Gate: PASS', "
-            "'## Acceptance criteria', and '## Evidence' sections"
-        )
+    required = [f"Phase: `{phase_id}`", "## Evidence"]
+    if completion:
+        required += ["Gate: PASS", "## Acceptance criteria"]
+    if any(marker not in content for marker in required):
+        detail = "Gate: PASS, '## Acceptance criteria', and " if completion else ""
+        raise ValueError(f"Evidence must identify {phase_id} and include {detail}'## Evidence'")
     return candidate.as_posix(), resolved
 
 
@@ -165,6 +161,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("refresh", help="regenerate phase status docs from the recorded state")
+    update = sub.add_parser("update", help="record verified progress while keeping the active phase in progress")
+    update.add_argument("phase_id")
+    update.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
+    update.add_argument("--summary", required=True, help="updated one-line phase summary")
     complete = sub.add_parser("complete", help="record a reviewed completion for the active phase")
     complete.add_argument("phase_id")
     complete.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
@@ -179,12 +179,22 @@ def main() -> int:
             return 0
 
         summary = args.summary.strip()
-        if not summary or len(summary) > 500 or "\n" in summary or "\r" in summary:
-            raise ValueError("Summary must be one line with 1–500 characters")
+        summary_limit = 10000 if args.command == "update" else 500
+        if not summary or len(summary) > summary_limit or "\n" in summary or "\r" in summary:
+            raise ValueError(f"Summary must be one line with 1–{summary_limit} characters")
         if state.get("active_phase") != args.phase_id:
-            raise ValueError(f"Only the active phase can be completed (active: {state.get('active_phase') or 'none'})")
+            raise ValueError(f"Only the active phase can be updated (active: {state.get('active_phase') or 'none'})")
         phase = next(p for p in state["phases"] if p["id"] == args.phase_id)
-        evidence = [evidence_path(item, args.phase_id)[0] for item in args.evidence]
+        evidence = [evidence_path(item, args.phase_id, completion=args.command == "complete")[0]
+                    for item in args.evidence]
+        if args.command == "update":
+            if phase["status"] != "in_progress":
+                raise ValueError("Only an in-progress phase can record incremental evidence")
+            merged = list(dict.fromkeys([*phase.get("evidence", []), *evidence]))
+            phase.update(summary=summary, evidence=merged)
+            write_all(render(state), state)
+            print(f"Recorded {args.phase_id} progress and refreshed generated phase documentation.")
+            return 0
         phase.update(
             status="completed",
             completed_on=dt.datetime.now(dt.timezone.utc).date().isoformat(),

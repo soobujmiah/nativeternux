@@ -28,7 +28,7 @@ class ManagementSessionTests(unittest.TestCase):
     def make_authority(self, *, clock=None, grants=None, idle_ttl=30):
         return management_sessions.ManagementSessionAuthority(
             "B" * 48,
-            grants if grants is not None else {"diagnostics.read", "services.manage"},
+            grants if grants is not None else {"diagnostics.read", "ssh.managed.lifecycle"},
             idle_ttl_seconds=idle_ttl,
             absolute_ttl_seconds=max(90, idle_ttl),
             clock=clock or FakeClock(),
@@ -37,7 +37,7 @@ class ManagementSessionTests(unittest.TestCase):
     def issue(self, authority, scopes=None):
         return authority.exchange_bootstrap(
             "B" * 48,
-            scopes if scopes is not None else {"diagnostics.read", "services.manage"},
+            scopes if scopes is not None else {"diagnostics.read", "ssh.managed.lifecycle"},
         )
 
     def test_bootstrap_issues_memory_only_scoped_credentials_once(self) -> None:
@@ -80,7 +80,7 @@ class ManagementSessionTests(unittest.TestCase):
         self.assertEqual(denied.reason, "scope_denied")
 
         control = self.make_authority()
-        scoped = self.issue(control, {"services.manage"})
+        scoped = self.issue(control, {"ssh.managed.lifecycle"})
         self.assertEqual(control.authorize_request(
             scoped.bearer_token, "ssh.service.stop").reason, "csrf_rejected")
         self.assertEqual(control.authorize_request(
@@ -88,6 +88,11 @@ class ManagementSessionTests(unittest.TestCase):
             "csrf_rejected")
         self.assertTrue(control.authorize_request(
             scoped.bearer_token, "ssh.service.stop", csrf_token=scoped.csrf_token).allowed)
+        other = self.make_authority(grants={"services.manage"})
+        services_only = self.issue(other, {"services.manage"})
+        self.assertEqual(other.authorize_request(
+            services_only.bearer_token, "ssh.service.stop", csrf_token=services_only.csrf_token).reason,
+            "scope_denied")
 
     def test_unknown_operations_and_bad_tokens_are_unauthenticated_or_denied(self) -> None:
         authority = self.make_authority()

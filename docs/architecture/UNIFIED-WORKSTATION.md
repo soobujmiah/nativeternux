@@ -1,6 +1,6 @@
 # Ternuxx unified workstation architecture
 
-**Status:** The shared CLI, interactive Terminal/TUI, Web UI, and Graphical UI management requirement is owner-accepted; implementation remains incomplete and is not release-qualified. Optional AI/cloud/runtime aspects remain proposals.
+**Status:** The shared CLI, interactive Terminal/TUI, Web UI, and Graphical UI management requirement is owner-accepted. The TUI now has shared-service views and a typed allowlisted operation runner with explicit mutation confirmation, including native desktop lifecycle operations. The local Web UI has authenticated read-only views. Broader client coverage remains incomplete and is not release-qualified. Optional AI/cloud/runtime aspects remain proposals.
 **Basis:** repository audit at `1a891fa` (2026-10-17), existing architecture/ADRs, and the owner-confirmed shared-management direction on 2026-10-18.
 **Scope:** management architecture for native Termux, the independent existing Ternux Debian PRoot, local AI, optional cloud providers, CLI, interactive Terminal/TUI, Web UI, and Graphical UI.
 

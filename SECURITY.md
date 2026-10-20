@@ -42,9 +42,14 @@ The 8023 managed service configuration and its startup log showed loopback `127.
 
 ### 2026-10-18 live bind follow-up
 
-ADB `toybox netstat -ltnp` on device `25053RT47C` observed actual 8022 listeners on `0.0.0.0` and `[::]`, and the managed 8023 listener on `127.0.0.1`. This confirms the bind addresses, not the owning PID. The 8022 wildcard listener is a current exposure risk; its authentication/configuration and active development workflow were not changed. Android shell lists no PID for either socket and denies `/proc/13449/fd`, so socket-to-process ownership remains UNVERIFIED. See the [dated evidence](docs/evidence/2026-10-18-live-session-state-reconciliation.json).
+ADB `toybox netstat -ltnp` on device `[redacted device serial]` observed actual 8022 listeners on `0.0.0.0` and `[::]`, and the managed 8023 listener on `127.0.0.1`. This confirms the bind addresses, not the owning PID. The 8022 wildcard listener is a current exposure risk; its authentication/configuration and active development workflow were not changed. Android shell lists no PID for either socket and denies `/proc/13449/fd`, so socket-to-process ownership remains UNVERIFIED. See the [dated evidence](docs/evidence/2026-10-18-live-session-state-reconciliation.json).
 
 
 ### Listener ownership correlation follow-up — 2026-10-18
 
 The previous observation's ownership limitation is superseded for the current listener snapshot. ADB `/proc/net/tcp` and `/proc/net/tcp6` exposed socket inodes and binds; the Native Termux shell (UID 10490) could inspect same-UID process FDs. Inodes `135149` (IPv4 wildcard 8022) and `135147` (IPv6 wildcard 8022) map to sshd PID 16337 FDs 7 and 6. Inode `117876` (`127.0.0.1:8023`) maps to managed sshd PID 13449 FD 6 under Runit PID 13061. Thus listener ownership and binds are verified for this snapshot. The 8022 wildcard/password-enabled posture remains a risk; external reachability was not tested and no policy was changed. See the [live evidence](docs/evidence/2026-10-18-live-session-state-reconciliation.json).
+
+
+### 2026-10-20 managed SSH authentication follow-up
+
+After key-only loopback access was verified, the managed ternuxx-sshd configuration on 127.0.0.1:8023 was changed to public-key-only authentication; password and keyboard-interactive authentication are disabled and root login is denied. The prior exact config is retained in a mode-0600 rollback file under the Termux home. sshd -t, effective sshd -T, managed Runit readiness, post-change key-only login, and recovery through unchanged 8022 passed. External reachability was not tested. See current execution evidence at docs/evidence/2026-10-20-workstation-qualification-execution.md.

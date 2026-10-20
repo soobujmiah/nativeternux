@@ -1,8 +1,10 @@
 """Authenticated HTTP request adapter; deliberately does not bind a socket.
 
-An eventual server must bind only to 127.0.0.1, use bounded workers/timeouts,
-and pass one request at a time here. The adapter shares the CLI application
-service after session authentication and does not expose shell/ADB forwarding.
+The foreground server binds to 127.0.0.1 and enforces worker, request, and time
+bounds before passing each request here. After session authentication, this
+adapter dispatches typed operations through the shared application service and
+does not expose generic shell or ADB forwarding. The foreground runtime keeps
+mutation dispatch disabled.
 """
 from __future__ import annotations
 

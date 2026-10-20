@@ -14,6 +14,28 @@ import doctor_report  # noqa: E402
 
 
 class DoctorReportTest(unittest.TestCase):
+    def test_pulse_probe_uses_only_explicit_loopback_tcp_endpoint(self):
+        with patch.object(doctor_report, "command_path", return_value="/mock/pactl"), \
+                patch.object(doctor_report.subprocess, "run", return_value=SimpleNamespace(
+                    returncode=0, stdout="Server Name: PulseAudio\nDefault Sink: Speaker\n")) as run:
+            status, detail = doctor_report.pulse_server_status()
+        self.assertEqual(status, "ready")
+        self.assertIn("authenticated loopback endpoint", detail)
+        self.assertEqual(run.call_args.args[0], ["/mock/pactl", "--server", "tcp:127.0.0.1:4713", "info"])
+        self.assertTrue(run.call_args.kwargs["env"]["PULSE_COOKIE"].endswith("/.config/pulse/cookie"))
+
+    def test_rish_bundle_inspection_requires_private_owned_files_and_never_executes(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-rish-") as temporary:
+            root = Path(temporary)
+            wrapper, dex = root / "rish", root / "rish_shizuku.dex"
+            wrapper.write_text("#!/system/bin/sh\n", encoding="utf-8")
+            dex.write_bytes(b"dex\n037\0")
+            wrapper.chmod(0o700)
+            dex.chmod(0o400)
+            self.assertIn("invocation not verified", doctor_report.rish_bundle_status(root))
+            dex.chmod(0o644)
+            self.assertIn("unsafe", doctor_report.rish_bundle_status(root))
+
     def test_addon_presence_query_failure_is_unknown_not_absent(self):
         failed = SimpleNamespace(returncode=2, stdout="package service unavailable")
         with patch.object(doctor_report, "command_path", return_value="/mock/pm"), \
@@ -99,6 +121,7 @@ class DoctorReportTest(unittest.TestCase):
                     "ownership": "unverified", "guest_entered": False, "read_only": True,
                 }),
                 patch.object(doctor_report.shutil, "disk_usage", return_value=SimpleNamespace(free=4 * 1024**3)),
+                patch.object(doctor_report, "pulse_server_status", return_value=("ready", "protocol connected")), \
                 patch.object(doctor_report, "check_session") as check_session, \
                 patch.object(doctor_report.ssh_diagnostics, "inspect_native", return_value={"checks": {}}),
             ):
@@ -114,6 +137,10 @@ class DoctorReportTest(unittest.TestCase):
             self.assertTrue(first["read_only"])
             self.assertEqual(first["schema_version"], 1)
             self.assertEqual(first["overall"], "pass")
+            cpu = next(f for f in first["findings"] if f["id"] == "NTX-CPU-001")
+            self.assertEqual(cpu["scope"], "native-compute")
+            self.assertIn("CPU is the native execution baseline", cpu["observed"])
+            self.assertIn("inference runtime/model integration=not implemented", cpu["observed"])
             shizuku = next(f for f in first["findings"] if f["id"] == "NTX-APP-103")
             termux_boot = next(f for f in first["findings"] if f["id"] == "NTX-APP-102")
             adb_server = next(f for f in first["findings"] if f["id"] == "NTX-ADB-001")
@@ -123,9 +150,13 @@ class DoctorReportTest(unittest.TestCase):
             self.assertIn("does not prove boot delivery", termux_boot["suggested_action"])
             self.assertIn("package versionCode: 1318", shizuku["observed"])
             self.assertIn("rish command: not found", shizuku["observed"])
-            self.assertIn("upstream shizuku_server process-name signal: not observed", shizuku["observed"])
+            self.assertIn("package ID: moe.shizuku.privileged.api", shizuku["observed"])
+            self.assertIn("shizuku_server process-name signal: not observed", shizuku["observed"])
+            self.assertIn("provider identity (upstream/custom): unverified", shizuku["observed"])
+            self.assertNotIn("upstream shizuku_server process-name signal", shizuku["observed"])
             self.assertIn("Ternuxx provider: not implemented", shizuku["observed"])
             self.assertIn("signer/release identity, granted permission, and watchdog health: unknown", shizuku["observed"])
+            self.assertIn("upstream/custom release identity", shizuku["suggested_action"])
             self.assertIn("no ADB-over-Wi-Fi operation is enabled", shizuku["suggested_action"])
             self.assertIn("127.0.0.1:5037", adb_server["observed"])
             self.assertIn("0x0029", adb_server["observed"])

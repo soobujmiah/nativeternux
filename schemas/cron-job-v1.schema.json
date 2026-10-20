@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ternuxx.invalid/schemas/cron-job-v1.schema.json",
+  "title": "Ternuxx Cron Job Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "name",
+    "description",
+    "action_id",
+    "owner",
+    "provider",
+    "source",
+    "schedule_type",
+    "schedule",
+    "enabled",
+    "run_after_device_boot",
+    "run_after_scheduler_recovery",
+    "timeout_seconds",
+    "retry_policy",
+    "missed_run_policy",
+    "concurrency_policy",
+    "environment",
+    "required_capabilities",
+    "output_policy",
+    "created_at",
+    "updated_at",
+    "last_execution"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "job_id": {
+      "type": "string",
+      "pattern": "^job-[0-9a-f]{32}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "action_id": {
+      "enum": [
+        "diagnostics.doctor",
+        "management.catalog.refresh",
+        "hermes.status",
+        "scheduler.self_test"
+      ]
+    },
+    "owner": {
+      "const": "ternuxx"
+    },
+    "provider": {
+      "const": "ternuxx"
+    },
+    "source": {
+      "const": "tx-mng-cron"
+    },
+    "schedule_type": {
+      "enum": [
+        "cron",
+        "interval",
+        "calendar",
+        "one_time"
+      ]
+    },
+    "schedule": {
+      "type": "object"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "run_after_device_boot": {
+      "const": false
+    },
+    "run_after_scheduler_recovery": {
+      "const": false
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400
+    },
+    "retry_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_attempts",
+        "delay_seconds",
+        "backoff"
+      ],
+      "properties": {
+        "max_attempts": {
+          "const": 1
+        },
+        "delay_seconds": {
+          "const": 0
+        },
+        "backoff": {
+          "const": "fixed"
+        }
+      }
+    },
+    "missed_run_policy": {
+      "const": "skip"
+    },
+    "concurrency_policy": {
+      "const": "skip_overlap"
+    },
+    "environment": {
+      "const": "native-termux"
+    },
+    "required_capabilities": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "output_policy": {
+      "enum": [
+        "discard",
+        "bounded_redacted"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_execution": {
+      "const": null
+    }
+  }
+}

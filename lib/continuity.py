@@ -297,7 +297,7 @@ def verify(
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="ternuxx checkpoint")
+    parser = argparse.ArgumentParser(prog="tx cp")
     parser.add_argument("--home", default=os.environ.get("HOME", ""), help=argparse.SUPPRESS)
     parser.add_argument("--state-dir", default=os.environ.get("TERNUXX_STATE_DIR", ""), help=argparse.SUPPRESS)
     parser.add_argument("--json", action="store_true")

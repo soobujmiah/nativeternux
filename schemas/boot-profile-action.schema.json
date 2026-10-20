@@ -7,60 +7,208 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["component", "schema_version", "requested_profile", "configured_profile", "configuration_source", "ready", "readiness_scope", "blockers", "actions", "generated_script", "managed_script_path", "boot_app_status", "requires_confirmation", "changed", "safety"],
+      "required": [
+        "component",
+        "schema_version",
+        "requested_profile",
+        "configured_profile",
+        "configuration_source",
+        "ready",
+        "readiness_scope",
+        "blockers",
+        "actions",
+        "generated_script",
+        "managed_script_path",
+        "boot_app_status",
+        "requires_confirmation",
+        "changed",
+        "safety",
+        "managed_script_identity"
+      ],
       "properties": {
-        "component": {"const": "boot_profile_preview"},
-        "schema_version": {"const": 1},
-        "requested_profile": {"enum": ["cli-only", "native", "proot", "hybrid"]},
-        "configured_profile": {"enum": ["cli-only", "native", "proot", "hybrid"]},
-        "configuration_source": {"enum": ["default", "configured"]},
-        "ready": {"type": "boolean"},
-        "readiness_scope": {"type": "string"},
-        "blockers": {"type": "array", "items": {"type": "string"}},
-        "actions": {"type": "array", "items": {"type": "string"}},
-        "generated_script": {"type": "string"},
-        "managed_script_path": {"type": "string"},
-        "boot_app_status": {"enum": ["installed", "not_installed", "unknown"]},
-        "requires_confirmation": {"type": "boolean"},
-        "changed": {"type": "boolean"},
-        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "component": {
+          "const": "boot_profile_preview"
+        },
+        "schema_version": {
+          "const": 2
+        },
+        "requested_profile": {
+          "enum": [
+            "cli-only",
+            "native",
+            "proot",
+            "hybrid"
+          ]
+        },
+        "configured_profile": {
+          "enum": [
+            "cli-only",
+            "native",
+            "proot",
+            "hybrid"
+          ]
+        },
+        "configuration_source": {
+          "enum": [
+            "default",
+            "configured"
+          ]
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "readiness_scope": {
+          "type": "string"
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generated_script": {
+          "type": "string"
+        },
+        "managed_script_path": {
+          "type": "string"
+        },
+        "boot_app_status": {
+          "enum": [
+            "installed",
+            "not_installed",
+            "unknown"
+          ]
+        },
+        "requires_confirmation": {
+          "type": "boolean"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
         "safety": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["read_only", "script_installed", "boot_config_changed", "existing_proot_touched", "silent_provider_fallback"],
+          "required": [
+            "read_only",
+            "script_installed",
+            "boot_config_changed",
+            "existing_proot_touched",
+            "silent_provider_fallback"
+          ],
           "properties": {
-            "read_only": {"type": "boolean"},
-            "script_installed": {"type": "boolean"},
-            "boot_config_changed": {"type": "boolean"},
-            "existing_proot_touched": {"const": false},
-            "silent_provider_fallback": {"const": false}
+            "read_only": {
+              "type": "boolean"
+            },
+            "script_installed": {
+              "type": "boolean"
+            },
+            "boot_config_changed": {
+              "type": "boolean"
+            },
+            "existing_proot_touched": {
+              "const": false
+            },
+            "silent_provider_fallback": {
+              "const": false
+            }
           }
+        },
+        "managed_script_identity": {
+          "enum": [
+            "not_checked",
+            "not_configured",
+            "match",
+            "legacy_match",
+            "missing",
+            "mismatch",
+            "unsafe"
+          ]
         }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["component", "schema_version", "configured_profile", "configuration_source", "script_path", "script_present", "requires_confirmation", "changed", "safety"],
+      "required": [
+        "component",
+        "schema_version",
+        "configured_profile",
+        "configuration_source",
+        "script_path",
+        "script_present",
+        "requires_confirmation",
+        "changed",
+        "safety"
+      ],
       "properties": {
-        "component": {"const": "boot_profile_disable"},
-        "schema_version": {"const": 1},
-        "configured_profile": {"enum": ["cli-only", "native", "proot", "hybrid"]},
-        "configuration_source": {"enum": ["default", "configured"]},
-        "script_path": {"type": "string"},
-        "script_present": {"type": "boolean"},
-        "requires_confirmation": {"type": "boolean"},
-        "changed": {"type": "boolean"},
-        "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "component": {
+          "const": "boot_profile_disable"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "configured_profile": {
+          "enum": [
+            "cli-only",
+            "native",
+            "proot",
+            "hybrid"
+          ]
+        },
+        "configuration_source": {
+          "enum": [
+            "default",
+            "configured"
+          ]
+        },
+        "script_path": {
+          "type": "string"
+        },
+        "script_present": {
+          "type": "boolean"
+        },
+        "requires_confirmation": {
+          "type": "boolean"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
         "safety": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["read_only", "script_removed", "only_owned_paths", "existing_proot_touched"],
+          "required": [
+            "read_only",
+            "script_removed",
+            "only_owned_paths",
+            "existing_proot_touched"
+          ],
           "properties": {
-            "read_only": {"type": "boolean"},
-            "script_removed": {"type": "boolean"},
-            "only_owned_paths": {"const": true},
-            "existing_proot_touched": {"const": false}
+            "read_only": {
+              "type": "boolean"
+            },
+            "script_removed": {
+              "type": "boolean"
+            },
+            "only_owned_paths": {
+              "const": true
+            },
+            "existing_proot_touched": {
+              "const": false
+            }
           }
         }
       }

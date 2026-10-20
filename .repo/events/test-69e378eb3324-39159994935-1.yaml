@@ -1,0 +1,13 @@
+event_id: test-69e378eb3324-39159994935-1
+repository: soobujmiah/ternuxx
+commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+kind: test
+occurred_at: '2026-10-19T23:24:12Z'
+run_id: '39159994935'
+run_attempt: '1'
+status: passed
+summary: Native Termux full suite 547/547 passed in 94.231 seconds via scripts/repo_test.sh
+  on dirty worktree based at source HEAD 69e378eb33247678437bda4b2de9ab25f6bcb91d;
+  GitHub Repository State Contract 39159994935 failed on Termux-only launcher; Repository
+  Knowledge Sync 39159994930 verified 0 findings and pushed generated-only 89a2a0b,
+  then intentionally failed due 326 tests with 2 wakelock fixture errors.

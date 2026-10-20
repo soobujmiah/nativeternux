@@ -5,8 +5,10 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import platform
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -95,6 +97,49 @@ def app_version_code(package: str) -> str:
         if not result.stdout.strip():
             return "not detected"
     return "unknown (Android package version query failed or was ambiguous)"
+
+
+def pulse_server_status() -> tuple[str, str]:
+    """Probe only the explicit loopback TCP server; this cannot autospawn locally."""
+    command = command_path("pactl")
+    if not command:
+        return "unavailable", "pactl is unavailable"
+    cookie = Path.home() / ".config/pulse/cookie"
+    env = {**os.environ, "PULSE_SERVER": "tcp:127.0.0.1:4713",
+           "PULSE_COOKIE": str(cookie), "LC_ALL": "C"}
+    try:
+        result = subprocess.run([command, "--server", "tcp:127.0.0.1:4713", "info"],
+                                check=False, text=True, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=2.0, env=env)
+    except (OSError, subprocess.TimeoutExpired):
+        return "unknown", "explicit loopback protocol probe timed out or could not run"
+    if result.returncode != 0:
+        return "unavailable", "explicit loopback PulseAudio endpoint did not respond"
+    values = {}
+    for line in result.stdout.splitlines():
+        key, separator, value = line.partition(":")
+        if separator and key in {"Server Name", "Default Sink"}:
+            value = value.strip()
+            if re.fullmatch(r"[A-Za-z0-9_.:+-]{1,128}", value):
+                values[key] = value
+    if not values.get("Server Name"):
+        return "unknown", "explicit loopback response was malformed"
+    return "ready", f"authenticated loopback endpoint ready; sink={values.get('Default Sink', 'unknown')}"
+
+
+def rish_bundle_status(home: Path | None = None) -> str:
+    """Inspect only the two expected private-home files; never execute them."""
+    root = home or Path.home()
+    wrapper, dex = root / "rish", root / "rish_shizuku.dex"
+    try:
+        wi, di = wrapper.lstat(), dex.lstat()
+    except OSError:
+        return "not found or unreadable"
+    if (not stat.S_ISREG(wi.st_mode) or not stat.S_ISREG(di.st_mode)
+            or wi.st_uid != os.getuid() or di.st_uid != os.getuid()
+            or wi.st_mode & 0o077 or di.st_mode & 0o077 or not wi.st_mode & 0o100):
+        return "unsafe identity, type, or permissions"
+    return "private wrapper and DEX present; invocation not verified"
 
 
 def shizuku_server_process_status() -> str:
@@ -438,14 +483,14 @@ def check_backups(state_root: Path) -> None:
     if invalid:
         add("NTX-BACKUP-002", "warning", "native-recovery",
             f"backup archives present: {len(backups)}; integrity failures: {invalid}",
-            "Keep the archives unchanged and inspect each with `ternuxx backup inspect`; do not restore an invalid archive.")
+            "Keep the archives unchanged and inspect each with `tx backup inspect`; do not restore an invalid archive.")
     elif backups:
         add("NTX-BACKUP-001", "pass", "native-recovery",
             f"backup archives present: {len(backups)}; all integrity checks passed",
             "No action needed.")
     else:
         add("NTX-BACKUP-001", "info", "native-recovery", "no Ternuxx configuration backups found",
-            "Create a preview with `ternuxx backup create` if configuration recovery is needed.")
+            "Create a preview with `tx backup create` if configuration recovery is needed.")
 
 
 def check_service_manager() -> None:
@@ -616,6 +661,13 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
         add(f"NTX-PKG-{index:03d}", severity, "termux-native", f"{package}: {observed}", action)
 
     if native_termux():
+        audio_status, audio_detail = pulse_server_status()
+        audio_severity = "pass" if audio_status == "ready" else "info" if audio_status == "unavailable" else "warning"
+        add("NTX-AUDIO-001", audio_severity, "native-audio",
+            f"PulseAudio client readiness={audio_status}; {audio_detail}",
+            "Native Ternuxx owns the loopback audio service; use tx audio start/status and tx db for the PRoot client handoff.")
+
+    if native_termux():
         add("NTX-APP-101", "info", "android-addons", f"Termux:X11 Android app: {app_path('com.termux.x11')}",
             "Install/open the official companion app only if needed and after checking its signing source.")
         boot = runtime_diagnostics.inspect_boot(home=Path.home())
@@ -632,10 +684,11 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
         shizuku_presence = app_path(shizuku_package)
         shizuku_version = app_version_code(shizuku_package) if shizuku_presence == "present" else "unknown"
         rish_presence = "available" if command_path("rish") else "not found"
+        rish_bundle = rish_bundle_status(Path.home())
         server_process = shizuku_server_process_status()
         add("NTX-APP-103", "info", "android-addons",
-            f"Shizuku app: {shizuku_presence}; package versionCode: {shizuku_version}; rish command: {rish_presence}; upstream shizuku_server process-name signal: {server_process}; Ternuxx provider: not implemented; signer/release identity, granted permission, and watchdog health: unknown",
-            "VersionCode, rish presence, and process-name match are discovery hints only; they do not prove Binder health or granted permission. Verify the app's signing source, service, and permission before provider integration; no ADB-over-Wi-Fi operation is enabled.")
+            f"Shizuku app: {shizuku_presence}; package ID: {shizuku_package}; package versionCode: {shizuku_version}; rish command: {rish_presence}; private-home rish bundle: {rish_bundle}; shizuku_server process-name signal: {server_process}; provider identity (upstream/custom): unverified; Ternuxx provider: not implemented; signer/release identity, granted permission, and watchdog health: unknown",
+            "Package ID, versionCode, rish presence, and process-name match are discovery hints only; they do not prove upstream/custom release identity, Binder health, or granted permission. Verify the app signing source, service, and permission before provider integration; no ADB-over-Wi-Fi operation is enabled.")
         adb_server = adb_diagnostics.inspect_local_server()
         adb_status = adb_server.get("status", "unknown")
         if adb_status == "available":
@@ -668,6 +721,13 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
             "Run from Termux host for add-on package visibility.")
 
     if native_termux():
+        cpu_arch = platform.machine() or "unknown"
+        logical_cpus = os.cpu_count()
+        cpu_count = str(logical_cpus) if logical_cpus is not None else "unknown"
+        add("NTX-CPU-001", "info", "native-compute",
+            f"CPU is the native execution baseline; architecture={cpu_arch}; logical CPUs={cpu_count}; Ternuxx inference runtime/model integration=not implemented",
+            "CPU execution does not establish a supported inference workload. Qualify a named runtime/model and correctness/performance separately.")
+
         node_paths = (Path("/dev/kgsl-3d0"), Path("/dev/dri/renderD128"))
         nodes = [p for p in node_paths if path_presence(p) is True]
         inaccessible = [p for p in node_paths if path_presence(p) is None]

@@ -53,7 +53,7 @@ PRoot rootfs lives under `$PREFIX/var/lib/proot-distro/`. This is the existing T
 - `/dev/dri/renderD128` — present
 - GPU model: **Adreno 825** (from `cat /sys/class/kgsl/kgsl-3d0/gpu_model`)
 - SoC: **SM8735** (Snapdragon platform)
-- Device: **25053RT47C** (codename: onyx)
+- Device: **[redacted device serial]** (codename: onyx)
 
 **Evidence classification:** verified — direct device read.
 
@@ -145,7 +145,7 @@ Read-only inspection of:
 
 ## 8. Native Termux GPU test
 
-**Observed:** 2026-10-17, on device `25053RT47C` / `onyx`, Android 16, Adreno 825 (SM8735). The read-only native Termux invocation of `vulkaninfo --summary` returned:
+**Observed:** 2026-10-17, on device `[redacted device serial]` / `onyx`, Android 16, Adreno 825 (SM8735). The read-only native Termux invocation of `vulkaninfo --summary` returned:
 
 ```text
 TU: error: ../src/src/freedreno/vulkan/tu_device.cc:1686: device (chip_id = 44030000, gpu_id = 6830) is unsupported (VK_ERROR_INCOMPATIBLE_DRIVER)

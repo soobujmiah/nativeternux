@@ -18,7 +18,7 @@ chmod 700 "$TERNUXX_STATE_DIR" "$LOG_DIR" 2>/dev/null || true
 exec >>"$LOG_FILE" 2>&1
 printf 'wrapper-started-at=%s pid=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$"
 
-if ! "$PREFIX/bin/bash" "$PREFIX/bin/ternuxx" wakelock acquire native.sshd --persistent >/dev/null; then
+if ! "$PREFIX/bin/bash" "$PREFIX/bin/tx" wakelock acquire native.sshd --persistent >/dev/null; then
   printf 'wakelock-acquire=failed-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   exit 1
 fi
@@ -31,7 +31,7 @@ cleanup() {
     kill -TERM "$child" 2>/dev/null || true
     wait "$child" 2>/dev/null || true
   fi
-  "$PREFIX/bin/bash" "$PREFIX/bin/ternuxx" wakelock release native.sshd --persistent >/dev/null 2>&1 || true
+  "$PREFIX/bin/bash" "$PREFIX/bin/tx" wakelock release native.sshd --persistent >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 trap 'exit 0' TERM INT

@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# Canonical Ternuxx CLI entry point for a source checkout.
-set -u
-repo_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P)" || exit 1
-if [ -x "$repo_dir/bin/ternuxx" ]; then
-  exec "$repo_dir/bin/ternuxx" "$@"
-fi
-printf '%s\n' 'Run this command from a complete Ternuxx checkout.' >&2
-exit 127

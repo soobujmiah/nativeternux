@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "termux-boot-cron.schema.json",
+  "title": "Ternuxx Termux:Boot Cron integration status",
+  "type": "object",
+  "required": ["component", "integration_state", "script_path", "script_identity", "companion_app", "actual_device_boot_delivery", "owner_action_required", "safety"],
+  "properties": {
+    "component": {"const": "termux_boot_cron_integration"},
+    "integration_state": {"enum": ["integration_not_configured", "script_configured", "unsafe_or_mismatched"]},
+    "script_path": {"type": "string"},
+    "script_identity": {"enum": ["missing", "match", "unsafe", "mismatch"]},
+    "companion_app": {"enum": ["confirmed_installed", "confirmed_not_installed", "unknown"]},
+    "companion_package": {"const": "com.termux.boot"},
+    "companion_app_enabled": {"enum": ["enabled", "disabled", "unknown"]},
+    "boot_completed_receiver": {"enum": ["enabled", "disabled", "absent", "unknown"]},
+    "last_script_result": {"type": ["object", "null"]},
+    "scheduler_started_by_script": {"type": "boolean"},
+    "scheduler_state": {"type": "string"},
+    "scheduler_process_alive": {"type": ["boolean", "null"]},
+    "actual_device_boot_delivery": {"const": "not_yet_verified"},
+    "owner_action_required": {"type": "string"},
+    "safety": {"type": "object"}
+  },
+  "additionalProperties": true
+}

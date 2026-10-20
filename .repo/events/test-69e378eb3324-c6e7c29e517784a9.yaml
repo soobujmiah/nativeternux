@@ -1,0 +1,9 @@
+event_id: test-69e378eb3324-c6e7c29e517784a9
+repository: soobujmiah/ternuxx
+commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+kind: test
+occurred_at: '2026-10-18T19:42:15Z'
+status: passed
+summary: 'Native Termux full suite: 343/343 passed in 86.969 seconds over SSH 8022
+  on dirty working tree based at 69e378e; tx proot status read-only live check observed
+  one host PRoot candidate with ownership unverified and no guest entry'

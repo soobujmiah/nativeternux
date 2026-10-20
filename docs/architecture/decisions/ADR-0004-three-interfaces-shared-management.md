@@ -1,4 +1,4 @@
-# ADR-0004: Three interfaces share one management layer
+# ADR-0004: Management clients share one service layer
 
 - **Date:** 2026-10-17
 - **Status:** accepted by owner on 2026-10-18; implementation is incremental
@@ -19,7 +19,7 @@ Create one shared management layer as the authority for configuration, capabilit
 - Automation uses named application-service operations, never a separate unrestricted shell path.
 - All interfaces use the same schemas, capability registry, authorization rules, operation IDs and evidence records.
 
-The CLI management service, versioned local API, loopback HTTP server, authorization/session primitives, and a read-only foreground runtime now exist. The interactive TUI, Web UI, and general Graphical management client do not yet exist; the recent PRoot shortcut manager is a task-specific X11 dialog and is not the shared interface layer. HTTP mutation dispatch remains disabled. See [shared management implementation plan](../SHARED-MANAGEMENT-PLAN.md) for the staged completion sequence and current gaps.
+The CLI management service, versioned local API, loopback HTTP server, authorization/session primitives, and read-only foreground runtime now exist. The TUI provides service-backed views and an allowlisted typed operation runner with explicit mutation confirmation. The Web client provides authenticated, loopback-only read-only views and uses a one-time bootstrap secret displayed in the terminal. HTTP mutation dispatch remains disabled. General Graphical management is not implemented; the PRoot shortcut manager remains a task-specific X11 dialog. Full operation parity and a browser bootstrap that avoids terminal secret delivery remain open. See [shared management implementation plan](../SHARED-MANAGEMENT-PLAN.md) for current gaps.
 
 ## Alternatives considered
 

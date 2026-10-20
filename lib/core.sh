@@ -153,26 +153,17 @@ nt_require_termux() {
 
 # --- Display number allocation ------------------------------------------
 nt_find_free_display() {
-  # :0 is the existing Ternux PRoot allocation on the owner device. Prefer
-  # native Termux displays :1 through :10; recover only positively stale,
-  # same-UID lock/socket pairs. Ambiguous artifacts stay unavailable.
-  local max_try=10
+  # Native Ternuxx has one stable default display. Never silently move an
+  # existing workstation session to another display when :1 is occupied.
   local tmp_root="${TMPDIR:-/data/data/com.termux/files/usr/tmp}"
   local helper="${_TN_LIB_DIR:-}/x11_display.py" result
-  for n in $(seq 1 "$max_try"); do
-    if [ -f "$helper" ]; then
-      result="$(python3 "$helper" "$tmp_root" "$n" 2>/dev/null)" || continue
-      [ "$result" = "recovered" ] && nt_warn "Recovered stale Termux:X11 socket and lock for :$n."
-      printf '%s\n' "$n"
-      return 0
-    fi
-    [ ! -e "$tmp_root/.X$n-lock" ] || continue
-    [ ! -e "$tmp_root/.X11-unix/X$n" ] || continue
-    printf '%s\n' "$n"
-    return 0
-  done
-  printf '%s\n' "error"
-  return 1
+  if [ -f "$helper" ]; then
+    result="$(python3 "$helper" "$tmp_root" 1 2>/dev/null)" || result=busy
+    [ "$result" = "available" ] || { printf '%s\n' error; return 1; }
+  else
+    [ ! -e "$tmp_root/.X1-lock" ] && [ ! -e "$tmp_root/.X11-unix/X1" ] || { printf '%s\n' error; return 1; }
+  fi
+  printf '%s\n' 1
 }
 
 # --- Process tracking ---------------------------------------------------

@@ -29,7 +29,49 @@ class BootProfilesTest(unittest.TestCase):
         self.assertTrue(result["ready"])
         self.assertTrue(result["safety"]["read_only"])
         self.assertFalse(result["safety"]["script_installed"])
+        self.assertEqual(result["generated_script"].encode("utf-8"), boot_profiles._managed_script("cli-only"))
         self.assertFalse(self.state.exists())
+
+    def test_profile_status_distinguishes_configured_script_identity(self):
+        profile_path = self.state / "boot/profile.json"
+        script_path = self.home / ".termux/boot" / boot_profiles.BOOT_SCRIPT_NAME
+        profile_path.parent.mkdir(parents=True)
+        profile_path.write_text(json.dumps({
+            "schema_version": 1, "owner": "ternuxx", "provider": "native", "profile": "native",
+        }))
+        profile_path.chmod(0o600)
+        script_path.parent.mkdir(parents=True)
+        script_path.write_bytes(boot_profiles._managed_script("native"))
+        script_path.chmod(0o700)
+        args = dict(home=self.home, state_dir=self.state, prefix="/data/data/com.termux/files/usr",
+                    which=lambda name: f"/prefix/bin/{name}" if name in {"tx", "termux-x11", "xfce4-session"} else None)
+
+        self.assertEqual(boot_profiles.status(**args)["managed_script_identity"], "match")
+        script_path.write_bytes(boot_profiles._legacy_managed_script("native"))
+        self.assertEqual(boot_profiles.status(**args)["managed_script_identity"], "legacy_match")
+        script_path.write_text("#!/bin/sh\n# changed after configuration\n")
+        script_path.chmod(0o700)
+        self.assertEqual(boot_profiles.status(**args)["managed_script_identity"], "mismatch")
+        script_path.unlink()
+        self.assertEqual(boot_profiles.status(**args)["managed_script_identity"], "missing")
+
+    def test_profile_status_marks_unsafe_managed_script_without_following_symlink(self):
+        profile_path = self.state / "boot/profile.json"
+        profile_path.parent.mkdir(parents=True)
+        profile_path.write_text(json.dumps({
+            "schema_version": 1, "owner": "ternuxx", "provider": "native", "profile": "cli-only",
+        }))
+        profile_path.chmod(0o600)
+        script_path = self.home / ".termux/boot" / boot_profiles.BOOT_SCRIPT_NAME
+        script_path.parent.mkdir(parents=True)
+        outside = self.home / "outside-script"
+        outside.write_bytes(boot_profiles._managed_script("cli-only"))
+        script_path.symlink_to(outside)
+        result = boot_profiles.status(
+            home=self.home, state_dir=self.state, prefix="/data/data/com.termux/files/usr",
+        )
+        self.assertEqual(result["managed_script_identity"], "unsafe")
+        self.assertTrue(outside.exists())
 
     def test_profile_status_reads_default_without_creating_state(self):
         result = boot_profiles.status(
@@ -38,10 +80,11 @@ class BootProfilesTest(unittest.TestCase):
         )
         self.assertEqual(result["requested_profile"], "cli-only")
         self.assertEqual(result["configuration_source"], "default")
+        self.assertEqual(result["managed_script_identity"], "not_configured")
         self.assertFalse(self.state.exists())
 
     def test_native_plan_checks_dependencies_and_separates_gui_visibility(self):
-        available = {"ternuxx": "/prefix/bin/ternuxx", "termux-x11": "/prefix/bin/termux-x11",
+        available = {"tx": "/prefix/bin/tx", "termux-x11": "/prefix/bin/termux-x11",
                      "xfce4-session": "/prefix/bin/xfce4-session"}
         result = boot_profiles.preview(
             "native", home=self.home, state_dir=self.state,
@@ -54,9 +97,10 @@ class BootProfilesTest(unittest.TestCase):
             script.flush()
             syntax = subprocess.run(["bash", "-n", script.name], capture_output=True, text=True, check=False)
         self.assertEqual(syntax.returncode, 0, syntax.stderr)
-        self.assertIn('exec "/data/data/com.termux/files/usr/bin/ternuxx" start', result["generated_script"])
-        self.assertIn("manager requests Termux:X11 Android activity", result["actions"][1])
-        self.assertIn("visibility remains unverified", result["actions"][1])
+        self.assertIn('exec "/data/data/com.termux/files/usr/bin/tx" start', result["generated_script"])
+        self.assertEqual(result["generated_script"].encode("utf-8"), boot_profiles._managed_script("native"))
+        self.assertIn("desktop manager keeps Android Activity launch disabled by default", result["actions"][1])
+        self.assertIn("open Termux:X11 manually", result["actions"][1])
 
         missing = boot_profiles.preview(
             "native", home=self.home, state_dir=self.state,
@@ -72,10 +116,11 @@ class BootProfilesTest(unittest.TestCase):
             result = boot_profiles.preview(
                 profile, home=self.home, state_dir=self.state,
                 prefix="/data/data/com.termux/files/usr",
-                which=lambda name: f"/prefix/bin/{name}" if name in {"ternuxx", "termux-x11", "xfce4-session"} else None,
+                which=lambda name: f"/prefix/bin/{name}" if name in {"tx", "termux-x11", "xfce4-session"} else None,
             )
             self.assertEqual(set(result), expected)
             self.assertEqual(result["component"], "boot_profile_preview")
+            self.assertEqual(result["schema_version"], 2)
             self.assertEqual(result["requested_profile"], profile)
             self.assertEqual(result["configured_profile"], "cli-only")
             self.assertIn(result["configuration_source"], schema["properties"]["configuration_source"]["enum"])
@@ -120,7 +165,7 @@ class BootProfilesTest(unittest.TestCase):
                 )
 
     def test_enable_requires_confirmed_boot_app_and_installs_only_owned_files(self):
-        available = {"ternuxx": "/prefix/bin/ternuxx", "termux-x11": "/prefix/bin/termux-x11",
+        available = {"tx": "/prefix/bin/tx", "termux-x11": "/prefix/bin/termux-x11",
                      "xfce4-session": "/prefix/bin/xfce4-session"}
         preview = boot_profiles.enable(
             profile="native", home=self.home, state_dir=self.state,
@@ -166,7 +211,7 @@ class BootProfilesTest(unittest.TestCase):
         self.assertEqual(len(list((self.state / "operations").glob("*.json"))), 1)
 
     def test_disable_is_preview_first_and_preserves_unrelated_boot_files(self):
-        available = {"ternuxx": "/prefix/bin/ternuxx", "termux-x11": "/prefix/bin/termux-x11",
+        available = {"tx": "/prefix/bin/tx", "termux-x11": "/prefix/bin/termux-x11",
                      "xfce4-session": "/prefix/bin/xfce4-session"}
         boot_profiles.enable(
             profile="native", home=self.home, state_dir=self.state,
@@ -190,7 +235,7 @@ class BootProfilesTest(unittest.TestCase):
         self.assertEqual({record["status"] for record in records}, {"complete"})
 
     def test_enable_rolls_back_partial_write_and_records_failure(self):
-        available = {"ternuxx": "/prefix/bin/ternuxx", "termux-x11": "/prefix/bin/termux-x11",
+        available = {"tx": "/prefix/bin/tx", "termux-x11": "/prefix/bin/termux-x11",
                      "xfce4-session": "/prefix/bin/xfce4-session"}
         real_write = boot_profiles._atomic_write
         def fail_script(path, data, mode):
@@ -217,7 +262,7 @@ class BootProfilesTest(unittest.TestCase):
         boot_dir.mkdir(parents=True)
         managed_path = boot_dir / boot_profiles.BOOT_SCRIPT_NAME
         managed_path.write_text("# user script\n")
-        available = {"ternuxx": "/prefix/bin/ternuxx", "termux-x11": "/prefix/bin/termux-x11",
+        available = {"tx": "/prefix/bin/tx", "termux-x11": "/prefix/bin/termux-x11",
                      "xfce4-session": "/prefix/bin/xfce4-session"}
         with self.assertRaisesRegex(ValueError, "unrecognized startup"):
             boot_profiles.enable(

@@ -24,17 +24,17 @@ nt_cmd_reboot() {
           *) nt_fail "Unknown reboot prepare option: $1"; return 2 ;;
         esac
       done
-      [ -n "$test_id" ] && [ -n "$baseline" ] || { nt_fail "Usage: ternuxx reboot prepare --test-id ID --baseline-json JSON"; return 2; }
+      [ -n "$test_id" ] && [ -n "$baseline" ] || { nt_fail "Usage: tx reboot prepare --test-id ID --baseline-json JSON"; return 2; }
       _nt_management_call --operation continuity.prepare-reboot-test --test-id "$test_id" --baseline-json "$baseline"
       ;;
     verify)
       local test_id="${1:-}"
-      [ -n "$test_id" ] && [ "$#" -eq 1 ] || { nt_fail "Usage: ternuxx reboot verify <test-id>"; return 2; }
+      [ -n "$test_id" ] && [ "$#" -eq 1 ] || { nt_fail "Usage: tx reboot verify <test-id>"; return 2; }
       _nt_management_call --operation continuity.verify-reboot-test --test-id "$test_id"
       ;;
     resume-info)
       local test_id="${1:-}"
-      [ -n "$test_id" ] || { nt_fail "Usage: ternuxx reboot resume-info <test-id>"; return 2; }
+      [ -n "$test_id" ] || { nt_fail "Usage: tx reboot resume-info <test-id>"; return 2; }
       _nt_management_call --operation continuity.resume-info --test-id "$test_id"
       ;;
     *) nt_fail "Supported reboot operations: status, prepare, verify, resume-info"; return 2 ;;
@@ -45,11 +45,11 @@ nt_cmd_boot() {
   local action="${1:-status}"
   case "$action" in
     status)
-      [ "$#" -le 1 ] || { nt_fail "Usage: ternuxx boot status"; return 2; }
+      [ "$#" -le 1 ] || { nt_fail "Usage: tx boot status"; return 2; }
       _nt_management_call --operation boot.status ;;
     gui)
       local choice="${2:-}" confirmed=0 profile
-      [ "$#" -ge 2 ] || { nt_fail "Usage: ternuxx boot gui <on|off> [--yes]"; return 2; }
+      [ "$#" -ge 2 ] || { nt_fail "Usage: tx boot gui <on|off> [--yes]"; return 2; }
       case "$choice" in
         on) profile="native" ;;
         off) profile="cli-only" ;;
@@ -75,7 +75,7 @@ nt_cmd_boot() {
           *) nt_fail "Unknown boot enable option: $1"; return 2 ;;
         esac
       done
-      [ -n "$profile" ] || { nt_fail "Usage: ternuxx boot enable --profile <cli-only|native|proot|hybrid> [--yes]"; return 2; }
+      [ -n "$profile" ] || { nt_fail "Usage: tx boot enable --profile <cli-only|native|proot|hybrid> [--yes]"; return 2; }
       local enable_args=(--operation boot.enable --profile "$profile")
       [ "$confirmed" -eq 1 ] && enable_args+=(--yes)
       _nt_management_call "${enable_args[@]}" ;;
@@ -94,13 +94,13 @@ nt_cmd_boot() {
     profile)
       case "${2:-status}" in
         status)
-          [ "$#" -le 2 ] || { nt_fail "Usage: ternuxx boot profile status"; return 2; }
+          [ "$#" -le 2 ] || { nt_fail "Usage: tx boot profile status"; return 2; }
           _nt_management_call --operation boot.profile.status ;;
         preview)
-          [ "$#" -eq 3 ] || { nt_fail "Usage: ternuxx boot profile preview <cli-only|native|proot|hybrid>"; return 2; }
+          [ "$#" -eq 3 ] || { nt_fail "Usage: tx boot profile preview <cli-only|native|proot|hybrid>"; return 2; }
           _nt_management_call --operation boot.profile.preview --profile "$3" ;;
         *)
-          nt_fail "Usage: ternuxx boot profile status | preview <cli-only|native|proot|hybrid>"
+          nt_fail "Usage: tx boot profile status | preview <cli-only|native|proot|hybrid>"
           return 2 ;;
       esac ;;
     *)
@@ -114,11 +114,11 @@ nt_cmd_wakelock() {
   [ "$#" -gt 0 ] && shift
   case "$action" in
     status)
-      [ "$#" -eq 0 ] || { nt_fail "Usage: ternuxx wakelock status"; return 2; }
+      [ "$#" -eq 0 ] || { nt_fail "Usage: tx wakelock status"; return 2; }
       _nt_management_call --operation wakelock.status ;;
     acquire|release)
       local owner="${1:-}" persistent=0
-      [ -n "$owner" ] || { nt_fail "Usage: ternuxx wakelock $action <owner> [--persistent]"; return 2; }
+      [ -n "$owner" ] || { nt_fail "Usage: tx wakelock $action <owner> [--persistent]"; return 2; }
       shift
       if [ "${1:-}" = "--persistent" ]; then persistent=1; shift; fi
       [ "$#" -eq 0 ] || { nt_fail "Unexpected Wake Lock option"; return 2; }

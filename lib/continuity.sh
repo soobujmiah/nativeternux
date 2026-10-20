@@ -6,7 +6,7 @@ nt_cmd_checkpoint() {
   if [ "$#" -gt 0 ]; then shift; fi
   case "$action" in
     prepare|verify) ;;
-    *) nt_fail "Usage: ternuxx checkpoint {prepare|verify} [options]"; return 2 ;;
+    *) nt_fail "Usage: tx checkpoint {prepare|verify} [options]"; return 2 ;;
   esac
   local tool
   for tool in python3; do

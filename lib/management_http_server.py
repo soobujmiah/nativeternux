@@ -219,6 +219,28 @@ class LoopbackManagementServer:
                         return
                     normalized[key] = values[0]
 
+                if self.command == "GET" and self.path == "/":
+                    expected_host = f"127.0.0.1:{server_owner.port}"
+                    if normalized.get("host") != expected_host:
+                        self._send(403, {"ok": False, "error": "host_rejected"})
+                        return
+                    if normalized.get("origin") not in (None, f"http://{expected_host}"):
+                        self._send(403, {"ok": False, "error": "origin_rejected"})
+                        return
+                    from pathlib import Path
+                    page = Path(__file__).with_name("management_web_ui.html").read_bytes()
+                    headers = {
+                        "Content-Type": "text/html; charset=utf-8",
+                        "Content-Length": str(len(page)),
+                        "Cache-Control": "no-store",
+                        "X-Content-Type-Options": "nosniff",
+                        "Referrer-Policy": "no-referrer",
+                        "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'",
+                        "Connection": "close",
+                    }
+                    self._send(200, headers, page)
+                    return
+
                 raw_length = normalized.get("content-length")
                 body = b""
                 if raw_length is not None:

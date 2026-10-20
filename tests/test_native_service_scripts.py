@@ -45,6 +45,30 @@ class NativeServiceScriptTests(unittest.TestCase):
             self.assertNotIn("proot", events.read_text().lower())
             self.assertEqual((state / "continuity/boot-logs/ternuxx-services.log").stat().st_mode & 0o777, 0o600)
 
+    def test_boot_entry_accepts_legacy_state_environment_without_changing_new_default(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="ternuxx-boot-legacy-state-") as temp:
+            root = Path(temp)
+            prefix = root / "prefix"
+            home = root / "home"
+            state = home / ".local/share/nativeternux"
+            events = root / "events.log"
+            executable(prefix / "etc/profile.d/start-services.sh", f"echo supervisor-started >> '{events}'\n")
+            executable(prefix / "bin/sv", f"#!/bin/sh\necho \"$*\" >> '{events}'\necho 'run: ternuxx-sshd: (pid 123) 5s'\n")
+            env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
+                   "TERMUX_VERSION": "fixture", "NATIVERNUX_STATE_DIR": str(state),
+                   "TERNUXX_STATE_DIR": "", "PATH": f"{prefix / 'bin'}:{os.environ['PATH']}"}
+            result = subprocess.run(["bash", str(BOOT_SCRIPT)], env=env, capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue((state / "continuity/boot-logs/ternuxx-services.log").is_file())
+            self.assertIn("result=ready; provider=native_termux; proot_dependency=false",
+                          (state / "continuity/boot-logs/ternuxx-services.log").read_text())
+
+    def test_recovery_boot_source_keeps_legacy_install_and_state_fallback(self) -> None:
+        source = (ROOT / "scripts/termux-boot/ternuxx-recovery").read_text(encoding="utf-8")
+        self.assertIn("NATIVERNUX_STATE_DIR:-$HOME/.local/share/ternuxx", source)
+        self.assertIn('"$PREFIX/lib/nativeternux/reboot_recovery.py"', source)
+        self.assertIn('NATIVERNUX_STATE_DIR:-$HOME/.local/share/ternuxx', source)
+
     def test_service_wrapper_owns_and_releases_its_persistent_lease(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ternuxx-runit-script-") as temp:
             root = Path(temp)
@@ -55,7 +79,7 @@ class NativeServiceScriptTests(unittest.TestCase):
             config.parent.mkdir(parents=True)
             config.write_text("fixture\n")
             events = root / "events.log"
-            executable(prefix / "bin/ternuxx", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{events}'\nprintf 'state=%s\\n' \"${{TERNUXX_STATE_DIR:-}}\" >> '{events}'\n")
+            executable(prefix / "bin/tx", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{events}'\nprintf 'state=%s\\n' \"${{TERNUXX_STATE_DIR:-}}\" >> '{events}'\n")
             executable(prefix / "bin/sshd", f"#!/bin/sh\nif [ \"$1\" = -t ]; then exit 0; fi\necho daemon-started >> '{events}'\nexec sleep 60\n")
             (prefix / "bin/bash").symlink_to(shutil.which("bash"))
             env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),

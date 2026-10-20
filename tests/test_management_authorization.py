@@ -27,6 +27,12 @@ class ManagementAuthorizationTests(unittest.TestCase):
         self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["diagnostics.read"]))
         self.assertTrue(management_authorization.authorize("proot.shortcuts.apply", ["applications.manage"]))
 
+    def test_proot_health_uses_read_scope_and_is_not_mutating(self) -> None:
+        import management_sessions
+        self.assertEqual(management_authorization.required_capability("proot.sessions.health"), "diagnostics.read")
+        self.assertIn("proot.sessions.health", management_sessions.READ_ONLY_OPERATIONS)
+        self.assertNotIn("proot.sessions.health", management_sessions.MUTATING_OPERATIONS)
+
     def test_unknown_or_malformed_operation_fails_closed(self) -> None:
         for operation in ("shell.exec", "adb.forward", None, [], {"ssh.inspect": True}):
             self.assertIsNone(management_authorization.required_capability(operation))

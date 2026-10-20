@@ -111,7 +111,7 @@ class SshDiagnosticsTests(unittest.TestCase):
         def runner(args: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
             calls.append(args)
             if args[1] == "status":
-                return subprocess.CompletedProcess(args, 0, "run: ternuxx-sshd: (pid 1) 2s\n", "")
+                return subprocess.CompletedProcess(args, 0, f"run: {args[2]}: (pid 1) 2s\n", "")
             if args[1] == "-t":
                 return subprocess.CompletedProcess(args, 0, "", "")
             port = "8027" if str(self.home / ".config/ternuxx/sshd_recovery.conf") in args else "8026"
@@ -136,6 +136,8 @@ class SshDiagnosticsTests(unittest.TestCase):
         self.assertIn(checks["policy_context"], {"default_without_connection_context", "native_user_loopback"})
         self.assertEqual(checks["configured_policy"]["port"], ["8026"])
         self.assertEqual(checks["configured_listener_bind_scope"], "wildcard")
+        status_call = next(call for call in calls if len(call) > 1 and call[1] == "status")
+        self.assertEqual(status_call, ["/synthetic/sv", "status", str(self.prefix / "var/service/ternuxx-sshd")])
         self.assertEqual(checks["managed_service"]["status"], "running")
         timing = checks["managed_service"]["startup_timing"]
         self.assertIn(timing["status"], {"observed", "unavailable", "inconsistent"})

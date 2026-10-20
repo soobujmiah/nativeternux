@@ -15,7 +15,7 @@ import tempfile
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "scripts/ternuxx-installed"
+SOURCE = ROOT / "scripts/tx-installed"
 MAX_SNAPSHOT = 1024 * 1024
 
 
@@ -69,7 +69,7 @@ def _target(prefix: str | os.PathLike[str]) -> Path:
     parent = root / "bin"
     if parent.is_symlink() or not parent.is_dir():
         raise InstallError("Termux PREFIX/bin must be an existing real directory")
-    return parent / "ternuxx"
+    return parent / "tx"
 
 
 def preview(*, prefix: str | os.PathLike[str]) -> dict[str, object]:
@@ -109,7 +109,7 @@ def preview(*, prefix: str | os.PathLike[str]) -> dict[str, object]:
         "old": original.decode("utf-8", "replace").splitlines() if original is not None else [],
         "new": desired.decode("utf-8").splitlines(),
     }
-    record["impact"] = "Atomically replaces only PREFIX/bin/ternuxx. Keeps the existing nativeternux executable and libraries untouched; rollback restores the exact prior entrypoint."
+    record["impact"] = "Atomically replaces only PREFIX/bin/tx. Keeps the existing nativeternux executable and libraries untouched; rollback restores the exact prior entrypoint."
     return record
 
 

@@ -510,19 +510,23 @@ def inspect_native(
     managed_config = home_path / ".config/ternuxx/sshd_recovery.conf"
     managed["config_present"] = managed_config.is_file()
     sv = which("sv")
+    service_dir = prefix_path / "var/service/ternuxx-sshd"
     service_status_line = ""
     service_pid: int | None = None
     if sv:
-        service_result = _run_readonly(runner, [sv, "status", "ternuxx-sshd"])
+        service_result = _run_readonly(runner, [sv, "status", str(service_dir)])
         if service_result is not None:
             service_status_line = service_result.stdout.strip().splitlines()[0] if service_result.stdout.strip() else ""
-            run_prefix = "run: ternuxx-sshd: "
-            down_prefix = "down: ternuxx-sshd: "
-            if service_status_line.startswith(run_prefix):
+            run_prefixes = (f"run: {service_dir}: ", "run: ternuxx-sshd: ")
+            down_prefixes = (f"down: {service_dir}: ", "down: ternuxx-sshd: ")
+            run_prefix = next((prefix for prefix in run_prefixes if service_status_line.startswith(prefix)), None)
+            down_prefix = next((prefix for prefix in down_prefixes if service_status_line.startswith(prefix)), None)
+            if run_prefix is not None:
                 managed["status"] = "running"
                 pid_match = re.match(r"\(pid ([1-9][0-9]*)\)(?:\s|$)", service_status_line[len(run_prefix):])
                 service_pid = int(pid_match.group(1)) if pid_match else None
-            elif service_status_line.startswith(down_prefix):
+                service_status_line = "run: ternuxx-sshd: " + service_status_line[len(run_prefix):]
+            elif down_prefix is not None:
                 managed["status"] = "stopped"
             else:
                 managed["status"] = "unknown"
@@ -575,7 +579,7 @@ def inspect_native(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ternuxx ssh inspect")
+    parser = argparse.ArgumentParser(prog="tx ssh inspect")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if os.environ.get("TERMUX_VERSION") is None or os.environ.get("PREFIX") != "/data/data/com.termux/files/usr":

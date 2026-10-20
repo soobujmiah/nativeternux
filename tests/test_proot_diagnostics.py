@@ -10,6 +10,7 @@ import tempfile
 import sys
 from pathlib import Path
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
@@ -17,82 +18,35 @@ import proot_diagnostics  # noqa: E402
 
 
 class ProotDiagnosticsTests(unittest.TestCase):
-    def _ternux_state_fixture(self, home: Path, contents: str = "user=guest\n") -> Path:
-        state_dir = home / ".local" / "share" / "ternux"
-        state_dir.mkdir(parents=True, mode=0o700)
-        for directory in (home / ".local", home / ".local" / "share", state_dir):
-            directory.chmod(0o700)
-        state = state_dir / "state"
-        state.write_text(contents)
-        state.chmod(0o600)
-        return state_dir
+    def _rootfs_fixture(self, base: Path, passwd: str) -> Path:
+        root = base / "prefix" / "var/lib/proot-distro/containers/debian/rootfs"
+        (root / "etc").mkdir(parents=True)
+        (root / "etc/passwd").write_text(passwd)
+        return base / "prefix"
 
-    def test_resolves_ternux_guest_user_from_private_state_without_emitting_it(self):
-        with tempfile.TemporaryDirectory(prefix="ternuxx-profile-home-") as temp:
-            home = Path(temp) / "home"
-            home.mkdir(mode=0o700)
-            state_dir = self._ternux_state_fixture(home)
-            calls = []
-            def runner(args, **kwargs):
-                calls.append((args, kwargs))
-                return SimpleNamespace(returncode=0, stdout=json.dumps({
-                    "command": "state", "status": "ok", "version": "1.4.0",
-                    "state_dir": str(state_dir),
-                }))
-            user = proot_diagnostics.resolve_ternux_guest_user(
-                home=home, path="/prefix/bin", which=lambda name, path=None: "/prefix/bin/ternux",
-                runner=runner,
-            )
-            self.assertEqual(user, "guest")
-            self.assertEqual(calls[0][0], ["/prefix/bin/ternux", "--json", "state"])
-            self.assertEqual(calls[0][1]["timeout"], 10)
-            self.assertEqual(stat.S_IMODE(state_dir.joinpath("state").stat().st_mode), 0o600)
+    def test_resolves_unique_regular_guest_account_from_rootfs_without_ternux(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-rootfs-user-") as temp:
+            prefix = self._rootfs_fixture(Path(temp),
+                "root:x:0:0:root:/root:/bin/bash\n"
+                "sbj:x:1000:1000:Owner:/home/sbj:/bin/bash\n"
+                "nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n")
+            self.assertEqual(proot_diagnostics.resolve_proot_guest_user(
+                distro="debian", prefix=str(prefix)), "sbj")
 
-    def test_ternux_guest_user_resolution_rejects_unsafe_state_paths_and_accounts(self):
-        with tempfile.TemporaryDirectory(prefix="ternuxx-profile-home-") as temp:
-            home = Path(temp) / "home"
-            home.mkdir(mode=0o700)
-            outside = Path(temp) / "outside"
-            outside.mkdir(mode=0o700)
-            outside_state = self._ternux_state_fixture(outside)
-            def cli(state_dir):
-                return lambda *_args, **_kwargs: SimpleNamespace(
-                    returncode=0, stdout=json.dumps({"command": "state", "status": "ok",
-                        "version": "1.4.0", "state_dir": str(state_dir)}))
+    def test_guest_user_resolution_rejects_ambiguous_or_unsafe_rootfs(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-rootfs-user-") as temp:
+            prefix = self._rootfs_fixture(Path(temp),
+                "one:x:1000:1000:One:/home/one:/bin/bash\n"
+                "two:x:1001:1001:Two:/home/two:/bin/bash\n")
+            with self.assertRaisesRegex(proot_diagnostics.GuestProfileError, "ambiguous"):
+                proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=str(prefix))
             with self.assertRaises(proot_diagnostics.GuestProfileError):
-                proot_diagnostics.resolve_ternux_guest_user(
-                    home=home, which=lambda *_a, **_kw: "/prefix/bin/ternux", runner=cli(outside_state))
-            safe_state = self._ternux_state_fixture(home, "user=root\n")
-            with self.assertRaises(proot_diagnostics.GuestProfileError):
-                proot_diagnostics.resolve_ternux_guest_user(
-                    home=home, which=lambda *_a, **_kw: "/prefix/bin/ternux", runner=cli(safe_state))
-            (safe_state / "state").write_text("user=guest\nuser=other\n")
-            (safe_state / "state").chmod(0o600)
-            with self.assertRaises(proot_diagnostics.GuestProfileError):
-                proot_diagnostics.resolve_ternux_guest_user(
-                    home=home, which=lambda *_a, **_kw: "/prefix/bin/ternux", runner=cli(safe_state))
-
-    def test_ternux_guest_user_resolution_rejects_loose_permissions_and_symlink(self):
-        with tempfile.TemporaryDirectory(prefix="ternuxx-profile-home-") as temp:
-            home = Path(temp) / "home"
-            home.mkdir(mode=0o700)
-            state_dir = self._ternux_state_fixture(home)
-            response = json.dumps({"command": "state", "status": "ok", "version": "1.4.0",
-                                   "state_dir": str(state_dir)})
-            runner = lambda *_args, **_kwargs: SimpleNamespace(returncode=0, stdout=response)
-            state = state_dir / "state"
-            state.chmod(0o644)
-            with self.assertRaises(proot_diagnostics.GuestProfileError):
-                proot_diagnostics.resolve_ternux_guest_user(
-                    home=home, which=lambda *_a, **_kw: "/prefix/bin/ternux", runner=runner)
-            state.unlink()
-            target = Path(temp) / "target-state"
-            target.write_text("user=guest\n")
-            target.chmod(0o600)
-            state.symlink_to(target)
-            with self.assertRaises(proot_diagnostics.GuestProfileError):
-                proot_diagnostics.resolve_ternux_guest_user(
-                    home=home, which=lambda *_a, **_kw: "/prefix/bin/ternux", runner=runner)
+                proot_diagnostics.resolve_proot_guest_user(distro="../debian", prefix=str(prefix))
+            passwd = prefix / "var/lib/proot-distro/containers/debian/rootfs/etc/passwd"
+            passwd.unlink()
+            passwd.symlink_to(Path(temp) / "outside")
+            with self.assertRaisesRegex(proot_diagnostics.GuestProfileError, "identity"):
+                proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=str(prefix))
 
     def test_host_proot_process_observation_reports_candidate_without_ownership(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-proc-") as temp:
@@ -176,78 +130,63 @@ class ProotDiagnosticsTests(unittest.TestCase):
             self.assertIsInstance(report["installed_distributions"], list)
             self.assertEqual(report["installed_distributions"], sorted(set(report["installed_distributions"])))
 
-    def test_ternux_guest_verify_uses_typed_readonly_commands_and_reports_partial_state(self):
+    def test_proot_guest_verify_uses_fixed_readonly_probe_and_no_ternux_cli(self):
         calls = []
         outputs = [
             SimpleNamespace(returncode=0, stdout="Installed containers:\n * Debian\nLog in with: proot-distro login <name>\n"),
-            SimpleNamespace(returncode=0, stdout="ternux guest v1.4.0\nhttps://github.com/soobujmiah/ternux\n"),
-            SimpleNamespace(returncode=1, stdout="ternux Debian guest status\n  Display: :1\n  X11: reachable\n  Audio: PulseAudio not reachable\n  Renderer: zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))\n"),
+            SimpleNamespace(returncode=0, stdout="Display: :1\nX11: reachable\nAudio: PulseAudio reachable\nRenderer: zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))\n"),
         ]
         def runner(args, **kwargs):
             calls.append((args, kwargs))
             return outputs.pop(0)
-        report = proot_diagnostics.verify_ternux_guest(
-            distro="debian", user="sbj", display=":1", backend="zink",
-            which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
-            runner=runner,
-        )
-        self.assertEqual(report["status"], "partial")
+        with mock.patch.object(proot_diagnostics, "_native_pulse_cookie_path",
+                               return_value=Path("/native/private/pulse-cookie")):
+            report = proot_diagnostics.verify_proot_guest(
+                distro="debian", user="sbj", display=":1", backend="zink",
+                which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
+                runner=runner,
+            )
+        self.assertEqual(report["status"], "complete")
+        self.assertEqual(report["component"], "proot_guest_diagnostics")
         self.assertTrue(report["guest_entered"])
-        self.assertEqual(report["profile_owner"], "unverified")
-        self.assertEqual(report["companion_version"], "1.4.0")
-        self.assertEqual(report["checks"], {
-            "observed_display": ":1", "x11": "reachable", "audio": "unavailable",
-            "renderer_class": "zink_turnip",
-            "renderer": "zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))",
-        })
+        self.assertIsNone(report["companion_version"])
+        self.assertEqual(len(calls), 2)
         command = calls[1][0]
         self.assertIn("--isolated", command)
         self.assertNotIn("--shared-tmp", command)
         self.assertIn("/data/data/com.termux/files/usr/tmp/.X11-unix:/tmp/.X11-unix", command)
-        self.assertEqual(command[2], "--isolated")
         self.assertIn("/dev/kgsl-3d0:/dev/kgsl", command)
         self.assertIn("DISPLAY=:1", command)
         self.assertIn("PULSE_SERVER=tcp:127.0.0.1:4713", command)
         self.assertIn("MESA_SHADER_CACHE_DISABLE=true", command)
-        self.assertEqual(command[-2:], ["ternux", "--version"])
-        self.assertEqual(calls[2][0][-2:], ["ternux", "status"])
-        self.assertNotIn("-c", command)
+        self.assertEqual(command[-3], "/bin/sh")
+        self.assertEqual(command[-2], "-c")
+        self.assertIn("glxinfo -B", command[-1])
+        self.assertFalse(any(item == "ternux" or item.endswith("/ternux") for item in command))
+        self.assertIn("/native/private/pulse-cookie:/tmp/.ternuxx-pulse-cookie", command)
+        self.assertIn("PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie", command)
         self.assertTrue(report["read_only"])
         self.assertTrue(report["safety"]["host_home_and_shared_storage_unbound"])
         self.assertTrue(all(value is False for key, value in report["safety"].items()
                             if key != "host_home_and_shared_storage_unbound"))
 
-    def test_guest_verification_includes_native_ternux_status_without_claiming_ownership(self):
-        outputs = [
-            "Installed containers:\n * Debian\nLog in with: proot-distro login <name>\n",
-            json.dumps({"command": "status", "status": "running", "timestamp": "2026-10-18T01:00:13Z",
-                        "version": "1.4.0", "x11_running": "yes", "pulseaudio": "stopped",
-                        "virgl": "stopped", "launcher": "present"}),
-            json.dumps({"command": "backend", "status": "ok", "version": "1.4.0",
-                        "backend": "zink", "renderer": "unknown", "vulkan": "yes",
-                        "available_backends": "zink,virgl"}),
-            "ternux guest v1.4.0\nhttps://github.com/soobujmiah/ternux\n",
-            "Display: :1\nX11: reachable\nAudio: PulseAudio reachable\nRenderer: zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))\n",
-        ]
+    def test_proot_guest_verification_does_not_probe_legacy_ternux_status(self):
         calls = []
+        outputs = [
+            SimpleNamespace(returncode=0, stdout="Installed containers:\n * Debian\n"),
+            SimpleNamespace(returncode=0, stdout="Display: :1\nX11: reachable\nAudio: PulseAudio reachable\nRenderer: zink Turnip\n"),
+        ]
         def runner(args, **kwargs):
             calls.append(args)
-            return SimpleNamespace(returncode=0, stdout=outputs.pop(0))
-        report = proot_diagnostics.verify_ternux_guest(
+            return outputs.pop(0)
+        report = proot_diagnostics.verify_proot_guest(
             distro="debian", user="sbj", display=":1", backend="zink",
-            which=lambda name: {"proot-distro": "/prefix/bin/proot-distro",
-                                "ternux": "/prefix/bin/ternux"}.get(name),
+            which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
             runner=runner,
         )
         self.assertEqual(report["status"], "complete")
-        self.assertEqual(report["native_ternux_status"]["pulseaudio"], "stopped")
-        self.assertEqual(report["native_ternux_status"]["identity"], "unverified")
-        self.assertEqual(report["native_ternux_status"]["backend"], "zink")
-        self.assertEqual(report["native_pulseaudio_endpoint"],
-                         {"status": "unavailable", "server_name": None, "default_sink": None})
-        self.assertEqual(calls[1], ["/prefix/bin/ternux", "--json", "status"])
-        self.assertEqual(calls[2], ["/prefix/bin/ternux", "--json", "backend", "show"])
-        self.assertIn("PULSE_SERVER=tcp:127.0.0.1:4713", calls[3])
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(report["native_ternux_status"]["availability"], "unavailable")
 
     def test_guest_verify_fails_closed_for_unsafe_or_unsupported_inputs(self):
         calls = []
@@ -259,37 +198,21 @@ class ProotDiagnosticsTests(unittest.TestCase):
             {"distro": "debian", "user": "sbj", "display": ":1", "backend": "auto"},
         ):
             with self.subTest(values=values), self.assertRaises(ValueError):
-                proot_diagnostics.verify_ternux_guest(**values, runner=lambda *a, **k: calls.append(a))
+                proot_diagnostics.verify_proot_guest(**values, runner=lambda *a, **k: calls.append(a))
         self.assertEqual(calls, [])
 
-    def test_unverified_companion_never_runs_guest_status(self):
-        outputs = [
-            SimpleNamespace(returncode=0, stdout="Installed containers:\n * Debian\n"),
-            SimpleNamespace(returncode=0, stdout="unexpected command\n"),
-        ]
-        calls = []
-        def runner(args, **kwargs):
-            calls.append(args)
-            return outputs.pop(0)
-        result = proot_diagnostics.verify_ternux_guest(
-            distro="debian", user="sbj", display=":1", backend="zink",
-            which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None, runner=runner)
-        self.assertEqual(result["status"], "unsupported_companion")
-        self.assertEqual(len(calls), 2)
-
     def test_guest_diagnostic_outcomes_match_strict_response_schema(self):
-        schema = json.loads((ROOT / "schemas/ternux-guest-diagnostics.schema.json").read_text())
+        schema = json.loads((ROOT / "schemas/proot-guest-diagnostics.schema.json").read_text())
         inventory = "Installed containers:\n * Debian\nLog in with: proot-distro login <name>\n"
-        companion = "ternux guest v1.4.0\nhttps://github.com/soobujmiah/ternux\n"
         status = "Display: :1\nX11: reachable\nAudio: PulseAudio reachable\nRenderer: zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))\n"
-        outputs = [inventory, companion, status]
+        outputs = [inventory, status]
         def runner(args, **kwargs):
             output = outputs.pop(0)
             return SimpleNamespace(returncode=0, stdout=output)
-        complete = proot_diagnostics.verify_ternux_guest(
+        complete = proot_diagnostics.verify_proot_guest(
             distro="debian", user="sbj", display=":1", backend="zink",
             which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None, runner=runner)
-        absent = proot_diagnostics.verify_ternux_guest(
+        absent = proot_diagnostics.verify_proot_guest(
             distro="debian", user="sbj", display=":1", backend="zink", which=lambda _name: None)
         for report in (complete, absent):
             self.assertEqual(set(report), set(schema["required"]))
@@ -303,15 +226,25 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertEqual(complete["status"], "complete")
         self.assertEqual(absent["status"], "unavailable")
 
+    def test_guest_command_rejects_unsafe_cookie_bind_paths(self):
+        for path in ("relative/cookie", "/tmp/cookie:guest", "/tmp/cookie\n--env=BAD=1"):
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                proot_diagnostics._guest_command(
+                    "/prefix/bin/proot-distro", "sbj", ":1", "zink", "status",
+                    prefix="/prefix", cookie_path=path)
+
     def test_guest_command_disables_default_host_mounts_and_scopes_zink_bindings(self):
         zink = proot_diagnostics._guest_command(
-            "/prefix/bin/proot-distro", "sbj", ":1", "zink", "status", prefix="/prefix")
+            "/prefix/bin/proot-distro", "sbj", ":1", "zink", "status", prefix="/prefix",
+            cookie_path="/native/home/.config/pulse/cookie")
         self.assertIn("--isolated", zink)
         self.assertNotIn("--shared-home", zink)
         self.assertNotIn("--shared-tmp", zink)
         self.assertIn("/prefix/tmp/.X11-unix:/tmp/.X11-unix", zink)
         self.assertIn("/dev/kgsl-3d0:/dev/kgsl", zink)
         self.assertIn("/dev/dri", zink)
+        self.assertIn("/native/home/.config/pulse/cookie:/tmp/.ternuxx-pulse-cookie", zink)
+        self.assertIn("PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie", zink)
         self.assertNotIn("/data/data/com.termux", zink)
         virgl = proot_diagnostics._guest_command(
             "/prefix/bin/proot-distro", "sbj", ":1", "virgl", "status", prefix="/prefix")
@@ -329,9 +262,32 @@ class ProotDiagnosticsTests(unittest.TestCase):
             which=lambda name: "/prefix/bin/pactl" if name == "pactl" else None, runner=runner)
         self.assertEqual(report, {"status": "available", "server_name": "pulseaudio",
                                   "default_sink": "OpenSL_ES_sink"})
-        self.assertEqual(calls[0][0], ["/prefix/bin/pactl", "info"])
+        self.assertEqual(calls[0][0], ["/prefix/bin/pactl", "--server", "tcp:127.0.0.1:4713", "info"])
         self.assertEqual(calls[0][1]["timeout"], 5)
         self.assertTrue(calls[0][1]["capture_output"])
+        self.assertTrue(calls[0][1]["env"]["PULSE_COOKIE"].endswith("/.config/pulse/cookie"))
+
+    def test_native_pulse_cookie_path_rejects_symlink_and_unsafe_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            pulse = home / ".config" / "pulse"
+            pulse.mkdir(parents=True, mode=0o700)
+            (home / ".config").chmod(0o700)
+            pulse.chmod(0o700)
+            cookie = pulse / "cookie"
+            cookie.write_bytes(b"x" * 256)
+            cookie.chmod(0o600)
+            with mock.patch.object(proot_diagnostics.Path, "home", return_value=home):
+                self.assertEqual(proot_diagnostics._native_pulse_cookie_path(), cookie)
+                cookie.chmod(0o640)
+                self.assertIsNone(proot_diagnostics._native_pulse_cookie_path())
+                cookie.chmod(0o600)
+                cookie.unlink()
+                target = pulse / "target"
+                target.write_bytes(b"x" * 256)
+                target.chmod(0o600)
+                cookie.symlink_to(target)
+                self.assertIsNone(proot_diagnostics._native_pulse_cookie_path())
 
     def test_native_pulseaudio_endpoint_distinguishes_unavailable_and_unknown(self):
         missing = proot_diagnostics.inspect_native_pulseaudio_endpoint(which=lambda _name: None)
@@ -379,7 +335,6 @@ class ProotDiagnosticsTests(unittest.TestCase):
     def test_failed_guest_display_reports_visible_host_display_mismatch_without_identity_claim(self):
         outputs = [
             SimpleNamespace(returncode=0, stdout="Installed containers:\n * Debian\nLog in with: proot-distro login <name>\n"),
-            SimpleNamespace(returncode=0, stdout="ternux guest v1.4.0\nhttps://github.com/soobujmiah/ternux\n"),
             SimpleNamespace(returncode=1, stdout="Display: :0\nX11: unavailable\nAudio: PulseAudio reachable\nRenderer: unavailable\n"),
             SimpleNamespace(returncode=0, stdout="16032 termux-x11\n"),
             SimpleNamespace(returncode=0, stdout="termux-x11 :1 -ac\n"),
@@ -388,7 +343,7 @@ class ProotDiagnosticsTests(unittest.TestCase):
         def runner(args, **kwargs):
             calls.append((args, kwargs))
             return outputs.pop(0)
-        report = proot_diagnostics.verify_ternux_guest(
+        report = proot_diagnostics.verify_proot_guest(
             distro="debian", user="sbj", display=":0", backend="zink",
             which=lambda name: {"proot-distro": "/prefix/bin/proot-distro",
                                 "ps": "/prefix/bin/ps"}.get(name),

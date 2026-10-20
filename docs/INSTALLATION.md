@@ -9,6 +9,10 @@ Ternuxx is in active development. Its `install` command uses a saved, preview-fi
 - `ternuxx start`, `stop`, `restart`, and `status` have an ownership-aware implementation in `lib/desktop.sh` and `lib/desktop-supervisor.sh`. The attached Android 16 / aarch64 target has completed start, repeated start, injected startup failure, stop, repeated stop, and preservation checks for the active PRoot login; the owner confirmed the `:1` desktop was visible and heard the audio test. These observations qualify only the recorded target and do not certify other builds. P2's acceptance gate is completed with a new target-native exact-preview validation; the original XFCE pre-consent console capture remains explicitly incomplete. See the [P2 completion evidence](evidence/P2-phase-completion-2026-10-18.md).
 - Device package installation remains an explicit, owner-authorized mutation. Run `ternuxx install --preview`, review the full saved transaction and its plan ID, then apply only that unchanged plan with `ternuxx install --yes --plan-id ID`.
 
+## Timezone default and selection
+
+A new Ternuxx installation uses `Asia/Dhaka` by default. The preference is selectable after installation with `tx mng timezone set IANA_NAME`; `tx mng timezone status` and `list` inspect the resolved setting and available IANA names. A deployment may supply `TERNUXX_INSTALL_TIMEZONE` as an explicit installation preference. A saved owner selection takes precedence. Timezone support uses the installed Android/Termux database when available and does not install packages or call an external geolocation service. Optional IP-based suggestions are not implemented.
+
 ## Requirements under evaluation
 
 ### Planned shell selection (not implemented)

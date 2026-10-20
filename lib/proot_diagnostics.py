@@ -1,4 +1,4 @@
-"""Read-only discovery of installed Termux PRoot distributions."""
+"""Read-only discovery and qualification of Native Termux PRoot guests."""
 from __future__ import annotations
 
 import json
@@ -18,107 +18,72 @@ _GUEST_USER = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$")
 
 
 class GuestProfileError(ValueError):
-    """A Ternux profile cannot be safely used for bounded guest discovery."""
+    """A PRoot guest profile cannot be safely used for bounded discovery."""
 
 
-def resolve_ternux_guest_user(*, home: str | os.PathLike[str],
-                              path: str | None = None,
-                              which: Callable[..., str | None] = shutil.which,
-                              runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run
-                              ) -> str:
-    """Read only the guest username from Ternux's private state file.
-
-    The username is returned for in-process use and must never be included in a
-    response, log, or evidence record. No directory or file is created.
-    """
-    command = which("ternux", path=path) if path is not None else which("ternux")
-    if not command:
-        raise GuestProfileError("installed Ternux CLI is unavailable")
+def resolve_proot_guest_user(*, distro: str, prefix: str) -> str:
+    """Resolve one ordinary account from an installed rootfs without Ternux."""
+    if not isinstance(distro, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,31}", distro):
+        raise GuestProfileError("distro name is invalid")
+    root = Path(prefix) / "var/lib/proot-distro/containers" / distro / "rootfs"
+    passwd = root / "etc/passwd"
     try:
-        result = runner([command, "--json", "state"], capture_output=True,
-                        text=True, timeout=10, check=False)
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise GuestProfileError("Ternux state query failed") from exc
-    try:
-        report = json.loads(result.stdout)
-    except (TypeError, json.JSONDecodeError) as exc:
-        raise GuestProfileError("Ternux state response is invalid") from exc
-    if (result.returncode != 0 or not isinstance(report, dict)
-            or report.get("command") != "state" or report.get("status") != "ok"
-            or not isinstance(report.get("state_dir"), str)
-            or not isinstance(report.get("version"), str)
-            or not _HOST_VERSION.fullmatch(report["version"])):
-        raise GuestProfileError("Ternux state response is unsupported")
-
-    home_path = Path(home).absolute()
-    state_dir = Path(report["state_dir"])
-    if not state_dir.is_absolute():
-        raise GuestProfileError("Ternux state path is not absolute")
-    try:
-        relative = state_dir.relative_to(home_path)
-    except ValueError as exc:
-        raise GuestProfileError("Ternux state path is outside Termux HOME") from exc
-    parts = relative.parts
-    if not parts or any(part in {"", ".", ".."} for part in parts):
-        raise GuestProfileError("Ternux state path is unsafe")
-
-    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
-    file_flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-    descriptors: list[int] = []
-    try:
-        current_fd = os.open(home_path, directory_flags)
-        descriptors.append(current_fd)
-        home_stat = os.fstat(current_fd)
-        if (not stat.S_ISDIR(home_stat.st_mode) or home_stat.st_uid != os.getuid()
-                or stat.S_IMODE(home_stat.st_mode) & 0o077):
-            raise GuestProfileError("Termux HOME permissions are unsafe")
-        for part in parts:
-            current_fd = os.open(part, directory_flags, dir_fd=current_fd)
-            descriptors.append(current_fd)
-            metadata = os.fstat(current_fd)
-            if (not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid != os.getuid()
-                    or stat.S_IMODE(metadata.st_mode) & 0o077):
-                raise GuestProfileError("Ternux state directory permissions are unsafe")
-        state_fd = os.open("state", file_flags, dir_fd=current_fd)
-        descriptors.append(state_fd)
-        state_stat = os.fstat(state_fd)
-        if (not stat.S_ISREG(state_stat.st_mode) or state_stat.st_uid != os.getuid()
-                or stat.S_IMODE(state_stat.st_mode) != 0o600):
-            raise GuestProfileError("Ternux state file permissions are unsafe")
-        chunks: list[bytes] = []
-        total_bytes = 0
-        while True:
-            chunk = os.read(state_fd, 65536)
-            if not chunk:
-                break
-            total_bytes += len(chunk)
-            if total_bytes > 1024 * 1024:
-                raise GuestProfileError("Ternux state file is too large")
-            chunks.append(chunk)
-        text = b"".join(chunks).decode("utf-8")
+        for directory in (root.parent.parent, root.parent, root, root / "etc"):
+            info = directory.lstat()
+            if (not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode)
+                    or info.st_uid != os.getuid()):
+                raise GuestProfileError("installed rootfs identity is unsafe")
+        info = passwd.lstat()
+        if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)
+                or info.st_uid != os.getuid() or info.st_size > 1024 * 1024):
+            raise GuestProfileError("guest account database identity is unsafe")
+        lines = passwd.read_text(encoding="utf-8").splitlines()
     except GuestProfileError:
         raise
-    except (OSError, UnicodeDecodeError, ValueError) as exc:
-        raise GuestProfileError("Ternux state path or file is unavailable or unsafe") from exc
-    finally:
-        for descriptor in reversed(descriptors):
-            try:
-                os.close(descriptor)
-            except OSError:
-                pass
-
-    users = [line.partition("=")[2].strip() for line in text.splitlines()
-             if line.partition("=")[0].strip() == "user"]
-    if len(users) != 1 or not _GUEST_USER.fullmatch(users[0]) or users[0] == "root":
-        raise GuestProfileError("Ternux state has no unique supported non-root guest user")
+    except (OSError, UnicodeError) as exc:
+        raise GuestProfileError("installed guest account database is unavailable") from exc
+    users = []
+    for line in lines:
+        fields = line.split(":")
+        if len(fields) != 7:
+            continue
+        name, _password, uid_text, _gid, _gecos, home, shell = fields
+        if (not _GUEST_USER.fullmatch(name) or name == "root" or not uid_text.isdecimal()
+                or len(uid_text) > 5 or not 1000 <= int(uid_text) < 60000
+                or home != f"/home/{name}" or not shell.startswith("/")):
+            continue
+        users.append(name)
+    if len(users) != 1:
+        raise GuestProfileError("guest account is ambiguous; pass --user NAME")
     return users[0]
+
+
 _DISPLAY = re.compile(r"^:(?:[0-9]|10)$")
-_GUEST_VERSION = re.compile(r"^ternux guest v([0-9][A-Za-z0-9.+~-]{0,31})$")
 _GUEST_SOURCE = "https://github.com/soobujmiah/ternux"
 _HOST_VERSION = re.compile(r"^[0-9][A-Za-z0-9.+~-]{0,31}$")
 _PULSE_SERVER = "tcp:127.0.0.1:4713"
 _PULSE_INFO_VALUE = re.compile(r"^[A-Za-z0-9_.:+-]{1,128}$")
 _X11_DISPLAY_TOKEN = re.compile(r"^:(?:[0-9]|10)$")
+
+
+def _native_pulse_cookie_path() -> Path | None:
+    """Return the existing private cookie only when its owner/path is safe."""
+    cookie = Path.home() / ".config" / "pulse" / "cookie"
+    directory = cookie.parent
+    try:
+        directory_info = directory.lstat()
+        cookie_info = cookie.lstat()
+    except OSError:
+        return None
+    if (not stat.S_ISDIR(directory_info.st_mode) or directory_info.st_uid != os.getuid()
+            or directory_info.st_mode & 0o077 or directory.is_symlink()
+            or directory.absolute() != directory.resolve(strict=False)):
+        return None
+    if (not stat.S_ISREG(cookie_info.st_mode) or cookie_info.st_uid != os.getuid()
+            or cookie_info.st_mode & 0o077 or cookie_info.st_size != 256
+            or cookie.is_symlink() or cookie.absolute() != cookie.resolve(strict=False)):
+        return None
+    return cookie
 
 
 def inspect_native_pulseaudio_endpoint(
@@ -131,8 +96,11 @@ def inspect_native_pulseaudio_endpoint(
     if not command:
         return {**unknown, "status": "unavailable"}
     try:
-        result = runner([command, "info"], capture_output=True, text=True,
-                        timeout=5, check=False)
+        cookie = str(Path.home() / ".config/pulse/cookie")
+        result = runner([command, "--server", _PULSE_SERVER, "info"], capture_output=True, text=True,
+                        timeout=5, check=False,
+                        env={**os.environ, "PULSE_SERVER": _PULSE_SERVER,
+                             "PULSE_COOKIE": cookie, "LC_ALL": "C"})
     except subprocess.TimeoutExpired:
         return unknown
     except OSError:
@@ -372,7 +340,7 @@ def _verification_result(*, status: str, display: str, backend: str,
                          native_pulseaudio_endpoint: dict[str, str | None] | None = None
                          ) -> dict[str, object]:
     return {
-        "component": "ternux_guest_diagnostics",
+        "component": "proot_guest_diagnostics",
         "status": status,
         "distro": "debian",
         "display": display,
@@ -396,7 +364,8 @@ def _verification_result(*, status: str, display: str, backend: str,
 
 
 def _guest_command(manager: str, user: str, display: str, backend: str,
-                   command: str, *, prefix: str = "/data/data/com.termux/files/usr") -> list[str]:
+                   command: str, *, prefix: str = "/data/data/com.termux/files/usr",
+                   cookie_path: str | Path | None = None) -> list[str]:
     args = [manager, "login", "--isolated"]
     if backend == "zink":
         x11_host_dir = str(Path(prefix) / "tmp" / ".X11-unix")
@@ -406,9 +375,18 @@ def _guest_command(manager: str, user: str, display: str, backend: str,
         # The VirGL server uses a socket under Termux TMPDIR; keep the guest
         # isolated from HOME/shared storage while preserving that documented route.
         args.append("--shared-tmp")
+    guest_cookie = None
+    if cookie_path is not None:
+        cookie = Path(cookie_path)
+        if not cookie.is_absolute() or ":" in str(cookie) or "\n" in str(cookie):
+            raise ValueError("PulseAudio cookie bind path must be a safe absolute path")
+        guest_cookie = "/tmp/.ternuxx-pulse-cookie"
+        args.extend(["--bind", f"{cookie}:{guest_cookie}"])
     args.append("debian")
     args.extend(["--user", user, "--env", f"DISPLAY={display}",
                  "--env", f"PULSE_SERVER={_PULSE_SERVER}"])
+    if guest_cookie:
+        args.extend(["--env", f"PULSE_COOKIE={guest_cookie}"])
     if backend == "zink":
         args.extend(["--env", "MESA_LOADER_DRIVER_OVERRIDE=zink",
                      "--env", "GALLIUM_DRIVER=zink", "--env", "TU_DEBUG=sysmem,noconform",
@@ -417,19 +395,54 @@ def _guest_command(manager: str, user: str, display: str, backend: str,
         args.extend(["--env", "GALLIUM_DRIVER=virpipe",
                      "--env", "MESA_GL_VERSION_OVERRIDE=4.3COMPAT",
                      "--env", "MESA_SHADER_CACHE_DISABLE=true"])
-    args.extend(["--", "ternux", command])
+    args.extend(["--", "/bin/sh", "-c", command])
     return args
 
 
-def verify_ternux_guest(*, distro: str, user: str, display: str, backend: str,
-                        prefix: str = "/data/data/com.termux/files/usr",
-                        which: Callable[[str], str | None] = shutil.which,
-                        runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> dict[str, object]:
-    """Run only the version and read-only status commands of Ternux's guest CLI."""
+_GUEST_PROBE_SCRIPT = r"""
+printf 'Display: %s
+' "${DISPLAY:-}"
+if command -v glxinfo >/dev/null 2>&1; then
+  glx_output=$(glxinfo -B 2>/dev/null)
+  renderer=$(printf '%s
+' "$glx_output" | sed -n 's/^OpenGL renderer string: //p' | head -n 1)
+  if [ -n "$renderer" ]; then
+    printf 'X11: reachable
+Renderer: %s
+' "$renderer"
+  else
+    printf 'X11: unavailable
+Renderer: unavailable
+'
+  fi
+elif command -v xdpyinfo >/dev/null 2>&1 && xdpyinfo -display "${DISPLAY:-}" >/dev/null 2>&1; then
+  printf 'X11: reachable
+Renderer: unavailable (glxinfo missing)
+'
+else
+  printf 'X11: unavailable
+Renderer: unavailable
+'
+fi
+if command -v pactl >/dev/null 2>&1 && pactl --server "${PULSE_SERVER:-tcp:127.0.0.1:4713}" info >/dev/null 2>&1; then
+  printf 'Audio: PulseAudio reachable
+'
+else
+  printf 'Audio: PulseAudio not reachable
+'
+fi
+"""
+
+
+def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
+                       prefix: str = "/data/data/com.termux/files/usr",
+                       which: Callable[[str], str | None] = shutil.which,
+                       runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> dict[str, object]:
+    """Run a fixed, bounded, read-only display/audio/renderer probe in Debian."""
     if distro != "debian":
-        raise ValueError("the Ternux guest companion is supported only in Debian")
+        raise ValueError("the managed Debian guest probe supports Debian only")
     if not isinstance(user, str) or not _GUEST_USER.fullmatch(user) or user == "root":
-        raise ValueError("guest user must be an explicit non-root Debian username")
+        raise ValueError("guest user must be a non-root Debian username")
     if not isinstance(display, str) or not _DISPLAY.fullmatch(display):
         raise ValueError("display must be an explicit Termux:X11 display from :0 through :10")
     if backend not in {"zink", "virgl"}:
@@ -444,49 +457,31 @@ def verify_ternux_guest(*, distro: str, user: str, display: str, backend: str,
     manager = which("proot-distro")
     if not manager:
         return verification_result(status="unavailable", display=display, backend=backend,
-                                    blockers=["proot-distro command is unavailable"])
+                                  blockers=["proot-distro command is unavailable"])
     try:
         inventory = runner([manager, "list"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                            text=True, timeout=5, check=False)
     except (OSError, subprocess.TimeoutExpired):
         return verification_result(status="unknown", display=display, backend=backend,
-                                    blockers=["installed Debian inventory could not be read"])
+                                  blockers=["installed Debian inventory could not be read"])
     installed = (_installed_names(inventory.stdout) if isinstance(getattr(inventory, "stdout", None), str)
                  else None) if inventory.returncode == 0 else None
     if installed is None:
         return verification_result(status="unknown", display=display, backend=backend,
-                                    blockers=["installed Debian inventory is unavailable or unrecognized"])
+                                  blockers=["installed Debian inventory is unavailable or unrecognized"])
     if distro not in installed:
         return verification_result(status="not_installed", display=display, backend=backend,
-                                    blockers=["Debian is not listed as an installed PRoot distribution"])
+                                  blockers=["Debian is not listed as an installed PRoot distribution"])
 
-    native_ternux_status = inspect_native_ternux(which=which, runner=runner)
-
+    cookie_path = _native_pulse_cookie_path()
     try:
-        version_result = runner(_guest_command(manager, user, display, backend, "--version", prefix=prefix),
-                                capture_output=True, text=True, timeout=20, check=False)
-    except (OSError, subprocess.TimeoutExpired):
-        return verification_result(status="unknown", display=display, backend=backend,
-                                    guest_entered=True, blockers=["guest companion version check failed"],
-                                    native_ternux_status=native_ternux_status)
-    lines = version_result.stdout.splitlines()
-    version_match = _GUEST_VERSION.fullmatch(lines[0].strip()) if lines else None
-    if (version_result.returncode != 0 or not version_match or len(lines) < 2
-            or lines[1].strip() != _GUEST_SOURCE):
-        return verification_result(status="unsupported_companion", display=display, backend=backend,
-                                    guest_entered=True,
-                                    blockers=["guest command did not identify the expected Ternux companion"],
-                                    native_ternux_status=native_ternux_status)
-    version = version_match.group(1)
-
-    try:
-        result = runner(_guest_command(manager, user, display, backend, "status", prefix=prefix),
+        result = runner(_guest_command(manager, user, display, backend, _GUEST_PROBE_SCRIPT,
+                                       prefix=prefix, cookie_path=cookie_path),
                         capture_output=True, text=True, timeout=30, check=False)
     except (OSError, subprocess.TimeoutExpired):
         return verification_result(status="unknown", display=display, backend=backend,
-                                    guest_entered=True, version=version,
-                                    blockers=["read-only guest status command timed out or failed to start"],
-                                    native_ternux_status=native_ternux_status)
+                                  guest_entered=True,
+                                  blockers=["read-only guest probe timed out or failed to start"])
 
     values: dict[str, str] = {}
     for line in result.stdout.splitlines():
@@ -500,6 +495,8 @@ def verify_ternux_guest(*, distro: str, user: str, display: str, backend: str,
     x11 = "reachable" if values.get("x11") == "reachable" else "unavailable" if "x11" in values else "unknown"
     audio = "reachable" if values.get("audio") == "PulseAudio reachable" else "unavailable" if "audio" in values else "unknown"
     renderer = values.get("renderer")
+    if renderer and (len(renderer) > 1024 or any(ord(char) < 32 for char in renderer)):
+        renderer = None
     if not renderer or renderer == "unavailable (glxinfo missing)":
         renderer, renderer_class = None, "unavailable"
     elif "llvmpipe" in renderer.lower() or "softpipe" in renderer.lower():
@@ -521,18 +518,21 @@ def verify_ternux_guest(*, distro: str, user: str, display: str, backend: str,
     if renderer_class != expected_renderer:
         blockers.append("observed renderer does not match the explicitly requested backend")
     if result.returncode != 0 and not blockers:
-        blockers.append("guest status reported one or more failed checks")
+        blockers.append("guest probe reported one or more failed checks")
     if not result.stdout.strip() and len(blockers) < 4:
-        blockers.append("guest status returned no recognized output")
+        blockers.append("guest probe returned no recognized output")
     if x11 == "unavailable" and observed_display == display and len(blockers) < 4:
         process_displays = inspect_termux_x11_process_displays(which=which, runner=runner)
         if (process_displays["status"] == "available"
                 and display not in process_displays["observed_displays"]):
-            blockers.append(
-                f"requested display {display} not observed in the Termux-visible X11 process list")
+            blockers.append(f"requested display {display} not observed in the Termux-visible X11 process list")
     status = "complete" if not blockers and result.returncode == 0 else "partial" if values else "unknown"
+    empty_native = {"availability": "unavailable", "identity": "unverified", "version": None,
+                    "status": "unknown", "x11_running": "unknown", "pulseaudio": "unknown",
+                    "virgl": "unknown", "launcher": "unknown", "backend_availability": "unknown",
+                    "backend": "unknown", "renderer": None, "vulkan": "unknown"}
     return verification_result(status=status, display=display, backend=backend,
-                                guest_entered=True, version=version, observed_display=observed_display,
-                                x11=x11, audio=audio,
-                                renderer=renderer, renderer_class=renderer_class, blockers=blockers,
-                                native_ternux_status=native_ternux_status)
+                               guest_entered=True, observed_display=observed_display,
+                               x11=x11, audio=audio, renderer=renderer,
+                               renderer_class=renderer_class, blockers=blockers,
+                               native_ternux_status=empty_native)

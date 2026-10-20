@@ -30,6 +30,41 @@ def native_env(home: str) -> dict[str, str]:
 
 
 class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
+    def test_bootstrap_secret_clipboard_copy_is_stdin_only_and_silent(self) -> None:
+        completed = type("Completed", (), {"returncode": 0})()
+        with patch.object(management_http_runtime.shutil, "which", return_value="/usr/bin/termux-clipboard-set"), \
+             patch.object(management_http_runtime.subprocess, "run", return_value=completed) as run:
+            self.assertTrue(management_http_runtime.copy_bootstrap_secret("one-time-private-secret"))
+        args, kwargs = run.call_args
+        self.assertEqual(args, (["/usr/bin/termux-clipboard-set"],))
+        self.assertEqual(kwargs["input"], "one-time-private-secret")
+        self.assertEqual(kwargs["stdout"], management_http_runtime.subprocess.DEVNULL)
+        self.assertEqual(kwargs["stderr"], management_http_runtime.subprocess.DEVNULL)
+        self.assertNotIn("one-time-private-secret", repr(args))
+
+    def test_default_clipboard_failure_stops_without_disclosing_secret(self) -> None:
+        err = io.StringIO()
+        err.isatty = lambda: True
+        server = type("Server", (), {"port": 8765, "start": lambda self: None,
+                                    "close": lambda self, **kwargs: True})()
+        with patch.object(management_http_runtime.management_sessions, "new_bootstrap_secret", return_value=SECRET), \
+             patch.object(management_http_runtime, "build_server", return_value=server), \
+             patch.object(management_http_runtime, "copy_bootstrap_secret", return_value=False), \
+             patch.object(management_http_runtime.sys, "stderr", err), \
+             patch.object(management_http_runtime.signal, "signal"), \
+             patch.object(management_http_runtime.threading, "Event") as event:
+            self.assertEqual(management_http_runtime.main(["--port", "8765", "--web"]), 1)
+        self.assertNotIn(SECRET, err.getvalue())
+        self.assertIn("Clipboard copy failed", err.getvalue())
+        event.return_value.wait.assert_not_called()
+    def test_clipboard_copy_failure_is_reported_as_boolean_only(self) -> None:
+        with patch.object(management_http_runtime.shutil, "which", return_value=None):
+            self.assertFalse(management_http_runtime.copy_bootstrap_secret("secret"))
+
+    def test_web_page_has_compact_portfolio_branding(self) -> None:
+        page = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
+        self.assertIn("Workstation in your pocket — by Sobuj Miah", page)
+        self.assertIn('href="https://soobujmiah.github.io/"', page)
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory(prefix="ternuxx-http-runtime-")
         self.env = native_env(self.temp.name)
@@ -94,6 +129,120 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
             connection.close()
             self.assertTrue(server.close(grace_seconds=3))
 
+    def test_web_mode_exposes_scoped_desktop_monitoring_and_managed_ssh_8023_mutations(self) -> None:
+        env = dict(self.env, TERNUXX_WEB_MODE="1")
+        Path(env["TERNUXX_STATE_DIR"]).mkdir(parents=True, mode=0o700)
+        Path(env["TERNUXX_STATE_DIR"]).chmod(0o700)
+        with patch.object(management_http_runtime.management_service, "dispatch") as dispatch:
+            server = management_http_runtime.build_server(
+                port=0, bootstrap_secret=SECRET, env=env)
+            try:
+                self.assertTrue(server.adapter._allow_mutations)
+                self.assertTrue(server.adapter._request_store.durable)
+                self.assertEqual(server.adapter.sessions._bootstrap_capabilities,
+                                 management_http_runtime.WEB_CAPABILITIES)
+                session = server.adapter.sessions.exchange_bootstrap(
+                    SECRET, sorted(management_http_runtime.WEB_CAPABILITIES))
+                host = "127.0.0.1:%s" % server.port
+
+                def post(operation: str, request_id: str, key: str, args: dict[str, object], *, csrf: bool = True):
+                    body = json.dumps({"api_version": 1, "request_id": request_id,
+                                       "operation": operation, "args": args}).encode()
+                    headers = {"Host": host, "Origin": "http://" + host,
+                               "Content-Type": "application/json", "Content-Length": str(len(body)),
+                               "Authorization": "Bearer " + session.bearer_token,
+                               "Idempotency-Key": key}
+                    if csrf:
+                        headers["X-Ternuxx-CSRF"] = session.csrf_token
+                    return server.adapter.handle(method="POST", path="/api/v1/operations",
+                                                 headers=headers, body=body)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-start-result-1",
+                    "ok": True, "operation": "desktop.start", "data": {"state": "running"}}
+                status, _headers, response = post("desktop.start", "web-start-request-01",
+                    "web-start-key-00000001", {"display": ":1"})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "desktop.start")
+                dispatch.assert_called_once()
+
+                status, _headers, response = post("desktop.stop", "web-stop-request-001",
+                    "web-stop-key-000000001", {}, csrf=False)
+                self.assertEqual(status, 403)
+                self.assertEqual(json.loads(response)["error"], "csrf_rejected")
+                self.assertEqual(dispatch.call_count, 1)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-ssh-preview-001",
+                    "ok": True, "operation": "ssh.service.stop", "data": {
+                        "service_id": "ternuxx-sshd", "current_status": "running",
+                        "requires_confirmation": True, "plan_id": "a" * 64,
+                        "impact": "Stops only the managed SSH unit."}}
+                status, _headers, response = post("ssh.service.stop", "web-ssh-request-001",
+                    "web-ssh-key-000000001", {"confirmed": False, "plan_id": None})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "ssh.service.stop")
+                self.assertEqual(dispatch.call_count, 2)
+
+                status, _headers, response = post("ssh.service.deploy", "web-ssh-deploy-001",
+                    "web-ssh-deploy-key-0001", {"confirmed": False, "plan_id": None})
+                self.assertEqual(status, 403)
+                self.assertEqual(json.loads(response)["error"], "permission_denied")
+                self.assertEqual(dispatch.call_count, 2)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-history-read-001",
+                    "ok": True, "operation": "recovery.status", "data": {
+                        "operations": [{"kind": "service.start", "status": "complete"}],
+                        "unresolved_count": 0, "read_only": True}}
+                status, _headers, response = post("recovery.status", "web-history-request-01",
+                    "web-history-key-00001", {})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "recovery.status")
+                self.assertEqual(dispatch.call_count, 3)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
+                    "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
+                status, _headers, response = post("desktop.restart", "web-restart-request-01",
+                    "web-restart-key-0000001", {"display": ":1"})
+                self.assertEqual(status, 400)
+                self.assertEqual(json.loads(response)["error"]["code"], "desktop_operation_failed")
+                self.assertNotIn("redacted", response.decode())
+            finally:
+                self.assertTrue(server.close(grace_seconds=1))
+
+        page = (ROOT / "lib" / "management_web_ui.html").read_text()
+        self.assertIn('id="categories"', page)
+        self.assertIn('id="search"', page)
+        self.assertIn('id="resource-detail"', page)
+        self.assertIn("window.confirm", page)
+        self.assertIn("Idempotency-Key", page)
+        self.assertIn("desktop.monitor.manage", page)
+        self.assertIn("desktop.manage", page)
+        self.assertIn("ssh.managed.lifecycle", page)
+        self.assertIn("network.ssh.managed-8023", page)
+        self.assertIn("View operation history", page)
+        self.assertIn('run("recovery.status")', page)
+        self.assertNotIn("network.ssh.manual-8022", page.split("manageSsh(operation)", 1)[-1].split("function drawCategories", 1)[0])
+        self.assertNotIn("applications.launch", page)
+
+    def test_web_console_has_bounded_mobile_layout_and_touch_navigation_rules(self) -> None:
+        page = (ROOT / "lib" / "management_web_ui.html").read_text()
+        self.assertIn('<meta name="viewport" content="width=device-width,initial-scale=1">', page)
+        self.assertIn('@media(max-width:760px)', page)
+        self.assertIn('grid-template-columns:minmax(0,1fr)', page)
+        self.assertIn('max-width:100%', page)
+        self.assertIn('min-height:44px', page)
+        self.assertIn('overscroll-behavior-inline:contain', page)
+        self.assertIn('@media(max-width:380px)', page)
+        self.assertIn('font:15px system-ui,sans-serif', page)
+        for handler in ('$("#connect").onclick=connect', '$("#disconnect").onclick=',
+                        '$("#refresh").onclick=', '$("#search").oninput=drawResources',
+                        '$("#status").onchange=drawResources', '$("#save-monitor").onclick='):
+            self.assertIn(handler, page)
+        self.assertIn('b.onclick=()=>run(b.dataset.op)', page)
+        self.assertIn('card.onclick=()=>selectResource(resource)', page)
+        self.assertIn('automation.cron-registry', page)
+        self.assertIn('b.textContent="List saved jobs"', page)
+        self.assertIn('b.onclick=()=>run("cron.jobs.list")', page)
+
     def test_liveness_and_readiness_are_distinct_and_readiness_tracks_listener(self) -> None:
         server = management_http_runtime.build_server(
             port=0, bootstrap_secret=SECRET, env=self.env)
@@ -140,6 +289,32 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
             method="GET", path="/ready", headers=headers, body=b"")
         self.assertEqual(closed_status, 503)
         self.assertFalse(json.loads(closed_body)["ready"])
+
+    def test_web_root_serves_the_real_category_console_with_same_origin_policy(self) -> None:
+        env = dict(self.env, TERNUXX_WEB_MODE="1")
+        Path(env["TERNUXX_STATE_DIR"]).mkdir(parents=True, mode=0o700)
+        Path(env["TERNUXX_STATE_DIR"]).chmod(0o700)
+        server = management_http_runtime.build_server(port=0, bootstrap_secret=SECRET, env=env)
+        server.start()
+        connection = http.client.HTTPConnection(*server.address, timeout=3)
+        host = f"127.0.0.1:{server.port}"
+        try:
+            connection.request("GET", "/", headers={"Host": host, "Origin": "http://" + host})
+            response = connection.getresponse()
+            page = response.read().decode("utf-8")
+            self.assertEqual(response.status, 200)
+            self.assertEqual(response.getheader("Content-Type"), "text/html; charset=utf-8")
+            self.assertIn('id="categories"', page)
+            self.assertIn('id="resource-list"', page)
+            self.assertIn('id="resource-detail"', page)
+            connection.close()
+            connection = http.client.HTTPConnection(*server.address, timeout=3)
+            connection.request("GET", "/", headers={"Host": host, "Origin": "http://untrusted.invalid"})
+            rejected = connection.getresponse()
+            self.assertEqual(rejected.status, 403)
+        finally:
+            connection.close()
+            self.assertTrue(server.close(grace_seconds=3))
 
     def test_noninteractive_main_refuses_before_generating_or_binding(self) -> None:
         err = io.StringIO()

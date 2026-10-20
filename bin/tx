@@ -2,9 +2,9 @@
 # =============================================================================
 #  Ternuxx — Native Termux workstation CLI
 #
-#  Desktop for Android using Termux packages + Termux:X11 directly.
-#  No PRoot. No Debian container.XFCE4, Chromium, and tools from the
-#  termux-x11 repository, running natively on the device.
+#  Native Termux host manager for the coordinated Debian PRoot workstation.
+#  Host graphics, audio, and acceleration are handed to PRoot through
+#  explicit, verified environment and device boundaries.
 #
 #  Copyright (c) 2026 Sobuj Miah (@soobujmiah)
 #  License: not yet selected; see README.md.
@@ -29,7 +29,7 @@ _NT_BIN_DIR=""
 _NT_SRC_DIR=""
 _TN_LIB_DIR=""
 
-# Checkout: bin/ternuxx + lib/*.sh, or installed lib under the Ternuxx data prefix.
+# Checkout: bin/tx + lib/*.sh, or installed lib under the Ternuxx data prefix.
 _NT_BIN_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd -P)" || _NT_BIN_DIR=""
 
 for _try in \
@@ -68,8 +68,26 @@ _nt_use() {
 declare -A _NT_LOADED
 
 # --- Command registry --------------------------------------------------
+_nt_resolve_slug() {
+  case "$1" in
+    up) echo start ;; dn) echo stop ;; rs) echo restart ;; st) echo status ;;
+    ck) echo check ;; inf) echo info ;; doc) echo doctor ;;
+    mg|mng) echo management ;; pr) echo proot ;;
+    cp) echo checkpoint ;; ra) echo remote ;; rb) echo reboot ;;
+    bt) echo boot ;; wl) echo wakelock ;; in) echo install ;;
+    bk) echo backup ;; rc) echo recovery ;; rt) echo restore ;; g) echo guides ;; h) echo help ;;
+    *) echo "$1" ;;
+  esac
+}
+
 _nt_dispatch() {
-  local cmd="$1"; shift
+  local requested="$1" cmd; cmd="$(_nt_resolve_slug "$1")"; shift
+  if [ "$requested" = management ]; then
+    printf "%s\n" "[WARN] tx management is deprecated; use tx mng." >&2
+  fi
+  if [ "$cmd" = help ]; then _nt_use help && nt_help "$(_nt_resolve_slug "${1:-}")"; return 0; fi
+  case "$cmd" in h) cmd=help ;; esac
+  if [ "$cmd" = help ]; then _nt_use help && nt_help "\${1:-}"; return 0; fi
 
   if declare -F "nt_cmd_${cmd}" >/dev/null 2>&1; then
     "nt_cmd_${cmd}" "$@"
@@ -86,6 +104,10 @@ _nt_dispatch() {
         '' 'Open these links in a browser. This command does not install anything.'
       return 0 ;;
     start|stop|restart|status) lib_map="desktop" ;;
+    audio)                     lib_map="audio" ;;
+    db|gui)                    lib_map="launch" ;;
+    tui)                        lib_map="tui" ;;
+    web)                        lib_map="management" ;;
     checkpoint)                lib_map="continuity" ;;
     ssh)                       lib_map="ssh" ;;
     remote)                    lib_map="remote_access" ;;
@@ -113,7 +135,7 @@ _nt_dispatch() {
       "requested_command" "$cmd"
   else
     nt_fail "Unknown command: $cmd"
-    echo "Run 'ternuxx --help' for usage." >&2
+    echo "Run 'tx --help' for usage." >&2
   fi
   return 1
 }
@@ -138,7 +160,7 @@ if [ "$_HELP_REQUESTED" -eq 1 ]; then
   if [ $# -eq 0 ]; then
     _nt_use "help" && nt_help ""; exit 0
   fi
-  _nt_use "help" && nt_help "$1"; exit 0
+  _nt_use "help" && nt_help "$(_nt_resolve_slug "$1")"; exit 0
 fi
 unset _HELP_REQUESTED
 

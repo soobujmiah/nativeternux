@@ -1,15 +1,355 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ternuxx.local/schemas/management-catalog.schema.json",
-  "title": "Ternuxx shared management catalog",
+  "title": "Ternuxx shared management catalog v2",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "read_only", "providers", "domains", "policy"],
+  "required": [
+    "schema_version",
+    "read_only",
+    "providers",
+    "domains",
+    "categories",
+    "resources",
+    "filters",
+    "policy"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "read_only": {"const": true},
-    "providers": {"type": "array", "items": {"type": "object", "required": ["id", "kind", "status", "secret_policy"], "properties": {"id": {"type": "string"}, "kind": {"type": "string"}, "status": {"type": "string"}, "secret_policy": {"type": "string"}}, "additionalProperties": false}},
-    "domains": {"type": "array", "items": {"type": "object", "required": ["id", "status", "providers", "operations", "available_operations", "unavailable_operations"], "properties": {"id": {"type": "string"}, "status": {"type": "string"}, "providers": {"type": "array", "items": {"type": "string"}}, "operations": {"type": "array", "items": {"type": "string"}}, "available_operations": {"type": "array", "items": {"type": "string"}}, "unavailable_operations": {"type": "array", "items": {"type": "string"}}, "planned": {"type": "array", "items": {"type": "string"}}, "targets": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}},
-    "policy": {"type": "object", "required": ["mutations_require_preview_and_explicit_confirmation", "external_cloud_calls_enabled", "credentials_in_catalog"], "properties": {"mutations_require_preview_and_explicit_confirmation": {"const": true}, "external_cloud_calls_enabled": {"const": false}, "credentials_in_catalog": {"const": false}}, "additionalProperties": false}
+    "schema_version": {
+      "const": 2
+    },
+    "read_only": {
+      "const": true
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "secret_policy"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "secret_policy": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "providers",
+          "operations",
+          "available_operations",
+          "unavailable_operations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "available_operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "unavailable_operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "planned": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/category"
+      }
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resource"
+      }
+    },
+    "filters": {
+      "type": "object",
+      "required": [
+        "category",
+        "query",
+        "status"
+      ],
+      "properties": {
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "query": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "implemented",
+            "partial",
+            "external",
+            "unverified",
+            "unavailable",
+            "planned",
+            null
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "mutations_require_preview_and_explicit_confirmation",
+        "external_cloud_calls_enabled",
+        "credentials_in_catalog"
+      ],
+      "properties": {
+        "mutations_require_preview_and_explicit_confirmation": {
+          "const": true
+        },
+        "external_cloud_calls_enabled": {
+          "const": false
+        },
+        "credentials_in_catalog": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "category": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "description",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "implemented",
+            "partial",
+            "external",
+            "unverified",
+            "unavailable",
+            "planned"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "resource": {
+      "type": "object",
+      "required": [
+        "id",
+        "category_id",
+        "name",
+        "description",
+        "status",
+        "availability",
+        "provider",
+        "environment",
+        "ownership",
+        "state",
+        "configuration",
+        "supported_operations",
+        "planned_operations",
+        "dependencies",
+        "dependants",
+        "background",
+        "boot",
+        "logs",
+        "diagnostics",
+        "recovery",
+        "identity",
+        "security",
+        "operation_capabilities",
+        "unavailable_operations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$"
+        },
+        "category_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "implemented",
+            "partial",
+            "external",
+            "unverified",
+            "unavailable",
+            "planned"
+          ]
+        },
+        "availability": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        },
+        "ownership": {
+          "type": "object"
+        },
+        "state": {
+          "type": "object"
+        },
+        "configuration": {
+          "type": "object"
+        },
+        "supported_operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "planned_operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "background": {
+          "type": "object"
+        },
+        "boot": {
+          "type": "object"
+        },
+        "logs": {
+          "type": "object"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recovery": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "identity": {
+          "type": "object"
+        },
+        "security": {
+          "type": "object"
+        },
+        "operation_capabilities": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "unavailable_operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
   }
 }

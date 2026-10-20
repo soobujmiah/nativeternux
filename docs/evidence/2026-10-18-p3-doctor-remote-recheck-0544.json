@@ -19,7 +19,7 @@
         "read_only": true,
         "overall": "warning",
         "device": {
-          "model": "25053RT47C",
+          "model": "[redacted device serial]",
           "android_release": "16",
           "abi": "arm64-v8a",
           "termux_version": "0.119.0-beta.3"

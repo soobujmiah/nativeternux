@@ -1,0 +1,16 @@
+event_id: test-69e378eb3324-native-20261020-final-551-1
+repository: soobujmiah/ternuxx
+commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+kind: test
+occurred_at: '2026-10-19T23:32:49Z'
+run_id: native-20261020-final-551
+run_attempt: '1'
+status: passed
+summary: 'Native Termux full suite 551/551 passed in 81.537 seconds; modified repository
+  contract checks also passed locally (bash syntax/help, knowledge verify 0 findings,
+  README bridge, classification, required docs). Read-only GTK reports Native audio
+  ready, CPU baseline, Native llvmpipe/Vulkan incompatible/NPU unverified. Read-only
+  Debian PRoot verify on :1 reports Zink/Turnip Adreno 825, X11 and authenticated
+  PulseAudio reachable. GitHub source-69 CI remains failed/unrerun: State Contract
+  39159994935 launcher exit 127; Knowledge Sync 39159994930 pushed generated-only
+  89a2a0b then failed on 326 tests/2 wakelock errors.'

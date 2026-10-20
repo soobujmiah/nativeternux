@@ -553,3 +553,22 @@ See [structured 8023 observer and readiness evidence](2026-10-18-p3-managed-8023
 Prepared private checkpoint `TERN-20261018-RB04` at mode 0600; status is `prepared` / `NOT_READY`. Baseline records the existing native XFCE desktop on `:1`, Debian inventory without guest entry, managed 8023 service/config readiness, current 8022 wildcard/password policy, enabled Termux:Boot receiver with delivery still unknown, and Wake Lock ownership limits. The public repo evidence excludes the checkpoint nonce and boot ID. No reboot, service/desktop action, boot-setting change, package operation, or PRoot action occurred.
 
 The CLI has no device reboot operation. The next step is an owner-initiated Android restart; afterward, reconnect on 8023 and collect read-only checks. Do not manually run `boot-observe`, because that would not prove Termux:Boot delivery. Evidence: [RB04 prepared baseline](2026-10-18-p3-reboot-rb04-prepared.json).
+
+## 2026-10-19 Shizuku identity disclosure recheck
+
+Doctor's Shizuku finding now includes the observed package ID alongside versionCode, and labels the `shizuku_server` process result only as a process-name signal. It explicitly keeps upstream/custom provider identity, signer/release identity, permission, and watchdog health unverified. Regression assertions reject the earlier upstream attribution. Native `./tx doctor --json` remains read-only and reports `overall=warning`; the full repository suite passed 346/346 in 75.339 seconds. Evidence: [read-only Shizuku and suite recheck](2026-10-19-p3-doctor-shizuku-identity-recheck.json). No device state or service was changed. P3 remains open for provider ownership and reboot/cold-boot qualification.
+
+
+## Native boot-profile preview/apply byte parity — 2026-10-19
+
+The supported `cli-only` and `native` boot-profile preview scripts now match the exact managed script bytes, including the trailing newline. Regression tests enforce parity. Focused tests passed 12/12 and the full Native Termux suite via SSH 8022 passed 347/347 in 69.117 seconds. No boot profile was applied; Termux:Boot delivery and cold-boot behavior remain unqualified. See [parity evidence](2026-10-19-native-boot-profile-preview-parity.md).
+
+
+## Native X11 activity request and fallback fixtures — 2026-10-19
+
+Desktop lifecycle fixtures now cover the fixed Termux:X11 Activity component request, accepted-request visibility limits, and rejected/unavailable manual-open fallback. Focused tests passed 16/16; full Native Termux suite via SSH 8022 passed 350/350 in 71.566 seconds. These are source/fixture checks only; Android UI, boot delivery, and background policy were not exercised. See [evidence](2026-10-19-native-x11-activity-fallback-tests.md).
+
+
+## Native boot-profile identity diagnostics — 2026-10-19
+
+`tx boot profile status` now verifies only the fixed Ternuxx boot script against the selected profile and reports legacy, missing, mismatch, or unsafe states without repair. The bounded read uses no-follow open and validates owner/mode. Response schema is v2. Focused boot tests passed 14/14, management-service tests passed 24/24, and the full native suite through SSH 8022 passed 352/352 in 71.703 seconds. Live status returned `cli-only`, `match`, and `read_only=true`; no runtime state changed. See [evidence](2026-10-19-native-boot-profile-identity.md). Boot delivery and cold boot remain unqualified.

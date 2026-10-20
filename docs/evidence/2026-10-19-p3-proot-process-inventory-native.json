@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-19T00:04:07Z",
+  "evidence_type": "native_termux_read_only_process_inventory_and_repository_tests",
+  "repository": {
+    "branch": "main",
+    "base_commit": "69e378eb33247678437bda4b2de9ab25f6bcb91d",
+    "working_tree_dirty": true
+  },
+  "runtime": {
+    "layer": "native_termux",
+    "architecture": "aarch64",
+    "kernel_family": "Android",
+    "transport": "owner_started_ssh_8022"
+  },
+  "live_probe": {
+    "command": "./tx proot status",
+    "exit_code": 0,
+    "read_only": true,
+    "guest_entered": false,
+    "distribution_status": "installed",
+    "installed_distributions": [
+      "debian"
+    ],
+    "host_proot_processes": {
+      "status": "observed",
+      "visibility": "complete",
+      "candidate_count": 1,
+      "ownership": "unverified",
+      "process_identifiers_recorded": false
+    },
+    "device_mutations": []
+  },
+  "repository_tests": {
+    "command": "bash scripts/repo_test.sh",
+    "route": "native_termux_over_ssh_8022",
+    "result": "passed",
+    "count": 343,
+    "duration_seconds": 86.969
+  },
+  "limits": [
+    "A readable process candidate does not prove Ternuxx ownership or authorize lifecycle control.",
+    "The live process list was summarized without persisting PID, parent PID, or command line.",
+    "This check does not enter the Debian guest or qualify PRoot workload, display, audio, GPU, or reboot behavior.",
+    "Complete visibility means no proc entry read denial was observed in this snapshot; it is not proof that Android exposes every system process."
+  ]
+}

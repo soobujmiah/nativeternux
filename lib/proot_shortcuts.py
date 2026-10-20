@@ -76,7 +76,7 @@ def _desktop_quote(value: str) -> str:
 
 def _entry(app_id: str, *, repo_root: str) -> bytes:
     item = CATALOG[app_id]
-    cli = Path(repo_root) / "ternuxx"
+    cli = Path(repo_root) / "tx"
     command = f"{_desktop_quote(str(cli))} management app launch {app_id}"
     lines = [
         "[Desktop Entry]", "Version=1.0", "Type=Application",
@@ -120,15 +120,19 @@ def _available(app_id: str, *, prefix: str, home: str, path: str, repo_root: str
     if CATALOG[app_id]["program"] == "manager":
         return (Path(repo_root) / "scripts" / "proot-x11-shortcut-manager.sh").is_file()
     try:
-        from proot_diagnostics import resolve_ternux_guest_user
-        user = resolve_ternux_guest_user(home=home, path=path)
+        from proot_diagnostics import resolve_proot_guest_user
+        user = resolve_proot_guest_user(distro="debian", prefix=prefix)
+        probe_env = {key: value for key, value in os.environ.items()
+                     if key not in {"ANDROID_ART_ROOT", "ANDROID_DATA", "ANDROID_I18N_ROOT",
+                                    "ANDROID_ROOT", "ANDROID_RUNTIME_ROOT", "ANDROID_TZDATA_ROOT",
+                                    "BOOTCLASSPATH", "DEX2OATBOOTCLASSPATH", "EXTERNAL_STORAGE"}}
         result = subprocess.run(
             [
                 f"{prefix}/bin/proot-distro", "login", "debian", "--shared-tmp",
                 "--user", user, "--", "sh", "-c",
                 'command -v "$1" >/dev/null 2>&1', "sh", CATALOG[app_id]["program"],
             ],
-            check=False, capture_output=True, timeout=20,
+            env=probe_env, check=False, capture_output=True, timeout=20,
         )
     except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
         return False
@@ -226,28 +230,19 @@ def apply(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
 
 
 def launch(app_id: str, *, prefix: str, repo_root: str, env: dict[str, str],
-           session_owner: str = "ternuxx", display: str | None = None) -> dict[str, Any]:
+           display: str | None = None) -> dict[str, Any]:
     if app_id not in CATALOG:
         raise ShortcutError("unknown PRoot application ID")
-    if not isinstance(session_owner, str) or session_owner not in {"ternuxx", "ternux"}:
-        raise ShortcutError("unknown X11 session owner")
-    if session_owner == "ternux" and (display is None or not re.fullmatch(r":[0-9]{1,2}", display)):
-        raise ShortcutError("Ternux session requires an explicit X11 display")
     if display is not None and not re.fullmatch(r":[0-9]{1,2}", display):
         raise ShortcutError("unsupported X11 display")
     if CATALOG[app_id]["program"] == "manager":
-        if session_owner != "ternuxx":
-            raise ShortcutError("the shortcut manager is available only in the Ternuxx desktop")
         script = Path(repo_root) / "scripts" / "proot-x11-shortcut-manager.sh"
         command = [f"{prefix}/bin/bash", str(script)]
     else:
         script = Path(repo_root) / "scripts" / "proot-x11-app.sh"
         command = [f"{prefix}/bin/bash", str(script)]
-    if session_owner != "ternuxx" or display is not None:
-        command += ["--session", session_owner]
         if display is not None:
             command += ["--display", display]
-    if CATALOG[app_id]["program"] != "manager":
         command += [CATALOG[app_id]["program"]]
     result = subprocess.run(command, env=env, check=False)
     if result.returncode != 0:

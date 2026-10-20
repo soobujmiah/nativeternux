@@ -24,8 +24,9 @@ CLI, X11 GUI, and local Web UI must manage the same Ternuxx resources through th
 
 - `lib/management_service.py` is a typed local application-service with a narrow operation allowlist. Many P3 operations use it, but the CLI/API coverage is incomplete.
 - `lib/management_authorization.py`, `lib/management_sessions.py`, the HTTP adapter/server, and the foreground runtime provide default-deny scopes, one-use session bootstrap, loopback/origin guards, bounded requests, and graceful drain.
-- The HTTP runtime is read-only, started explicitly in the foreground, and requires a TTY-delivered bootstrap secret. No static Web client, browser-friendly bootstrap path, or X11 client backed by the shared service exists yet. Mutation dispatch is disabled.
+- The HTTP runtime is read-only, started explicitly in the foreground, and requires a TTY-delivered bootstrap secret. The tx web client presents authenticated read-only catalog, Doctor, desktop, PRoot, SSH, and recovery views; it has no mutation dispatch. A browser bootstrap without terminal secret delivery and a general X11 management client remain unimplemented.
 - PRoot GUI apps have been verified as X11 clients on native `:1`; the first PRoot shortcut/app slice now has typed operations in `lib/management_service.py`. CLI shortcuts, desktop-entry launches, and the X11 shortcut manager route through those operations. The list reports Debian as the launch provider and native Termux as the shortcut-storage owner; unknown availability is not promoted to installed.
+- `tx tui` now has a guided named-app launch path: the user selects the existing PRoot app ID and explicit `ternuxx`/`ternux` X11 session, confirms, and dispatches through `proot.app.launch`. A Ternux session requires an explicit display. This adapter does not manage the existing desktop or rootfs; source/test evidence is in [the guided launch record](../evidence/2026-10-19-tui-guided-proot-launch.md).
 - Shortcut add/remove uses a state-bound preview and explicit confirmation. It preserves unowned, edited, symlinked, or out-of-home entries. Existing exact legacy entries can be safely adopted; ambiguous entries remain conflicts. Removing a launcher never stops its running app.
 - The owner confirmed a PRoot Thunar window opened. That confirms app-level display sharing, not a second PRoot desktop or provider unification.
 
@@ -43,6 +44,8 @@ The product scope also includes PRoot guest lifecycle: adapt/verify the already-
 
 ### M3 — Non-CLI Web/X11 read-only client
 
+**Status: partial.** The tx web command starts the authenticated loopback server, opens the Android browser, and provides read-only management views after a one-time terminal-delivered secret. The TUI also provides shared-service views and an allowlisted operation runner, but it does not close M3's browser/X11 access and usability gates. Browser bootstrap without terminal secret delivery, an X11 Applications-menu entry, and general Graphical management remain open.
+
 Serve a small accessible Web client from the same-origin loopback server. Show native and PRoot status with provider labels, evidence age/source, and clear unsupported/unavailable states. Add an X11 Applications-menu entry that starts the on-demand client safely. Design a user-visible bootstrap flow that does not require terminal copy/paste and does not weaken same-origin/session protections. Keep mutation scopes unavailable in this milestone.
 
 ### M4 — Confirmed configuration operations
@@ -55,7 +58,7 @@ Provide guided setup, optional provider selection, dependency previews, applicat
 
 ## Current disposition
 
-The M1 domain registry and Doctor service entry are implemented; M1 is not complete because several domain adapters and all PRoot lifecycle operations remain. The first app slice and M2 source/fixture gates pass. A physical X11 manager interaction has not been run in this pass, and the Web client/session bootstrap and HTTP mutation remain unimplemented/disabled. P3 remains active; do not infer phase completion from these source gates.
+The M1 domain registry and Doctor service entry are implemented; M1 is not complete because several domain adapters and all PRoot lifecycle operations remain. The first app slice and M2 source/fixture gates pass. The Web client is authenticated and read-only; the TUI uses the shared service and asks for confirmation on mutations. Physical X11 manager interaction, complete browser onboarding, general Graphical management, and HTTP mutation remain open. P3 remains active; do not infer phase completion from these source gates.
 
 ## Completion gates
 

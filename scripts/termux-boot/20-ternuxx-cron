@@ -1,0 +1,91 @@
+#!/data/data/com.termux/files/usr/bin/python3
+"""Ternuxx Termux:Boot entrypoint: start only the Cron daemon."""
+import datetime
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import stat
+import subprocess
+import sys
+
+PREFIX = "/data/data/com.termux/files/usr"
+HOME = os.environ.get("HOME", "")
+SAFE_TEST = os.environ.get("TERNUXX_BOOT_SAFE_TEST") == "1"
+if PREFIX != "/data/data/com.termux/files/usr":
+    raise SystemExit(2)
+os.environ["PREFIX"] = PREFIX
+os.environ["PATH"] = PREFIX + "/bin:" + os.environ.get("PATH", "")
+os.environ.setdefault("TERMUX_VERSION", "boot")
+os.environ.setdefault("TERNUXX_STATE_DIR", HOME + "/.local/share/ternuxx")
+try:
+    sys.path.insert(0, str(Path(HOME) / "ternuxx" / "lib"))
+    from boot_state_path import StatePathError, ensure_private_tree, resolve_private_state
+    home, state = resolve_private_state(
+        HOME, os.environ["TERNUXX_STATE_DIR"],
+        allowed_home_root=None if SAFE_TEST else "/data/data/com.termux/files/home")
+    if SAFE_TEST:
+        marker = home / ".ternuxx-termux-boot-safe-test"
+        marker_stat = marker.lstat()
+        if marker.is_symlink() or not stat.S_ISREG(marker_stat.st_mode) or marker_stat.st_mode & 0o077:
+            raise StatePathError("safe-test marker identity or permissions are unsafe")
+        if marker.read_text(encoding="utf-8") != "isolated-empty-cron-state-v1\n":
+            raise StatePathError("safe-test marker is absent or invalid")
+    boot_fd = ensure_private_tree(home, state)
+except (OSError, ValueError, StatePathError):
+    raise SystemExit(2)
+
+log_path = "termux-boot-cron.jsonl"
+lock_path = "entry.lock"
+flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+lock_fd = os.open(lock_path, flags, 0o600, dir_fd=boot_fd)
+try:
+    lock_stat = os.fstat(lock_fd)
+    if not stat.S_ISREG(lock_stat.st_mode) or lock_stat.st_uid != os.getuid() or lock_stat.st_mode & 0o077:
+        raise SystemExit(2)
+    fcntl.flock(lock_fd, fcntl.LOCK_EX)
+    tx = Path(HOME) / "ternuxx" / "tx"
+    if not tx.is_file() or not os.access(tx, os.X_OK):
+        result = {"outcome": "cli_unavailable", "started_by_script": False}
+    else:
+        try:
+            completed = subprocess.run(
+                [str(tx), "mng", "cron", "start", "--yes"],
+                cwd=str(tx.parent), env=os.environ.copy(), stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=20,
+                check=False,
+            )
+            try:
+                response = json.loads(completed.stdout)
+                data = response.get("data", {}) if response.get("ok") is True else {}
+                started = data.get("started") is True
+                result = {"outcome": "started" if started else "already_running" if data.get("already_running") is True else "start_failed",
+                          "started_by_script": started,
+                          "scheduler_instance_id": data.get("status", {}).get("instance_id") if isinstance(data.get("status"), dict) else None,
+                          "exit_code": completed.returncode}
+            except (ValueError, AttributeError):
+                result = {"outcome": "start_failed", "started_by_script": False,
+                          "exit_code": completed.returncode, "detail": "non-JSON CLI response"}
+        except subprocess.TimeoutExpired:
+            result = {"outcome": "start_timeout", "started_by_script": False}
+        except OSError:
+            result = {"outcome": "start_failed", "started_by_script": False,
+                      "detail": "CLI could not be executed"}
+    record = {"at": datetime.datetime.now(datetime.timezone.utc).isoformat(), **result}
+    encoded = (json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    log_fd = os.open(log_path, flags, 0o600, dir_fd=boot_fd)
+    try:
+        info = os.fstat(log_fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+            raise SystemExit(2)
+        if info.st_size > 262144:
+            os.ftruncate(log_fd, 0)
+        os.write(log_fd, encoded[:4096])
+        os.fsync(log_fd)
+    finally:
+        os.close(log_fd)
+    if result["outcome"] not in {"started", "already_running"}:
+        raise SystemExit(1)
+finally:
+    os.close(lock_fd)

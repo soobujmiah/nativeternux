@@ -1,37 +1,49 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-18T16:11:50Z'
+generated_at: '2026-10-20T00:07:14Z'
 generated_by: tools/repo_knowledge collect
-version: 45b276a
+version: 69e378e
 head:
-  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
   branch: main
-  committed_at: '2026-10-18T14:14:30Z'
+  committed_at: '2026-10-18T19:42:15Z'
 phases:
   source: not_configured
   completed: []
   active: null
   next: null
 build:
-  status: unknown
-  run_id: null
-  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+  status: failed
+  run_id: '39159994935'
+  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
   run_attempt: '1'
-  at: '2026-10-18T14:14:30Z'
-  timestamp_source: commit
+  at: '2026-10-18T19:42:44Z'
+  timestamp_source: ci
+  conclusion: failure
+  workflow_name: Repository State Contract
+  event_type: push
+  started_at: '2026-10-18T19:42:30Z'
+  completed_at: '2026-10-18T19:42:44Z'
+  actor: soobujmiah
+  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39159994935
 test:
   status: passed
-  run_id: null
-  commit: 45b276ae687364a9cf375e8e92ba607ff39c315d
+  run_id: native-20261020-w7-native-only-550
+  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
   run_attempt: '1'
-  at: '2026-10-18T14:14:30Z'
-  timestamp_source: commit
-  summary: 'Native Termux full suite: 324/324 passed in 67.025 seconds on dirty working
-    tree based at HEAD 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a; see docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md.'
+  at: '2026-10-20T00:07:14Z'
+  timestamp_source: observed
+  summary: 'Native Termux dirty worktree HEAD 69e378e after native-only PRoot GUI
+    routing: repo_test.sh 550/550 passed in 93.732s; CLI help contract passed; deterministic
+    knowledge verify 0 findings; strict README bridge passed. Local only, no GitHub
+    workflow run.'
 last_successful_build: null
-last_failed_build: null
+last_failed_build:
+  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+  at: '2026-10-18T19:42:44Z'
+  run_id: '39159994935'
 sync:
   status: ok
-  last_synced_at: '2026-10-18T16:11:50Z'
+  last_synced_at: '2026-10-20T00:07:14Z'
   source: local

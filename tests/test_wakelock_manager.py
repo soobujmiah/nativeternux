@@ -98,7 +98,7 @@ class WakeLockManagerTests(unittest.TestCase):
     def test_acquire_clears_record_only_when_kernel_confirms_pid_absent(self) -> None:
         with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):
             root = self.state / "wakelock"
-            root.mkdir(parents=True)
+            root.mkdir(parents=True, mode=0o700)
             record = {"schema_version": 1, "boot_id": self.boot, "last_error": None,
                       "owners": {"native.sshd": {"pid": 99999999, "process_start": "1",
                                                    "persistent": True, "reason": "native_sshd"}}}
@@ -112,7 +112,7 @@ class WakeLockManagerTests(unittest.TestCase):
     def test_acquire_fails_closed_if_unavailable_pid_may_exist(self) -> None:
         with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):
             root = self.state / "wakelock"
-            root.mkdir(parents=True)
+            root.mkdir(parents=True, mode=0o700)
             record = {"schema_version": 1, "boot_id": self.boot, "last_error": None,
                       "owners": {"native.sshd": {"pid": 99999999, "process_start": "1",
                                                    "persistent": True, "reason": "native_sshd"}}}

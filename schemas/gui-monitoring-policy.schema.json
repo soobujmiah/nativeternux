@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ternuxx.local/schemas/gui-monitoring-policy.schema.json",
+  "title": "Ternuxx GUI Activity monitoring policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "enabled",
+    "interval_seconds",
+    "activity_launch",
+    "focus_check",
+    "updated_at",
+    "last_check_at",
+    "last_result",
+    "last_error",
+    "activity_availability",
+    "activity_request_status",
+    "focus_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "interval_seconds": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 86400
+    },
+    "activity_launch": {
+      "type": "boolean"
+    },
+    "focus_check": {
+      "type": "boolean"
+    },
+    "updated_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_check_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_result": {
+      "type": "string"
+    },
+    "last_error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "activity_availability": {
+      "type": "string"
+    },
+    "activity_request_status": {
+      "type": "string"
+    },
+    "focus_status": {
+      "type": "string"
+    }
+  }
+}

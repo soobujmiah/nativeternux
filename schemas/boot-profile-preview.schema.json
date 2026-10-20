@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:ternuxx:schema:boot-profile-preview:v1",
+  "$id": "urn:ternuxx:schema:boot-profile-preview:v2",
   "title": "Ternuxx boot profile status and preview",
   "type": "object",
   "additionalProperties": false,
@@ -16,14 +16,15 @@
     "actions",
     "generated_script",
     "managed_script_path",
-    "safety"
+    "safety",
+    "managed_script_identity"
   ],
   "properties": {
     "component": {
       "const": "boot_profile_preview"
     },
     "schema_version": {
-      "const": 1
+      "const": 2
     },
     "requested_profile": {
       "enum": [
@@ -100,6 +101,17 @@
           "const": false
         }
       }
+    },
+    "managed_script_identity": {
+      "enum": [
+        "not_checked",
+        "not_configured",
+        "match",
+        "legacy_match",
+        "missing",
+        "mismatch",
+        "unsafe"
+      ]
     }
   }
 }

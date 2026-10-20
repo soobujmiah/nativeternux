@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-P3 remains in progress. Preview-first installed CLI entrypoint and 8023 source/state reconciliation are applied. Current managed service, authenticated loopback SSH, and socket-to-process ownership are verified; checkout and installed CLI share one native.sshd lease. 8022 listener/session remain active. Reboot remains UNVERIFIED pending explicit owner approval. Full Native Termux suite passed 324/324.
+Ownership diagnostics and bounded health reads are implemented; headless lifecycle remains live-qualified, but current interactive login fails closed on cwd/guest-identity checks and GUI/reattach remain unqualified.
 
-**Next action:** Continue remaining P3 provider/diagnostics and recovery acceptance from the current roadmap. Keep 8022 active, preserve the existing Debian PRoot/X11 workstation, and leave reboot readiness UNVERIFIED until explicit owner-approved post-reboot qualification.
+**Next action:** Continue P3 provider, diagnostics, and recovery acceptance from the roadmap. Keep 8022 and the existing Debian/X11 workstation intact; do not qualify reboot readiness without explicit owner-approved post-reboot checks.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -138,12 +138,40 @@ Evidence:
 - [docs/evidence/2026-10-18-live-session-state-reconciliation.json](evidence/2026-10-18-live-session-state-reconciliation.json)
 - [docs/evidence/2026-10-18-8023-lifecycle-qualification.md](evidence/2026-10-18-8023-lifecycle-qualification.md)
 - [docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md](evidence/2026-10-18-cli-entrypoint-state-reconciliation.md)
+- [docs/evidence/2026-10-19-tx-web-tui-cli.md](evidence/2026-10-19-tx-web-tui-cli.md)
+- [docs/evidence/2026-10-19-native-display-proot-full-gui.md](evidence/2026-10-19-native-display-proot-full-gui.md)
+- [docs/evidence/2026-10-19-noncontract-cli-shortcut-removal.md](evidence/2026-10-19-noncontract-cli-shortcut-removal.md)
+- [docs/evidence/2026-10-19-full-repo-audit-followup.md](evidence/2026-10-19-full-repo-audit-followup.md)
+- [docs/evidence/2026-10-19-p3-proot-process-inventory-native.json](evidence/2026-10-19-p3-proot-process-inventory-native.json)
+- [docs/evidence/2026-10-19-native-source-cli-entrypoint.md](evidence/2026-10-19-native-source-cli-entrypoint.md)
+- [docs/evidence/2026-10-19-native-runit-status-diagnostics.md](evidence/2026-10-19-native-runit-status-diagnostics.md)
+- [docs/evidence/2026-10-19-native-boot-profile-preview-parity.md](evidence/2026-10-19-native-boot-profile-preview-parity.md)
+- [docs/evidence/2026-10-19-native-x11-activity-fallback-tests.md](evidence/2026-10-19-native-x11-activity-fallback-tests.md)
+- [docs/evidence/2026-10-19-native-boot-profile-identity.md](evidence/2026-10-19-native-boot-profile-identity.md)
+- [docs/evidence/2026-10-19-gui-session-recovery.md](evidence/2026-10-19-gui-session-recovery.md)
+- [docs/architecture/GUI-SESSION-LIFECYCLE.md](architecture/GUI-SESSION-LIFECYCLE.md)
+- [docs/evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md](evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md)
+- [docs/evidence/2026-10-19-native-ui-management-audit.md](evidence/2026-10-19-native-ui-management-audit.md)
+- [docs/evidence/2026-10-19-management-center-client-implementation.md](evidence/2026-10-19-management-center-client-implementation.md)
+- [docs/evidence/2026-10-19-management-center-ssh-parity.md](evidence/2026-10-19-management-center-ssh-parity.md)
+- [docs/evidence/2026-10-19-management-center-history.md](evidence/2026-10-19-management-center-history.md)
+- [docs/evidence/2026-10-19-launcher-tui-web-followup.md](evidence/2026-10-19-launcher-tui-web-followup.md)
+- [docs/evidence/2026-10-19-independent-runtime-clipboard-branding.md](evidence/2026-10-19-independent-runtime-clipboard-branding.md)
+- [docs/evidence/2026-10-19-hermes-readonly-provider.md](evidence/2026-10-19-hermes-readonly-provider.md)
+- [docs/evidence/2026-10-19-mng-cron-foundation.md](evidence/2026-10-19-mng-cron-foundation.md)
+- [docs/evidence/2026-10-19-timezone-foundation.md](evidence/2026-10-19-timezone-foundation.md)
+- [docs/evidence/2026-10-19-cron-ledger-executor-core.md](evidence/2026-10-19-cron-ledger-executor-core.md)
+- [docs/evidence/2026-10-19-cron-scheduler-lease-proot-gate.md](evidence/2026-10-19-cron-scheduler-lease-proot-gate.md)
+- [docs/evidence/2026-10-19-cron-runtime-proot-probe.md](evidence/2026-10-19-cron-runtime-proot-probe.md)
+- [docs/evidence/2026-10-19-termux-boot-cron-integration.md](evidence/2026-10-19-termux-boot-cron-integration.md)
+- [docs/evidence/2026-10-20-proot-lifecycle.md](evidence/2026-10-20-proot-lifecycle.md)
+- [docs/evidence/2026-10-20-interactive-workstation-followup.md](evidence/2026-10-20-interactive-workstation-followup.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 
 **Status:** planned
 
-Read-only Ternux source/state and guest diagnostics record v1.4.0, configured guest account, Zink backend, and launcher display :0. Same-input :0 handoff is partial while :1 verifies; Ternux reported running while current visible server :1 matched Ternuxx ownership and :0 was not observed (installed-script identity unverified); active :0 rootfs/X-server ownership and feature parity remain unverified, so no lifecycle adapter is qualified. Guest diagnostics now explain the observed :0 process mismatch while :1 still verifies; Ternux ownership remains unverified. Fresh native installed CLI recheck at 08:21 UTC confirms Ternux v1.4.0 exposes no generic workload execution command; host backend is Zink/Vulkan but renderer is unknown. P4 remains planned pending the P3 ownership contract and owner review of ADR-0006. A fresh native bounded verification at 08:23 UTC passed on :1/Zink-Turnip/audio control, but does not establish rootfs/session ownership or workload dispatch. Current 2026-10-18 14:28 UTC read-only snapshot: upstream Ternux `main` is pinned at 9fda631; host Ternux reports Zink/Vulkan available but renderer unknown; its installed v1.4.0 lacks the `extension` command documented upstream, and the standard extension root is absent. Native launcher aliases diverge from Ternux source semantics, Ternuxx desktop reports stopped, and the X11 socket owner remains unverified. Optional CPU/Vulkan and experimental HTP source capability is not proof of installation or active inference. See `docs/evidence/2026-10-18-existing-workstation-baseline.md`; P4 remains planned. Current Native Termux handoff slice: optional proot.app.launch session_owner=ternux with explicit display, read-only Ternux status/backend preflight, X11 socket and guest xdpyinfo validation. On :1, guest glxinfo reported Zink/Vulkan Turnip on Adreno 825, Accelerated=yes; Thunar process launch succeeded and remains owner-closeable; focused tests passed 12/12 and the final full Native Termux suite passed 312/312. Ternux session ownership, GUI visibility by independent observation, full lifecycle, and workload parity remain unverified. See docs/evidence/2026-10-18-ternux-session-app-handoff.md. Current recheck confirms active native GUI process ancestry includes the Ternuxx supervisor, and the CLI now discovers that recorded state through identity-checked fallback. The earlier Thunar process is no longer present; independent GUI visibility remains unknown.
+Read-only Ternux source/state and guest diagnostics record v1.4.0, configured guest account, Zink backend, and launcher display :0. Same-input :0 handoff is partial while :1 verifies; Ternux reported running while current visible server :1 matched Ternuxx ownership and :0 was not observed (installed-script identity unverified); active :0 rootfs/X-server ownership and feature parity remain unverified, so no lifecycle adapter is qualified. Guest diagnostics now explain the observed :0 process mismatch while :1 still verifies; Ternux ownership remains unverified. Fresh native installed CLI recheck at 08:21 UTC confirms Ternux v1.4.0 exposes no generic workload execution command; host backend is Zink/Vulkan but renderer is unknown. P4 remains planned pending the P3 ownership contract and owner review of ADR-0006. A fresh native bounded verification at 08:23 UTC passed on :1/Zink-Turnip/audio control, but does not establish rootfs/session ownership or workload dispatch. Current 2026-10-18 14:28 UTC read-only snapshot: upstream Ternux `main` is pinned at 9fda631; host Ternux reports Zink/Vulkan available but renderer unknown; its installed v1.4.0 lacks the `extension` command documented upstream, and the standard extension root is absent. Native launcher aliases diverge from Ternux source semantics, Ternuxx desktop reports stopped, and the X11 socket owner remains unverified. Optional CPU/Vulkan and experimental HTP source capability is not proof of installation or active inference. See `docs/evidence/2026-10-18-existing-workstation-baseline.md`; P4 remains planned. Current Native Termux handoff slice: optional proot.app.launch session_owner=ternux with explicit display, read-only Ternux status/backend preflight, X11 socket and guest xdpyinfo validation. On :1, guest glxinfo reported Zink/Vulkan Turnip on Adreno 825, Accelerated=yes; Thunar process launch succeeded and remains owner-closeable; focused tests passed 12/12 and the final full Native Termux suite passed 312/312. Ternux session ownership, GUI visibility by independent observation, full lifecycle, and workload parity remain unverified. See docs/evidence/2026-10-18-ternux-session-app-handoff.md. Current recheck confirms active native GUI process ancestry includes the Ternuxx supervisor, and the CLI now discovers that recorded state through identity-checked fallback. The earlier Thunar process is no longer present; independent GUI visibility remains unknown. On 2026-10-19, Native Termux TUI gained a guided named-app launch path through the shared operation with explicit session/display selection and confirmation; this is source/fixture coverage only and does not qualify Ternux ownership or P4 parity. 2026-10-19 host graphics/audio recheck: Native PulseAudio protocol reports ready on OpenSL_ES_sink, but its temporary socket, cookie, Debian client path, and actual playback remain unverified. Existing PRoot remains installed and untouched; no guest entry occurred. P4 remains planned until the P3 ownership gate and explicit PRoot compatibility checks pass.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -161,6 +189,9 @@ Evidence:
 - [docs/evidence/2026-10-18-p4-installed-ternux-interface-recheck.md](evidence/2026-10-18-p4-installed-ternux-interface-recheck.md)
 - [docs/evidence/2026-10-18-ternux-session-app-handoff.md](evidence/2026-10-18-ternux-session-app-handoff.md)
 - [docs/evidence/2026-10-18-live-session-state-reconciliation.json](evidence/2026-10-18-live-session-state-reconciliation.json)
+- [docs/evidence/2026-10-19-tui-guided-proot-launch.md](evidence/2026-10-19-tui-guided-proot-launch.md)
+- [docs/evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md](evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md)
+- [docs/architecture/NATIVE-GRAPHICS-AUDIO.md](architecture/NATIVE-GRAPHICS-AUDIO.md)
 
 ## P5 — Distro and display compatibility profiles
 

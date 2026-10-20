@@ -4,27 +4,31 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
 TMP_ROOT="${TMPDIR:-$PREFIX/tmp}"
-GUEST_USER="$(PYTHONPATH="$ROOT/lib" python3 -c 'import os,proot_diagnostics; print(proot_diagnostics.resolve_ternux_guest_user(home=os.environ["HOME"], path=os.environ.get("PATH", "")))')" || {
-  echo "Could not safely resolve the configured Debian PRoot user from Ternux state." >&2
+GUEST_USER="$(PYTHONPATH="$ROOT/lib" python3 -c 'import os,proot_diagnostics; print(proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=os.environ["PREFIX"]))')" || {
+  echo "Could not resolve one regular Debian account from the installed rootfs." >&2
   exit 1
 }
 
-DISPLAY_VALUE="$("$ROOT/ternuxx" status --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("status")=="running" and d.get("x11")=="yes"; print(d["display"])')" || {
+DISPLAY_VALUE="$("$ROOT/tx" status --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("status")=="running" and d.get("x11")=="yes"; print(d["display"])')" || {
   echo "Start the Ternuxx desktop first, then open Manage PRoot Shortcuts again." >&2
   exit 1
 }
 [[ "$DISPLAY_VALUE" =~ ^:[0-9]+$ ]] || { echo "Unsupported display: $DISPLAY_VALUE" >&2; exit 1; }
 [[ -S "$TMP_ROOT/.X11-unix/X${DISPLAY_VALUE#:}" ]] || { echo "X11 socket is unavailable for $DISPLAY_VALUE" >&2; exit 1; }
-proot-distro login debian --shared-tmp --user "$GUEST_USER" --env "DISPLAY=$DISPLAY_VALUE" -- xdpyinfo >/dev/null || {
+env -u ANDROID_ART_ROOT -u ANDROID_DATA -u ANDROID_I18N_ROOT \
+  -u ANDROID_ROOT -u ANDROID_RUNTIME_ROOT -u ANDROID_TZDATA_ROOT \
+  -u BOOTCLASSPATH -u DEX2OATBOOTCLASSPATH -u EXTERNAL_STORAGE proot-distro login debian --shared-tmp --user "$GUEST_USER" --env "DISPLAY=$DISPLAY_VALUE" -- xdpyinfo >/dev/null || {
   echo "Debian PRoot cannot connect to $DISPLAY_VALUE" >&2
   exit 1
 }
 
-service() { "$ROOT/ternuxx" management shortcuts "$@"; }
+service() { "$ROOT/tx" management shortcuts "$@"; }
 
 dialog() {
   local title="$1" buttons="$2" default="$3" message="$4"
-  proot-distro login debian --shared-tmp --user "$GUEST_USER" --env "DISPLAY=$DISPLAY_VALUE" -- \
+  env -u ANDROID_ART_ROOT -u ANDROID_DATA -u ANDROID_I18N_ROOT \
+  -u ANDROID_ROOT -u ANDROID_RUNTIME_ROOT -u ANDROID_TZDATA_ROOT \
+  -u BOOTCLASSPATH -u DEX2OATBOOTCLASSPATH -u EXTERNAL_STORAGE proot-distro login debian --shared-tmp --user "$GUEST_USER" --env "DISPLAY=$DISPLAY_VALUE" -- \
     xmessage -center -title "$title" -buttons "$buttons" -default "$default" "$message"
 }
 

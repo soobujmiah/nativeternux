@@ -75,7 +75,7 @@ Read-only observations made from the current Debian 13.7 ARM64 PRoot session at 
 | Fact | Observed | Evidence boundary |
 |---|---|---|
 | Current agent runtime | Debian GNU/Linux 13.7, aarch64, PRoot-Distro kernel string | Confirms this agent session runs in a PRoot userland; it does not authorize guest modifications. |
-| Device | Xiaomi `25053RT47C`, codename `onyx`, Android 16, ABI `arm64-v8a`, SoC `SM8735` | Read-only system properties; no identifying serial was recorded. |
+| Device | Xiaomi `[redacted device serial]`, codename `onyx`, Android 16, ABI `arm64-v8a`, SoC `SM8735` | Read-only system properties; no identifying serial was recorded. |
 | GPU visibility | `/dev/kgsl-3d0` present and readable model `Adreno825`; `/dev/dri/renderD128` absent in this process context | Detection/access only; this is not an inference or renderer test. |
 | APK presence | `com.termux`, `com.termux.boot`, `com.termux.api`, `com.termux.x11`, and `moe.shizuku.privileged.api` resolve through `pm path` | Package presence only; versions, current service state and authorization were not verified. Accessibility-service settings were not inspected. |
 | Termux packages | `termux-x11-nightly`, `dbus`, `pulseaudio`, `termux-api` are installed in the native Termux dpkg database | Read-only package status. |
