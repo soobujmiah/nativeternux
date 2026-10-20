@@ -230,12 +230,17 @@ def _matches_lsof(paths: dict[str, Path | str | int], pid: int) -> bool:
                                 text=True, timeout=3, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise VirglError("could not inspect VirGL socket users; stop was refused") from exc
+    diagnostic = result.stderr.lower()
+    if any(marker in diagnostic for marker in ("warning:", "permission denied", "output information may be incomplete")):
+        raise VirglError("Native process visibility is incomplete; VirGL client ownership is unknown, so stop was refused")
     pids: set[int] = set()
     for line in result.stdout.splitlines():
         if not line.strip().isdigit():
             raise VirglError("lsof returned ambiguous VirGL socket ownership; stop was refused")
         pids.add(int(line.strip()))
-    if result.returncode not in {0, 1} or pids != {pid}:
+    if result.returncode == 1 and not pids:
+        raise VirglError("Android lsof could not map this Unix socket to its owner; VirGL client ownership is unknown, so stop was refused")
+    if result.returncode != 0 or pids != {pid}:
         raise VirglError("VirGL has active or unverified socket users; stop was refused")
     return True
 

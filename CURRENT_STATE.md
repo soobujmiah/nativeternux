@@ -673,3 +673,8 @@ Direct-device work in the canonical Native Termux checkout adds `tx virgl status
 ### Live VirGL startup qualification — 2026-10-20
 
 Native `virglrenderer-android` 1.3.0-1 server started on `:1`; status matched Ternuxx PID 21034 and the private socket. Stop was refused because `lsof` returned no socket PID and Android denied `fuser` access to `/proc/net/unix`; service remains running fail-closed. Active PRoot PID 14360 remains present, Native PulseAudio and X11 remain up, and no new guest login/rootfs mutation occurred. No VirGL guest workload or renderer is verified. Client-aware stop recovery and live PRoot workload are next gates. Evidence is appended to `docs/evidence/2026-10-20-workstation-qualification-execution.md`.
+
+
+### VirGL stop ownership limitation — 2026-10-20
+
+Tightened `tx virgl stop` diagnostics and added fixtures for Android lsof path misses and incomplete process visibility. Native Termux still cannot enumerate AF_UNIX peers: lsof has no exact path PID, fuser and `/proc/net/unix` are permission-denied, and `NETLINK_SOCK_DIAG` socket creation returns `PermissionError`. `tx virgl stop --display :1` exits 1 with an actionable refusal and leaves exact owner PID 21034 and its socket intact. Active PRoot PID 14360 remains running. Full Native Termux suite passed 560/560; latest targeted suite passed 20/20. The source of truth and Linux UAPI probe evidence are in the workstation execution record.
