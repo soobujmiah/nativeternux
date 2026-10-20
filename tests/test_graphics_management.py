@@ -110,11 +110,27 @@ class GraphicsManagementTests(unittest.TestCase):
         self.assertEqual(runner.call_args_list[1].args[1]["LIBGL_ALWAYS_SOFTWARE"], "true")
         self.assertEqual(runner.call_args_list[1].args[1]["GALLIUM_DRIVER"], "llvmpipe")
 
+    def test_opengl_tries_softpipe_when_llvmpipe_cannot_render(self) -> None:
+        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/glmark2"), \
+             patch.object(graphics_manager, "_run", side_effect=[
+                 (1, "primary Zink failed"),
+                 (1, "GL_RENDERER: llvmpipe (LLVM fixture)\n"),
+                 (0, "GL_RENDERER: softpipe (LLVM fixture)\nglmark2 Score: 33\n"),
+             ]) as runner:
+            result = graphics_manager.verify("native", "opengl", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(result["status"], "fallback-rendered")
+        self.assertEqual(result["fallback_order"], ["llvmpipe", "softpipe"])
+        self.assertEqual([item["backend"] for item in result["fallback_attempts"]], ["llvmpipe", "softpipe"])
+        self.assertEqual(runner.call_args_list[1].args[1]["GALLIUM_DRIVER"], "llvmpipe")
+        self.assertEqual(runner.call_args_list[2].args[1]["GALLIUM_DRIVER"], "softpipe")
+
     def test_opengl_fallback_does_not_accept_an_unqualified_renderer(self) -> None:
         with patch.object(graphics_manager.shutil, "which", return_value="/fixture/glmark2"), \
              patch.object(graphics_manager, "_run", side_effect=[
                  (1, "primary backend failed"),
                  (0, "GL_RENDERER: unknown virtual renderer\nglmark2 Score: 123\n"),
+                 (0, "GL_RENDERER: another virtual renderer\nglmark2 Score: 100\n"),
              ]):
             result = graphics_manager.verify("native", "opengl", home=str(self.home), state_dir=str(self.state),
                                              process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
