@@ -64,3 +64,8 @@ Optimization is workload-scoped and evidence-based. Native and PRoot profiles re
 
 
 Native graphical and audio ownership, readiness evidence, and the unqualified PRoot endpoint boundary are documented in [Native graphics and audio](architecture/NATIVE-GRAPHICS-AUDIO.md).
+
+
+## Shared graphics provider diagnostics
+
+`graphics.provider.status` and `graphics.provider.verify` use the same typed management service for Native Termux and the existing Debian PRoot. Native Bionic and Debian glibc results remain separate. Native GL status checks the current display renderer; native OpenGL verification runs the bounded off-screen `glmark2` workload. Vulkan status is device enumeration only and is never labeled as a rendered workload. GLES verification reports unavailable until a dedicated GLES runner is available; the shared OpenGL benchmark is not used as a GLES substitute. The Debian provider uses the existing fixed read-only guest verifier for its configured Zink/Turnip GL path. CLI, TUI, Web, and GTK expose these same operations; no interface owns independent graphics policy.

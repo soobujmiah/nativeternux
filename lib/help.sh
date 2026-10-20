@@ -33,6 +33,7 @@ Commands:
   proot       Inspect and manage PRoot integrations
   audio       Manage Native PulseAudio used by Debian PRoot
   virgl       Manage the identity-checked Native VirGL server
+  graphics    Select Native desktop graphics backend
   ssh         Inspect and manage the fixed native SSH service
   checkpoint  Prepare or verify reboot-continuity records
   remote      Preview off-home access policy
@@ -87,6 +88,17 @@ still use it; inspect with `tx virgl status` and stop only when no client is att
 CPU execution is independent of the graphics backend. NPU execution is not wired.
 EOF
       ;;
+    graphics)
+      cat <<'EOF'
+tx graphics native status|enable --prefix PATH|disable
+
+Select an extracted Native KGSL Mesa candidate for future desktop sessions.
+Enable validates the required candidate files and saves its prefix in the
+private Ternuxx state directory. Restart the desktop to apply it to XFCE and
+new native applications. Disable returns future sessions to the system stack.
+The candidate remains local and experimental; GPU inference is not implied.
+EOF
+      ;;
     virgl)
       cat <<'EOF'
 tx virgl [status|start|stop] [--display :N]
@@ -128,6 +140,7 @@ tx mng boot cron preview {enable|disable} — Preview exact script changes
 tx mng boot cron enable|disable --yes --plan-id ID — Apply the reviewed boot-script plan
 tx mng timezone status|list — Inspect configured timezone and available IANA zones
 tx mng timezone set IANA_NAME — Persist an explicitly selected timezone
+tx mng graphics status PROVIDER | verify PROVIDER API [:N] | select native BACKEND
 tx mng doctor [--graphics] — Run read-only Doctor via the shared service
 tx mng app launch APP_ID — Launch a named PRoot app on native X11
 tx mng shortcuts list — View PRoot app launchers
@@ -139,7 +152,7 @@ tx web — Open the browser UI over the same shared service
 The Web UI binds only to 127.0.0.1 (default port 8765), copies the one-time
 bootstrap secret to the Termux clipboard, opens the local browser, and runs until Ctrl-C. The secret is not saved. If clipboard copy fails,
 the server stops without revealing it; use --show-secret-on-clipboard-failure
-for the explicit private-terminal fallback. The browser client uses the shared management service. It can read catalogued diagnostics, edit GUI Activity-monitoring policy, and start/stop/restart the verified native desktop after confirmation. Other mutations stay unavailable until their preview and authorization flows are implemented.
+for the explicit private-terminal fallback. The browser client uses the shared management service. It can read provider-specific graphics diagnostics and select the Native KGSL candidate or system stack after confirmation, edit GUI Activity-monitoring policy, and start/stop/restart the verified native desktop after confirmation. Debian graphics remain controlled by the existing Ternux guest configuration.
 EOF
       ;;
     start)
@@ -306,6 +319,9 @@ EOF
 tx proot status — Read-only installed guest inventory
 tx proot gui {start|status|stop} — legacy session status/stop; separate :0 start disabled
 tx proot verify --distro debian (--guest-user USER|--guest-user-from rootfs) --display :N --backend zink|virgl
+tx proot setup status
+tx proot setup adopt-preview --user NAME
+tx proot setup adopt --user NAME --yes --plan-id PLAN_ID
 
 --backend is the expected renderer class for this read-only probe; it does not switch drivers.
 
@@ -316,8 +332,11 @@ reinstall or rootfs replacement is part of this route. Status lists installed
 distributions. Verify enters Debian only to run a fixed Ternuxx read-only
 display/audio/renderer probe. The rootfs source resolves the unique ordinary
 non-root account from Debian passwd; unsafe paths or ambiguous accounts fail
-closed. This route does not invoke the separate Ternux CLI or change guest
-packages, services, or desktop lifecycle.
+closed. The Ternuxx-owned setup profile and read-only adoption record are managed with
+tx proot setup. Adoption writes only a private Native Ternuxx state record; it
+does not change guest files, packages, services, or desktop lifecycle. Fresh
+Debian provisioning and package configuration are staged separately and are
+not yet available. This route does not invoke the separate Ternux CLI.
 EOF
       ;;
     reboot)

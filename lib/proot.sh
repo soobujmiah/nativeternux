@@ -69,6 +69,40 @@ nt_cmd_proot() {
       ;;
     db) _nt_use launch; nt_cmd_db "$@" ;;
     gui)   _nt_proot_gui "$@" ;;
-    *) nt_fail "Use proot status|inspect|verify|db|gui."; return 2 ;;
+    setup)
+      local action="${1:-status}" user="" plan_id="" confirmed=0 option
+      [ $# -eq 0 ] || shift
+      case "$action" in
+        status|adopt-preview|adopt) ;;
+        *) nt_fail "Use tx proot setup {status|adopt-preview|adopt}."; return 2 ;;
+      esac
+      while [ "$#" -gt 0 ]; do
+        option="$1"; shift
+        case "$option" in
+          --user) [ "$#" -gt 0 ] || { nt_fail "--user needs a value."; return 2; }; user="$1"; shift ;;
+          --plan-id) [ "$#" -gt 0 ] || { nt_fail "--plan-id needs a value."; return 2; }; plan_id="$1"; shift ;;
+          --yes) confirmed=1 ;;
+          --help|-h) nt_help proot; return 0 ;;
+          *) nt_fail "Unknown PRoot setup option: $option"; return 2 ;;
+        esac
+      done
+      nt_require_termux || return 1
+      nt_require_command python3 || return 1
+      local repo_root="${_TN_LIB_DIR%/lib}"
+      local setup_args=("$action" --repo-root "$repo_root" --json)
+      case "$action" in
+        status) [ -z "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
+          nt_fail "Usage: tx proot setup status"; return 2;
+        } ;;
+        adopt-preview) [ -n "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
+          nt_fail "Usage: tx proot setup adopt-preview --user NAME"; return 2;
+        }; setup_args+=(--user "$user") ;;
+        adopt) [ -n "$user" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || {
+          nt_fail "Apply requires --user NAME --yes --plan-id ID from an adoption preview."; return 2;
+        }; setup_args+=(--user "$user" --yes --plan-id "$plan_id") ;;
+      esac
+      python3 "$_TN_LIB_DIR/proot_setup.py" "${setup_args[@]}"
+      ;;
+    *) nt_fail "Use proot status|inspect|verify|db|gui|setup."; return 2 ;;
   esac
 }

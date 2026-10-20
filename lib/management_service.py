@@ -32,6 +32,7 @@ import remote_access_policy
 import proot_shortcuts
 import doctor_report
 import management_catalog
+import graphics_manager
 import gui_monitoring
 import hermes_adapter
 import cron_registry
@@ -45,6 +46,9 @@ import timezone_support
 API_VERSION = 1
 OPERATIONS = {
     "management.catalog": {"args": {"category", "query", "status"}},
+    "graphics.provider.status": {"args": {"provider"}},
+    "graphics.provider.verify": {"args": {"provider", "api", "display"}},
+    "graphics.provider.select": {"args": {"provider", "backend", "confirmed"}},
     "agent.hermes.status": {"args": set()},
     "cron.status": {"args": set()},
     "cron.scheduler.start": {"args": {"poll_seconds", "confirmed"}},
@@ -269,6 +273,26 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = {"job": cron_registry.update_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"], args["changes"])}
         elif operation == "cron.jobs.remove":
             data = cron_registry.remove_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])
+        elif operation == "graphics.provider.status":
+            provider = args.get("provider")
+            if provider not in {"native", "debian"}:
+                return _error(request_id, "invalid_arguments", "provider must be native or debian")
+            data = graphics_manager.status(provider, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), process_env=process_env, prefix=process_env["PREFIX"])
+        elif operation == "graphics.provider.select":
+            if args.get("provider") != "native" or args.get("backend") not in {"kgsl-freedreno", "system"} or args.get("confirmed") is not True:
+                return _error(request_id, "confirmation_required", "Native graphics selection requires a supported backend and explicit confirmation")
+            repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            data = graphics_manager.configure_native(args["backend"], home=home,
+                state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), repo_root=repo_root)
+        elif operation == "graphics.provider.verify":
+            provider, api = args.get("provider"), args.get("api")
+            display = args.get("display", ":1")
+            if provider not in {"native", "debian"} or api not in {"opengl", "gles", "vulkan"} or not isinstance(display, str) or not re.fullmatch(r":[0-9]{1,2}", display):
+                return _error(request_id, "invalid_arguments", "provider, graphics API, or display is invalid")
+            if provider == "debian":
+                process_env = dict(process_env)
+                process_env["TERNUXX_GRAPHICS_DISPLAY"] = display
+            data = graphics_manager.verify(provider, api, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), process_env=process_env, prefix=process_env["PREFIX"])
         elif operation == "management.catalog":
             data = management_catalog.build_catalog(
                 set(OPERATIONS), category=args.get("category"),
@@ -656,6 +680,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--guest-user-source", choices=("rootfs",))
     parser.add_argument("--display", choices=tuple(f":{number}" for number in range(11)))
     parser.add_argument("--backend", choices=("zink", "virgl"))
+    parser.add_argument("--provider", choices=("native", "debian"))
+    parser.add_argument("--graphics-api", choices=("opengl", "gles", "vulkan"))
+    parser.add_argument("--graphics-backend", choices=("kgsl-freedreno", "system"))
     parser.add_argument("--policy-stdin", action="store_true",
                         help="read a secret-free remote-access desired policy JSON object from stdin")
     parser.add_argument("--current-boot-id")
@@ -825,6 +852,24 @@ def main(argv: list[str] | None = None) -> int:
             payload["user_source"] = "rootfs"
     elif args.operation == "management.catalog":
         payload = {key: value for key, value in (("category", args.category), ("query", args.query), ("status", args.status)) if value is not None}
+    elif args.operation == "graphics.provider.status":
+        if not args.provider:
+            response = _error(request_id, "invalid_arguments", "--provider is required")
+            print(json.dumps(response, sort_keys=True) if args.json else "Provide --provider native|debian.", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"provider": args.provider}
+    elif args.operation == "graphics.provider.select":
+        if args.provider != "native" or not args.graphics_backend or not args.yes:
+            response = _error(request_id, "confirmation_required", "select requires --provider native, --graphics-backend, and --yes")
+            print(json.dumps(response, sort_keys=True) if args.json else "Confirm native graphics backend selection with --yes.", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"provider": args.provider, "backend": args.graphics_backend, "confirmed": True}
+    elif args.operation == "graphics.provider.verify":
+        if not args.provider or not args.graphics_api:
+            response = _error(request_id, "invalid_arguments", "--provider and --graphics-api are required")
+            print(json.dumps(response, sort_keys=True) if args.json else "Provide --provider and --graphics-api.", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"provider": args.provider, "api": args.graphics_api, "display": args.display or ":1"}
     elif args.operation == "cron.scheduler.start":
         payload = {"poll_seconds": args.poll_seconds, "confirmed": bool(args.yes)}
     elif args.operation == "cron.scheduler.stop":

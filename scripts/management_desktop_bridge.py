@@ -37,6 +37,15 @@ def main(argv: list[str]) -> int:
         print("Typed management action required.", file=sys.stderr)
         return 2
     action = argv[0]
+    if action == "graphics-select" and len(argv) == 2 and argv[1] in {"kgsl-freedreno", "system"}:
+        result = call("graphics.provider.select", {"provider": "native", "backend": argv[1], "confirmed": True})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
+    if action == "graphics-verify" and len(argv) == 3:
+        provider, api = argv[1], argv[2]
+        result = call("graphics.provider.verify", {"provider": provider, "api": api, "display": ":1"})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "catalog" and len(argv) == 1:
         result = call("management.catalog")
         if not result.get("ok"):
@@ -52,7 +61,10 @@ def main(argv: list[str]) -> int:
     if action == "inspect" and len(argv) == 2:
         rid = argv[1]
         operation_args: dict[str, object] = {}
-        if rid == "network.ssh.manual-8022":
+        if rid in {"graphics.native", "graphics.debian"}:
+            operation = "graphics.provider.status"
+            operation_args = {"provider": "native" if rid.endswith("native") else "debian"}
+        elif rid == "network.ssh.manual-8022":
             operation = "ssh.inspect"
         elif rid == "native.acceleration.qualification":
             operation = "doctor.report"

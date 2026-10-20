@@ -2,7 +2,7 @@
 
 ## Project scope
 
-Ternuxx is an independent project aiming to become a world-class mobile workstation in a pocket with CPU baseline and verified GPU/NPU acceleration. Treat native Termux and the existing Ternux Debian PRoot as complementary first-class layers: native tools and permitted Android-facing integrations have their place; the PRoot provides its Linux userland, established desktop/workloads, and configured GPU route. Hybrid workflows should join their strengths through scoped handoffs. The existing `soobujmiah/ternux` project and its Debian rootfs remain independent and must not be modified as part of Ternuxx work. The supported source-checkout command is `./tx`; the installed `tx` shim dispatches to `$HOME/ternuxx`. Installed paths use the Ternuxx state and library directories.
+Ternuxx is an independent project aiming to become a world-class mobile workstation in a pocket with CPU baseline and verified GPU/NPU acceleration. Treat native Termux and the existing Ternux Debian PRoot as complementary first-class layers: native tools and permitted Android-facing integrations have their place; the PRoot provides its Linux userland, established desktop/workloads, and configured GPU route. Hybrid workflows should join their strengths through scoped handoffs. The `soobujmiah/ternux` source project remains independent. Its existing Debian rootfs is the owner-selected Ternuxx adapter target and may be changed only through the bounded Ternuxx guest plan described below. The supported source-checkout command is `./tx`; the installed `tx` shim dispatches to `$HOME/ternuxx`. Installed paths use the Ternuxx state and library directories.
 
 Read `README.md`, `CURRENT_STATE.md`, `PROJECT_MANIFEST.yaml`, `PROJECT_CLASSIFICATION.yaml`, `AI_ASSISTANT.md`, `SECURITY.md`, `docs/PRODUCT-VISION.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/KNOWLEDGE-SYNC.md`, `SKB_KNOWLEDGE_SYNC.md`, relevant ADRs, and task-relevant evidence in `docs/RESEARCH.md` before changing behavior. Keep vision-facing docs in my plain first-person voice. Do not turn my goals into generic marketing copy or claim that I verified something I have not. For existing Ternux PRoot GPU use, read `docs/PROOT-GPU.md` first.
 
@@ -25,9 +25,10 @@ A device node, driver library, Vulkan instance, or shader cache is not proof tha
 - Keep work inside this repository unless the owner authorizes a specific additional path.
 - Do not access shared/external storage or personal device data without explicit path-specific authorization.
 - Do not install/remove/upgrade device packages, change Android/Termux settings, start/stop desktop processes, or drive device UI unless explicitly authorized for that operation.
-- Do not rewrite `~/x.sh`, run Ternux cleanup, or modify/upgrade/remove/prune/minimize the existing Ternux Debian rootfs. Native/Hybrid work must preserve all demonstrated existing Ternux PRoot features; Ternuxx additions are opt-in and additive.
+- Do not rewrite `~/x.sh`, run broad Ternux cleanup, or replace/reset/prune/minimize the existing Debian rootfs. The owner has directed Ternuxx to become its setup and management layer: guest changes are allowed only through a Ternuxx-owned, exact-target preview with explicit apply, preserved user data, and a tested rollback. Preserve `db`, `droot`, `x.sh`, `xgo`, and `killx` behavior.
+- Do not call the legacy Ternux CLI from new code. Retire its exact host/guest command files only after Ternuxx replacement and workload verification, with a reviewable preview and backup/rollback. Never use `ternux uninstall`.
 - Until an ownership-aware adapter exists, Ternuxx must not start or stop Ternux or claim its display/audio lifecycle. Existing Ternux GPU workloads are run from the Ternux Debian desktop.
-- Keep package installation preview-first with explicit consent. Never describe a stub as implemented.
+- Keep Native and Debian package installation preview-first with explicit consent. Debian Bionic/Termux libraries must never cross into the Debian glibc guest. Never describe a stub as implemented or a manifest as a working installer.
 
 ## Engineering workflow
 

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "profile_id": "native-mesa-kgsl-0219ff84",
+  "status": "device-qualified-experimental; installer-not-implemented",
+  "provider": "native-termux-bionic",
+  "architecture": "aarch64",
+  "device_qualification": {
+    "android": "16",
+    "gpu": "Adreno 825",
+    "mesa": "26.3.0-devel",
+    "upstream_commit": "98f3d6229d"
+  },
+  "input_snapshot": {
+    "bundle_sha256": "8b8f3dfccefd4dc3dba65a0099dc9c3efdfd6afc7f9679f3b92a2b8b781a9353",
+    "packages": [
+      {
+        "name": "mesa",
+        "version": "26.3.0",
+        "architecture": "aarch64",
+        "sha256": "1a11b410b31ff98e80915cd0a51b7f7e91f0c8a7b09c71862e8924028eff1ecb"
+      },
+      {
+        "name": "mesa-dev",
+        "version": "26.3.0",
+        "architecture": "all",
+        "sha256": "09c81b60186cac48dcd73ff066925f57273b1d2f327214fbd449c13c0bf1aa60"
+      },
+      {
+        "name": "mesa-vulkan-icd-freedreno",
+        "version": "26.3.0",
+        "architecture": "aarch64",
+        "sha256": "772eb1b9ac2f689bd8659bfd0aaffcb827caca322be3441d41520831dec4cb09"
+      },
+      {
+        "name": "mesa-vulkan-icd-swrast",
+        "version": "26.3.0",
+        "architecture": "aarch64",
+        "sha256": "2c67dd19b45bf69944c2185b9a5a7a60c7a48d0beea9e5d6bfb3b1e3c7decedf"
+      },
+      {
+        "name": "mesa-opencl-icd-rusticl",
+        "version": "26.3.0",
+        "architecture": "aarch64",
+        "sha256": "d1fea689f105fb81128be6caed3338bab40262750b3d809aa04020fcc2eba81d"
+      }
+    ],
+    "clean_install_reproducible": false,
+    "source_project": "https://github.com/lfdevs/termux-packages/pull/25",
+    "source_kind": "community-draft-pull-request-GitHub-Actions-artifact-not-official-Termux-release",
+    "source_commit": "0219ff84b372c9d38aad4e40f448c20ec3d1588e",
+    "workflow_run_id": "36377469447",
+    "artifact_name": "debs-aarch64-0219ff84b372c9d38aad4e40f448c20ec3d1588e",
+    "artifact_distribution_url": null
+  },
+  "private_state": {
+    "provider_root": "$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84",
+    "prefix": "$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/extracted/data/data/com.termux/files/usr",
+    "icd_manifest": "$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/freedreno-isolated.json"
+  },
+  "verified_files": {
+    "lib/dri/libdril_dri.so": "2b9e257e9eff82d7a3bbda0334f27678500857de13aabc0746f7362eb1caf837",
+    "lib/libgallium-26.3.0-devel.so": "1d3280f47fcf3188c89630aa2e14162e46f8e672ee202cfd150e0e3ac288874a",
+    "lib/libvulkan_freedreno.so": "df7c286663e6b9aad7a325f0af0df8590ff9c582ac76cf236684528c757eac22",
+    "share/glvnd/egl_vendor.d/50_mesa.json": "cd3881df4227c13ca7f9cfe6c78820f21d5f7a00a41b299214f6f827e63be369"
+  },
+  "qualification": {
+    "native_opengl": "render-verified-on-adreno-825",
+    "native_vulkan": "device-enumerated; draw-unverified",
+    "native_gles": "standalone-pbuffer-rendered; shared-manager-runner-unavailable",
+    "inference": "unverified"
+  }
+}

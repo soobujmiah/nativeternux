@@ -1,0 +1,230 @@
+"""Shared, provider-aware graphics inventory and bounded verification."""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import shutil
+import stat
+import subprocess
+from pathlib import Path
+
+
+def _run(argv: list[str], env: dict[str, str], timeout: int = 20) -> tuple[int, str]:
+    try:
+        result = subprocess.run(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, timeout=timeout, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return 127, type(exc).__name__
+    return result.returncode, result.stdout[-12000:]
+
+
+def _candidate_hashes(repo_root: str) -> dict[str, str]:
+    manifest = Path(repo_root) / "config/graphics/native-kgsl.json"
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        hashes = data.get("verified_files")
+    except (OSError, ValueError, AttributeError) as exc:
+        raise ValueError("qualified KGSL profile manifest is unavailable") from exc
+    if data.get("schema_version") != 1 or data.get("provider") != "native-termux-bionic" or not isinstance(hashes, dict):
+        raise ValueError("qualified KGSL profile manifest is invalid")
+    if any(not isinstance(key, str) or not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value)
+           for key, value in hashes.items()):
+        raise ValueError("qualified KGSL profile hashes are invalid")
+    return hashes
+
+
+def _candidate_paths(state_dir: str) -> tuple[str, str]:
+    root = Path(state_dir) / "graphics/providers/native-mesa-0219ff84"
+    prefix = root / "extracted/data/data/com.termux/files/usr"
+    return str(prefix), str(root / "freedreno-isolated.json")
+
+
+def _native_env(*, home: str, state_dir: str, process_env: dict[str, str]) -> dict[str, str]:
+    env = dict(process_env)
+    session = Path(state_dir) / "session.json"
+    try:
+        data = json.loads(session.read_text(encoding="utf-8"))
+        display = data.get("display")
+        if isinstance(display, str) and re.fullmatch(r":[0-9]{1,2}", display):
+            env["DISPLAY"] = display
+    except (OSError, ValueError, AttributeError):
+        pass
+    config = Path(state_dir) / "native-graphics-prefix"
+    try:
+        config_meta = config.lstat()
+        prefix = config.read_text(encoding="utf-8").splitlines()[0]
+        qualified_root, isolated = _candidate_paths(state_dir)
+        if (config.is_file() and not config.is_symlink() and config_meta.st_uid == os.getuid()
+                and stat.S_IMODE(config_meta.st_mode) == 0o600 and os.path.isabs(prefix)
+                and os.path.realpath(prefix) == os.path.realpath(qualified_root)
+                and os.path.isdir(prefix) and not os.path.islink(prefix)
+                and os.path.isfile(os.path.join(prefix, "lib/dri/libdril_dri.so"))
+                and os.path.isfile(os.path.join(prefix, "lib/libgallium-26.3.0-devel.so"))):
+            env.update({
+                "LD_LIBRARY_PATH": prefix + "/lib:" + env.get("LD_LIBRARY_PATH", ""),
+                "LIBGL_DRIVERS_PATH": prefix + "/lib/dri",
+                "MESA_LOADER_DRIVER_OVERRIDE": "kgsl",
+                "__EGL_VENDOR_LIBRARY_FILENAMES": prefix + "/share/glvnd/egl_vendor.d/50_mesa.json",
+                "GLX_VENDOR_LIBRARY_NAME": "mesa",
+            })
+            # The candidate ICD manifest in private provider state is deliberately
+            # generated only when its library is present at this checked path.
+            try:
+                manifest = json.loads(Path(isolated).read_text(encoding="utf-8"))
+                library = manifest.get("ICD", {}).get("library_path")
+                expected = os.path.join(prefix, "lib/libvulkan_freedreno.so")
+                if library == expected and os.path.isfile(expected):
+                    env["VK_ICD_FILENAMES"] = isolated
+            except (OSError, ValueError, AttributeError):
+                pass
+    except (OSError, IndexError):
+        pass
+    if env.get("DISPLAY"):
+        env.setdefault("XDG_RUNTIME_DIR", os.path.join(process_env.get("PREFIX", ""), "tmp"))
+    return env
+
+
+def status(provider: str, *, home: str, state_dir: str, process_env: dict[str, str], prefix: str) -> dict[str, object]:
+    if provider == "native":
+        env = _native_env(home=home, state_dir=state_dir, process_env=process_env)
+        display = env.get("DISPLAY")
+        gl = {"status": "unavailable", "renderer": None, "accelerated": None}
+        if display and shutil.which("glxinfo", path=env.get("PATH")):
+            code, output = _run([shutil.which("glxinfo", path=env.get("PATH")) or "glxinfo", "-B"], env)
+            renderer = next((line.split(":", 1)[1].strip() for line in output.splitlines()
+                             if line.strip().startswith("OpenGL renderer string:")), None)
+            accel = next((line.split(":", 1)[1].strip().lower() == "yes" for line in output.splitlines()
+                          if line.strip().startswith("Accelerated:")), None)
+            gl = {"status": "verified" if code == 0 and renderer else "failed", "renderer": renderer,
+                  "accelerated": accel, "display": display}
+        vk = {"status": "unavailable", "device": None, "proof": "not-queried"}
+        vkinfo = shutil.which("vulkaninfo", path=env.get("PATH"))
+        if vkinfo:
+            code, output = _run([vkinfo, "--summary"], env, 15)
+            device = next((m.group(1).strip() for line in output.splitlines()
+                           if (m := re.search(r"deviceName\s*=\s*(.*)", line))), None)
+            vk = {"status": "enumerated" if code == 0 and device else "unavailable",
+                  "device": device, "proof": "device-enumeration-only; no draw verified"}
+        return {"provider": provider, "display": display, "opengl": gl, "vulkan": vk,
+                "saved_candidate": os.path.isfile(os.path.join(state_dir, "native-graphics-prefix")),
+                "provider_boundary": "native Termux/Bionic"}
+    if provider == "debian":
+        import proot_diagnostics
+        user = proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=prefix)
+        result = proot_diagnostics.verify_proot_guest(
+            distro="debian", user=user, display=process_env.get("TERNUXX_GRAPHICS_DISPLAY", ":1"),
+            backend="zink", prefix=prefix)
+        result["provider"] = provider
+        result["provider_boundary"] = "existing Debian PRoot/glibc"
+        return result
+    raise ValueError("provider must be native or debian")
+
+
+def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: dict[str, str], prefix: str) -> dict[str, object]:
+    if provider == "debian":
+        if api != "opengl":
+            return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
+                    "reason": "current Debian adapter verifies OpenGL/Zink only; it does not run an OpenGL ES workload"}
+        return status(provider, home=home, state_dir=state_dir, process_env=process_env, prefix=prefix)
+    env = _native_env(home=home, state_dir=state_dir, process_env=process_env)
+    if api == "gles":
+        return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
+                "reason": "a dedicated OpenGL ES workload runner is not installed"}
+    if api == "opengl":
+        tool = shutil.which("glmark2", path=env.get("PATH"))
+        if not tool:
+            return {"provider": provider, "api": api, "status": "unavailable", "reason": "glmark2 is not installed"}
+        code, output = _run([tool, "--off-screen", "--size", "1280x720",
+                             "--frame-end", "finish", "--swap-mode", "immediate",
+                             "--benchmark", "build:duration=4.0",
+                             "--benchmark", "texture:duration=4.0",
+                             "--benchmark", "shading:duration=4.0"], env, 30)
+        renderer = next((line.split(":", 1)[1].strip() for line in output.splitlines()
+                         if line.strip().startswith("GL_RENDERER:")), None)
+        score = next((line.split(":", 1)[1].strip() for line in output.splitlines()
+                      if line.strip().startswith("glmark2 Score:")), None)
+        return {"provider": provider, "api": api, "status": "rendered" if code == 0 and renderer else "failed",
+                "render_verified": bool(code == 0 and renderer), "renderer": renderer,
+                "score": score, "display": "off-screen", "exit_code": code}
+    if api == "vulkan":
+        tool = shutil.which("vulkaninfo", path=env.get("PATH"))
+        if not tool:
+            return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
+                    "reason": "vulkaninfo is not installed"}
+        code, output = _run([tool, "--summary"], env, 15)
+        device = next((m.group(1).strip() for line in output.splitlines()
+                       if (m := re.search(r"deviceName\s*=\s*(.*)", line))), None)
+        return {"provider": provider, "api": api, "status": "enumerated" if code == 0 and device else "unavailable",
+                "render_verified": False, "device": device,
+                "proof": "vulkaninfo device enumeration only; a Vulkan draw was not exercised"}
+    raise ValueError("api must be opengl, gles, or vulkan")
+
+
+def configure_native(backend: str, *, home: str, state_dir: str, repo_root: str) -> dict[str, object]:
+    """Select only the known extracted candidate or native system stack."""
+    import stat
+    import tempfile
+    import desktop_session_state
+    config = Path(state_dir) / "native-graphics-prefix"
+    candidate, manifest_path = _candidate_paths(state_dir)
+    candidate = os.path.realpath(candidate)
+    if backend not in {"kgsl-freedreno", "system"}:
+        raise ValueError("backend must be kgsl-freedreno or system")
+    desktop_session_state.ensure_state_dir(Path(home), Path(state_dir))
+    if backend == "system":
+        try:
+            meta = config.lstat()
+        except FileNotFoundError:
+            return {"provider": "native", "backend": backend, "changed": False, "applies": "future desktop starts"}
+        if not stat.S_ISREG(meta.st_mode) or meta.st_uid != os.getuid():
+            raise ValueError("saved graphics selection is not a regular owned file; it was preserved")
+        try:
+            saved = config.read_text(encoding="utf-8").splitlines()[0]
+        except (OSError, IndexError):
+            raise ValueError("saved graphics selection is malformed; it was preserved")
+        if saved != candidate:
+            raise ValueError("saved graphics selection is not the qualified candidate; it was preserved")
+        config.unlink()
+        return {"provider": "native", "backend": backend, "changed": True, "applies": "future desktop starts"}
+    required = ["lib/dri/libdril_dri.so", "lib/libgallium-26.3.0-devel.so",
+                "share/glvnd/egl_vendor.d/50_mesa.json", "lib/libvulkan_freedreno.so"]
+    expected_hashes = _candidate_hashes(repo_root)
+    for item in required:
+        path = Path(candidate) / item
+        try:
+            metadata = path.lstat()
+        except OSError as exc:
+            raise ValueError("qualified KGSL candidate is incomplete") from exc
+        expected = expected_hashes.get(item)
+        if not stat.S_ISREG(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode) or not expected:
+            raise ValueError("qualified KGSL candidate contains an unsafe or unpinned file")
+        if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("qualified KGSL candidate file hash does not match its profile")
+    try:
+        manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ValueError("qualified Turnip ICD manifest is unavailable") from exc
+    if manifest.get("ICD", {}).get("library_path") != os.path.join(candidate, "lib/libvulkan_freedreno.so"):
+        raise ValueError("Turnip ICD manifest does not match the qualified candidate")
+    try:
+        current_meta = config.lstat()
+    except FileNotFoundError:
+        current_meta = None
+    if current_meta is not None and (not stat.S_ISREG(current_meta.st_mode) or current_meta.st_uid != os.getuid()):
+        raise ValueError("saved graphics selection is unsafe; it was preserved")
+    fd, temp_name = tempfile.mkstemp(prefix=".native-graphics-", dir=state_dir)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(candidate + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp_name, config)
+    finally:
+        try:
+            os.unlink(temp_name)
+        except FileNotFoundError:
+            pass
+    return {"provider": "native", "backend": backend, "changed": True, "applies": "future desktop starts"}

@@ -1,21 +1,50 @@
-# GPU inference acceleration
+# Graphics and accelerator verification
 
-**Status:** inference integration `NOT_IMPLEMENTED`; stock Native Termux renderer `SOFTWARE (llvmpipe)`; isolated community KGSL GL trial `PASS (Adreno 825)`; GPU inference workload `UNKNOWN`. **Commercial class:** supported GPU inference is a `FREE_CORE` target.
+## Current device results
 
-## Context-separated evidence
+Target: Native Termux on Android 16, aarch64, Adreno 825. Results below are scoped to the named API, process, and display. They do not establish inference acceleration or general application compatibility.
 
-The default Native Termux Mesa/Freedreno probe on Adreno 825 still returns `VK_ERROR_INCOMPATIBLE_DRIVER`, and ordinary `DISPLAY=:1 glxinfo -B` reports `llvmpipe (LLVM 21.1.8, 128 bits)`, `Accelerated: no`. The installed Native DRI directory contains `zink_dri.so` but no `kgsl_dri.so`. Separately, owner-authorized testing of a third-party draft KGSL/Turnip build from Native Termux on the same `:1` display, with only that process pointed to an extracted candidate prefix, enumerated Adreno 825 and reported Freedreno / `Accelerated: yes`; a bounded `glxgears` workload drew 602 frames in 5.0 seconds (~120.280 FPS) while the running XFCE compositor was verified on. The current XFCE/GTK session was not restarted and still uses the stock llvmpipe path. The Debian PRoot Zink/Turnip route remains separate and cannot supply Bionic libraries. No Native Mesa package or shared system library was replaced. See the [dated isolated driver trial](../evidence/2026-10-20-workstation-qualification-execution.md#native-kgslturnip-community-build-trial--2026-10-20). Native GPU inference remains unverified.
+| Provider and API | Current result | What the evidence establishes |
+|---|---|---|
+| Native OpenGL | Verified on display `:1`; Adreno 825 / Freedreno reports `Accelerated: yes` | The selected local Mesa KGSL candidate rendered GLX and the bounded `glmark2` workload. The stock Mesa path uses llvmpipe when the candidate is not selected. |
+| Native OpenGL ES | A prior standalone EGL/GLES pbuffer test rendered on the candidate; shared manager verification is unavailable | The shared manager has no dedicated GLES runner and does not infer GLES support from `glmark2`. |
+| Native Vulkan | Adreno 825 enumerates through Turnip | Enumeration only. No Vulkan draw has been verified. The stock package route previously returned `VK_ERROR_INCOMPATIBLE_DRIVER`. |
+| Debian OpenGL | Verified through the existing guest on `:1`; Zink over Turnip reports Adreno 825 | Existing Debian glibc stack only. The fixed verifier is read-only and does not install or alter guest files. |
+| Debian OpenGL ES | Unavailable through the current adapter | The guest verifier checks OpenGL/Zink, not a GLES workload. |
+| VirGL | Unqualified | A Native server process or available package alone does not prove a guest VirGL renderer. |
+| GPU inference / NPU | Not implemented or verified | No model/runtime workload has demonstrated delegated execution. |
 
-Upstream llama.cpp's Snapdragon backend docs describe GPUOpenCL on Adreno alongside CPU and Hexagon HTP, and contain Android target build/run examples. This makes Snapdragon/OpenCL a research candidate distinct from the failing Vulkan probe. It remains untested on this exact SM8735 device, native Termux app context and Ternuxx code. See [upstream Snapdragon backend](https://github.com/ggml-org/llama.cpp/tree/master/docs/backend/snapdragon) and [general Android/Termux instructions](https://github.com/ggml-org/llama.cpp/blob/master/docs/android.md).
+The current desktop preference is stored in private Ternuxx state. The running GUI session may continue to use the environment it inherited at its last start; changing the preference applies to future starts. Fresh installs use system Mesa because the locally tested candidate has no completed installer or clean-install qualification. The candidate remains experimental.
 
-## What counts as GPU success
+## Shared management commands
 
-- Build and dependency versions are recorded; runtime starts without loader errors.
-- GPU device is identified, and runtime logs show the target operations/tensors actually delegated. Record delegated and CPU-resident work separately.
-- Same model/hash, quantization, prompts, context, output limits, runtime commit and test conditions are run on CPU and GPU.
-- Output passes the same correctness checks. If outputs differ numerically, record tolerances/reference; do not use subjective response quality as proof.
-- Benchmark includes load time, TTFT/prompt throughput, decode tokens/s, end-to-end time, memory, repeat variation, thermal state and failures as available.
-- Forced-GPU execution that silently falls back to CPU is a GPU `FAIL` or `PARTIAL`, not a pass. CPU fallback remains a separately tested free path.
-- Sustained behavior and safe process teardown pass before release qualification.
+```sh
+./tx mng graphics status native
+./tx mng graphics status debian
+./tx mng graphics verify native opengl
+./tx mng graphics verify native vulkan
+./tx mng graphics select native system
+./tx mng graphics select native kgsl-freedreno
+```
 
-The stock package route still fails on this Adreno 825. The third-party process-scoped Mesa candidate does pass a short same-display GLX workload; that does not establish that the running XFCE session uses it, that sustained rendering is stable, or that inference is accelerated. The owner-directed next step is a same-display session-level trial after saving GUI work; the existing llvmpipe environment remains intact and VirGL remains a separate unqualified PRoot path. GPU inference needs a named model/runtime workload and delegated-operation evidence.
+OpenGL verification runs a bounded off-screen-mode `glmark2` workload. Vulkan verification reports device enumeration only and always marks `render_verified` false. OpenGL ES currently returns `unavailable` unless a dedicated runner is added. The Debian adapter supports only its configured OpenGL/Zink read-only check. CLI, TUI, Web, and GTK send these operations to the shared management service; action coverage varies by client.
+
+To use stock Native Mesa for the next desktop start, select `system`. To use the verified candidate for future starts, select `kgsl-freedreno`. Neither operation restarts the current desktop. The selected candidate must already exist in private provider state. This checkout does not yet download or install it on a fresh device.
+
+## Repeatable test setup and limits
+
+The Native candidate came from a GitHub Actions artifact for the community draft [lfdevs/termux-packages PR #25](https://github.com/lfdevs/termux-packages/pull/25), not an official Termux release, and was staged under `$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/`. The checked-in profile records its draft PR commit, workflow run, package names, versions, and hashes, but does not include the binary artifact or a stable distribution URL. Do not download an unverified replacement based only on the PR; a Ternuxx provider installer needs an owner-approved, reproducible artifact source and provenance review. A Ternuxx preview-first provider installer is still required for clean-install reproducibility.
+
+The checked-in evidence records the device package versions, candidate and stock measurements, display mode, and failure cases:
+
+- [Native candidate and session qualification](../evidence/2026-10-20-workstation-qualification-execution.md)
+- [Native off-screen benchmark results](../evidence/2026-10-20-native-offscreen-glmark2.md)
+- [KGSL session selection](../evidence/2026-10-20-native-kgsl-session-selection.md)
+- [Shared graphics manager and client coverage](../evidence/2026-10-20-shared-graphics-manager.md)
+- [Debian adapter audit and current adoption record](../evidence/2026-10-20-ternuxx-proot-consolidation.md)
+
+## GPU inference requirements
+
+A GPU inference pass requires a named model/runtime, recorded binary and model hashes, target-device identification, runtime logs showing delegated operations, correctness checks, and comparable CPU/GPU timing. A forced-GPU run that falls back silently to CPU is not a GPU pass. Record load time, prompt and decode throughput, memory, repeat variation, thermal behavior, and failure/teardown behavior where available. NPU capability claims require the same workload-level evidence.
+
+Upstream llama.cpp describes Snapdragon/OpenCL and Hexagon HTP backends as research options; their existence does not show that they work in this Ternuxx runtime. See [llama.cpp Snapdragon backend](https://github.com/ggml-org/llama.cpp/tree/master/docs/backend/snapdragon) and [Android/Termux instructions](https://github.com/ggml-org/llama.cpp/blob/master/docs/android.md).

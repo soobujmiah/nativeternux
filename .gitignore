@@ -15,3 +15,8 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local qualification artifacts and owner design scratch; summarized evidence is checked in.
+.qualification/
+.superdesign/
+.graphics_verify.py

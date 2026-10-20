@@ -145,6 +145,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     if resource_id == "native.desktop.session":
         labels.extend(name for op, name in (("desktop.start", "start desktop"),
                                             ("desktop.stop", "stop desktop")) if op in operations)
+    elif resource_id in {"graphics.native", "graphics.debian"}:
+        labels.extend(("check graphics status", "verify OpenGL", "verify Vulkan", "select Native backend"))
     elif resource_id == "native.gui.activity-monitor":
         labels.append("configure monitoring policy")
     elif resource_id == "proot.debian.workloads":
@@ -345,7 +347,31 @@ def _run(screen: "curses._CursesWindow") -> int:
                 category_index = min(category_index, len(categories) - 1)
         elif key in (ord("a"), ord("A")) and resources:
             resource = resources[selected]
-            if resource["id"] == "native.gui.activity-monitor":
+            if resource["id"] in {"graphics.native", "graphics.debian"}:
+                provider = "native" if resource["id"] == "graphics.native" else "debian"
+                action = _prompt(screen, "Graphics action: status, opengl, gles, or vulkan (blank cancels)").lower()
+                if action == "status":
+                    report = _call("graphics.provider.status", {"provider": provider})
+                elif action == "select" and provider == "native":
+                    backend = _prompt(screen, "Choose backend: kgsl-freedreno or system")
+                    if backend not in {"kgsl-freedreno", "system"}:
+                        report = {"ok": False, "error": {"code": "invalid_backend"}}
+                    elif _prompt(screen, f"Set Native backend to {backend} for future desktop starts? type yes").lower() == "yes":
+                        report = _call("graphics.provider.select", {"provider": "native", "backend": backend, "confirmed": True})
+                    else:
+                        report = {"ok": False, "error": {"code": "cancelled"}}
+                elif action in {"opengl", "gles", "vulkan"}:
+                    display = ":1" if provider == "debian" else None
+                    if provider == "debian":
+                        chosen = _prompt(screen, "Debian display (default :1)")
+                        display = chosen or ":1"
+                    args = {"provider": provider, "api": action}
+                    if display:
+                        args["display"] = display
+                    report = _call("graphics.provider.verify", args)
+                else:
+                    report = {"ok": False, "error": {"code": "cancelled"}}
+            elif resource["id"] == "native.gui.activity-monitor":
                 report = _edit_monitor_policy(screen)
             elif resource["id"] == "native.desktop.session":
                 report = _desktop_action(screen, resource)

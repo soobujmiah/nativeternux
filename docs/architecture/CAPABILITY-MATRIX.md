@@ -175,7 +175,10 @@ A disposable PRoot probe was started and stopped with an isolated temporary regi
 | Resource/context | Current observation | Qualification boundary |
 |---|---|---|
 | Native CPU | Native CPU baseline; inference integration not implemented | Baseline only, no model/runtime workload claim |
-| Native GUI graphics | Default/current `:1` session uses `llvmpipe`; a process-scoped third-party Mesa/KGSL candidate on `:1` reported Freedreno Adreno 825, accelerated=yes, and drew 602 glxgears frames in 5 sec with the live compositor confirmed on | Candidate is extracted under a test-only private prefix; current XFCE/GTK session was not restarted and continues using llvmpipe; no inference workload proof |
+| Native GUI graphics | Current Native `:1` XFCE session loads the explicitly enabled extracted Mesa KGSL candidate; Adreno 825 / Freedreno reports `Accelerated: yes` | Candidate selection is saved in private Ternuxx state and applied on desktop start; local experimental candidate only, no inference or general application qualification |
+| Native OpenGL ES | A standalone candidate EGL/GLES pbuffer workload completed; shared verification reports unavailable | No GLES workload runner is wired into shared management; no presented UI rate or broad app claim |
+| Native Vulkan | Turnip enumerates Adreno 825 in the current candidate environment | Enumeration only; no Vulkan draw has been tested |
+| Debian OpenGL ES | Unavailable through the current guest verifier | Guest verification covers configured OpenGL/Zink only |
 | Debian PRoot GPU | Isolated read-only verify on `:1` reports Zink/Vulkan 1.4, Adreno 825, `MESA_TURNIP`; X11 reachable | Renderer evidence for this guest process/display, not a general workload benchmark; guest profile ownership remains unverified |
 | VirGL | Native Ternuxx vtest server PID 21034 is running on :1; the earlier read-only renderer request observed Zink/Turnip and returned a mismatch | Server startup is live-verified, but no guest VirGL renderer/workload is qualified; Android socket ownership restrictions prevent verified stop; `tx proot verify --backend virgl` remains an expectation, while `tx db --backend virgl` activates the host handoff |
 | NPU | Native GUI reports runtime/delegate unverified | Experimental only; no package/runtime/model/workload installed or run |

@@ -25,7 +25,7 @@ MAX_TOKEN_LENGTH = 256
 # Every known operation must be explicitly classified. Mutations also require
 # the session-specific CSRF proof in a custom header.
 MUTATING_OPERATIONS = frozenset({
-    "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure",
+    "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "graphics.provider.select",
     "ssh.service.start", "ssh.service.stop", "ssh.service.deploy", "ssh.service.deploy.rollback.apply", "boot.enable", "boot.disable", "boot.cron.enable", "boot.cron.disable",
     "backup.create", "restore.apply", "recovery.resolve",
     "recovery.rollback.apply", "wakelock.acquire", "wakelock.release",
@@ -36,7 +36,7 @@ MUTATING_OPERATIONS = frozenset({
     "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",
 })
 READ_ONLY_OPERATIONS = frozenset({
-    "management.catalog", "agent.hermes.status", "cron.status", "cron.executor.self_test",
+    "management.catalog", "graphics.provider.status", "graphics.provider.verify", "agent.hermes.status", "cron.status", "cron.executor.self_test",
     "proot.sessions.list", "proot.sessions.show", "proot.sessions.health", "proot.recovery.inspect",
     "proot.recovery.reconcile.preview", "proot.profiles.list", "proot.profiles.show",
     "proot.start.preview", "proot.stop.preview", "cron.jobs.list",

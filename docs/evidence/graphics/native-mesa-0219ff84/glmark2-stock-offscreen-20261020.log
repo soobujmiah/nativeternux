@@ -1,0 +1,25 @@
+TU: error: ../src/src/freedreno/vulkan/tu_device.cc:1686: device (chip_id = 44030000, gpu_id = 6830) is unsupported (VK_ERROR_INCOMPATIBLE_DRIVER)
+** GLX does not support GLX_EXT_swap_control or GLX_MESA_swap_control!
+** Failed to set swap interval. Results may be bounded above by refresh rate.
+=======================================================
+    glmark2 2023.01
+=======================================================
+    OpenGL Information
+    GL_VENDOR:      Mesa
+    GL_RENDERER:    llvmpipe (LLVM 21.1.8, 128 bits)
+    GL_VERSION:     4.6 (Compatibility Profile) Mesa 26.2.5
+    Surface Config: buf=32 r=8 g=8 b=8 a=8 depth=32 stencil=0 samples=0
+    Surface Size:   1280x720 windowed
+=======================================================
+** GLX does not support GLX_EXT_swap_control or GLX_MESA_swap_control!
+** Failed to set swap interval. Results may be bounded above by refresh rate.
+[build] duration=4.0: FPS: 101 FrameTime: 9.949 ms
+** GLX does not support GLX_EXT_swap_control or GLX_MESA_swap_control!
+** Failed to set swap interval. Results may be bounded above by refresh rate.
+[texture] duration=4.0: FPS: 163 FrameTime: 6.165 ms
+** GLX does not support GLX_EXT_swap_control or GLX_MESA_swap_control!
+** Failed to set swap interval. Results may be bounded above by refresh rate.
+[shading] duration=4.0: FPS: 79 FrameTime: 12.819 ms
+=======================================================
+                                  glmark2 Score: 113
+=======================================================

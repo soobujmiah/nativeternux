@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "lib"))
+import graphics_manager
+import management_authorization
+import management_service
+import management_sessions
+
+
+class GraphicsManagementTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.home = Path(self.temp.name)
+        self.repo = self.home / "ternuxx"
+        self.state = self.home / ".local/share/ternuxx"
+        self.provider = self.state / "graphics/providers/native-mesa-0219ff84"
+        self.prefix = self.provider / "extracted/data/data/com.termux/files/usr"
+        for relative in ("lib/dri/libdril_dri.so", "lib/libgallium-26.3.0-devel.so",
+                        "share/glvnd/egl_vendor.d/50_mesa.json", "lib/libvulkan_freedreno.so"):
+            target = self.prefix / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("qualified fixture", encoding="utf-8")
+        manifest = self.provider / "freedreno-isolated.json"
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        manifest.write_text(json.dumps({"ICD": {"library_path": str(self.prefix / "lib/libvulkan_freedreno.so")}}), encoding="utf-8")
+        profile = self.repo / "config/graphics/native-kgsl.json"
+        profile.parent.mkdir(parents=True, exist_ok=True)
+        verified = {
+            relative: hashlib.sha256((self.prefix / relative).read_bytes()).hexdigest()
+            for relative in ("lib/dri/libdril_dri.so", "lib/libgallium-26.3.0-devel.so",
+                             "share/glvnd/egl_vendor.d/50_mesa.json", "lib/libvulkan_freedreno.so")
+        }
+        profile.write_text(json.dumps({"schema_version": 1, "provider": "native-termux-bionic",
+                                       "verified_files": verified}), encoding="utf-8")
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def test_only_known_candidate_is_selected_and_file_is_private(self) -> None:
+        result = graphics_manager.configure_native("kgsl-freedreno", home=str(self.home),
+                                                   state_dir=str(self.state), repo_root=str(self.repo))
+        config = self.state / "native-graphics-prefix"
+        self.assertEqual(result["backend"], "kgsl-freedreno")
+        self.assertEqual(config.read_text().strip(), str(self.prefix))
+        self.assertEqual(config.stat().st_mode & 0o777, 0o600)
+
+    def test_system_selection_is_reversible_and_unsafe_file_is_preserved(self) -> None:
+        graphics_manager.configure_native("kgsl-freedreno", home=str(self.home),
+                                           state_dir=str(self.state), repo_root=str(self.repo))
+        graphics_manager.configure_native("system", home=str(self.home),
+                                           state_dir=str(self.state), repo_root=str(self.repo))
+        self.assertFalse((self.state / "native-graphics-prefix").exists())
+        link = self.state / "native-graphics-prefix"
+        link.symlink_to(self.repo)
+        with self.assertRaisesRegex(ValueError, "preserved"):
+            graphics_manager.configure_native("system", home=str(self.home),
+                                               state_dir=str(self.state), repo_root=str(self.repo))
+        self.assertTrue(link.is_symlink())
+        link.unlink()
+        link.symlink_to(self.repo / "missing-target")
+        with self.assertRaisesRegex(ValueError, "unsafe"):
+            graphics_manager.configure_native("kgsl-freedreno", home=str(self.home),
+                                               state_dir=str(self.state), repo_root=str(self.repo))
+        self.assertTrue(link.is_symlink())
+
+    def test_gles_is_not_reported_from_an_opengl_only_probe(self) -> None:
+        native = graphics_manager.verify("native", "gles", home=str(self.home), state_dir=str(self.state),
+                                         process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux")
+        guest = graphics_manager.verify("debian", "gles", home=str(self.home), state_dir=str(self.state),
+                                        process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(native["status"], "unavailable")
+        self.assertFalse(native["render_verified"])
+        self.assertEqual(guest["status"], "unavailable")
+        self.assertFalse(guest["render_verified"])
+
+    def test_modified_candidate_file_fails_hash_validation(self) -> None:
+        driver = self.prefix / "lib/libvulkan_freedreno.so"
+        driver.write_text("modified candidate", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "file hash does not match"):
+            graphics_manager.configure_native("kgsl-freedreno", home=str(self.home),
+                                               state_dir=str(self.state), repo_root=str(self.repo))
+
+    def test_unqualified_backend_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "backend must be"):
+            graphics_manager.configure_native("virgl", home=str(self.home),
+                                               state_dir=str(self.state), repo_root=str(self.repo))
+
+    def test_selection_requires_confirmation_and_has_narrow_mutation_scope(self) -> None:
+        request = {"api_version": 1, "request_id": "graphics-test-0001",
+                   "operation": "graphics.provider.select",
+                   "args": {"provider": "native", "backend": "system", "confirmed": False}}
+        response = management_service.dispatch(request, env={"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr", "HOME": str(self.home)})
+        self.assertFalse(response["ok"])
+        self.assertEqual(response["error"]["code"], "confirmation_required")
+        self.assertEqual(management_authorization.required_capability("graphics.provider.select"), "graphics.manage")
+        self.assertIn("graphics.provider.select", management_sessions.MUTATING_OPERATIONS)
+        self.assertNotIn("graphics.provider.select", management_sessions.READ_ONLY_OPERATIONS)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,4 @@
+EGL=1.5 | GLES=OpenGL ES 3.2 Mesa 26.3.0-devel (git-98f3d6229d) | renderer=Adreno (TM) 825 | pbuffer=1280x720 | shader=48-iteration full-screen fragment | glFinish/frame
+os_same_file_description couldn't determine if two DRM fds reference the same file description. (Operation not permitted)
+Let's just assume that file descriptors for the same file probablyshare the file description instead. This may cause problems whenthat isn't the case.
+elapsed=10.000 seconds frames=2520 throughput=252.00 frames/sec

@@ -25,19 +25,37 @@ Ownership diagnostics and bounded health reads are implemented; headless lifecyc
 
 See [my product vision](docs/PRODUCT-VISION.md), [phase status and evidence](docs/PHASE-STATUS.md), the [full roadmap](docs/ROADMAP.md), [current project state](CURRENT_STATE.md), [generated Git/CI status](.repo/STATUS.md), and [security policy](SECURITY.md). GitHub status automation has completed its first validation and state-sync run; build/test remain `unknown` by design. Phase status is generated from the reviewed phase state; no roadmap gate is marked complete without evidence.
 
+## Quick start
+
+Run these commands in Native Termux from the checkout:
+
+```sh
+./tx help
+./tx info
+./tx tui
+./tx web
+```
+
+`./tx mng center` opens the Native GTK management app when the desktop and GTK dependencies are installed. `./tx db` opens the existing Debian PRoot shell. The four management clients use the shared service, though feature coverage still differs by client.
+
 ## Planned use and current workstation boundary
 
-- **Native mode:** Native Termux is the Ternuxx host and management authority. Its CPU is the baseline; the current Native display process reports llvmpipe and its installed Vulkan route rejects Adreno 825.
-- **Debian PRoot:** Ternuxx uses the existing installed Debian rootfs directly through typed proot-distro operations. On display :1, the read-only guest check currently verifies Zink/Turnip Adreno 825 and authenticated Native PulseAudio client reachability. Full interactive attach/detach/stop ownership remains unqualified.
+- **Native mode:** Native Termux is the Ternuxx host and management authority. CPU is the baseline. The current `:1` desktop is configured to use the locally staged KGSL/Freedreno candidate and live GLX status reports Adreno 825 with `Accelerated: yes`; Native Vulkan only enumerates the device, and no Vulkan draw or inference workload has been verified. A clean install uses stock Mesa until a provider installer exists.
+- **Debian PRoot:** Ternuxx uses the existing Debian rootfs through typed `proot-distro` operations. The read-only guest check on `:1` verifies Zink/Turnip on Adreno 825 and Native PulseAudio control reachability. The existing rootfs is recorded in Ternuxx private state; package/config migration and fresh Debian provisioning are not implemented. Full interactive attach/detach/stop ownership remains unqualified.
 - **Hybrid handoff:** Ternuxx routes selected guest applications to its verified Native :1 display and host audio endpoint. VirGL remains a separate preserved option but is not active/renderer-qualified in this snapshot.
 
 The separate Ternux project remains independent and reference-only. Ternuxx does not require its CLI or state files. Existing Debian user data, packages, GPU setup, db/launcher aliases, x.sh, xgo, and killx are preserved; any targeted guest config adaptation requires a bounded impact assessment and recovery plan. Native Bionic libraries are not copied into Debian glibc paths. NPU execution remains unverified.
 
+
+## Existing Debian setup
+
+Inspect the Ternuxx provider record with `./tx proot setup status`. If this checkout has not recorded the existing Debian rootfs, run `./tx proot setup adopt-preview --user NAME`, review the identified guest and plan, then apply that exact plan with `./tx proot setup adopt --user NAME --yes --plan-id ID`. Adoption records the rootfs identity in private Native state and does not modify Debian. It does not yet install packages, migrate guest configuration, reproduce a fresh Debian setup, or remove the legacy Ternux CLI. See [the setup status and limits](docs/INSTALLATION.md#existing-debian-provider).
+
 ## Development notes
 
-The install command uses a preview-first Termux APT transaction and persists full dependency plans under private Ternuxx state. The base Native workstation set includes `proot-distro` plus the desktop host packages; the manager install never installs or replaces a Debian rootfs. The historical 2026-10-18 XFCE transaction is recorded with all 77 package versions in P2 evidence. P2 is complete for the recorded target. P3 remains active. Ternuxx now runs its own bounded, read-only Debian display/audio/renderer verification and passes explicit Native display, cookie-authenticated PulseAudio, and Zink/Turnip settings to its direct PRoot commands; it does not invoke the separate Ternux CLI. Headless session fixtures pass, but interactive login, detach/reattach, exact live stop, production boot, and shared-rootfs concurrency remain unqualified. Native Vulkan rejects Adreno 825; the current Debian guest reports Zink/Turnip. Native GPU, VirGL renderer, inference CPU/GPU workload, and NPU runtime/workload remain unqualified.
+The install command uses a preview-first Termux APT transaction and persists full dependency plans under private Ternuxx state. The base Native workstation set includes `proot-distro` plus the desktop host packages; the manager install never installs or replaces a Debian rootfs. The historical 2026-10-18 XFCE transaction is recorded with all 77 package versions in P2 evidence. P2 is complete for the recorded target. P3 remains active. Ternuxx now runs its own bounded, read-only Debian display/audio/renderer verification and passes explicit Native display, cookie-authenticated PulseAudio, and Zink/Turnip settings to its direct PRoot commands; it does not invoke the separate Ternux CLI. Headless session fixtures pass, but interactive login, detach/reattach, exact live stop, production boot, and shared-rootfs concurrency remain unqualified. The stock Native Vulkan route previously rejected Adreno 825; the selected experimental candidate now enumerates it, but no Vulkan draw is verified. The existing Debian guest reports Zink/Turnip. Native GPU, VirGL renderer, inference CPU/GPU workload, and NPU runtime/workload remain unqualified.
 
-See the [PRoot session lifecycle](docs/architecture/PROOT-SESSIONS.md), See [Architecture](docs/ARCHITECTURE.md), [Native/PRoot integration](docs/HYBRID-INTEGRATION.md), [Native Wine and Hangover](docs/WINE-NATIVE.md), [workload optimization](docs/OPTIMIZATION.md), [documentation and SKB sync](docs/KNOWLEDGE-SYNC.md), [Installation status](docs/INSTALLATION.md), and [AI assistant instructions](AI_ASSISTANT.md). The repository's [SKB knowledge-sync pointer](SKB_KNOWLEDGE_SYNC.md) explains internal knowledge return and the separate deterministic-state workflow.
+See [PRoot session lifecycle](docs/architecture/PROOT-SESSIONS.md), [architecture](docs/ARCHITECTURE.md), [Native/PRoot integration](docs/HYBRID-INTEGRATION.md), [Native Wine and Hangover](docs/WINE-NATIVE.md), [workload optimization](docs/OPTIMIZATION.md), [documentation and SKB sync](docs/KNOWLEDGE-SYNC.md), [installation status](docs/INSTALLATION.md), and [AI assistant instructions](AI_ASSISTANT.md). The repository's [SKB knowledge-sync pointer](SKB_KNOWLEDGE_SYNC.md) explains internal knowledge return and the separate deterministic-state workflow.
 
 For current CPU/GPU/NPU inference status, evidence requirements, compatibility, and benchmark methodology, see [testing and acceleration evidence](docs/testing/README.md). Ternuxx itself has no implemented inference backend or benchmark; the separate Ternux repository documents optional CPU/Vulkan llama.cpp and experimental SM8735 HTP extensions whose installed state and Ternuxx integration remain unverified.
 

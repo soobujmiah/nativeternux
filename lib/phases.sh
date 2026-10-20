@@ -7,8 +7,9 @@
 # shellcheck source=lib/core.sh
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
-# Keep Native workstation prerequisites small and predictable. Browser/editor
-# and acceleration-provider packages remain optional and are handled separately.
+# Native workstation packages include graphical diagnostics and X11 test
+# utilities requested by the owner. Heavy applications and Mesa providers stay
+# optional and are handled separately.
 _NT_BASE_PACKAGES=(
   proot-distro
   termux-x11-nightly
@@ -23,6 +24,9 @@ _NT_BASE_PACKAGES=(
   xfconf
   thunar
   xfce4-terminal
+  glmark2
+  xorg-server-xvfb
+  xdotool
 )
 
 _nt_package_installed() {

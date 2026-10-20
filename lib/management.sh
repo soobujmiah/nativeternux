@@ -4,6 +4,15 @@ nt_cmd_management() {
   local section="${1:-}"
   [ "$#" -gt 0 ] && shift
   case "$section" in
+    graphics)
+      local action="${1:-status}" provider="${2:-native}" api="${3:-opengl}" display="${4:-:1}"
+      case "$action" in
+        status) python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.status --provider "$provider" --json ;;
+        verify) python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.verify --provider "$provider" --graphics-api "$api" --display "$display" --json ;;
+        select) [ "$provider" = native ] || { nt_fail "Only Native Termux backend selection is managed; Debian remains under its existing Ternux configuration."; return 2; }; python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.select --provider native --graphics-backend "$api" --yes --json ;;
+        *) nt_fail "Usage: tx mng graphics status {native|debian} | verify {native|debian} {opengl|gles|vulkan} [:N]"; return 2 ;;
+      esac
+      ;;
     app)
       local action="${1:-}"
       [ "$#" -gt 0 ] && shift

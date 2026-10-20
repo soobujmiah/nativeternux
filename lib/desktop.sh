@@ -135,8 +135,49 @@ _nt_session_active() {
   _nt_state_process_live supervisor
 }
 
+_nt_native_graphics_prefix() {
+  local config="$TERNUXX_STATE_DIR/native-graphics-prefix" prefix
+  local candidate="$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/extracted/data/data/com.termux/files/usr"
+  [ -f "$config" ] && [ ! -L "$config" ] || return 1
+  IFS= read -r prefix < "$config" || return 1
+  [[ "$prefix" = /* && "$prefix" != *$'\n'* ]] || return 1
+  [ -d "$prefix" ] && [ ! -L "$prefix" ] || return 1
+  [ -f "$prefix/lib/dri/libdril_dri.so" ] && [ -f "$prefix/lib/libgallium-26.3.0-devel.so" ] || return 1
+  [ -f "$prefix/share/glvnd/egl_vendor.d/50_mesa.json" ] || return 1
+  printf '%s\n' "$prefix"
+}
+
+nt_cmd_graphics() {
+  local target="${1:-}" action="${2:-}" prefix="" expected="$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/extracted/data/data/com.termux/files/usr" arg
+  [ "$target" = native ] || { nt_fail "Use 'tx mng graphics status|verify|select' for shared graphics management."; return 2; }
+  shift; [ "$#" -gt 0 ] && shift
+  case "$action" in
+    status)
+      [ "$#" -eq 0 ] || { nt_fail "Usage: tx graphics native status"; return 2; }
+      python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.status --provider native --json
+      ;;
+    enable)
+      while [ "$#" -gt 0 ]; do
+        arg="$1"; shift
+        case "$arg" in
+          --prefix) [ "$#" -gt 0 ] || { nt_fail "--prefix needs a path"; return 2; }; prefix="$1"; shift ;;
+          *) nt_fail "Unknown graphics option: $arg"; return 2 ;;
+        esac
+      done
+      [ "$prefix" = "$expected" ] || { nt_fail "Only the qualified KGSL candidate is selectable through shared management."; return 2; }
+      python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.select --provider native --graphics-backend kgsl-freedreno --yes --json
+      ;;
+    disable)
+      [ "$#" -eq 0 ] || { nt_fail "Usage: tx graphics native disable"; return 2; }
+      python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.select --provider native --graphics-backend system --yes --json
+      ;;
+    *) nt_fail "Use 'tx mng graphics status|verify|select'."; return 2 ;;
+  esac
+}
+
 nt_cmd_start() {
-  local display_number="" arg state_root supervisor owned_exec log_file tmp_root operation_id
+  local display_number="" arg state_root supervisor owned_exec log_file tmp_root operation_id mesa_prefix=""
+  local -a launch_env=()
   local stale_display="" stale_display_number="" stale_x11_pid="" stale_artifact_state=""
   while [ $# -gt 0 ]; do
     arg="$1"; shift
@@ -224,13 +265,34 @@ nt_cmd_start() {
 
   _nt_use audio && nt_audio_ensure || true
 
+  if [ -e "$TERNUXX_STATE_DIR/native-graphics-prefix" ] || [ -L "$TERNUXX_STATE_DIR/native-graphics-prefix" ]; then
+    mesa_prefix="$(_nt_native_graphics_prefix 2>/dev/null)" || {
+      nt_fail "Saved Native graphics candidate is missing or unsafe; no desktop process was started."; return 1;
+    }
+  fi
+  if [ -n "$mesa_prefix" ]; then
+    launch_env=("LD_LIBRARY_PATH=$mesa_prefix/lib:$PREFIX/lib"
+      "LIBGL_DRIVERS_PATH=$mesa_prefix/lib/dri"
+      "MESA_LOADER_DRIVER_OVERRIDE=kgsl"
+      "__EGL_VENDOR_LIBRARY_FILENAMES=$mesa_prefix/share/glvnd/egl_vendor.d/50_mesa.json"
+      "GLX_VENDOR_LIBRARY_NAME=mesa" "MESA_SHADER_CACHE_DISABLE=true")
+    local candidate_prefix="$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/extracted/data/data/com.termux/files/usr"
+    local candidate_icd="$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/freedreno-isolated.json"
+    if [ "$mesa_prefix" = "$candidate_prefix" ] && [ -f "$candidate_icd" ] && [ ! -L "$candidate_icd" ] \
+      && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); raise SystemExit(0 if d.get("ICD",{}).get("library_path")==sys.argv[2] else 1)' \
+        "$candidate_icd" "$mesa_prefix/lib/libvulkan_freedreno.so" 2>/dev/null; then
+      launch_env+=("VK_ICD_FILENAMES=$candidate_icd")
+    fi
+    nt_info "Applying the saved Native KGSL graphics candidate to this desktop session."
+  fi
+
   operation_id="$(_nt_journal_begin desktop.start "display :$display_number")" || { nt_fail "Could not write durable operation journal; no desktop process was started"; return 1; }
   log_file="$state_root/desktop.log"
   touch "$log_file" || { _nt_journal_update "$operation_id" failed "desktop log could not be created" || true; nt_fail "Cannot create the Ternuxx desktop log"; return 1; }
   chmod 600 "$log_file" 2>/dev/null || true
   rm -f "$state_root/session.ready" 2>/dev/null || true
   nt_step "Starting Ternuxx-owned X11 and XFCE on :$display_number..."
-  nohup "$supervisor" ":$display_number" "$state_root" "$tmp_root" \
+  nohup env "${launch_env[@]}" "$supervisor" ":$display_number" "$state_root" "$tmp_root" \
     "$(command -v termux-x11)" "$(command -v dbus-launch)" \
     "$(command -v xfce4-session)" "$owned_exec" >> "$log_file" 2>&1 </dev/null &
 
