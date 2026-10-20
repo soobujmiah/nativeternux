@@ -175,8 +175,8 @@ A disposable PRoot probe was started and stopped with an isolated temporary regi
 |---|---|---|
 | Native CPU | Native CPU baseline; inference integration not implemented | Baseline only, no model/runtime workload claim |
 | Native GUI graphics | The read-only `:1` GUI bridge reports `llvmpipe`; Native Vulkan reports `VK_ERROR_INCOMPATIBLE_DRIVER` for this package/device | Native GTK is not currently GPU-rendered by this route |
-| Debian PRoot GPU | Isolated read-only verify on `:1` reports Zink/Vulkan 1.4, Adreno 825, `MESA_TURNIP`; X11 reachable | Renderer evidence for this guest process/display, not a general workload benchmark or Ternux session ownership proof |
-| VirGL | Existing route/profile remains documented and retained; Ternux status reports it stopped during this check | Not currently selected/renderer-qualified; do not remove or replace with Zink |
+| Debian PRoot GPU | Isolated read-only verify on `:1` reports Zink/Vulkan 1.4, Adreno 825, `MESA_TURNIP`; X11 reachable | Renderer evidence for this guest process/display, not a general workload benchmark; guest profile ownership remains unverified |
+| VirGL | Existing option remains preserved. A read-only request for VirGL observed Zink/Turnip and returned a backend mismatch; the verifier does not switch the driver | Not live-qualified; Zink is the currently observed guest renderer; do not treat `--backend virgl` as activation |
 | NPU | Native GUI reports runtime/delegate unverified | Experimental only; no package/runtime/model/workload installed or run |
 | Audio | Native Ternuxx cookie-auth endpoint is ready; isolated Debian PRoot client status passes on `:1` | Protocol path verified; physical audibility and UI lifecycle controls remain unqualified |
 
@@ -189,3 +189,8 @@ Ternuxx Native Termux remains the CPU and service authority. A direct tx db gues
 ## Acceleration qualification update — direct Native check (2026-10-20)
 
 Native Doctor now reports candidate NPU vendor-library visibility, FastRPC-node visibility, and known runtime-CLI availability separately. The current device check found vendor files but no visible candidate device node or checked runtime CLI; the report keeps NPU execution unverified. Native `:1` reports llvmpipe and incompatible Vulkan, while Debian PRoot `:1` independently verifies Zink/Turnip Adreno 825 and authenticated Native PulseAudio reachability. CPU remains baseline without an inference integration. VirGL remains preserved but inactive. None of these renderer/probe checks qualifies an inference workload; see the dated execution evidence.
+
+
+### Native host / Debian workload split — 2026-10-20 direct recheck
+
+Native Termux owns the `:1` display and authenticated PulseAudio endpoint. Debian PRoot uses its own glibc Mesa/Turnip userspace against the existing host device/display handoff. Direct Zink verification passed. Native display doctor reports llvmpipe and incompatible Vulkan. VirGL is retained but a `--backend virgl` verify request only checks for a VirGL renderer; it does not select one. CPU remains baseline without inference integration; NPU execution remains unverified. No host Bionic libraries are copied into Debian. Guest package/profile cleanup remains gated on a consumer and rollback inventory.

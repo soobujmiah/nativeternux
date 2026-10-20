@@ -283,6 +283,8 @@ tx proot status — Read-only installed guest inventory
 tx proot gui {start|status|stop} — legacy session status/stop; separate :0 start disabled
 tx proot verify --distro debian (--guest-user USER|--guest-user-from rootfs) --display :N --backend zink|virgl
 
+--backend is the expected renderer class for this read-only probe; it does not switch drivers.
+
 gui start currently fails closed because a full Debian desktop must be nested
 inside the native Termux :1 desktop; it must not open a separate :0 Activity.
 Specific GUI apps remain available through tx mng app launch APP_ID. No guest
