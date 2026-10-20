@@ -210,7 +210,7 @@ Evidence:
 
 **Status:** planned
 
-Native off-screen OpenGL render is verified on Adreno 825; GLES creates an Adreno context but draw is unverified; deliberate OpenGL failure falls back to a verified llvmpipe render in the verifier. Workload dispatch and fallback, Vulkan draw, clean-install driver setup, and NPU runtime remain open.
+Native off-screen OpenGL is verified; the existing Debian GLX workload on :1 rendered 486 frames on Zink/Turnip Adreno 825. GLES context is detected but GLES draw is unverified, and nested Xephyr :2 draw/presentation remains unqualified. Deliberate OpenGL verification failure falls back to verified llvmpipe. Ordinary workload routing, Vulkan draw, clean-device setup, and NPU runtime remain open.
 
 Evidence:
 - [docs/evidence/2026-10-20-shared-graphics-manager.md](evidence/2026-10-20-shared-graphics-manager.md)

@@ -296,7 +296,9 @@ def _verification_result(*, status: str, display: str, backend: str,
                          observed_display: str | None = None, x11: str = "unknown", audio: str = "unknown",
                          renderer: str | None = None, renderer_class: str = "unavailable",
                          gles_context: str = "unknown", gles_renderer: str | None = None,
-                         gles_version: str | None = None, blockers: list[str] | None = None,
+                         gles_version: str | None = None, glx_draw: str = "unavailable",
+                         glx_draw_frames: int = 0, glx_draw_renderer: str | None = None,
+                         blockers: list[str] | None = None,
                          native_pulseaudio_endpoint: dict[str, str | None] | None = None
                          ) -> dict[str, object]:
     return {
@@ -313,7 +315,9 @@ def _verification_result(*, status: str, display: str, backend: str,
         "checks": {"observed_display": observed_display, "x11": x11, "audio": audio,
                    "renderer_class": renderer_class, "renderer": renderer,
                    "gles_context": gles_context, "gles_renderer": gles_renderer,
-                   "gles_version": gles_version, "gles_draw_verified": False},
+                   "gles_version": gles_version, "gles_draw_verified": False,
+                   "glx_draw": glx_draw, "glx_draw_frames": glx_draw_frames,
+                   "glx_draw_renderer": glx_draw_renderer},
         "blockers": blockers or [],
         "read_only": True,
         "safety": {"packages_changed": False, "guest_write_command_invoked": False,
@@ -373,6 +377,20 @@ if command -v glxinfo >/dev/null 2>&1; then
 fi
 printf 'X11: %s\n' "$x11"
 printf 'Renderer: %s\n' "${renderer:-unavailable}"
+glx_draw=unavailable
+glx_draw_frames=0
+glx_draw_renderer=
+if command -v glxgears >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+  glx_draw_output=$(timeout -s TERM 7s glxgears -info -geometry 180x100 2>&1 || true)
+  glx_draw_frames=$(printf '%s\n' "$glx_draw_output" | awk '$2 == "frames" && $3 == "in" { frames=$1 } END { if (frames ~ /^[0-9]+$/) print frames; else print 0 }')
+  glx_draw_renderer=$(printf '%s\n' "$glx_draw_output" | sed -n 's/^GL_RENDERER[[:space:]]*=[[:space:]]*//p' | head -n 1)
+  if [ "$glx_draw_frames" -gt 0 ] && [ -n "$glx_draw_renderer" ]; then
+    glx_draw=verified
+  else
+    glx_draw=failed
+  fi
+fi
+printf 'GLX draw: %s\nGLX draw frames: %s\nGLX draw renderer: %s\n' "$glx_draw" "$glx_draw_frames" "${glx_draw_renderer:-unavailable}"
 gles_renderer=
 gles_version=
 if command -v es2_info >/dev/null 2>&1; then
@@ -448,7 +466,8 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
             continue
         key, value = line.split(":", 1)
         key, value = key.strip().lower(), value.strip()
-        if key in {"display", "x11", "audio", "renderer", "gles context", "gles renderer", "gles version"}:
+        if key in {"display", "x11", "audio", "renderer", "gles context", "gles renderer", "gles version",
+                   "glx draw", "glx draw frames", "glx draw renderer"}:
             values[key] = value
     observed_display = values.get("display")
     x11 = "reachable" if values.get("x11") == "reachable" else "unavailable" if "x11" in values else "unknown"
@@ -473,7 +492,30 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
     if gles_version and (len(gles_version) > 256 or any(ord(char) < 32 for char in gles_version)):
         gles_version = None
     gles_context = "verified" if values.get("gles context") == "verified" and gles_renderer and gles_version else "unavailable" if values.get("gles context") == "unavailable" else "unknown"
+    glx_draw_renderer = values.get("glx draw renderer")
+    if glx_draw_renderer and (len(glx_draw_renderer) > 1024 or any(ord(char) < 32 for char in glx_draw_renderer)):
+        glx_draw_renderer = None
+    try:
+        glx_draw_frames = int(values.get("glx draw frames", "0"))
+    except ValueError:
+        glx_draw_frames = 0
+    if not 0 <= glx_draw_frames <= 1000000000:
+        glx_draw_frames = 0
+    glx_draw_status = values.get("glx draw")
+    if glx_draw_status not in {"verified", "failed", "unavailable"}:
+        glx_draw_status = "unknown"
+    if glx_draw_status == "verified" and (glx_draw_frames <= 0 or not glx_draw_renderer):
+        glx_draw_status = "unknown"
     expected_renderer = "zink_turnip" if backend == "zink" else "virgl"
+    if glx_draw_status == "verified":
+        draw_lower = (glx_draw_renderer or "").lower()
+        draw_matches = (
+            ("zink" in draw_lower and ("turnip" in draw_lower or "adreno" in draw_lower))
+            if expected_renderer == "zink_turnip" else
+            ("virpipe" in draw_lower or "virgl" in draw_lower)
+        )
+        if not draw_matches:
+            glx_draw_status = "failed"
     blockers = []
     if observed_display is not None and observed_display != display:
         blockers.append("guest reported display does not match the requested display")
@@ -500,4 +542,6 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
                                guest_entered=True, observed_display=observed_display,
                                x11=x11, audio=audio, renderer=renderer,
                                renderer_class=renderer_class, gles_context=gles_context,
-                               gles_renderer=gles_renderer, gles_version=gles_version, blockers=blockers)
+                               gles_renderer=gles_renderer, gles_version=gles_version,
+                               glx_draw=glx_draw_status, glx_draw_frames=glx_draw_frames,
+                               glx_draw_renderer=glx_draw_renderer, blockers=blockers)

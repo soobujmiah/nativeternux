@@ -163,7 +163,7 @@ class ProotDiagnosticsTests(unittest.TestCase):
         calls = []
         outputs = [
             SimpleNamespace(returncode=0, stdout="Installed containers:\n * Debian\nLog in with: proot-distro login <name>\n"),
-            SimpleNamespace(returncode=0, stdout="Display: :1\nX11: reachable\nAudio: PulseAudio reachable\nRenderer: zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))\n"),
+            SimpleNamespace(returncode=0, stdout="Display: :1\nX11: reachable\nAudio: PulseAudio reachable\nRenderer: zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))\nGLX draw: verified\nGLX draw frames: 214\nGLX draw renderer: zink Vulkan 1.4(Adreno (TM) 825 (MESA_TURNIP))\n"),
         ]
         def runner(args, **kwargs):
             calls.append((args, kwargs))
@@ -190,6 +190,11 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertEqual(command[-3], "/bin/sh")
         self.assertEqual(command[-2], "-c")
         self.assertIn("glxinfo -B", command[-1])
+        self.assertIn("glxgears -info -geometry 180x100", command[-1])
+        self.assertIn("timeout -s TERM 7s", command[-1])
+        self.assertEqual(report["checks"]["glx_draw"], "verified")
+        self.assertEqual(report["checks"]["glx_draw_frames"], 214)
+        self.assertIn("zink Vulkan", report["checks"]["glx_draw_renderer"])
         self.assertFalse(any(item == "ternux" or item.endswith("/ternux") for item in command))
         self.assertIn("/native/private/pulse-cookie:/tmp/.ternuxx-pulse-cookie", command)
         self.assertIn("PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie", command)
@@ -222,7 +227,29 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertIn("zink Vulkan", checks["gles_renderer"])
         self.assertEqual(checks["gles_version"], "OpenGL ES 3.2 Mesa")
         self.assertFalse(checks["gles_draw_verified"])
+        self.assertEqual(checks["glx_draw"], "unknown")
+        self.assertEqual(checks["glx_draw_frames"], 0)
+        self.assertIsNone(checks["glx_draw_renderer"])
         self.assertTrue(any("GLX renderer unavailable" in blocker for blocker in report["blockers"]))
+
+    def test_glx_draw_requires_frames_and_the_requested_renderer(self):
+        outputs = [
+            "Installed containers:\n * Debian\n",
+            "Display: :1\nX11: reachable\nAudio: PulseAudio reachable\n"
+            "Renderer: zink Vulkan (Adreno 825)\nGLX draw: verified\n"
+            "GLX draw frames: 214\nGLX draw renderer: llvmpipe (LLVM fixture)\n",
+        ]
+        def runner(*_args, **_kwargs):
+            return SimpleNamespace(returncode=0, stdout=outputs.pop(0))
+        report = proot_diagnostics.verify_proot_guest(
+            distro="debian", user="sbj", display=":1", backend="zink",
+            which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
+            runner=runner,
+        )
+        self.assertEqual(report["checks"]["renderer_class"], "zink_turnip")
+        self.assertEqual(report["checks"]["glx_draw"], "failed")
+        self.assertEqual(report["checks"]["glx_draw_frames"], 214)
+        self.assertIn("llvmpipe", report["checks"]["glx_draw_renderer"])
 
     def test_proot_guest_verification_does_not_probe_legacy_ternux_status(self):
         calls = []

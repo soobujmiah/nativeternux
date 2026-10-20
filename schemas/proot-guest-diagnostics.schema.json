@@ -66,7 +66,10 @@
         "gles_context",
         "gles_renderer",
         "gles_version",
-        "gles_draw_verified"
+        "gles_draw_verified",
+        "glx_draw",
+        "glx_draw_frames",
+        "glx_draw_renderer"
       ],
       "properties": {
         "observed_display": {
@@ -129,6 +132,26 @@
         },
         "gles_draw_verified": {
           "const": false
+        },
+        "glx_draw": {
+          "enum": [
+            "verified",
+            "failed",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "glx_draw_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "glx_draw_renderer": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 1024
         }
       }
     },

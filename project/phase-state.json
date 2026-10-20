@@ -215,13 +215,13 @@
       "title": "CPU/GPU/NPU capability, optimization, and fallback",
       "status": "planned",
       "completed_on": null,
-      "summary": "Native off-screen OpenGL render is verified on Adreno 825; GLES creates an Adreno context but draw is unverified; deliberate OpenGL failure falls back to a verified llvmpipe render in the verifier. Workload dispatch and fallback, Vulkan draw, clean-install driver setup, and NPU runtime remain open.",
+      "summary": "Native off-screen OpenGL is verified; the existing Debian GLX workload on :1 rendered 486 frames on Zink/Turnip Adreno 825. GLES context is detected but GLES draw is unverified, and nested Xephyr :2 draw/presentation remains unqualified. Deliberate OpenGL verification failure falls back to verified llvmpipe. Ordinary workload routing, Vulkan draw, clean-device setup, and NPU runtime remain open.",
       "evidence": [
         "docs/evidence/2026-10-20-shared-graphics-manager.md",
         "docs/evidence/2026-10-20-native-offscreen-glmark2.md",
         "docs/evidence/2026-10-20-graphics-live-recheck.md"
       ],
-      "next_action": "Connect API-aware backend assessment and software fallback to named workload launch paths; qualify actual GLES and Vulkan draws and fresh-install driver reproduction, while keeping unsupported APIs fail-closed."
+      "next_action": "Connect API-aware backend assessment and software fallback to named workload launch paths; qualify Native GLES/Vulkan draws, nested Xephyr presentation, and fresh-device reproduction while keeping unsupported APIs fail-closed."
     },
     {
       "id": "P7",
