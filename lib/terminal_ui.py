@@ -158,8 +158,11 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
                                             ("ssh.service.stop", "stop SSH 8023 (preview)")) if op in operations)
     elif resource_id == "recovery.native-state" and "recovery.status" in operations:
         labels.append("view operation history")
-    elif resource_id == "automation.cron-registry" and "cron.jobs.list" in operations:
-        labels.append("list persisted job definitions")
+    elif resource_id == "automation.cron-registry":
+        if "cron.jobs.list" in operations:
+            labels.append("list persisted job definitions")
+        if "cron.executions.list" in operations:
+            labels.append("view Cron execution history")
     return labels
 
 
@@ -267,6 +270,11 @@ def _cron_jobs() -> dict[str, object]:
     return _call("cron.jobs.list")
 
 
+def _cron_executions() -> dict[str, object]:
+    """Read bounded Cron execution history via the shared management service."""
+    return _call("cron.executions.list", {"limit": 20})
+
+
 def _operation_history(resource: dict[str, Any]) -> dict[str, object]:
     if resource.get("id") != "recovery.native-state" or "recovery.status" not in resource.get("supported_operations", []):
         return {"ok": False, "error": {"code": "history_unavailable"}}
@@ -337,8 +345,12 @@ def _run(screen: "curses._CursesWindow") -> int:
                 report = _call(operation)
             else:
                 report = {"ok": False, "error": {"code": "live_status_unavailable"}}
-        elif key in (ord("h"), ord("H")) and resources and resources[selected].get("id") == "recovery.native-state":
-            report = _operation_history(resources[selected])
+        elif key in (ord("h"), ord("H")) and resources:
+            resource = resources[selected]
+            if resource.get("id") == "recovery.native-state":
+                report = _operation_history(resource)
+            elif resource.get("id") == "automation.cron-registry" and "cron.executions.list" in resource.get("supported_operations", []):
+                report = _cron_executions()
         elif key in (ord("v"), ord("V")):
             _show_details(screen, report)
         elif key in (ord("r"), ord("R")):
@@ -385,7 +397,8 @@ def _run(screen: "curses._CursesWindow") -> int:
             elif resource["id"] == "network.ssh.managed-8023":
                 report = _managed_ssh_action(screen, resource)
             elif resource["id"] == "automation.cron-registry":
-                report = _cron_jobs()
+                choice = _prompt(screen, "Cron action: jobs or history (blank cancels)").lower()
+                report = _cron_jobs() if choice == "jobs" else (_cron_executions() if choice == "history" else {"ok": False, "error": {"code": "cancelled"}})
             else:
                 report = {"ok": False, "error": {"code": "guided_action_unavailable"}}
 

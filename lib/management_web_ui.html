@@ -63,7 +63,7 @@
    if(provider==="native")for(const [backend,label] of [["kgsl-freedreno","Use verified KGSL candidate"],["system","Use system graphics stack"]]){const b=document.createElement("button");b.textContent=label;b.onclick=()=>run("graphics.provider.select",{provider,backend,confirmed:true});actions.append(b)}
   }
   if(r.id==="native.gui.activity-monitor"){const b=document.createElement("button");b.textContent="Load monitoring policy";b.onclick=()=>run("desktop.monitor.status");actions.append(b)}
-  if(r.id==="automation.cron-registry"&&operations.includes("cron.jobs.list")){const b=document.createElement("button");b.textContent="List saved jobs";b.onclick=()=>run("cron.jobs.list");actions.append(b)}
+  if(r.id==="automation.cron-registry"){if(operations.includes("cron.jobs.list")){const b=document.createElement("button");b.textContent="List saved jobs";b.onclick=()=>run("cron.jobs.list");actions.append(b)}if(operations.includes("cron.executions.list")){const b=document.createElement("button");b.textContent="View execution history";b.onclick=()=>run("cron.executions.list",{limit:20});actions.append(b)}}
  }
  function operationLabel(op){return op.replaceAll("."," ").replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}
  function fillMonitor(data){$("#monitor-enabled").checked=!!data.enabled;$("#monitor-interval").value=data.interval_seconds||300;$("#monitor-unit").value="seconds";$("#monitor-focus").checked=!!data.focus_check;$("#monitor-launch").checked=!!data.activity_launch}

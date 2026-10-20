@@ -79,10 +79,15 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                         if item["id"] == "automation.cron-registry")
         self.assertIn("check status", terminal_ui._available_action_labels(resource))
         self.assertIn("list persisted job definitions", terminal_ui._available_action_labels(resource))
+        self.assertIn("view Cron execution history", terminal_ui._available_action_labels(resource))
         result = {"ok": True, "data": {"jobs": []}}
         with mock.patch.object(terminal_ui, "_call", return_value=result) as dispatch:
             self.assertIs(terminal_ui._cron_jobs(), result)
         dispatch.assert_called_once_with("cron.jobs.list")
+        history = {"ok": True, "data": {"executions": []}}
+        with mock.patch.object(terminal_ui, "_call", return_value=history) as dispatch:
+            self.assertIs(terminal_ui._cron_executions(), history)
+        dispatch.assert_called_once_with("cron.executions.list", {"limit": 20})
 
     def test_operation_history_is_available_only_from_recovery_resource(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES

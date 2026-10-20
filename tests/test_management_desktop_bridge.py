@@ -110,6 +110,14 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("cron.jobs.list")
         self.assertIn('"jobs": []', output.getvalue())
 
+    def test_cron_history_bridge_reads_bounded_shared_execution_history(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"executions": []}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["cron-history"]), 0)
+        dispatch.assert_called_once_with("cron.executions.list", {"limit": 20})
+        self.assertIn("executions", output.getvalue())
+
     def test_history_bridge_reads_the_shared_recovery_journal(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
             "operations": [], "unresolved_count": 0, "read_only": True}}) as dispatch:
