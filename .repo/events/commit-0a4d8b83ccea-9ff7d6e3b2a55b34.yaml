@@ -1,0 +1,7 @@
+event_id: commit-0a4d8b83ccea-9ff7d6e3b2a55b34
+repository: soobujmiah/ternuxx
+commit: 0a4d8b83ccea9d12b3802cedd02972261c0c4abc
+kind: commit
+occurred_at: '2026-10-20T11:01:14Z'
+status: completed
+summary: 'docs(cli): include cron execution history help'
