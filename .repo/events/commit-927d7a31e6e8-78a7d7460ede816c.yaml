@@ -1,0 +1,7 @@
+event_id: commit-927d7a31e6e8-78a7d7460ede816c
+repository: soobujmiah/ternuxx
+commit: 927d7a31e6e87b4d5d6005cc7524c03cd220ec0b
+kind: commit
+occurred_at: '2026-10-20T06:14:41Z'
+status: completed
+summary: 'docs: record native GUI renderer limitation'
