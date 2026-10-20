@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-Cron boot and boot-helper mutations have concurrency fixtures; Native helpers and managed 8023 read-only checks pass. P3 recovery/ownership and cold-boot qualification remain open.
+Managed 8023 process identity and config are verified separately from still-unknown TCP listener ownership; 638/638 Native tests pass. P3 recovery/ownership and cold-boot qualification remain open.
 
-**Next action:** Continue P3 ownership/recovery acceptance; do not close the active Termux/Codex session. Cold-boot qualification remains a separate owner-approved window.
+**Next action:** Continue remaining P3 recovery and ownership gates; keep cold-boot qualification in a separate owner-approved window and do not close the active Termux/Codex session.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -180,6 +180,7 @@ Evidence:
 - [docs/evidence/2026-10-21-p3-cron-boot-concurrency.md](evidence/2026-10-21-p3-cron-boot-concurrency.md)
 - [docs/evidence/2026-10-21-p3-native-readonly-recheck.md](evidence/2026-10-21-p3-native-readonly-recheck.md)
 - [docs/evidence/2026-10-21-p3-managed-8023-readonly-recheck.md](evidence/2026-10-21-p3-managed-8023-readonly-recheck.md)
+- [docs/evidence/2026-10-21-p3-managed-ssh-process-identity.md](evidence/2026-10-21-p3-managed-ssh-process-identity.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 

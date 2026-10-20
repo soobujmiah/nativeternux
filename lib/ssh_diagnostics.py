@@ -98,6 +98,89 @@ def _proc_identity(proc_root: Path, pid: int) -> tuple[int, int, str] | None:
     return pid, int(fields[1]), fields[19]
 
 
+def _managed_service_process_identity(
+    proc_root: Path,
+    service_pid: int | None,
+    service_dir: Path,
+    sshd_path: str | None,
+    config_path: Path,
+) -> str:
+    """Verify the fixed runit wrapper and exact managed sshd argv, without claiming its port."""
+    if service_pid is None or sshd_path is None:
+        return "unknown"
+    try:
+        root_identity = _proc_identity(proc_root, service_pid)
+        if root_identity is None:
+            return "unknown"
+        service_comm = (proc_root / str(service_pid) / "comm").read_text(encoding="utf-8").strip()
+        service_uid = _proc_uid(proc_root, service_pid)
+        service_argv = _proc_cmdline(proc_root, service_pid)
+        service_cwd = os.readlink(proc_root / str(service_pid) / "cwd")
+        parent_pid = root_identity[1]
+        parent_identity = _proc_identity(proc_root, parent_pid)
+        parent_comm = (proc_root / str(parent_pid) / "comm").read_text(encoding="utf-8").strip()
+        parent_argv = _proc_cmdline(proc_root, parent_pid)
+        parent_uid = _proc_uid(proc_root, parent_pid)
+        parent_cwd = os.readlink(proc_root / str(parent_pid) / "cwd")
+    except (OSError, UnicodeError, ValueError):
+        return "unknown"
+    if (parent_identity is None or service_uid != os.getuid() or parent_uid != os.getuid()
+            or service_comm != "bash" or service_cwd != str(service_dir)
+            or parent_cwd != str(service_dir)
+            or len(service_argv) != 2 or service_argv[-1] != "./run"
+            or parent_comm != "runsv" or parent_argv != ["runsv", "ternuxx-sshd"]):
+        return "not_verified"
+    try:
+        entries = list(proc_root.iterdir())
+    except OSError:
+        return "unknown"
+    incomplete = False
+    expected_argv = [sshd_path, "-D", "-e", "-f", str(config_path)]
+    for entry in entries:
+        if not entry.name.isdecimal():
+            continue
+        pid = int(entry.name)
+        identity = _proc_identity(proc_root, pid)
+        if identity is None:
+            try:
+                (proc_root / entry.name / "stat").stat()
+            except OSError:
+                continue
+            incomplete = True
+            continue
+        if identity[1] != service_pid:
+            continue
+        try:
+            comm = (proc_root / str(pid) / "comm").read_text(encoding="utf-8").strip()
+            uid = _proc_uid(proc_root, pid)
+            argv = _proc_cmdline(proc_root, pid)
+        except (OSError, UnicodeError, ValueError):
+            incomplete = True
+            continue
+        if comm == "sshd" and uid == os.getuid() and argv == expected_argv:
+            if (_proc_identity(proc_root, service_pid) == root_identity
+                    and _proc_identity(proc_root, parent_pid) == parent_identity
+                    and _proc_identity(proc_root, pid) == identity):
+                return "verified"
+            return "unknown"
+    return "unknown" if incomplete else "not_verified"
+
+
+def _proc_uid(proc_root: Path, pid: int) -> int | None:
+    try:
+        line = next(line for line in (proc_root / str(pid) / "status").read_text(encoding="ascii").splitlines()
+                    if line.startswith("Uid:"))
+        value = line.split()[1]
+        return int(value) if value.isdecimal() else None
+    except (OSError, UnicodeError, StopIteration, ValueError, IndexError):
+        return None
+
+
+def _proc_cmdline(proc_root: Path, pid: int) -> list[str]:
+    raw = (proc_root / str(pid) / "cmdline").read_bytes()
+    return [part.decode("utf-8", "strict") for part in raw.split(b"\0") if part]
+
+
 def listener_bind_scope(policy: dict[str, list[str]]) -> str:
     """Classify configured ListenAddress values without asserting network reachability."""
     values = policy.get("listenaddress", [])
@@ -484,6 +567,7 @@ def inspect_native(
                 "config_syntax": "unknown",
                 "effective_policy": {},
                 "listener_bind_scope": "unknown",
+                "process_identity": "unknown",
                 "loopback_ssh_probe": {"status": "not_attempted", "address": None, "port": None},
                 "definition_identity": _managed_service_definition_identity(prefix_path, service_source),
                 "startup_timing": {
@@ -545,13 +629,16 @@ def inspect_native(
             else:
                 managed["config_syntax"] = "invalid_or_unavailable"
     if managed["status"] == "running":
-        if managed.get("definition_identity", {}).get("status") != "verified":
-            checks["listener_daemon_correlation"] = "unknown"
-        else:
+        if managed.get("definition_identity", {}).get("status") == "verified":
+            managed["process_identity"] = _managed_service_process_identity(
+                proc_path, service_pid, service_dir, sshd, managed_config)
             checks["listener_daemon_correlation"] = _correlate_runit_listener(
                 proc_path, service_pid, managed.get("effective_policy", {}),
                 listener_sockets, listener_status)
+        else:
+            checks["listener_daemon_correlation"] = "unknown"
     elif managed["status"] == "stopped":
+        managed["process_identity"] = "not_running"
         checks["listener_daemon_correlation"] = "not_performed"
     else:
         checks["listener_daemon_correlation"] = "unknown"

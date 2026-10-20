@@ -238,7 +238,23 @@ class DoctorReportTest(unittest.TestCase):
             doctor_report.check_service_manager()
         finding = next(f for f in doctor_report.FINDINGS if f["id"] == "NTX-SVC-001")
         self.assertEqual(finding["severity"], "pass")
-        self.assertIn("listener ownership=unverified", finding["observed"])
+        self.assertIn("managed process identity=unknown", finding["observed"])
+        self.assertIn("listener-to-port correlation=unknown", finding["observed"])
+
+    def test_doctor_warns_when_managed_runit_process_identity_is_not_verified(self):
+        result = {"checks": {"managed_service": {"manager": "runit", "service_id": "ternuxx-sshd",
+                  "status": "running", "config_syntax": "valid", "process_identity": "not_verified",
+                  "loopback_ssh_probe": {"status": "ssh_banner"}},
+                  "listener_daemon_correlation": "unknown", "tcp_listener_observation": "permission_denied"}}
+        doctor_report.FINDINGS.clear()
+        with patch.object(doctor_report, "native_termux", return_value=True), \
+                patch.dict(doctor_report.os.environ, {"PREFIX": "/termux"}), \
+                patch.object(doctor_report.ssh_diagnostics, "inspect_native", return_value=result):
+            doctor_report.check_service_manager()
+        finding = next(f for f in doctor_report.FINDINGS if f["id"] == "NTX-SVC-001")
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("managed process identity=not_verified", finding["observed"])
+        self.assertIn("listener-to-port correlation=unknown", finding["observed"])
 
     def test_doctor_warns_on_wildcard_native_ssh_config_without_claiming_reachability(self):
         result = {"checks": {"configured_listener_bind_scope": "wildcard",

@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-Cron boot and boot-helper mutations have concurrency fixtures; Native helpers and managed 8023 read-only checks pass. P3 recovery/ownership and cold-boot qualification remain open.
+Managed 8023 process identity and config are verified separately from still-unknown TCP listener ownership; 638/638 Native tests pass. P3 recovery/ownership and cold-boot qualification remain open.
 
-**Next action:** Continue P3 ownership/recovery acceptance; do not close the active Termux/Codex session. Cold-boot qualification remains a separate owner-approved window.
+**Next action:** Continue remaining P3 recovery and ownership gates; keep cold-boot qualification in a separate owner-approved window and do not close the active Termux/Codex session.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

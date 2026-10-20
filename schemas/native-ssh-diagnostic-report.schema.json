@@ -147,7 +147,8 @@
             "listener_bind_scope",
             "loopback_ssh_probe",
             "definition_identity",
-            "startup_timing"
+            "startup_timing",
+            "process_identity"
           ],
           "properties": {
             "service_id": {
@@ -233,6 +234,9 @@
                 "address": {"type": ["string", "null"]},
                 "port": {"type": ["integer", "null"], "minimum": 1, "maximum": 65535}
               }
+            },
+            "process_identity": {
+              "enum": ["unknown", "verified", "not_verified", "not_running"]
             }
           }
         }

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import errno
+import os
 import subprocess
 import sys
 import tempfile
@@ -180,6 +181,43 @@ class SshDiagnosticsTests(unittest.TestCase):
         self.assertEqual(ssh_diagnostics._correlate_runit_listener(self.proc, 10, wrong_endpoint, sockets, status), "not_verified")
         self.assertEqual(ssh_diagnostics._correlate_runit_listener(self.proc, 999, policy, sockets, status), "unknown")
         self.assertEqual(ssh_diagnostics._correlate_runit_listener(self.proc, 10, policy, sockets, "unavailable"), "unknown")
+
+    def test_managed_service_process_identity_verifies_only_exact_runit_child(self) -> None:
+        service_dir = self.prefix / "var/service/ternuxx-sshd"
+        service_dir.mkdir(parents=True)
+        (self.proc / "20").mkdir()
+        (self.proc / "21").mkdir()
+        (self.proc / "22").mkdir()
+        (self.proc / "20/cwd").symlink_to(service_dir, target_is_directory=True)
+        (self.proc / "21/cwd").symlink_to(service_dir, target_is_directory=True)
+
+        def write_process(pid: int, comm: str, ppid: int, start: int, argv: list[str]) -> None:
+            directory = self.proc / str(pid)
+            fields = ["S", str(ppid)] + ["0"] * 17 + [str(start)]
+            (directory / "comm").write_text(comm + "\n", encoding="utf-8")
+            (directory / "stat").write_text(f"{pid} ({comm}) " + " ".join(fields) + "\n", encoding="ascii")
+            (directory / "status").write_text(f"Name:\t{comm}\nUid:\t{os.getuid()}\t{os.getuid()}\t{os.getuid()}\t{os.getuid()}\n", encoding="ascii")
+            (directory / "cmdline").write_bytes(b"\0".join(item.encode() for item in argv) + b"\0")
+
+        write_process(20, "runsv", 1, 200, ["runsv", "ternuxx-sshd"])
+        write_process(21, "bash", 20, 201, ["/data/data/com.termux/files/usr/bin/bash", "./run"])
+        config = self.home / ".config/ternuxx/sshd_recovery.conf"
+        sshd_path = "/synthetic/sshd"
+        write_process(22, "sshd", 21, 202, [sshd_path, "-D", "-e", "-f", str(config)])
+
+        result = ssh_diagnostics._managed_service_process_identity(
+            self.proc, 21, service_dir, sshd_path, config)
+        self.assertEqual(result, "verified")
+        (self.proc / "20/cwd").unlink()
+        (self.proc / "20/cwd").symlink_to(self.prefix, target_is_directory=True)
+        self.assertEqual(ssh_diagnostics._managed_service_process_identity(
+            self.proc, 21, service_dir, sshd_path, config), "not_verified")
+        (self.proc / "20/cwd").unlink()
+        (self.proc / "20/cwd").symlink_to(service_dir, target_is_directory=True)
+        (self.proc / "22/cmdline").write_bytes(
+            b"\0".join(item.encode() for item in [sshd_path, "-D", "-e", "-f", "/other/config"]) + b"\0")
+        self.assertEqual(ssh_diagnostics._managed_service_process_identity(
+            self.proc, 21, service_dir, sshd_path, config), "not_verified")
 
     def test_runit_startup_timing_is_sanitized_and_fail_closed(self) -> None:
         line = "run: ternuxx-sshd: (pid 456) 1h 20m 3s, normally down"
