@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import tempfile
 import sys
+import threading
 import unittest
 from unittest import mock
 
@@ -143,6 +144,35 @@ class BootHelperTests(unittest.TestCase):
         restored = self.call_apply(rollback, "services", "rollback", deployed["snapshot_id"])
         self.assertTrue(restored["changed"])
         self.assertEqual(target.stat().st_mode & 0o777, 0o740)
+
+    def test_concurrent_apply_of_same_preview_has_one_winner(self) -> None:
+        preview = self.call_preview("services", "deploy")
+        start = threading.Barrier(3)
+        successes = []
+        failures = []
+
+        def apply_same_plan() -> None:
+            start.wait(timeout=3)
+            try:
+                successes.append(self.call_apply(preview, "services", "deploy"))
+            except boot_helpers.BootHelperError as exc:
+                failures.append(exc)
+
+        workers = [threading.Thread(target=apply_same_plan) for _ in range(2)]
+        for worker in workers:
+            worker.start()
+        start.wait(timeout=3)
+        for worker in workers:
+            worker.join(timeout=5)
+            self.assertFalse(worker.is_alive())
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(failures), 1)
+        target = self.boot / boot_helpers.HELPERS["services"][0]
+        source = self.source_root / boot_helpers.HELPERS["services"][1]
+        self.assertEqual(target.read_bytes(), source.read_bytes())
+        snapshot_index = json.loads((self.state / "boot/helpers/snapshots.json").read_text())
+        self.assertEqual(len(snapshot_index["items"]), 1)
 
     def test_status_reads_only_fixed_helpers_without_creating_state(self) -> None:
         result = boot_helpers.status(home=self.home, state_dir=self.state, source_root=self.source_root)

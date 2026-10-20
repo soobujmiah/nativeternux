@@ -26,8 +26,13 @@ The manager now acquires that same private lock before rechecking the exact prev
 
 Next P3 action: continue the remaining ownership/recovery checks that do not require a reboot. Cold-boot qualification remains a separate owner-approved device window. P4 stays planned until P3 passes.
 
+## Follow-up — boot-helper concurrent apply fixture
+
+The two preview/apply-managed boot helpers also serialize registry, snapshot, and target updates under their private lock. Added a same-preview race fixture that starts two applies together: exactly one deploy succeeds, the second fails closed after the plan is consumed, the target matches source, and only one rollback snapshot is recorded. This proves process-local concurrent callers contend on separate lock descriptors in the Native Termux runtime.
+
 ## Evidence
 
-- Focused fixture test: `tests/test_termux_boot_cron.py` (16/16).
-- Full Native Termux repository suite: 635/635 in 97.501 seconds.
+- Cron boot entry manager focused fixture: `tests/test_termux_boot_cron.py` (16/16).
+- Boot helper focused fixture: `tests/test_boot_helpers.py` (7/7).
+- Full Native Termux repository suite after both concurrency fixtures: 636/636 in 96.086 seconds.
 - Source manager: `lib/termux_boot_cron.py`; boot runner source: `scripts/termux-boot/20-ternuxx-cron`.

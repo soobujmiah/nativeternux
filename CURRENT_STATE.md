@@ -783,3 +783,8 @@ The current serial roadmap has 11 phases (P0–P10): P0–P2 complete, P3 active
 
 
 Latest read-only Native status at 2026-10-20 18:44 UTC (2026-10-21 00:44 Asia/Dhaka): both boot helpers match source; Cron boot is configured and its scheduler is running, but device boot delivery is not qualified; all nine PRoot session records are stopped/released; Doctor reports no unresolved journal records and one SSH 8022 wildcard/password warning. Managed 8023 listener ownership and PRoot guest ownership remain unverified. No state changed. See [read-only P3 recheck](docs/evidence/2026-10-21-p3-native-readonly-recheck.md).
+
+
+## 2026-10-21 — boot-helper recovery concurrency acceptance
+
+Added a fixture for two simultaneous applies of the same exact boot-helper plan. One deploy wins under the helper lock; the second fails closed after the plan is consumed; only one private rollback snapshot exists and the target matches the source. Focused boot-helper tests passed 7/7 and the final full Native suite passed 636/636 in 96.086 seconds. No live helper or boot file was changed. Updated evidence: [P3 Cron boot and helper concurrency](docs/evidence/2026-10-21-p3-cron-boot-concurrency.md). P3 remains open for outstanding recovery/ownership and actual boot delivery qualification.
