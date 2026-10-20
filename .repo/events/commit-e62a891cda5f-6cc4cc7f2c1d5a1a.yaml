@@ -1,0 +1,7 @@
+event_id: commit-e62a891cda5f-6cc4cc7f2c1d5a1a
+repository: soobujmiah/ternuxx
+commit: e62a891cda5fc122f34a353d5641cb5ce5819882
+kind: commit
+occurred_at: '2026-10-20T16:09:12Z'
+status: completed
+summary: 'docs(graphics): record nested PRoot display results'
