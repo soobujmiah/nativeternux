@@ -1,0 +1,12 @@
+event_id: test-dc3a4752e4b7-native-20261020-merged-dc3a475-550-1
+repository: soobujmiah/ternuxx
+commit: dc3a4752e4b77d739d9b2f85d4307069371ca6b6
+kind: test
+occurred_at: '2026-10-20T00:15:27Z'
+run_id: native-20261020-merged-dc3a475-550
+run_attempt: '1'
+status: passed
+summary: 'Native Termux merge revision dc3a475: repo_test.sh 550/550 passed in 93.146s;
+  CLI help contract passed; repository knowledge verify reported 0 findings; strict
+  README bridge check passed. Local device evidence only; GitHub CI not yet run for
+  this revision.'

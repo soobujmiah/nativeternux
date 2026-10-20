@@ -1,13 +1,13 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-20T00:07:14Z'
+generated_at: '2026-10-20T00:15:27Z'
 generated_by: tools/repo_knowledge collect
-version: 69e378e
+version: dc3a475
 head:
-  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+  commit: dc3a4752e4b77d739d9b2f85d4307069371ca6b6
   branch: main
-  committed_at: '2026-10-18T19:42:15Z'
+  committed_at: '2026-10-20T00:13:40Z'
 phases:
   source: not_configured
   completed: []
@@ -29,15 +29,15 @@ build:
   run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39159994935
 test:
   status: passed
-  run_id: native-20261020-w7-native-only-550
-  commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
+  run_id: native-20261020-merged-dc3a475-550
+  commit: dc3a4752e4b77d739d9b2f85d4307069371ca6b6
   run_attempt: '1'
-  at: '2026-10-20T00:07:14Z'
+  at: '2026-10-20T00:15:27Z'
   timestamp_source: observed
-  summary: 'Native Termux dirty worktree HEAD 69e378e after native-only PRoot GUI
-    routing: repo_test.sh 550/550 passed in 93.732s; CLI help contract passed; deterministic
-    knowledge verify 0 findings; strict README bridge passed. Local only, no GitHub
-    workflow run.'
+  summary: 'Native Termux merge revision dc3a475: repo_test.sh 550/550 passed in 93.146s;
+    CLI help contract passed; repository knowledge verify reported 0 findings; strict
+    README bridge check passed. Local device evidence only; GitHub CI not yet run
+    for this revision.'
 last_successful_build: null
 last_failed_build:
   commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
@@ -45,5 +45,5 @@ last_failed_build:
   run_id: '39159994935'
 sync:
   status: ok
-  last_synced_at: '2026-10-20T00:07:14Z'
+  last_synced_at: '2026-10-20T00:15:27Z'
   source: local

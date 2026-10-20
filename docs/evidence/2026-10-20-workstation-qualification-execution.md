@@ -173,3 +173,16 @@ Removed the optional `session_owner=ternux` control plane from the supported Ter
 ### Final post-routing verification — 2026-10-20
 
 After removing the legacy Ternux session-owner surface, `PYTHONDONTWRITEBYTECODE=1 bash scripts/repo_test.sh` passed **550/550 tests** (exit 0, 93.732 seconds). CLI help contract passed, deterministic repository verify reported 0 findings, and strict README bridge passed. The local event `native-20261020-w7-native-only-550` was collected; generated repository status was synced and still reports GitHub build run `39159994935` failed. No CI pass is claimed for HEAD 69e378e or this dirty worktree.
+
+
+## Final Native checkout reconciliation — 2026-10-20
+
+Execution context was reverified through SSH alias `termux`: Native Termux user `u0_a490`, Termux `0.119.0-beta.3`, canonical checkout `/data/data/com.termux/files/home/ternuxx`. Local source commit `08b64f4` was integrated with the then-current upstream `origin/main` commit `89a2a0b` by merge commit `dc3a475`; no history was rewritten. Conflicts were limited to generated `.repo` status/project data and an existing CI event. The upstream failed CI event was retained as authoritative; local test detail remains in this execution record. Owner-created `.superdesign/` files remain untracked and untouched.
+
+On merged revision `dc3a4752e4b77d739d9b2f85d4307069371ca6b6`, `PYTHONDONTWRITEBYTECODE=1 bash scripts/repo_test.sh` exited 0: 550/550 tests passed in 93.146 seconds. `bash -n` over the CLI and changed launch modules passed; `bash tests/test_cli_help.sh` passed; `python3 -m tools.repo_knowledge verify` reported 0 findings; `python3 tools/doc_bridge.py check --strict --project-id ternuxx README.md` passed. The current local event is `native-20261020-merged-dc3a475-550`. The first attempted bridge invocation had a misspelled module path and failed; the exact supported command above was then run successfully.
+
+GitHub CLI authentication is available. The latest known GitHub runs before this push are old failed runs `39159994935` (Repository State Contract) and `39159994930` (Repository Knowledge Sync), both for source `69e378eb33247678437bda4b2de9ab25f6bcb91d`. No CI result for `dc3a475` exists yet. Release remains NOT RELEASE-READY pending post-push CI and the open gates below.
+
+Native GUI evidence remains bounded: `tx gui` launched the Ternuxx GTK management center on Native display `:1`; X11 mapped-window evidence exists, but Android-visible interaction was not verified. Native Vulkan logged an incompatible-driver error. Debian PRoot `:1` Zink/Turnip Adreno 825 and authenticated Native PulseAudio were verified by read-only runtime probes. CPU is the baseline. VirGL is preserved as an available route but not live-qualified in this run. NPU remains experimental and unverified. The PRoot Codex session and active GUI were left running; SSH 8022 and the rootfs were not reconfigured or replaced.
+
+The `bin/tx` source header was corrected to describe Native Termux as host manager for a coordinated Debian PRoot workstation. No executable behavior changed in that final edit; `bash -n bin/tx` passed afterward. Current generated `.repo` state now records the 550-test result against `dc3a475` and explicitly states that GitHub CI has not yet evaluated the revision.

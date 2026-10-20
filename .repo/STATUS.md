@@ -2,14 +2,14 @@
 # ternuxx -- deterministic status
 
 - Repository: `soobujmiah/ternuxx`
-- Generated at: 2026-10-20T00:07:14Z (by `tools/repo_knowledge collect`)
-- Version: `69e378e`
-- Head: `69e378eb33247678437bda4b2de9ab25f6bcb91d` on `main` (2026-10-18T19:42:15Z)
+- Generated at: 2026-10-20T00:15:27Z (by `tools/repo_knowledge collect`)
+- Version: `dc3a475`
+- Head: `dc3a4752e4b77d739d9b2f85d4307069371ca6b6` on `main` (2026-10-20T00:13:40Z)
 
 ## Build / test
 
 - Build: **failed** (run `39159994935`)
-- Test: **passed** -- Native Termux dirty worktree HEAD 69e378e after native-only PRoot GUI routing: repo_test.sh 550/550 passed in 93.732s; CLI help contract passed; deterministic knowledge verify 0 findings; strict README bridge passed. Local only, no GitHub workflow run.
+- Test: **passed** -- Native Termux merge revision dc3a475: repo_test.sh 550/550 passed in 93.146s; CLI help contract passed; repository knowledge verify reported 0 findings; strict README bridge check passed. Local device evidence only; GitHub CI not yet run for this revision.
 - Last failed build: `69e378eb33247678437bda4b2de9ab25f6bcb91d` at 2026-10-18T19:42:44Z
 
 ## Phases
@@ -19,4 +19,4 @@
 
 - Status: ok
 - Source: local
-- Last synced at: 2026-10-20T00:07:14Z
+- Last synced at: 2026-10-20T00:15:27Z
