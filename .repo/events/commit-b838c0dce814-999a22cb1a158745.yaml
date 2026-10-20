@@ -1,0 +1,7 @@
+event_id: commit-b838c0dce814-999a22cb1a158745
+repository: soobujmiah/ternuxx
+commit: b838c0dce81489503db0c2665bd812e27dc24322
+kind: commit
+occurred_at: '2026-10-20T20:19:18Z'
+status: completed
+summary: 'docs: record TUI log read acceptance'
