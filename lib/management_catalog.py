@@ -70,7 +70,7 @@ CATEGORIES: list[Category] = [
     {"id":"system-health", "name":"System & health", "description":"Device, runtime, resource use, and overall health.", "status":"partial"},
     {"id":"services", "name":"Services & background", "description":"Managed services, supervisors, and background work.", "status":"partial"},
     {"id":"deployments", "name":"Server & application deployment", "description":"Server templates, deployments, ports, versions, and rollback.", "status":"planned"},
-    {"id":"proot", "name":"Debian PRoot & applications", "description":"Profile inventory, preview-confirmed diagnostic sessions, bounded health reads, and a foreground Debian login path whose live identity qualification currently fails closed; GUI/workstation supervision remains unqualified.", "status":"partial"},
+    {"id":"proot", "name":"Debian PRoot & applications", "description":"Profile inventory, preview-confirmed diagnostic sessions, bounded health reads, and a foreground Debian login that passed one live identity check; attach/detach, shared-rootfs concurrency, and general GUI/workstation supervision remain unqualified.", "status":"partial"},
     {"id":"graphics-acceleration", "name":"Graphics acceleration", "description":"Provider-specific GPU, Vulkan, and software-rendering diagnostics.", "status":"partial"},
     {"id":"desktop-audio", "name":"Desktop & multimedia", "description":"Display, GUI sessions, audio, and graphical dependencies.", "status":"partial"},
     {"id":"ai-providers", "name":"AI runtime & providers", "description":"Local runtimes, models, hardware capabilities, and API providers.", "status":"planned"},

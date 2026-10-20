@@ -1,6 +1,6 @@
 # Doctor, management, and recovery
 
-This document defines how Ternuxx should inspect and manage the workstation after installation. These are product requirements; commands that are marked planned are not implemented yet. The current CLI reports its real limits in `ternuxx help`.
+This document defines how Ternuxx should inspect and manage the workstation after installation. These are product requirements; commands that are marked planned are not implemented yet. The current CLI reports its real limits in `tx help`.
 
 ## Operating principles
 
@@ -15,7 +15,7 @@ This document defines how Ternuxx should inspect and manage the workstation afte
 
 ## Doctor
 
-`ternuxx doctor` should provide a concise overall state and detailed sections for host, packages, desktop/display, audio, storage, providers, acceleration, and recovery. `--json` returns stable machine-readable codes and fields; human output explains them without requiring the user to interpret raw shell errors. It also validates Ternuxx backup archives read-only: an empty backup set is informational, valid archives pass, invalid archives warn, and unsafe/inaccessible paths warn without repair. The desktop process inventory validates recorded supervisor/X11/desktop PID identities, counts other known desktop processes in the same recorded session separately, and labels all remaining candidates as owner-unverified; a process name alone never authorizes a lifecycle action. On native Termux, Doctor also reads the fixed `ternuxx-sshd` Runit status and validates its config syntax through the existing SSH diagnostic adapter; it does not call start/stop. Doctor also compares the fixed installed unit script with the checked-out definition and warns on mismatch; this does not establish process-to-listener ownership.
+`tx doctor` should provide a concise overall state and detailed sections for host, packages, desktop/display, audio, storage, providers, acceleration, and recovery. `--json` returns stable machine-readable codes and fields; human output explains them without requiring the user to interpret raw shell errors. It also validates Ternuxx backup archives read-only: an empty backup set is informational, valid archives pass, invalid archives warn, and unsafe/inaccessible paths warn without repair. The desktop process inventory validates recorded supervisor/X11/desktop PID identities, counts other known desktop processes in the same recorded session separately, and labels all remaining candidates as owner-unverified; a process name alone never authorizes a lifecycle action. On native Termux, Doctor also reads the fixed `ternuxx-sshd` Runit status and validates its config syntax through the existing SSH diagnostic adapter; it does not call start/stop. Doctor also compares the fixed installed unit script with the checked-out definition and warns on mismatch; this does not establish process-to-listener ownership.
 
 Each finding has an ID, severity (`pass`, `info`, `warning`, or `error`), scope, observed value, timestamp/source, and a safe suggested action. Diagnostics distinguish unavailable, unverified, and failed. A GPU device node or installed driver is not reported as a working renderer; provider checks identify whether the result came from native Termux or the existing Debian PRoot. Doctor does not test by launching a desktop or workload unless a future command explicitly says it will do so and asks first.
 
@@ -26,10 +26,10 @@ Suggested actions link to the matching guide or an explicit command. A future `d
 The optional read-only management HTTP API can be run explicitly in the foreground:
 
 ```text
-ternuxx management http serve [--port 8765]
+tx mng http serve [--port 8765]
 ```
 
-It binds only to `127.0.0.1`, requires an interactive terminal before it generates and displays a per-run bootstrap secret, and exits on Ctrl-C. The secret is not written to a file or log. The runtime grants read-only scopes; mutations, boot startup, browser UI, and off-home access are not enabled. Use `ternuxx management http serve --help` for command help. Source and verification limits are recorded in [the management API contract](architecture/MANAGEMENT-API.md).
+It binds only to `127.0.0.1`, requires an interactive terminal before it generates and displays a per-run bootstrap secret, and exits on Ctrl-C. The secret is not written to a file or log. The runtime grants read-only scopes; mutations, boot startup, browser UI, and off-home access are not enabled. Use `tx mng http serve --help` for command help. Source and verification limits are recorded in [the management API contract](architecture/MANAGEMENT-API.md).
 
 The management layer inventories Ternuxx-owned services and desktop sessions, plus read-only observations of external sessions. Initial managed services may include the Termux:X11 server, D-Bus session, PulseAudio only when Ternuxx started it, XFCE, and later an explicitly selected PRoot provider. A service record includes PID, process start time, executable identity, parent/session information, display, state directory, and the launch command version needed to reject stale PID reuse.
 
@@ -39,7 +39,7 @@ The manager serializes Ternuxx session operations with a private lifecycle lock,
 
 ## Native Runit SSH service control
 
-The CLI supports ternuxx ssh start and ternuxx ssh stop for only the fixed ternuxx-sshd Runit unit. Without --yes, each command is a read-only preview. Applying requires --yes --plan-id copied from that exact preview. The plan binds the requested transition, observed service state, checked-out and installed run-script hashes, and the native Runit command hash; apply rechecks these before journaling and action.
+The CLI supports tx ssh start and tx ssh stop for only the fixed ternuxx-sshd Runit unit. Without --yes, each command is a read-only preview. Applying requires --yes --plan-id copied from that exact preview. The plan binds the requested transition, observed service state, checked-out and installed run-script hashes, and the native Runit command hash; apply rechecks these before journaling and action.
 
 The action refuses missing/unsafe service paths, a different run script, an unavailable Runit command, unknown state, or an unresolved prior journal entry. It invokes only sv up ternuxx-sshd or sv down ternuxx-sshd, writes a durable service.start/service.stop record first, then verifies the resulting Runit state. A timeout or uncertain result stays in the journal as needs_recovery and blocks another mutation. Stop preview warns that clients using the managed SSH port may disconnect. These controls do not edit SSH config, keys, boot policy, package state, PRoot, or other services.
 
@@ -77,7 +77,7 @@ The Wake Lock status response uses `schemas/wakelock-status.schema.json`. `boot_
 
 Write native boot and task-continuity records to Ternuxx-owned Termux private storage. Persist only sanitized operation identity, provider, checkpoint/status, timestamps, and recovery metadata; exclude credentials, private keys, and unnecessary personal paths. Make updates atomic and versioned so an interrupted write is detectable. Reboot evidence records what native services recovered without assuming the current agent survived. PRoot-dependent work remains pending until a fresh PRoot session is running and the owner requests verification or continuation. Stopping or restarting one provider may affect only processes/resources recorded as owned by that provider.
 
-**Current implementation slice:** `ternuxx checkpoint prepare|verify` now writes private, atomic native continuity records and compares boot IDs without auto-resuming tasks. Host-side tests exercise reboot detection and a platform-neutral owner-scoped resource lease model. These do not yet verify Android reboot recovery, Termux:Boot, service readiness, or actual Wake Lock API semantics; see [continuity implementation status](architecture/CONTINUITY-IMPLEMENTATION.md).
+**Current implementation slice:** `tx checkpoint prepare|verify` now writes private, atomic native continuity records and compares boot IDs without auto-resuming tasks. Host-side tests exercise reboot detection and a platform-neutral owner-scoped resource lease model. These do not yet verify Android reboot recovery, Termux:Boot, service readiness, or actual Wake Lock API semantics; see [continuity implementation status](architecture/CONTINUITY-IMPLEMENTATION.md).
 
 Required acceptance evidence (not yet passed): native SSH and continuity recording with PRoot stopped; `db` enters the guest without starting a GUI; `xgo` matches its pre-change graphical workflow; an authorized PRoot agent can run a bounded native diagnostic over configured SSH and an unauthorized request is rejected; stopping PRoot leaves native services healthy; restarting native services preserves PRoot state; and a reboot can be prepared/verified from native records without a surviving agent. Wake-lock ownership also needs a test proving one service cannot release another workload's lock. See [ADR-0010](architecture/decisions/ADR-0010-native-termux-autonomy.md).
 - **Version and signing:** Termux add-on apps need a compatible signing source with the main Termux app. Doctor should report missing/mismatched companion capability without attempting to uninstall or replace apps.
@@ -94,7 +94,7 @@ The manager checks each profile's dependencies before enabling or starting it an
 
 | Missing capability | Safe fallback |
 |---|---|
-| Termux:Boot APK absent, disabled, or not initialized | Boot automation is unavailable. Keep manual `ternuxx start`/CLI controls available and show the official add-on setup guide; do not pretend boot is enabled. |
+| Termux:Boot APK absent, disabled, or not initialized | Boot automation is unavailable. Keep manual `tx start`/CLI controls available and show the official add-on setup guide; do not pretend boot is enabled. |
 | `termux-services`/runit package absent | A Termux:Boot script may perform one-shot startup for selected owned services. Mark watchdog/restart supervision unavailable; do not silently install a manager. |
 | Termux:X11 APK or companion package unavailable | CLI services may still start, but report no visible desktop and show the specific setup route. Do not report GUI-ready. |
 | Native desktop packages unavailable | Keep CLI-only mode available; show a preview for the native package profile. Do not silently switch to the PRoot desktop. |
@@ -133,27 +133,27 @@ A recovery command should fail closed when checksums fail, ownership cannot be e
 Planned interface:
 
 ```text
-ternuxx recovery status
-ternuxx proot status                            # distro inventory + readable host PRoot process candidates; never enters Debian
-ternuxx proot verify --distro debian --guest-user USER --display :N --backend zink|virgl
-ternuxx proot verify --distro debian --guest-user-from ternux-state --display :N --backend zink|virgl
+tx recovery status
+tx proot status                            # distro inventory + readable host PRoot process candidates; never enters Debian
+tx proot verify --distro debian --guest-user USER --display :N --backend zink|virgl
+tx proot verify --distro debian --guest-user-from ternux-state --display :N --backend zink|virgl
 # verification also reports fixed native `ternux --json status` and `ternux --json backend show` fields when available
 # status response: schemas/proot-distribution-inventory.schema.json
 # verify response: schemas/ternux-guest-diagnostics.schema.json
 
 PRoot-Distro guest diagnostics use `login --isolated`, which disables its broad default host mounts. Zink verification binds only Termux's X11 socket directory and the explicit KGSL/DRI device paths. VirGL verification also enables shared temporary storage for its server socket, while keeping the default host home and shared-storage mounts disabled. These checks run only Ternux's version and read-only status commands; they do not enable arbitrary guest command execution. The optional `--guest-user-from ternux-state` resolves the configured non-root account from Ternux's own `state` file without returning the account value. It requires a regular file owned by the Termux UID with mode 0600, and private, owned, symlink-free state directories below Termux HOME; malformed or unsafe profiles fail closed. The explicit `--guest-user USER` path remains available. When guest X11 fails, diagnostics compare the requested display with the visible Termux:X11 process arguments and add a bounded blocker if the display is not observed; this does not prove ownership or server absence, and PID/argv are not returned. See `docs/evidence/2026-10-18-p3-display-process-diagnostic-0206.json` for the live result and limitations.
 # native Ternux fields are self-reported and identity/ownership-unverified; its running/X11 status is process-presence only and does not correlate the process to Ternux or its configured display. Its PulseAudio field is process status; a separate read-only native_pulseaudio_endpoint uses pactl info, and neither proves audible output. Configured backend/host renderer do not prove the selected guest workload. See docs/evidence/2026-10-18-p3-ternux-x11-presence-correlation-0202.json.
-ternuxx backup create --name NAME                 # preview and print PLAN_ID
-ternuxx backup create --name NAME --yes --plan-id PLAN_ID
-ternuxx backup list
-ternuxx backup inspect BACKUP_ID
-ternuxx restore --preview BACKUP_ID                # preview and print PLAN_ID
-ternuxx restore BACKUP_ID --yes --plan-id PLAN_ID
-ternuxx recovery inspect OPERATION_ID
-ternuxx recovery resolve OPERATION_ID              # preview supported operation-journal reconciliation
-ternuxx recovery resolve OPERATION_ID --yes --plan-id PLAN_ID
-ternuxx recovery rollback OPERATION_ID                 # preview only
-ternuxx recovery rollback OPERATION_ID --yes --plan-id PLAN_ID
+tx backup create --name NAME                 # preview and print PLAN_ID
+tx backup create --name NAME --yes --plan-id PLAN_ID
+tx backup list
+tx backup inspect BACKUP_ID
+tx restore --preview BACKUP_ID                # preview and print PLAN_ID
+tx restore BACKUP_ID --yes --plan-id PLAN_ID
+tx recovery inspect OPERATION_ID
+tx recovery resolve OPERATION_ID              # preview supported operation-journal reconciliation
+tx recovery resolve OPERATION_ID --yes --plan-id PLAN_ID
+tx recovery rollback OPERATION_ID                 # preview only
+tx recovery rollback OPERATION_ID --yes --plan-id PLAN_ID
 # `recovery resolve` supports the journal kinds listed below; unsupported future kinds remain inspect-only. Generic task resume is not implemented.
 ```
 
@@ -167,7 +167,7 @@ Catalog entries are optional and cannot silently expand the base install. Packag
 
 ## Choosing GUI startup after reboot
 
-The default `cli-only` profile keeps GUI startup off after reboot while leaving separately configured CLI services alone. Use `tx start` to start native X11/XFCE. Run `tx gui` from Native Termux to open the GTK management center on the verified session display; if `DISPLAY` is unset, Ternuxx derives it from the session record, and a conflicting display is refused. Use `ternuxx boot gui on` to preview native X11/XFCE startup and `ternuxx boot gui on --yes` to apply it. Use `ternuxx boot gui off` to preview GUI-off and `ternuxx boot gui off --yes` to apply it. These shortcuts use the existing preview-first profile manager and preserve unrelated Termux:Boot scripts. `ternuxx boot disable --yes` removes only the recognized Ternuxx boot profile. The native boot profile calls the same desktop manager as an interactive start. That manager does not launch the Termux:X11 Activity. The opt-in monitoring service can check Android package availability and foreground state at its configured interval; it requests launch only when the Linux session is healthy, the Activity is verified in the background, and both focus checking and Activity launch are enabled. Unknown focus never triggers a launch. The current device has not enabled or live-qualified this scheduler.
+The default `cli-only` profile keeps GUI startup off after reboot while leaving separately configured CLI services alone. Use `tx start` to start native X11/XFCE. Run `tx gui` from Native Termux to open the GTK management center on the verified session display; if `DISPLAY` is unset, Ternuxx derives it from the session record, and a conflicting display is refused. Use `tx boot gui on` to preview native X11/XFCE startup and `tx boot gui on --yes` to apply it. Use `tx boot gui off` to preview GUI-off and `tx boot gui off --yes` to apply it. These shortcuts use the existing preview-first profile manager and preserve unrelated Termux:Boot scripts. `tx boot disable --yes` removes only the recognized Ternuxx boot profile. The native boot profile calls the same desktop manager as an interactive start. That manager does not launch the Termux:X11 Activity. The opt-in monitoring service can check Android package availability and foreground state at its configured interval; it requests launch only when the Linux session is healthy, the Activity is verified in the background, and both focus checking and Activity launch are enabled. Unknown focus never triggers a launch. The current device has not enabled or live-qualified this scheduler.
 
 ## Current boot-profile implementation status
 
