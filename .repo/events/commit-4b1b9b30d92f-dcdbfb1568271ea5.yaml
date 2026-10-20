@@ -1,0 +1,7 @@
+event_id: commit-4b1b9b30d92f-dcdbfb1568271ea5
+repository: soobujmiah/ternuxx
+commit: 4b1b9b30d92f17bc0f6a7538c12828301d684053
+kind: commit
+occurred_at: '2026-10-20T10:34:41Z'
+status: completed
+summary: 'fix(proot): verify interactive login after exec transition'
