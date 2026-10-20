@@ -1,0 +1,7 @@
+event_id: commit-8e6dc1e1de2e-3bc37077304b330e
+repository: soobujmiah/ternuxx
+commit: 8e6dc1e1de2ec4c47364acc32fb2393a37238239
+kind: commit
+occurred_at: '2026-10-20T06:17:01Z'
+status: completed
+summary: 'docs: add CI evidence for native renderer review'
