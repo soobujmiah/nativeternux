@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "TUI, Web, and GTK now have source-verified exact-plan PRoot shortcut add/remove actions; visual client acceptance, native recovery concurrency, boot gates, and P3 exit review remain open.",
+      "summary": "Installed GTK/TUI/Web/PRoot Apps visual acceptance was owner-confirmed on 2026-10-20; Native boot-Cron exact-script integration is configured and duplicate-safe in a live/manual run. Desktop lifecycle lock contention is covered in fixtures. Cold-boot delivery and Android startup/background policy remain unverified, so P3 stays in progress.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -165,9 +165,11 @@
         "docs/evidence/2026-10-20-proot-full-gui.md",
         "docs/evidence/2026-10-20-a-z-audit-followup.md",
         "docs/evidence/2026-10-20-management-client-parity-audit.md",
-        "docs/evidence/2026-10-20-proot-shortcut-client-parity.md"
+        "docs/evidence/2026-10-20-proot-shortcut-client-parity.md",
+        "docs/evidence/2026-10-20-p3-owner-visual-and-boot-cron-recheck.md",
+        "docs/evidence/2026-10-20-graphics-live-recheck.md"
       ],
-      "next_action": "Owner visually inspect the installed GTK client, TUI key flow, Web layout and PRoot Apps menu; finish desktop recovery concurrency and boot acceptance; keep P4 planned until the P3 exit gate is reviewed."
+      "next_action": "Keep the accepted visual review closed. Preserve the running session; qualify Termux:Boot delivery only during a separately scheduled reboot window, then resolve remaining Android startup policy and review the P3 exit gate. Continue non-disruptive P4/P6 implementation work without claiming their phase gates complete."
     },
     {
       "id": "P4",
@@ -195,7 +197,8 @@
         "docs/evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md",
         "docs/architecture/NATIVE-GRAPHICS-AUDIO.md",
         "docs/evidence/2026-10-20-ternuxx-proot-consolidation.md",
-        "docs/evidence/2026-10-20-proot-full-gui.md"
+        "docs/evidence/2026-10-20-proot-full-gui.md",
+        "docs/evidence/2026-10-20-graphics-live-recheck.md"
       ],
       "next_action": "After P3 passes, integrate this dedicated GUI lifecycle with the existing Debian provider and shared management contract; implement previewed package/config replay and verify fresh-guest setup without replacing the existing rootfs."
     },
@@ -212,12 +215,13 @@
       "title": "CPU/GPU/NPU capability, optimization, and fallback",
       "status": "planned",
       "completed_on": null,
-      "summary": "Preparatory graphics work provides shared CLI/TUI/Web/GTK inventory, verification, and Native selection. Adreno 825 OpenGL rendering and benchmark paths were observed; Native GLES manager verification and Vulkan draw, automatic fallback, per-workload API enforcement, clean-install driver reproduction, and broader GUI acceptance remain incomplete. P6 stays planned.",
+      "summary": "Native off-screen OpenGL render is verified on Adreno 825; GLES creates an Adreno context but draw is unverified; deliberate OpenGL failure falls back to a verified llvmpipe render in the verifier. Workload dispatch and fallback, Vulkan draw, clean-install driver setup, and NPU runtime remain open.",
       "evidence": [
         "docs/evidence/2026-10-20-shared-graphics-manager.md",
-        "docs/evidence/2026-10-20-native-offscreen-glmark2.md"
+        "docs/evidence/2026-10-20-native-offscreen-glmark2.md",
+        "docs/evidence/2026-10-20-graphics-live-recheck.md"
       ],
-      "next_action": "After its dependencies pass, implement API-aware backend health and fallback with real Native GLES/Vulkan and Debian workload probes; make the candidate driver reproducible from a clean Native install before claiming supported acceleration."
+      "next_action": "Connect API-aware backend assessment and software fallback to named workload launch paths; qualify actual GLES and Vulkan draws and fresh-install driver reproduction, while keeping unsupported APIs fail-closed."
     },
     {
       "id": "P7",

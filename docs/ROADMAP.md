@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Owner visually inspect the installed GTK client, TUI key flow, Web layout and PRoot Apps menu; finish desktop recovery concurrency and boot acceptance; keep P4 planned until the P3 exit gate is reviewed.
+**Next action:** Keep the accepted visual review closed. Preserve the running session; qualify Termux:Boot delivery only during a separately scheduled reboot window, then resolve remaining Android startup policy and review the P3 exit gate. Continue non-disruptive P4/P6 implementation work without claiming their phase gates complete.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
@@ -147,7 +147,7 @@ See [Doctor, management, and recovery](OPERATIONS.md) for command and safety con
 
 **Goal:** let users opt into the existing Ternux Debian environment without losing any working capability. Ternuxx may reuse the existing rootfs and independently manage only guest processes/sessions it launches and can verify. Preserve the legacy Ternux lifecycle and its configured Zink/Turnip route; rootfs sharing alone never transfers ownership of a running session.
 
-**Current preparation (P4 remains planned):** Ternuxx now has a versioned Debian Trixie profile and a live-verified, guest-write-free adoption record for the existing rootfs. This records ownership only; it does not install packages, migrate guest settings, replay a fresh setup, or qualify GUI/workload parity. See [Debian consolidation evidence](evidence/2026-10-20-ternuxx-proot-consolidation.md). P4 work waits for the P3 ownership and recovery gates.
+**Current preparation (P4 remains planned):** The existing Debian rootfs has a live-verified, guest-write-free adoption record. A preview-bound fresh installer now pins the Debian OCI image index digest, dated APT snapshots, manifest package groups, locale, user, and package-version capture; KGSL devices also receive only the hash-verified Turnip artifact. This installer has fixture evidence but has not been applied to a clean device, and fresh guest rendering remains unverified. Existing Debian is refused by the fresh path and remains in place. See [Debian consolidation evidence](evidence/2026-10-20-ternuxx-proot-consolidation.md) and [fresh setup evidence](evidence/2026-10-20-proot-fresh-reproducibility.md). P4 work waits for the P3 ownership and recovery gates.
 
 **Deliverables:**
 - Source-reviewed capability/behavior matrix of the existing Ternux setup: desktop/session, display/audio, configured graphics backend, and owner-demonstrated Linux workloads. The pinned source baseline is recorded in [P4 Ternux source and capability matrix](evidence/P4-ternux-source-capability-matrix-2026-10-18.md); this is not yet a live parity qualification.

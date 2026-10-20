@@ -101,7 +101,10 @@ while True:
                 env=self.env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                timeout=8,
+                # A full native suite can leave very little scheduling time
+                # for fixture child shutdown on this device. Keep cleanup
+                # bounded, but allow the scoped supervisor to finish normally.
+                timeout=20,
                 check=False,
             )
         self.temp.cleanup()

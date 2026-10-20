@@ -118,5 +118,33 @@
   "legacy_ternux_cli": {
     "required_for_new_install": false,
     "remove_from_existing_install_only_after": "Ternuxx setup and workload verification plus a preview-bound exact-file removal"
+  },
+  "fresh_install": {
+    "base_image": "debian:trixie-20261005",
+    "image_index_digest": "sha256:913f6706df59a68922d1dd08f78c2476560a8d367897200a6005b00e5f67c2d5",
+    "image_date": "2026-10-05",
+    "architecture": "aarch64",
+    "source": "official Debian Docker image index",
+    "package_versions": "resolved from current Debian repositories and recorded after install",
+    "apt_snapshot": {
+      "snapshot_id": "20261020T000000Z",
+      "main_archive": "http://snapshot.debian.org/archive/debian/20261020T000000Z/",
+      "security_archive": "http://snapshot.debian.org/archive/debian-security/20261020T000000Z/",
+      "suites": [
+        "trixie",
+        "trixie-updates",
+        "trixie-security"
+      ],
+      "components": [
+        "main"
+      ],
+      "valid_until": "disabled for historical snapshots; signed Release metadata remains required"
+    },
+    "arch_manifest_digest": "sha256:b55910b579d6eb05ebd79fbc8468b974fa39bb0610d52e1f1390bb2177ab7614",
+    "config_digest": "sha256:4bb08c595249772893799a9189839e5a94900e8deaa14885896307e562b51e88",
+    "config_size": 466,
+    "layer_digest": "sha256:df9831efb49cab24dec437e8482f2a9ddbd9e239131fa3ffe095dc1492081e1d",
+    "layer_size": 49761105,
+    "image_created": "2026-10-05T00:00:00Z"
   }
 }

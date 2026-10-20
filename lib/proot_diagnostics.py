@@ -295,7 +295,8 @@ def _verification_result(*, status: str, display: str, backend: str,
                          guest_entered: bool = False,
                          observed_display: str | None = None, x11: str = "unknown", audio: str = "unknown",
                          renderer: str | None = None, renderer_class: str = "unavailable",
-                         blockers: list[str] | None = None,
+                         gles_context: str = "unknown", gles_renderer: str | None = None,
+                         gles_version: str | None = None, blockers: list[str] | None = None,
                          native_pulseaudio_endpoint: dict[str, str | None] | None = None
                          ) -> dict[str, object]:
     return {
@@ -310,7 +311,9 @@ def _verification_result(*, status: str, display: str, backend: str,
         "native_pulseaudio_endpoint": native_pulseaudio_endpoint or {
             "status": "unknown", "server_name": None, "default_sink": None},
         "checks": {"observed_display": observed_display, "x11": x11, "audio": audio,
-                   "renderer_class": renderer_class, "renderer": renderer},
+                   "renderer_class": renderer_class, "renderer": renderer,
+                   "gles_context": gles_context, "gles_renderer": gles_renderer,
+                   "gles_version": gles_version, "gles_draw_verified": False},
         "blockers": blockers or [],
         "read_only": True,
         "safety": {"packages_changed": False, "guest_write_command_invoked": False,
@@ -357,36 +360,35 @@ def _guest_command(manager: str, user: str, display: str, backend: str,
 
 
 _GUEST_PROBE_SCRIPT = r"""
-printf 'Display: %s
-' "${DISPLAY:-}"
+printf 'Display: %s\n' "${DISPLAY:-}"
+x11=unavailable
+if command -v xdpyinfo >/dev/null 2>&1 && xdpyinfo -display "${DISPLAY:-}" >/dev/null 2>&1; then
+  x11=reachable
+fi
+renderer=
 if command -v glxinfo >/dev/null 2>&1; then
-  glx_output=$(glxinfo -B 2>/dev/null)
-  renderer=$(printf '%s
-' "$glx_output" | sed -n 's/^OpenGL renderer string: //p' | head -n 1)
-  if [ -n "$renderer" ]; then
-    printf 'X11: reachable
-Renderer: %s
-' "$renderer"
-  else
-    printf 'X11: unavailable
-Renderer: unavailable
-'
-  fi
-elif command -v xdpyinfo >/dev/null 2>&1 && xdpyinfo -display "${DISPLAY:-}" >/dev/null 2>&1; then
-  printf 'X11: reachable
-Renderer: unavailable (glxinfo missing)
-'
+  glx_output=$(glxinfo -B 2>/dev/null || true)
+  renderer=$(printf '%s\n' "$glx_output" | sed -n 's/^OpenGL renderer string: //p' | head -n 1)
+  [ -n "$renderer" ] && x11=reachable
+fi
+printf 'X11: %s\n' "$x11"
+printf 'Renderer: %s\n' "${renderer:-unavailable}"
+gles_renderer=
+gles_version=
+if command -v es2_info >/dev/null 2>&1; then
+  gles_output=$(es2_info 2>&1 || true)
+  gles_renderer=$(printf '%s\n' "$gles_output" | sed -n 's/^GL_RENDERER: //p' | head -n 1)
+  gles_version=$(printf '%s\n' "$gles_output" | sed -n 's/^GL_VERSION: //p' | head -n 1)
+fi
+if [ -n "$gles_renderer" ] && [ -n "$gles_version" ]; then
+  printf 'GLES context: verified\nGLES renderer: %s\nGLES version: %s\n' "$gles_renderer" "$gles_version"
 else
-  printf 'X11: unavailable
-Renderer: unavailable
-'
+  printf 'GLES context: unavailable\nGLES renderer: unavailable\nGLES version: unavailable\n'
 fi
 if command -v pactl >/dev/null 2>&1 && pactl --server "${PULSE_SERVER:-tcp:127.0.0.1:4713}" info >/dev/null 2>&1; then
-  printf 'Audio: PulseAudio reachable
-'
+  printf 'Audio: PulseAudio reachable\n'
 else
-  printf 'Audio: PulseAudio not reachable
-'
+  printf 'Audio: PulseAudio not reachable\n'
 fi
 """
 
@@ -446,7 +448,7 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
             continue
         key, value = line.split(":", 1)
         key, value = key.strip().lower(), value.strip()
-        if key in {"display", "x11", "audio", "renderer"}:
+        if key in {"display", "x11", "audio", "renderer", "gles context", "gles renderer", "gles version"}:
             values[key] = value
     observed_display = values.get("display")
     x11 = "reachable" if values.get("x11") == "reachable" else "unavailable" if "x11" in values else "unknown"
@@ -454,7 +456,7 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
     renderer = values.get("renderer")
     if renderer and (len(renderer) > 1024 or any(ord(char) < 32 for char in renderer)):
         renderer = None
-    if not renderer or renderer == "unavailable (glxinfo missing)":
+    if not renderer or renderer == "unavailable" or renderer == "unavailable (glxinfo missing)":
         renderer, renderer_class = None, "unavailable"
     elif "llvmpipe" in renderer.lower() or "softpipe" in renderer.lower():
         renderer_class = "software"
@@ -464,6 +466,13 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
         renderer_class = "virgl"
     else:
         renderer_class = "other"
+    gles_renderer = values.get("gles renderer")
+    if gles_renderer and (len(gles_renderer) > 1024 or any(ord(char) < 32 for char in gles_renderer)):
+        gles_renderer = None
+    gles_version = values.get("gles version")
+    if gles_version and (len(gles_version) > 256 or any(ord(char) < 32 for char in gles_version)):
+        gles_version = None
+    gles_context = "verified" if values.get("gles context") == "verified" and gles_renderer and gles_version else "unavailable" if values.get("gles context") == "unavailable" else "unknown"
     expected_renderer = "zink_turnip" if backend == "zink" else "virgl"
     blockers = []
     if observed_display is not None and observed_display != display:
@@ -473,7 +482,10 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
     if audio != "reachable":
         blockers.append("guest PulseAudio connection is not verified")
     if renderer_class != expected_renderer:
-        blockers.append("observed renderer does not match the explicitly requested backend")
+        if renderer_class == "unavailable":
+            blockers.append("GLX renderer unavailable; GLES context does not verify a draw")
+        else:
+            blockers.append("observed renderer does not match the explicitly requested backend")
     if result.returncode != 0 and not blockers:
         blockers.append("guest probe reported one or more failed checks")
     if not result.stdout.strip() and len(blockers) < 4:
@@ -487,4 +499,5 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
     return verification_result(status=status, display=display, backend=backend,
                                guest_entered=True, observed_display=observed_display,
                                x11=x11, audio=audio, renderer=renderer,
-                               renderer_class=renderer_class, blockers=blockers)
+                               renderer_class=renderer_class, gles_context=gles_context,
+                               gles_renderer=gles_renderer, gles_version=gles_version, blockers=blockers)

@@ -6,6 +6,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -81,6 +82,45 @@ class GraphicsManagementTests(unittest.TestCase):
         self.assertFalse(native["render_verified"])
         self.assertEqual(guest["status"], "unavailable")
         self.assertFalse(guest["render_verified"])
+
+    def test_gles_probe_reports_context_without_claiming_a_draw(self) -> None:
+        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/es2_info"), \
+             patch.object(graphics_manager, "_run", return_value=(0, "GL_VERSION: OpenGL ES 3.2\nGL_RENDERER: llvmpipe (LLVM fixture)\n")):
+            result = graphics_manager.verify("native", "gles", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(result["status"], "context-verified")
+        self.assertTrue(result["context_verified"])
+        self.assertFalse(result["render_verified"])
+        self.assertFalse(result["accelerated"])
+        self.assertIn("no draw", result["proof"])
+
+    def test_opengl_failed_primary_tries_llvmpipe_and_reports_software(self) -> None:
+        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/glmark2"), \
+             patch.object(graphics_manager, "_run", side_effect=[
+                 (1, "primary backend failed"),
+                 (0, "GL_RENDERER: llvmpipe (LLVM fixture)\nglmark2 Score: 123\n"),
+             ]) as runner:
+            result = graphics_manager.verify("native", "opengl", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(result["status"], "fallback-rendered")
+        self.assertTrue(result["render_verified"])
+        self.assertFalse(result["accelerated"])
+        self.assertEqual(result["renderer"], "llvmpipe (LLVM fixture)")
+        self.assertEqual(result["fallback_attempts"][0]["backend"], "llvmpipe")
+        self.assertEqual(runner.call_args_list[1].args[1]["LIBGL_ALWAYS_SOFTWARE"], "true")
+        self.assertEqual(runner.call_args_list[1].args[1]["GALLIUM_DRIVER"], "llvmpipe")
+
+    def test_opengl_fallback_does_not_accept_an_unqualified_renderer(self) -> None:
+        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/glmark2"), \
+             patch.object(graphics_manager, "_run", side_effect=[
+                 (1, "primary backend failed"),
+                 (0, "GL_RENDERER: unknown virtual renderer\nglmark2 Score: 123\n"),
+             ]):
+            result = graphics_manager.verify("native", "opengl", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+        self.assertEqual(result["status"], "failed")
+        self.assertFalse(result["render_verified"])
+        self.assertFalse(result["fallback_attempts"][0]["status"] == "rendered")
 
     def test_modified_candidate_file_fails_hash_validation(self) -> None:
         driver = self.prefix / "lib/libvulkan_freedreno.so"

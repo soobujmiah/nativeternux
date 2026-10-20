@@ -62,7 +62,11 @@
         "x11",
         "audio",
         "renderer_class",
-        "renderer"
+        "renderer",
+        "gles_context",
+        "gles_renderer",
+        "gles_version",
+        "gles_draw_verified"
       ],
       "properties": {
         "observed_display": {
@@ -101,6 +105,30 @@
             "null"
           ],
           "maxLength": 1024
+        },
+        "gles_context": {
+          "enum": [
+            "verified",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "gles_renderer": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 1024
+        },
+        "gles_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "gles_draw_verified": {
+          "const": false
         }
       }
     },

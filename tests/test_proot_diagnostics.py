@@ -198,6 +198,32 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertTrue(all(value is False for key, value in report["safety"].items()
                             if key != "host_home_and_shared_storage_unbound"))
 
+    def test_nested_gles_context_does_not_claim_glx_or_draw_success(self):
+        outputs = [
+            "Installed containers:\n * Debian\n",
+            "Display: :2\nX11: reachable\nAudio: PulseAudio reachable\n"
+            "Renderer: unavailable\nGLES context: verified\n"
+            "GLES renderer: zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP))\n"
+            "GLES version: OpenGL ES 3.2 Mesa\n",
+        ]
+        def runner(*_args, **_kwargs):
+            return SimpleNamespace(returncode=0, stdout=outputs.pop(0))
+        report = proot_diagnostics.verify_proot_guest(
+            distro="debian", user="sbj", display=":2", backend="zink",
+            which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
+            runner=runner,
+        )
+        self.assertEqual(report["status"], "partial")
+        checks = report["checks"]
+        self.assertEqual(checks["x11"], "reachable")
+        self.assertEqual(checks["renderer_class"], "unavailable")
+        self.assertIsNone(checks["renderer"])
+        self.assertEqual(checks["gles_context"], "verified")
+        self.assertIn("zink Vulkan", checks["gles_renderer"])
+        self.assertEqual(checks["gles_version"], "OpenGL ES 3.2 Mesa")
+        self.assertFalse(checks["gles_draw_verified"])
+        self.assertTrue(any("GLX renderer unavailable" in blocker for blocker in report["blockers"]))
+
     def test_proot_guest_verification_does_not_probe_legacy_ternux_status(self):
         calls = []
         which_calls = []

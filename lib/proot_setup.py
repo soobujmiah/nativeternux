@@ -16,6 +16,7 @@ import sys
 import tempfile
 
 import desktop_session_state
+import proot_fresh_setup
 
 
 class SetupError(ValueError):
@@ -252,7 +253,7 @@ def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[st
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="tx proot setup")
-    parser.add_argument("action", choices=("status", "adopt-preview", "adopt"))
+    parser.add_argument("action", choices=("status", "adopt-preview", "adopt", "fresh-preview", "fresh-install"))
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--prefix", default=os.environ.get("PREFIX", ""))
     parser.add_argument("--home", default=os.environ.get("HOME", ""))
@@ -272,13 +273,24 @@ def main() -> int:
                 parser.error("adopt-preview requires --user NAME")
             result = preview_adoption(repo_root=args.repo_root, prefix=args.prefix, home=args.home,
                                       state_dir=args.state_dir, user=args.user)
+        elif args.action == "fresh-preview":
+            if not args.user or args.plan_id or args.yes:
+                parser.error("fresh-preview requires --user NAME")
+            result = proot_fresh_setup.preview(repo_root=args.repo_root, prefix=args.prefix,
+                                               home=args.home, state_dir=args.state_dir, user=args.user)
+        elif args.action == "fresh-install":
+            if not args.user or not args.plan_id or not args.yes:
+                parser.error("fresh-install requires --user NAME --yes --plan-id ID")
+            result = proot_fresh_setup.apply(repo_root=args.repo_root, prefix=args.prefix,
+                                             home=args.home, state_dir=args.state_dir, user=args.user,
+                                             plan_id=args.plan_id, confirmed=True)
         else:
             if not args.user or not args.plan_id or not args.yes:
                 parser.error("adopt requires --user NAME --yes --plan-id ID")
             result = apply_adoption(repo_root=args.repo_root, prefix=args.prefix, home=args.home,
                                     state_dir=args.state_dir, user=args.user,
                                     plan_id=args.plan_id, confirmed=True)
-    except (SetupError, OSError, ValueError) as exc:
+    except (SetupError, proot_fresh_setup.FreshSetupError, OSError, ValueError) as exc:
         result = {"status": "failed", "error": str(exc)}
         print(json.dumps(result, sort_keys=True), file=sys.stderr)
         return 1

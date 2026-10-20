@@ -86,6 +86,34 @@ def _native_env(*, home: str, state_dir: str, process_env: dict[str, str]) -> di
     return env
 
 
+def _renderer_accelerated(renderer: str | None) -> bool | None:
+    if not renderer:
+        return None
+    if re.search(r"llvmpipe|softpipe|swrast|software rasterizer", renderer, re.I):
+        return False
+    if re.search(r"adreno|turnip|freedreno|panfrost|mali|radeonsi|iris|nouveau", renderer, re.I):
+        return True
+    return None
+
+
+def _gles_context(env: dict[str, str]) -> dict[str, object]:
+    tool = shutil.which("es2_info", path=env.get("PATH"))
+    if not tool:
+        return {"status": "unavailable", "context_verified": False, "render_verified": False,
+                "reason": "es2_info is not installed"}
+    code, output = _run([tool], env, 15)
+    renderer = next((line.split(":", 1)[1].strip() for line in output.splitlines()
+                     if line.strip().startswith("GL_RENDERER:")), None)
+    version = next((line.split(":", 1)[1].strip() for line in output.splitlines()
+                    if line.strip().startswith("GL_VERSION:")), None)
+    context_ok = code == 0 and bool(renderer and version)
+    return {"status": "context-verified" if context_ok else ("failed" if code != 127 else "unavailable"),
+            "context_verified": context_ok, "render_verified": False, "renderer": renderer,
+            "version": version, "accelerated": _renderer_accelerated(renderer) if context_ok else None,
+            "proof": "GLES context initialization only; no draw or presentation verified",
+            "exit_code": code}
+
+
 def status(provider: str, *, home: str, state_dir: str, process_env: dict[str, str], prefix: str) -> dict[str, object]:
     if provider == "native":
         env = _native_env(home=home, state_dir=state_dir, process_env=process_env)
@@ -107,7 +135,9 @@ def status(provider: str, *, home: str, state_dir: str, process_env: dict[str, s
                            if (m := re.search(r"deviceName\s*=\s*(.*)", line))), None)
             vk = {"status": "enumerated" if code == 0 and device else "unavailable",
                   "device": device, "proof": "device-enumeration-only; no draw verified"}
-        return {"provider": provider, "display": display, "opengl": gl, "vulkan": vk,
+        gles = _gles_context(env) if display else {"status": "unavailable", "context_verified": False,
+                                                   "render_verified": False, "reason": "no active display"}
+        return {"provider": provider, "display": display, "opengl": gl, "gles": gles, "vulkan": vk,
                 "saved_candidate": os.path.isfile(os.path.join(state_dir, "native-graphics-prefix")),
                 "provider_boundary": "native Termux/Bionic"}
     if provider == "debian":
@@ -130,8 +160,8 @@ def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: d
         return status(provider, home=home, state_dir=state_dir, process_env=process_env, prefix=prefix)
     env = _native_env(home=home, state_dir=state_dir, process_env=process_env)
     if api == "gles":
-        return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
-                "reason": "a dedicated OpenGL ES workload runner is not installed"}
+        result = _gles_context(env)
+        return {"provider": provider, "api": api, **result}
     if api == "opengl":
         tool = shutil.which("glmark2", path=env.get("PATH"))
         if not tool:
@@ -145,9 +175,35 @@ def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: d
                          if line.strip().startswith("GL_RENDERER:")), None)
         score = next((line.split(":", 1)[1].strip() for line in output.splitlines()
                       if line.strip().startswith("glmark2 Score:")), None)
-        return {"provider": provider, "api": api, "status": "rendered" if code == 0 and renderer else "failed",
-                "render_verified": bool(code == 0 and renderer), "renderer": renderer,
-                "score": score, "display": "off-screen", "exit_code": code}
+        if code == 0 and renderer:
+            return {"provider": provider, "api": api, "status": "rendered", "render_verified": True,
+                    "renderer": renderer, "accelerated": _renderer_accelerated(renderer),
+                    "score": score, "display": "off-screen", "exit_code": code, "fallback_attempts": []}
+        software_env = dict(env)
+        software_env.pop("MESA_LOADER_DRIVER_OVERRIDE", None)
+        software_env.pop("VK_ICD_FILENAMES", None)
+        software_env["LIBGL_ALWAYS_SOFTWARE"] = "true"
+        software_env["GALLIUM_DRIVER"] = "llvmpipe"
+        fallback_code, fallback_output = _run([tool, "--off-screen", "--size", "1280x720",
+                                                "--frame-end", "finish", "--swap-mode", "immediate",
+                                                "--benchmark", "build:duration=4.0",
+                                                "--benchmark", "texture:duration=4.0",
+                                                "--benchmark", "shading:duration=4.0"], software_env, 30)
+        fallback_renderer = next((line.split(":", 1)[1].strip() for line in fallback_output.splitlines()
+                                  if line.strip().startswith("GL_RENDERER:")), None)
+        fallback_score = next((line.split(":", 1)[1].strip() for line in fallback_output.splitlines()
+                               if line.strip().startswith("glmark2 Score:")), None)
+        fallback_backend = ("llvmpipe" if fallback_renderer and re.search(r"llvmpipe", fallback_renderer, re.I)
+                            else "softpipe" if fallback_renderer and re.search(r"softpipe", fallback_renderer, re.I)
+                            else None)
+        fallback_ok = fallback_code == 0 and fallback_backend is not None
+        return {"provider": provider, "api": api, "status": "fallback-rendered" if fallback_ok else "failed",
+                "render_verified": fallback_ok, "renderer": fallback_renderer,
+                "accelerated": False if fallback_ok else None, "score": fallback_score,
+                "display": "off-screen", "exit_code": fallback_code if fallback_ok else code,
+                "primary_attempt": {"status": "failed", "renderer": renderer, "exit_code": code},
+                "fallback_attempts": [{"backend": fallback_backend or "llvmpipe", "status": "rendered" if fallback_ok else "failed",
+                                       "renderer": fallback_renderer, "exit_code": fallback_code}]}
     if api == "vulkan":
         tool = shutil.which("vulkaninfo", path=env.get("PATH"))
         if not tool:

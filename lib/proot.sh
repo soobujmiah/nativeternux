@@ -125,8 +125,8 @@ nt_cmd_proot() {
       local action="${1:-status}" user="" plan_id="" confirmed=0 option
       [ $# -eq 0 ] || shift
       case "$action" in
-        status|adopt-preview|adopt) ;;
-        *) nt_fail "Use tx proot setup {status|adopt-preview|adopt}."; return 2 ;;
+        status|adopt-preview|adopt|fresh-preview|fresh-install) ;;
+        *) nt_fail "Use tx proot setup {status|adopt-preview|adopt|fresh-preview|fresh-install}."; return 2 ;;
       esac
       while [ "$#" -gt 0 ]; do
         option="$1"; shift
@@ -149,9 +149,12 @@ nt_cmd_proot() {
         adopt-preview) [ -n "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
           nt_fail "Usage: tx proot setup adopt-preview --user NAME"; return 2;
         }; setup_args+=(--user "$user") ;;
-        adopt) [ -n "$user" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || {
-          nt_fail "Apply requires --user NAME --yes --plan-id ID from an adoption preview."; return 2;
+        adopt|fresh-install) [ -n "$user" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || {
+          nt_fail "Apply requires --user NAME --yes --plan-id ID from the matching setup preview."; return 2;
         }; setup_args+=(--user "$user" --yes --plan-id "$plan_id") ;;
+        fresh-preview) [ -n "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
+          nt_fail "Usage: tx proot setup fresh-preview --user NAME"; return 2;
+        }; setup_args+=(--user "$user") ;;
       esac
       python3 "$_TN_LIB_DIR/proot_setup.py" "${setup_args[@]}"
       ;;

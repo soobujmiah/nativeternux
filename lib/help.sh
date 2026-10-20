@@ -349,6 +349,8 @@ tx proot verify --distro debian (--guest-user USER|--guest-user-from rootfs) --d
 tx proot setup status
 tx proot setup adopt-preview --user NAME
 tx proot setup adopt --user NAME --yes --plan-id PLAN_ID
+tx proot setup fresh-preview --user NAME
+tx proot setup fresh-install --user NAME --yes --plan-id PLAN_ID
 
 --backend is the expected renderer class for this read-only probe; it does not switch drivers.
 
@@ -361,9 +363,13 @@ display/audio/renderer probe. The rootfs source resolves the unique ordinary
 non-root account from Debian passwd; unsafe paths or ambiguous accounts fail
 closed. The Ternuxx-owned setup profile and read-only adoption record are managed with
 tx proot setup. Adoption writes only a private Native Ternuxx state record; it
-does not change guest files, packages, services, or desktop lifecycle. Fresh
-Debian provisioning and package configuration are staged separately and are
-not yet available. This route does not invoke the separate Ternux CLI.
+does not change guest files, packages, services, or desktop lifecycle. Fresh provisioning creates the default `debian` alias only when it is absent and never
+changes the existing `debian` rootfs. Preview lists package groups, image tag,
+space available, and exact plan ID. Apply creates the new alias, installs the
+manifest package groups, locale, and user, then records installed package
+version evidence. The Debian image tag and APT versions are resolved at apply
+time; byte-identical rebuilds are not promised. Turnip rendering remains a
+separate verification gate. This route does not invoke the separate Ternux CLI.
 EOF
       ;;
     reboot)

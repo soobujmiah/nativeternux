@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases complete
 
-TUI, Web, and GTK now have source-verified exact-plan PRoot shortcut add/remove actions; visual client acceptance, native recovery concurrency, boot gates, and P3 exit review remain open.
+Installed GTK/TUI/Web/PRoot Apps visual acceptance was owner-confirmed on 2026-10-20; Native boot-Cron exact-script integration is configured and duplicate-safe in a live/manual run. Desktop lifecycle lock contention is covered in fixtures. Cold-boot delivery and Android startup/background policy remain unverified, so P3 stays in progress.
 
-**Next action:** Owner visually inspect the installed GTK client, TUI key flow, Web layout and PRoot Apps menu; finish desktop recovery concurrency and boot acceptance; keep P4 planned until the P3 exit gate is reviewed.
+**Next action:** Keep the accepted visual review closed. Preserve the running session; qualify Termux:Boot delivery only during a separately scheduled reboot window, then resolve remaining Android startup policy and review the P3 exit gate. Continue non-disruptive P4/P6 implementation work without claiming their phase gates complete.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
