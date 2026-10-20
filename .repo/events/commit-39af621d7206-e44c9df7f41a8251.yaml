@@ -1,0 +1,7 @@
+event_id: commit-39af621d7206-e44c9df7f41a8251
+repository: soobujmiah/ternuxx
+commit: 39af621d72069218c0e7e370ac7881a6dc13a9cb
+kind: commit
+occurred_at: '2026-10-20T17:40:41Z'
+status: completed
+summary: 'test(proot): tighten interactive ownership fixtures'
