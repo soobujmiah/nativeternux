@@ -17,6 +17,14 @@ The owner reports that Debian XFCE's device information displayed the GPU on sta
 
 The earlier context-only and unobserved es2gears_x11 attempts above are superseded for the shared verification path by the later bounded surfaceless pbuffer workload. The integrated manager compiled the tracked GLES runner and verified a 1280x720 GLES 3.2 Adreno 825 shader draw: 1,098 frames in five seconds (219.47 frames/sec). This remains off-screen synthetic workload evidence, not UI presentation or screen FPS. Full implementation and test details: [Native GLES draw verification](2026-10-20-native-gles-draw.md).
 
+## Fresh PRoot display-route comparison
+
+After starting the Ternuxx-managed full nested XFCE on Xephyr :2 while Native :1 remained running, the shared Debian OpenGL verifier on :2 reported X11 and PulseAudio reachable, a GLES 3.2 context string zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP)), but GLX renderer unavailable and glx_draw=failed with zero frames. The output contained blocker GLX renderer unavailable; GLES context does not verify a draw. Xephyr/XFCE emitted repeated DRI3 not available warnings. This is a repeated live failure of nested GLX drawing/presentation, not evidence of nested GPU acceleration.
+
+The same fixed read-only verifier on Debian display :1 then completed with status=complete, glx_draw=verified, 580 frames, and requested Zink/Turnip renderer zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP)); X11 and authenticated Native PulseAudio were reachable. This verifies the direct PRoot application display route on Native :1. It does not qualify the full nested :2 desktop.
+
+The managed :2 test was closed by signaling only its exact verified wrapper process. A follow-up status confirmed the :2 socket absent; Native desktop :1 remained running. No Debian packages/configuration were changed, and no existing Debian process outside the Ternuxx test wrapper was signaled.
+
 ## Existing Debian PRoot
 
 A read-only `tx proot verify --distro debian --guest-user-from rootfs --display :1 --backend zink --json` completed with renderer `zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP))`, X11/audio reachable, and no guest write, package change, service action, or host lifecycle action. This confirms the individual Debian verifier workload on Native `:1`; profile ownership remains unverified and no config replay was performed.
