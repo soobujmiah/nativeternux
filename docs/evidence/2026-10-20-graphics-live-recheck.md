@@ -19,12 +19,14 @@ The owner reports that Debian XFCE's device information displayed the GPU on sta
 
 A read-only `tx proot verify --distro debian --guest-user-from rootfs --display :1 --backend zink --json` completed with renderer `zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP))`, X11/audio reachable, and no guest write, package change, service action, or host lifecycle action. This confirms the individual Debian verifier workload on Native `:1`; profile ownership remains unverified and no config replay was performed.
 
+A follow-up read-only run on 2026-10-20 used ./tx proot verify --distro debian --guest-user sbj --display :1 --backend zink. X11 and PulseAudio were reachable; GLX renderer class was zink_turnip with zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP)); GLES context was OpenGL ES 3.2 Mesa 25.0.7-2+deb13u1 on the same renderer. The probe returned complete, but gles_draw_verified=false; it verifies backend/context detection for this fixed probe, not an actual application draw or presentation. Safety fields confirm no packages, services, or host GUI lifecycle changed. The existing PRoot and its running session were preserved.
+
 A fresh nested XFCE run on Xephyr `:2` was queried with the updated structured verifier while live. X11 and PulseAudio were reachable; GLX renderer was unavailable; GLES context was verified as `zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP))`, OpenGL ES 3.2. The report remains `partial` and explicitly sets `gles_draw_verified=false`. GLX RGB visual creation, DRI3 presentation and an observable draw remain unavailable/unverified. Do not infer nested fullscreen acceleration from the GLES context string alone. The test's managed nested session was stopped afterward; Native XFCE `:1` stayed running.
 
 ## Verification
 
 - `python3 -m unittest tests.test_graphics_management -v`: 9/9 passed, including GLES context-vs-draw reporting, forced-failure llvmpipe fallback, and rejection of an unqualified fallback renderer.
-- `bash scripts/repo_test.sh`: 596/596 passed in 102.351 seconds on Native Termux. The first full run had one fixture teardown timeout at its existing 8-second limit; the test passed in isolation, so fixture cleanup was raised to a still-bounded 20 seconds and the full suite passed.
+- `bash scripts/repo_test.sh`: 605/605 passed in 105.323 seconds on Native Termux. The suite includes the longer bounded fixture teardown allowance and the fresh-image digest rejection regression.
 - Python compilation and `git diff --check` passed.
 
 ## Evidence
