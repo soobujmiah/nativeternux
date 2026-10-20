@@ -1,0 +1,7 @@
+event_id: commit-5a77c9e74515-a5899ce4c5d19878
+repository: soobujmiah/ternuxx
+commit: 5a77c9e745158211ce1ad084f1e61882dedd5065
+kind: commit
+occurred_at: '2026-10-20T18:45:01Z'
+status: completed
+summary: 'docs: record native P3 read-only recheck'
