@@ -1,9 +1,9 @@
 #include <gtk/gtk.h>
 #include <string.h>
 
-typedef struct { gchar *id, *category, *name, *status, *availability, *description; } Resource;
+typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search;
-                 GtkWidget *start_button, *stop_button, *graphics_select_button, *history_button, *cron_button, *monitor_box, *monitor_enabled,
+                 GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *cron_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; } Request;
@@ -11,6 +11,7 @@ static Center *app_center;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5);
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact);
+static void choose_graphics_api(GtkButton *button, gpointer data);
 
 static gchar *bridge_path(void) {
     const gchar *root = g_getenv("TERNUXX_CHECKOUT");
@@ -104,7 +105,7 @@ static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const 
 }
 static void resource_free(gpointer ptr) {
     Resource *r = ptr; if (!r) return; g_free(r->id); g_free(r->category); g_free(r->name);
-    g_free(r->status); g_free(r->availability); g_free(r->description); g_free(r);
+    g_free(r->status); g_free(r->availability); g_free(r->description); g_free(r->operations); g_free(r);
 }
 static void clear_rows(GtkWidget *list) {
     GtkWidget *child; while ((child = gtk_widget_get_first_child(list)) != NULL) gtk_list_box_remove(GTK_LIST_BOX(list), child);
@@ -122,8 +123,25 @@ static const gchar *status_label(const gchar *status) {
 }
 static void show_resource(Center *c, Resource *r) {
     if (!r) return;
-    gchar *summary = g_strdup_printf("%s\n\nCapability: %s\nLive state: %s\nAvailability: %s\n\n%s\n\nLogs and diagnostics are shown only when the shared API exposes a supported operation.",
-        r->name, status_label(r->status), "Live status follows below", r->availability, r->description);
+    const gchar *gui_actions = "Inspect shared service operations; no guided mutation is available in this window.";
+    if (g_strcmp0(r->id, "native.desktop.session") == 0)
+        gui_actions = "Inspect status; start or stop the Native desktop with confirmation.";
+    else if (g_strcmp0(r->id, "graphics.native") == 0)
+        gui_actions = "Check status; verify OpenGL, GLES or Vulkan; select the Native backend for future starts.";
+    else if (g_strcmp0(r->id, "graphics.debian") == 0)
+        gui_actions = "Check status; verify OpenGL, GLES or Vulkan (read-only guest inspection).";
+    else if (g_strcmp0(r->id, "network.ssh.managed-8023") == 0)
+        gui_actions = "Inspect status; preview and confirm start or stop of managed SSH on 127.0.0.1:8023.";
+    else if (g_strcmp0(r->id, "native.gui.activity-monitor") == 0)
+        gui_actions = "Inspect and save the Activity/focus monitoring policy.";
+    else if (g_strcmp0(r->id, "recovery.native-state") == 0)
+        gui_actions = "Inspect recorded operation history.";
+    else if (g_strcmp0(r->id, "automation.cron-registry") == 0)
+        gui_actions = "Inspect scheduler status and list saved Cron jobs.";
+    gchar *summary = g_strdup_printf("%s\n\nCapability: %s\nLive state: queried from the shared service\nAvailability: %s\n\n%s\n\nShared supported operations:\n%s\n\nActions available in this GTK app:\n%s\n\nAn operation listed by the shared catalog may require another client or a capability not granted to this app.",
+        r->name, status_label(r->status), r->availability, r->description,
+        r->operations && *r->operations ? r->operations : "None",
+        gui_actions);
     set_text(c, summary); g_free(summary);
     g_free(c->selected_resource_id); c->selected_resource_id = g_strdup(r->id);
     gboolean graphics = g_str_has_prefix(r->id, "graphics.");
@@ -134,6 +152,7 @@ static void show_resource(Center *c, Resource *r) {
     gboolean cron = g_strcmp0(r->id, "automation.cron-registry") == 0;
     gtk_widget_set_visible(c->history_button, history);
     gtk_widget_set_visible(c->cron_button, cron);
+    gtk_widget_set_visible(c->graphics_api_button, graphics);
     gtk_button_set_label(GTK_BUTTON(c->start_button), managed_ssh ? "Start managed SSH (8023)" : "Start desktop");
     gtk_button_set_label(GTK_BUTTON(c->stop_button), managed_ssh ? "Stop managed SSH (8023)" : "Stop desktop");
     gtk_widget_set_visible(c->start_button, desktop || managed_ssh || graphics); gtk_widget_set_visible(c->stop_button, desktop || managed_ssh || graphics);
@@ -183,7 +202,7 @@ static void append_category(Center *c, gchar **fields) {
 }
 static void append_resource(Center *c, gchar **f) {
     Resource *r = g_new0(Resource, 1); r->id=g_strdup(f[1]); r->category=g_strdup(f[2]);
-    r->name=g_strdup(f[3]); r->status=g_strdup(f[4]); r->availability=g_strdup(f[5]); r->description=g_strdup(f[6]);
+    r->name=g_strdup(f[3]); r->status=g_strdup(f[4]); r->availability=g_strdup(f[5]); r->description=g_strdup(f[6]); r->operations=g_strdup(f[7] ? f[7] : "");
     g_ptr_array_add(c->resources, r);
 }
 static void load_catalog(Center *c) {
@@ -262,6 +281,28 @@ static void select_graphics(GtkButton *button, gpointer data) {
     const char *choices[]={"Cancel","KGSL Freedreno","System stack",NULL}; gtk_alert_dialog_set_buttons(dialog,choices);
     gtk_alert_dialog_set_default_button(dialog,0); gtk_alert_dialog_choose(dialog,GTK_WINDOW(c->window),NULL,graphics_select_done,c); g_object_unref(dialog);
 }
+static void graphics_api_done(GObject *source, GAsyncResult *result, gpointer user_data) {
+    GtkAlertDialog *dialog = GTK_ALERT_DIALOG(source); Request *request = user_data; GError *error = NULL;
+    int choice = gtk_alert_dialog_choose_finish(dialog, result, &error);
+    if (!error && choice > 0) {
+        const gchar *api = choice == 1 ? "opengl" : choice == 2 ? "gles" : "vulkan";
+        run_bridge(request->center, "graphics-verify", request->resource_id, api, NULL, NULL, NULL);
+    } else if (error) {
+        gtk_label_set_text(GTK_LABEL(request->center->notice), error->message); g_clear_error(&error);
+    }
+    g_free(request->action); g_free(request->resource_id); g_free(request);
+}
+static void choose_graphics_api(GtkButton *button, gpointer data) {
+    (void)button; Center *c = data;
+    const gchar *provider = g_strcmp0(c->selected_resource_id, "graphics.native") == 0 ? "native" : "debian";
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("Choose the graphics API to verify.");
+    const char *choices[] = {"Cancel", "OpenGL", "OpenGL ES", "Vulkan", NULL};
+    gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
+    Request *request = g_new0(Request, 1); request->center = c;
+    request->action = g_strdup("graphics-verify"); request->resource_id = g_strdup(provider);
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, graphics_api_done, request);
+    g_object_unref(dialog);
+}
 static void show_history(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "history", NULL, NULL, NULL, NULL, NULL);
 }
@@ -294,7 +335,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->category_list=gtk_list_box_new(); gtk_widget_set_size_request(c->category_list,210,-1); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->category_list),GTK_SELECTION_SINGLE); gtk_paned_set_start_child(GTK_PANED(paned),c->category_list);
     GtkWidget *middle=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL); GtkWidget *center=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_size_request(center,260,-1); c->search=gtk_search_entry_new(); gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(c->search),"Search resources"); gtk_box_append(GTK_BOX(center),c->search); c->resource_list=gtk_list_box_new(); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->resource_list),GTK_SELECTION_SINGLE); GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),c->resource_list); gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(center),scroll); gtk_paned_set_start_child(GTK_PANED(middle),center);
     GtkWidget *right=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); c->details=gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(c->details),FALSE); gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->details),GTK_WRAP_WORD_CHAR); GtkWidget *detail_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(detail_scroll),c->details); gtk_widget_set_vexpand(detail_scroll,TRUE); gtk_box_append(GTK_BOX(right),detail_scroll);
-    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); gtk_box_append(GTK_BOX(right),actions);
+    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); gtk_box_append(GTK_BOX(right),actions);
     c->monitor_box=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->monitor_enabled=gtk_check_button_new_with_label("Enable Activity/focus monitoring"); c->monitor_interval=gtk_spin_button_new_with_range(1,86400,1); const gchar *units[]={"seconds","minutes","hours",NULL}; c->monitor_unit=gtk_drop_down_new_from_strings(units); c->monitor_focus=gtk_check_button_new_with_label("Check Android Activity focus"); c->monitor_launch=gtk_check_button_new_with_label("Request Activity when background"); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_enabled); gtk_box_append(GTK_BOX(c->monitor_box),gtk_label_new("Polling interval")); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_interval); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_unit); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_focus); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_launch); GtkWidget *save=gtk_button_new_with_label("Save monitoring policy"); gtk_box_append(GTK_BOX(c->monitor_box),save); gtk_widget_set_visible(c->monitor_box,FALSE); gtk_box_append(GTK_BOX(right),c->monitor_box);
     gtk_paned_set_end_child(GTK_PANED(middle),right); gtk_paned_set_end_child(GTK_PANED(paned),middle);
     c->notice=gtk_label_new("Loading resource catalog…"); gtk_widget_set_halign(c->notice,GTK_ALIGN_START); gtk_box_append(GTK_BOX(root),c->notice);
@@ -302,7 +343,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_halign(tagline,GTK_ALIGN_START); gtk_widget_add_css_class(tagline,"dim-label");
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window)); return TRUE;
 }
 int main(int argc, char **argv) {

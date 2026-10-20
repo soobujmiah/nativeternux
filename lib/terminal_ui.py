@@ -146,7 +146,9 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         labels.extend(name for op, name in (("desktop.start", "start desktop"),
                                             ("desktop.stop", "stop desktop")) if op in operations)
     elif resource_id in {"graphics.native", "graphics.debian"}:
-        labels.extend(("check graphics status", "verify OpenGL", "verify Vulkan", "select Native backend"))
+        labels.extend(("check graphics status", "verify OpenGL", "verify GLES", "verify Vulkan"))
+        if resource_id == "graphics.native" and "graphics.provider.select" in operations:
+            labels.append("select Native backend")
     elif resource_id == "native.gui.activity-monitor":
         labels.append("configure monitoring policy")
     elif resource_id == "proot.debian.workloads":
@@ -174,7 +176,7 @@ def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], cate
                    max(width - 2, 0))
     category = categories[category_index] if categories else {"name": "Resources"}
     screen.addnstr(2, 1, f"{category['name']}  ·  {len(resources)} resources", max(width - 2, 0))
-    screen.addnstr(3, 1, f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  h history  v details",
+    screen.addnstr(3, 1, f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
                    max(width - 2, 0))
     selected_resource = resources[selected] if resources and selected < len(resources) else None
     action_text = ", ".join(_available_action_labels(selected_resource)) if selected_resource else "none"
@@ -207,7 +209,7 @@ def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], cate
                   if not isinstance(value, (dict, list))]
         if values:
             screen.addnstr(height - 2, 1, " · ".join(values), max(width - 2, 0))
-    footer = " ←/→ categories · ↑/↓ resources · Enter status · h history · v details · a actions · q quit "
+    footer = " ←/→ categories · ↑/↓ resources · Enter status · H history · v details · a actions · r refresh · q quit "
     screen.attron(curses.A_REVERSE)
     screen.addnstr(height - 1, 0, footer.ljust(max(width - 1, 0)), max(width - 1, 0))
     screen.attroff(curses.A_REVERSE)
@@ -349,7 +351,10 @@ def _run(screen: "curses._CursesWindow") -> int:
             resource = resources[selected]
             if resource["id"] in {"graphics.native", "graphics.debian"}:
                 provider = "native" if resource["id"] == "graphics.native" else "debian"
-                action = _prompt(screen, "Graphics action: status, opengl, gles, or vulkan (blank cancels)").lower()
+                actions = "status, opengl, gles, vulkan"
+                if provider == "native" and "graphics.provider.select" in resource.get("supported_operations", []):
+                    actions += ", select"
+                action = _prompt(screen, f"Graphics action: {actions} (blank cancels)").lower()
                 if action == "status":
                     report = _call("graphics.provider.status", {"provider": provider})
                 elif action == "select" and provider == "native":

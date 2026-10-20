@@ -36,6 +36,11 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         self.assertGreaterEqual(len(categories), 10)
         self.assertIn("native.desktop.session", {row[1] for row in resources})
         self.assertIn("native.gui.activity-monitor", {row[1] for row in resources})
+        desktop = next(row for row in resources if row[1] == "native.desktop.session")
+        graphics = next(row for row in resources if row[1] == "graphics.native")
+        self.assertGreaterEqual(len(desktop), 8)
+        self.assertIn("desktop.start", desktop[7])
+        self.assertIn("graphics.provider.verify", graphics[7])
 
     def test_inspection_is_selected_from_resource_supported_read_operation(self) -> None:
         output = StringIO()

@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Finish the remaining P3 ownership/recovery gates, especially desktop recovery concurrency and boot acceptance; visually inspect the live PRoot Apps menu; keep P4 planned until the P3 exit gate is reviewed.
+**Next action:** Owner visually inspect the installed GTK client, TUI key flow, Web layout and PRoot Apps menu; finish desktop recovery concurrency and boot acceptance; keep P4 planned until the P3 exit gate is reviewed.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

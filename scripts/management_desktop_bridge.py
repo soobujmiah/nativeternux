@@ -56,7 +56,8 @@ def main(argv: list[str]) -> int:
             print("C\t" + "\t".join(clean(item.get(k)) for k in ("id", "name", "description", "status")))
         for item in data["resources"]:
             print("R\t" + "\t".join(clean(item.get(k)) for k in (
-                "id", "category_id", "name", "status", "availability", "description")))
+                "id", "category_id", "name", "status", "availability", "description"))
+                  + "\t" + clean(", ".join(item.get("supported_operations", []))))
         return 0
     if action == "inspect" and len(argv) == 2:
         rid = argv[1]

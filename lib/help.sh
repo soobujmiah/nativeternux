@@ -22,34 +22,22 @@ Quick launch:
   tx tui             Interactive terminal management
   tx web             Open the shared Web UI in Android browser
 
-Commands:
-  start       Start the Native Termux:X11/XFCE session
-  stop        Stop recorded native desktop
-  restart     Restart native desktop
-  status      Show desktop status
-  check       Inspect device and package readiness
-  info        Show system, renderer, Vulkan, package, and session information
-  doctor      Run diagnostic checks
-  mng         Shared management operations and local Web service
-  proot       Inspect and manage PRoot integrations
-  pgui        Start/status/stop the existing Debian full desktop
-  app         Launch allowlisted Debian apps from Native XFCE menu entries
-  mng papps sync  Refresh the separate PRoot Apps menu from installed Debian apps
-  audio       Manage Native PulseAudio used by Debian PRoot
-  virgl       Manage the identity-checked Native VirGL server
-  graphics    Select Native desktop graphics backend
-  ssh         Inspect and manage the fixed native SSH service
-  checkpoint  Prepare or verify reboot-continuity records
-  remote      Preview off-home access policy
-  reboot      Inspect or manage reboot-test checkpoints
-  boot        Inspect Termux:Boot availability and profile
-  wakelock    Inspect or manage Wake Lock ownership
-  install     Preview or apply native desktop package setup
-  backup      Backup operations
-  recovery    Recovery journal operations
-  restore     Restore preview or apply
-  guides      Show documentation links
-  help        Show this help
+Commands by task:
+  Desktop:       start, stop, restart, status, gui, tui, web
+  Debian PRoot:  db, pgui, proot, app, audio, virgl
+  Graphics:      graphics, info, check, doctor
+  Management:    mng (catalog, app shortcuts, Cron, timezone, graphics,
+                 PRoot sessions, boot, GTK center, HTTP service)
+  Access:        ssh, remote
+  Recovery:      checkpoint, reboot, boot, wakelock, backup, recovery, restore
+  Setup:         install
+  Reference:     guides, help
+
+Use `tx help NAME` or `tx NAME --help` for command options and safety rules.
+Common short forms: up=start, dn=stop, rs=restart, st=status, ck=check,
+inf=info, doc=doctor, mg=mng, pr=proot, cp=checkpoint, ra=remote, rb=reboot,
+bt=boot, wl=wakelock, in=install, bk=backup, rc=recovery, rt=restore,
+g=guides, h=help. `management` is a deprecated spelling of `mng`.
 
 Options:
   --json      Machine-readable output
@@ -73,28 +61,15 @@ Examples:
   tx recovery resolve OPERATION_ID
   tx remote access preview
   tx proot verify --distro debian --guest-user-from rootfs --display :1 --backend zink
-  tx pgui
 
 Safety:
   start/stop/restart change process and session state. install --yes requires
   an exact preview plan ID. Recovery apply operations require their preview ID.
   Remote access defaults to disabled and never enables public ingress.
 
-Short command spellings remain accepted as aliases. Help uses the full names.
-EOF
-      ;;
-    pgui)
-      cat <<'EOF'
-tx pgui [start [--mode auto|standalone|nested]|status|stop]
-
-Starts the existing Debian XFCE desktop. Auto starts standalone on Termux:X11
-:0 when Native GUI is stopped; when Native GUI is running on :1, it starts a
-full nested desktop through Debian Xephyr :2. Standalone and Native desktops
-are mutually exclusive. Nested mode shares Native :1 as the host display and
-uses isolated Debian Zink/Turnip plus the authenticated Native PulseAudio
-endpoint. Ctrl-C in the launching terminal closes only the nested desktop.
-`tx pgui stop` stops only a verified Ternuxx-owned standalone :0 session.
-Individual Debian apps remain available through `tx mng app launch` shortcuts.
+`app` launches a Debian app entry; `mng papps sync` refreshes the Native XFCE
+PRoot Apps menu from installed guest applications. Use `tx help mng` and
+`tx help app` for detailed options.
 EOF
       ;;
     db)
@@ -167,13 +142,19 @@ tx mng app launch APP_ID — Launch a named PRoot app on native X11
 tx mng shortcuts list — View PRoot app launchers
 tx mng shortcuts plan {add|remove} APP_ID — Preview a launcher change
 tx mng shortcuts apply {add|remove} APP_ID --plan-id ID --yes — Confirm the exact preview
-tx mng http serve — Run the read-only management API in foreground
+tx mng http serve — Run the authenticated loopback management API in foreground
 tx web — Open the browser UI over the same shared service
 
 The Web UI binds only to 127.0.0.1 (default port 8765), copies the one-time
 bootstrap secret to the Termux clipboard, opens the local browser, and runs until Ctrl-C. The secret is not saved. If clipboard copy fails,
 the server stops without revealing it; use --show-secret-on-clipboard-failure
-for the explicit private-terminal fallback. The browser client uses the shared management service. It can read provider-specific graphics diagnostics and select the Native KGSL candidate or system stack after confirmation, edit GUI Activity-monitoring policy, and start/stop/restart the verified native desktop after confirmation. Debian graphics remain controlled by the existing Ternux guest configuration.
+for the explicit private-terminal fallback. Browser access uses the shared
+management service with scoped reads and narrow confirmed actions: Native
+desktop lifecycle, graphics status/verification and Native backend selection,
+GUI Activity-monitoring policy, managed SSH 8023 start/stop, and Cron status/job
+list reads. It does not receive every local CLI capability; PRoot lifecycle,
+boot changes, backup/restore, timezone mutation, and recovery writes remain
+outside the Web session.
 EOF
       ;;
     start)
@@ -282,18 +263,27 @@ Starts a loopback-only service, copies the one-time secret to the Termux clipboa
 and opens the Android browser. Clipboard failure stops safely without revealing
 the secret; use --show-secret-on-clipboard-failure for an explicit terminal
 fallback. Press Ctrl-C to stop. The Web client uses the shared management API
-with its authorized desktop, monitoring-policy, and managed SSH 8023 operations.
+with scoped reads, confirmed native desktop lifecycle, graphics verification and
+Native backend selection, monitoring-policy configuration, managed SSH 8023
+preview/confirmation, and Cron status/job-list reads. It does not expose every
+local CLI operation; PRoot lifecycle, boot changes, backup/restore, timezone
+mutation, and recovery writes remain CLI-only. Resource details list shared
+supported and planned operations separately.
 EOF
       ;;
     tui)
       cat <<'EOF'
 tx tui — Interactive terminal client
 
-Overview, PRoot, SSH, and recovery views use the shared typed service. Press
-1–5 to switch views, arrows/j/k to scroll, PageUp/PageDown for larger jumps,
-Enter to refresh, l to choose and launch a named PRoot app, o to run an
-allowlisted operation, and q to exit. The guided launch asks for the X11 session
-and display, then requires confirmation. Text wraps to fit the terminal width.
+The TUI reads the shared resource catalog and uses the shared typed service.
+Use ←/→ (or h/l) to change categories, ↑/↓ (or j/k) to select a resource,
+Enter to inspect live status, / to search, a to run an action offered for that
+resource, H for operation history, v for the last operation details, r to reload
+the catalog, and q to exit. Actions include confirmed desktop and managed SSH
+8023 lifecycle, Native graphics selection and graphics verification, monitoring
+policy, named PRoot app launch, and Cron job listing. Other operations remain
+available through their documented CLI commands; catalog support is not shown
+as an implemented guided action when this TUI has no action flow.
 EOF
       ;;
     gui)

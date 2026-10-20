@@ -62,6 +62,18 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertFalse(any("start" in item or "stop" in item for item in manual_actions))
         self.assertTrue(any("status" in item for item in manual_actions))
 
+    def test_graphics_action_labels_match_provider_operations(self) -> None:
+        native = next(item for item in management_service.management_catalog.RESOURCES
+                      if item["id"] == "graphics.native")
+        debian = next(item for item in management_service.management_catalog.RESOURCES
+                      if item["id"] == "graphics.debian")
+        native_actions = terminal_ui._available_action_labels(native)
+        debian_actions = terminal_ui._available_action_labels(debian)
+        self.assertIn("verify GLES", native_actions)
+        self.assertIn("verify Vulkan", native_actions)
+        self.assertIn("select Native backend", native_actions)
+        self.assertNotIn("select Native backend", debian_actions)
+
     def test_cron_resource_exposes_status_and_saved_job_listing_only(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES
                         if item["id"] == "automation.cron-registry")
