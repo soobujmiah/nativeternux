@@ -1,0 +1,7 @@
+event_id: commit-232edd110847-8a21b3276fc6c211
+repository: soobujmiah/ternuxx
+commit: 232edd110847f143355c404635ad1a959e751358
+kind: commit
+occurred_at: '2026-10-20T12:11:46Z'
+status: completed
+summary: 'feat(management): manage PRoot shortcuts across clients'
