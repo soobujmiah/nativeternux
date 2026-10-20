@@ -18,7 +18,7 @@ The current Ternuxx-owned read-only check on Debian display :1 reports Zink/Vulk
 
 Ternuxx preserves the existing rootfs, user data, installed packages, legacy aliases, and x.sh/xgo/killx workflows. Routine Ternuxx management does not call the separate Ternux CLI or its broad cleanup. A targeted guest configuration adaptation is permitted only after identifying the exact consumer and capturing ownership, mode, hash, impact, and tested recovery; no package/rootfs replacement or broad profile deletion is part of this integration.
 
-Native Termux GPU evidence is separate: the current Native :1 probe reports llvmpipe and VK_ERROR_INCOMPATIBLE_DRIVER. VirGL remains a preserved explicit route without a current renderer check. NPU execution is unverified. See PRoot GPU reuse, Native graphics/audio ownership, and the current execution evidence.
+Native Termux GPU evidence is separate. The live `:1` status currently reports Adreno 825 with `Accelerated: yes`; a bounded GL workload rendered with score 561. The stock Mesa fallback reports llvmpipe. Native Vulkan device enumeration is not a draw test, and Native Vulkan rendering remains unverified. VirGL remains an explicit route without a verified guest renderer/workload. NPU execution is unverified. See PRoot GPU reuse, Native graphics/audio ownership, and the dated execution evidence.
 
 ## End-to-end Native/PRoot integration
 

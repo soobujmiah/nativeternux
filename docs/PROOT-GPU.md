@@ -6,7 +6,7 @@ Ternuxx is the independent final workstation project. Native Termux is the host 
 
 The current Native display is `:1`. A read-only Ternuxx guest verification on Debian `:1` reports X11 reachable, authenticated Native PulseAudio reachable, and `zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP))`. This verifies the selected renderer for that PRoot process/display. It does not claim all applications or inference workloads use the GPU.
 
-Native Termux's separate `DISPLAY=:1 tx doctor --graphics --json` check reported OpenGL `llvmpipe` and Vulkan `VK_ERROR_INCOMPATIBLE_DRIVER`. Do not apply this Native result to the Debian guest, or the guest renderer result to Native GTK.
+Historical Native stock-Mesa checks reported OpenGL `llvmpipe` and Vulkan `VK_ERROR_INCOMPATIBLE_DRIVER`. Later bounded checks in a managed session using the locally staged KGSL/Freedreno candidate reported Adreno 825 with `Accelerated: yes` and rendered GL workloads. The latest Native `:1` status again reports Adreno 825 / accelerated, and bounded OpenGL verification rendered successfully. Do not apply either Native result to the Debian guest, or the guest renderer result to Native GTK.
 
 The existing division is intentional:
 

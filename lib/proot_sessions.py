@@ -214,6 +214,39 @@ def _members(session_id: int) -> list[tuple[int, str]]:
     return found
 
 
+def _proc_cwd_matches_rootfs(proc: Path, rootfs: Path) -> bool:
+    """Compare cwd directory identity, not the pathname shown by procfs.
+
+    PRoot can expose its rootfs through a procfs magic link printed as `/`.
+    The pathname may differ while both names identify the same directory.
+    """
+    try:
+        if rootfs.is_symlink():
+            return False
+        cwd_stat = (proc / "cwd").stat()
+        rootfs_stat = rootfs.stat()
+    except OSError:
+        return False
+    return (cwd_stat.st_dev, cwd_stat.st_ino) == (rootfs_stat.st_dev, rootfs_stat.st_ino)
+
+
+def _await_verified_login(record: dict[str, object], pid: int, *, timeout: float = 5.0) -> bool:
+    """Wait briefly for proot-distro's launcher to exec the actual PRoot process."""
+    deadline = time.monotonic() + timeout
+    while True:
+        identity = _proc(pid)
+        if (identity is None or identity["state"] in {"Z", "X"}
+                or identity["start"] != record["process_start"]
+                or identity["pgrp"] != record["process_group"]
+                or identity["session"] != record["process_group"]):
+            return False
+        if _verified(record):
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.05)
+
+
 def _verified(record: dict[str, object], *, proc_root: Path | None = None) -> bool:
     proc_root = Path("/proc") if proc_root is None else Path(proc_root)
     identity = _proc(record["pid"])
@@ -261,7 +294,6 @@ def _verified(record: dict[str, object], *, proc_root: Path | None = None) -> bo
     # distro name and --user disappear, while rootfs cwd, numeric guest IDs,
     # and the fixed login command remain observable.
     try:
-        guest_cwd = (proc / "cwd").resolve(strict=True)
         passwd = (Path(record["rootfs"]) / "etc/passwd").read_text(
             encoding="utf-8", errors="replace")
         user = PROFILES[record["profile"]]["user"]
@@ -270,8 +302,8 @@ def _verified(record: dict[str, object], *, proc_root: Path | None = None) -> bo
         expected_ids = f"--change-id={int(account[2])}:{int(account[3])}"
     except (OSError, ValueError, IndexError, StopIteration):
         return False
-    return (guest_cwd == Path(record["rootfs"]).resolve()
-            and expected_ids in text and "/usr/bin/env" in text
+    return (_proc_cwd_matches_rootfs(proc, Path(record["rootfs"]))
+            and expected_ids in argv and "/usr/bin/env" in text
             and marker_token in text and "/bin/bash --login" in text)
 
 
@@ -320,24 +352,23 @@ def _observed_state(record: dict[str, object]) -> str:
 
 
 def list_sessions(state_dir: str | os.PathLike[str]) -> list[dict[str, object]]:
-    root, path, lock_path = _paths(state_dir, create=False)
+    root, path, _lock_path = _paths(state_dir, create=False)
     if not root.exists():
         return []
-    lock = _RegistryLock(lock_path)
-    try:
-        result = []
-        for record in _read_registry(path):
-            item = {key: record[key] for key in ("session_id", "profile", "profile_version",
-                                                  "purpose", "mode", "rootfs", "pid",
-                                                  "created_at", "last_verified_at")}
-            item["recorded_state"] = record["state"]
-            item["state"] = _observed_state(record)
-            item["ownership"] = ("released" if record["state"] == "stopped" else
-                                 "ternuxx_verified" if _verified(record) else "unverified")
-            result.append(item)
-        return result
-    finally:
-        lock.close()
+    # Writers replace the complete registry atomically. A lock here would
+    # create .sessions.lock during a read-only inventory, so read the old or
+    # new complete snapshot without creating state.
+    result = []
+    for record in _read_registry(path):
+        item = {key: record[key] for key in ("session_id", "profile", "profile_version",
+                                              "purpose", "mode", "rootfs", "pid",
+                                              "created_at", "last_verified_at")}
+        item["recorded_state"] = record["state"]
+        item["state"] = _observed_state(record)
+        item["ownership"] = ("released" if record["state"] == "stopped" else
+                             "ternuxx_verified" if _verified(record) else "unverified")
+        result.append(item)
+    return result
 
 
 def start_probe(state_dir: str | os.PathLike[str], *, prefix: str, timeout_seconds: int = 300,
@@ -630,7 +661,7 @@ def preview_start(profile: str, *, prefix: str) -> dict[str, object]:
                                     else "inherited-approved-proot-env"),
             "impact": ("Starts one bounded headless Debian diagnostic process."
                        if profile == "isolated-probe" else
-                       "Enters a foreground interactive Debian login shell as sbj using shared-tmp. No service, GUI, boot hook, or guest configuration is changed."),
+                       "Enters a foreground interactive Debian login shell as sbj using shared-tmp. The installed proot-distro normal-login path can write the shared guest etc/profile.d/termux-profile.sh and its container sidecar state from the login environment; Ternuxx does not snapshot or roll back those package-owned writes."),
             "confirmation_required": True, "plan_id": _start_plan(profile, discovery)}
 
 
@@ -853,7 +884,7 @@ def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirm
             saved["pid"], saved["process_start"], saved["process_group"] = child_pid, identity["start"], child_pid
             _append_transition(saved, "starting", "process-identity-recorded")
         record = _update_session(state_dir, record["session_id"], record_process_identity)
-        if not _verified(record):
+        if not _await_verified_login(record, child_pid):
             raise SessionError("interactive Debian process ownership could not be verified")
         def mark_running(saved):
             _append_transition(saved, "running", "login-pty-verified")
@@ -1102,15 +1133,14 @@ def _recovery_evidence(record: dict[str, object]) -> dict[str, object]:
                 evidence["profile_signature_match"] = all(checks.values())
             else:
                 try:
-                    cwd = Path(f"/proc/{pid}/cwd").resolve(strict=True)
                     passwd = (Path(record["rootfs"]) / "etc/passwd").read_text(encoding="utf-8", errors="replace")
                     account = next(line.split(":") for line in passwd.splitlines()
                                    if line.split(":", 1)[0] == PROFILES[record["profile"]]["user"])
                     expected_ids = f"--change-id={int(account[2])}:{int(account[3])}"
                     checks = {
                         "proot": "proot" in text,
-                        "cwd_rootfs": cwd == Path(record["rootfs"]).resolve(),
-                        "guest_ids": expected_ids in text,
+                        "cwd_rootfs": _proc_cwd_matches_rootfs(proc, Path(record["rootfs"])),
+                        "guest_ids": expected_ids in argv,
                         "guest_env": "/usr/bin/env" in text,
                         "marker_argv": marker_token in text,
                         "login_bash": "/bin/bash --login" in text,

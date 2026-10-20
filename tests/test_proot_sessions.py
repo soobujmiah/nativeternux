@@ -126,6 +126,13 @@ class PRootSessionRegistryTests(unittest.TestCase):
             proc.terminate()
             proc.wait(timeout=5)
 
+    def test_readonly_inventory_does_not_create_registry_lock(self):
+        root, path, lock_path = proot_sessions._paths(self.state, create=True)
+        proot_sessions._write_registry(root, path, [])
+        self.assertFalse(lock_path.exists())
+        self.assertEqual(proot_sessions.list_sessions(self.state), [])
+        self.assertFalse(lock_path.exists())
+
     def test_reconciliation_marks_only_proven_absent_process_as_exited_without_signal(self):
         root, path, _lock = proot_sessions._paths(self.state, create=True)
         session_id = "proot-" + "c" * 32
@@ -454,6 +461,7 @@ class PRootSessionRegistryTests(unittest.TestCase):
             second = proot_sessions.preview_start("debian-interactive", prefix=str(prefix))
         self.assertNotEqual(first["plan_id"], second["plan_id"])
         self.assertTrue(first["confirmation_required"])
+        self.assertIn("etc/profile.d/termux-profile.sh", second["impact"])
         with self.assertRaisesRegex(proot_sessions.SessionError, "unsupported"):
             proot_sessions.preview_start("arbitrary-shell", prefix=str(prefix))
 
@@ -524,7 +532,7 @@ class PRootVerificationFixtureTests(unittest.TestCase):
                 "--user", "sbj", "--", "/usr/bin/env", self.marker,
                 "/bin/bash", "--login"],
         }
-        cmd = ("proot --rootfs=. --change-id=1000:1000 --cwd=. /usr/bin/env "
+        cmd = ("proot --rootfs=. --change-id=1000:1000 --cwd=/home/sbj /usr/bin/env "
                + self.marker + " /bin/bash --login").encode()
         (self.proc / "cmdline").write_bytes(cmd.replace(b" ", b"\0") + b"\0")
         (self.proc / "environ").write_bytes(self.marker.encode() + b"\0")
@@ -539,6 +547,44 @@ class PRootVerificationFixtureTests(unittest.TestCase):
 
     def test_synthetic_complete_identity_is_verified(self):
         self.assertTrue(self.verified())
+
+    def test_interactive_start_waits_for_proot_distro_exec_transition(self):
+        from unittest.mock import patch
+        record = {"pid": 42, "process_start": "same", "process_group": 42}
+        identity = {"state": "S", "start": "same", "pgrp": 42, "session": 42}
+        with patch.object(proot_sessions, "_proc", return_value=identity), \
+                patch.object(proot_sessions, "_verified", side_effect=[False, True]), \
+                patch.object(proot_sessions.time, "monotonic", side_effect=[0.0, 0.1]), \
+                patch.object(proot_sessions.time, "sleep") as sleep:
+            self.assertTrue(proot_sessions._await_verified_login(record, 42, timeout=1.0))
+        sleep.assert_called_once_with(0.05)
+
+    def test_interactive_start_keeps_bounded_fail_closed_verification(self):
+        from unittest.mock import patch
+        record = {"pid": 42, "process_start": "same", "process_group": 42}
+        identity = {"state": "S", "start": "same", "pgrp": 42, "session": 42}
+        with patch.object(proot_sessions, "_proc", return_value=identity), \
+                patch.object(proot_sessions, "_verified", return_value=False), \
+                patch.object(proot_sessions.time, "monotonic", side_effect=[0.0, 0.1, 0.5]), \
+                patch.object(proot_sessions.time, "sleep") as sleep:
+            self.assertFalse(proot_sessions._await_verified_login(record, 42, timeout=0.25))
+        sleep.assert_called_once_with(0.05)
+
+    def test_proc_cwd_matches_rootfs_by_inode_when_path_is_aliased(self):
+        from unittest.mock import patch
+        cwd = self.proc / "cwd"
+        cwd.unlink()
+        cwd.symlink_to(self.other_cwd, target_is_directory=True)
+        rootfs_stat = self.rootfs.stat()
+        real_stat = Path.stat
+
+        def aliased_stat(path, *args, **kwargs):
+            if path == cwd:
+                return rootfs_stat
+            return real_stat(path, *args, **kwargs)
+
+        with patch.object(Path, "stat", autospec=True, side_effect=aliased_stat):
+            self.assertTrue(self.verified())
 
     def test_identity_mismatches_fail_closed(self):
         from unittest.mock import patch
@@ -559,7 +605,7 @@ class PRootVerificationFixtureTests(unittest.TestCase):
                 # Restore valid fixture bytes for the next case.
                 (self.proc / "environ").write_bytes(self.marker.encode() + b"\0")
                 (self.proc / "cmdline").write_bytes(
-                    ("proot --rootfs=. --change-id=1000:1000 --cwd=. /usr/bin/env "
+                    ("proot --rootfs=. --change-id=1000:1000 --cwd=/home/sbj /usr/bin/env "
                      + self.marker + " /bin/bash --login").encode().replace(b" ", b"\0") + b"\0")
 
     def test_marker_launcher_rootfs_and_working_directory_mismatches_fail(self):
