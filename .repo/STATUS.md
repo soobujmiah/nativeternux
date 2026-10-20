@@ -2,14 +2,14 @@
 # ternuxx -- deterministic status
 
 - Repository: `soobujmiah/ternuxx`
-- Generated at: 2026-10-20T00:23:38Z (by `tools/repo_knowledge collect`)
-- Version: `3c1dfea`
-- Head: `3c1dfead9ebc50ea9565792c25aa020e5db28f79` on `main` (2026-10-20T00:21:48Z)
+- Generated at: 2026-10-20T00:24:53Z (by `tools/repo_knowledge collect`)
+- Version: `18ef161`
+- Head: `18ef1618cc6e9ad8d7021e1dc8f68819ee5a97e8` on `main` (2026-10-20T00:23:54Z)
 
 ## Build / test
 
-- Build: **unknown** (run `39346648285`)
-- Test: **passed** -- Native Termux at source commit 3c1dfea: repo_test.sh 550/550 passed in 96.199s; CLI help contract passed; repo knowledge verify 0 findings; strict README bridge passed. Tests isolate Native-only external dependencies with explicit fixtures. GitHub run 39346648239 failed before this remediation; new workflow run is pending.
+- Build: **unknown** (run `39347406525`)
+- Test: **failed**
 - Last failed build: `69e378eb33247678437bda4b2de9ab25f6bcb91d` at 2026-10-18T19:42:44Z
 
 ## Phases
@@ -18,5 +18,5 @@
 ## Sync
 
 - Status: ok
-- Source: local
-- Last synced at: 2026-10-20T00:23:38Z
+- Source: ci
+- Last synced at: 2026-10-20T00:24:53Z
