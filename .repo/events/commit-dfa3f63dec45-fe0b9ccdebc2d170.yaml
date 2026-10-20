@@ -1,0 +1,7 @@
+event_id: commit-dfa3f63dec45-fe0b9ccdebc2d170
+repository: soobujmiah/ternuxx
+commit: dfa3f63dec45afccd9de06b3ff9d0652b325c2b8
+kind: commit
+occurred_at: '2026-10-20T20:23:46Z'
+status: completed
+summary: 'docs: clarify temporary Web verification runtime'
