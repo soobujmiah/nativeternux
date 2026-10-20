@@ -201,81 +201,160 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     return labels
 
 
+def _wrap_line(value: object, width: int) -> list[str]:
+    return textwrap.wrap(str(value), max(1, width), break_long_words=True,
+                         break_on_hyphens=False) or [""]
+
+
+def _put_wrapped(screen: "curses._CursesWindow", row: int, col: int, value: object,
+                 width: int, color: int | None = None) -> int:
+    height, screen_width = screen.getmaxyx()
+    lines = _wrap_line(value, min(width, max(1, screen_width - col - 1)))
+    for line in lines:
+        if row >= height:
+            break
+        if color is not None:
+            screen.attron(curses.color_pair(color))
+        screen.addnstr(row, col, line, max(0, screen_width - col - 1))
+        if color is not None:
+            screen.attroff(curses.color_pair(color))
+        row += 1
+    return row
+
+
+def _footer_layout(width: int) -> list[list[tuple[str, int]]]:
+    limit = max(1, width - 2)
+    groups = [
+        ("←/→", "category", 2), ("↑/↓", "resource", 2), ("Enter", "status", 1),
+        ("H", "history", 3), ("v", "details", 4), ("a", "actions", 1),
+        ("r", "refresh", 3), ("q", "quit", 6),
+    ]
+    rows: list[list[tuple[str, int]]] = [[]]
+    used = 0
+    for key, label, color in groups:
+        pieces = _wrap_line(f"{key} {label}", limit)
+        for piece in pieces:
+            extra = len(piece) + (3 if rows[-1] else 0)
+            if rows[-1] and used + extra > limit:
+                rows.append([])
+                used = 0
+                extra = len(piece)
+            if rows[-1]:
+                rows[-1].append((" · ", 5))
+                used += 3
+            rows[-1].append((piece, color))
+            used += len(piece)
+    return rows
+
+
 def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], category_index: int,
           resources: list[dict[str, Any]], selected: int, query: str,
           report: dict[str, object] | None, scroll: int = 0) -> int:
     screen.erase()
     height, width = screen.getmaxyx()
-    title = "Ternuxx Management Center"
-    screen.attron(curses.color_pair(1) | curses.A_BOLD)
-    title_col = max(0, (width - len(title)) // 2)
-    screen.addnstr(0, title_col, title, max(width - title_col - 1, 0))
-    screen.attroff(curses.color_pair(1) | curses.A_BOLD)
-    tagline_col = max(0, (width - len(BRANDING_TAGLINE)) // 2)
-    screen.addnstr(1, tagline_col, BRANDING_TAGLINE, max(width - tagline_col - 1, 0))
-    url_col = max(0, (width - len(BRANDING_URL)) // 2)
-    screen.addnstr(2, url_col, BRANDING_URL, max(width - url_col - 1, 0))
+    content_width = max(1, width - 2)
+    header = [
+        ("Ternuxx Management Center", 1),
+        (BRANDING_TAGLINE, 2),
+        (BRANDING_URL, 4),
+    ]
+    row = 0
+    for value, color in header:
+        for line in _wrap_line(value, content_width):
+            if row >= height:
+                break
+            col = max(0, (width - len(line)) // 2)
+            screen.attron(curses.color_pair(color))
+            screen.addnstr(row, col, line, max(0, width - col - 1))
+            screen.attroff(curses.color_pair(color))
+            row += 1
     category = categories[category_index] if categories else {"name": "Resources"}
     counts = {state: sum(1 for item in resources if item.get("status") == state)
               for state in ("implemented", "partial", "external", "unverified", "unavailable", "planned")}
     selected_resource = resources[selected] if resources and selected < len(resources) else None
     action_text = ", ".join(_available_action_labels(selected_resource)) if selected_resource else "none"
-    if width > 2:
-        screen.attron(curses.color_pair(5))
-        screen.addnstr(3, 1, "─" * (width - 2), width - 2)
-        screen.attroff(curses.color_pair(5))
-    screen.attron(curses.color_pair(2) | curses.A_BOLD)
-    screen.addnstr(4, 1, f"{category['name']}  ·  {len(resources)} resources", max(width - 2, 0))
-    screen.attroff(curses.color_pair(2) | curses.A_BOLD)
-    summary = f"Available: {counts['implemented']} implemented · {counts['partial']} partial · {counts['external']} external · {counts['planned']} planned"
-    screen.attron(curses.color_pair(3))
-    screen.addnstr(5, 1, summary, max(width - 2, 0))
-    screen.attroff(curses.color_pair(3))
-    screen.attron(curses.color_pair(4) | curses.A_BOLD)
-    screen.addnstr(6, 1, f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
-                   max(width - 2, 0))
-    screen.attroff(curses.color_pair(4) | curses.A_BOLD)
-    if width > 2:
-        screen.attron(curses.color_pair(5))
-        screen.addnstr(7, 1, "─" * (width - 2), width - 2)
-        screen.attroff(curses.color_pair(5))
-    screen.addnstr(8, 1, f"Selected actions: {action_text}", max(width - 2, 0))
-    if height < 13 or width < 34:
-        if height > 3 and width > 1:
-            screen.addnstr(height - 1, 1, "Resize terminal to at least 34x13", width - 2)
-        screen.refresh()
-        return 0
-    capacity = max(1, height - 13)
-    max_scroll = max(0, len(resources) - capacity)
-    scroll = min(max(0, min(scroll, max_scroll)), max_scroll)
-    for row, resource in enumerate(resources[scroll:scroll + capacity], 9):
-        index = scroll + row - 9
-        marker = ">" if index == selected else " "
-        status = management_presentation.status_label(resource.get("status", "unknown"))
-        text = f"{marker} {resource.get('name', 'Resource')} · {status} · {_resource_state(resource)}"
-        state = resource.get("status", "unknown")
-        pair = 1 if state == "implemented" else (3 if state in ("partial", "external", "unverified") else 6)
-        screen.attron(curses.color_pair(pair))
-        if index == selected:
-            screen.attron(curses.A_REVERSE)
-        screen.addnstr(row, 1, text, max(width - 2, 0))
-        if index == selected:
-            screen.attroff(curses.A_REVERSE)
-        screen.attroff(curses.color_pair(pair))
+
+    def divider(at: int) -> int:
+        if at < height:
+            screen.attron(curses.color_pair(5))
+            screen.addnstr(at, 1, "─" * content_width, max(0, width - 2))
+            screen.attroff(curses.color_pair(5))
+        return at + 1
+
+    row = divider(row)
+    row = _put_wrapped(screen, row, 1, f"{category['name']}  ·  {len(resources)} resources",
+                       content_width, color=2)
+    summary = (f"Available: {counts['implemented']} implemented · {counts['partial']} partial · "
+               f"{counts['external']} external · {counts['planned']} planned")
+    row = _put_wrapped(screen, row, 1, summary, content_width, color=3)
+    row = _put_wrapped(screen, row, 1,
+                       f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
+                       content_width, color=4)
+    row = divider(row)
+    row = _put_wrapped(screen, row, 1, f"Selected actions: {action_text}", content_width, color=2)
+
+    footer_rows = _footer_layout(width)
+    footer_top = max(0, height - len(footer_rows))
     if report:
         error = report.get("error") if isinstance(report.get("error"), dict) else {}
         code = error.get("code")
         message = "Last action: " + (str(code) if code else ("complete" if report.get("ok") else "failed"))
-        screen.addnstr(height - 3, 1, message, max(width - 2, 0))
         data = report.get("data") if isinstance(report.get("data"), dict) else {}
         values = [f"{key.replace('_', ' ')}: {value}" for key, value in list(data.items())[:2]
                   if not isinstance(value, (dict, list))]
+        report_lines = _wrap_line(message, content_width)
         if values:
-            screen.addnstr(height - 2, 1, " · ".join(values), max(width - 2, 0))
-    footer = " ←/→ categories · ↑/↓ resources · Enter status · H history · v details · a actions · r refresh · q quit "
-    screen.attron(curses.A_REVERSE)
-    screen.addnstr(height - 1, 0, footer.ljust(max(width - 1, 0)), max(width - 1, 0))
-    screen.attroff(curses.A_REVERSE)
+            report_lines += _wrap_line(" · ".join(values), content_width)
+        report_top = max(row, footer_top - len(report_lines))
+        for offset, line in enumerate(report_lines):
+            _put_wrapped(screen, report_top + offset, 1, line, content_width,
+                         color=6 if not report.get("ok") else 1)
+        content_bottom = report_top
+    else:
+        content_bottom = footer_top
+
+    item_lines = []
+    for resource in resources:
+        status = management_presentation.status_label(resource.get("status", "unknown"))
+        label = f"  {resource.get('name', 'Resource')} · {status} · {_resource_state(resource)}"
+        item_lines.append(_wrap_line(label, content_width))
+    scroll = min(max(0, scroll), max(0, len(resources) - 1))
+    while scroll < selected and sum(len(item_lines[index]) for index in range(scroll, selected + 1)) > max(0, content_bottom - row):
+        scroll += 1
+    cursor = row
+    for index in range(scroll, len(resources)):
+        lines = item_lines[index]
+        if cursor + len(lines) > content_bottom:
+            break
+        resource = resources[index]
+        state = resource.get("status", "unknown")
+        color = 1 if state == "implemented" else (3 if state in ("partial", "external", "unverified") else 6)
+        for line_index, line in enumerate(lines):
+            shown = (">" if index == selected else " ") + line[1:] if line_index == 0 else line
+            screen.attron(curses.color_pair(color))
+            if index == selected:
+                screen.attron(curses.A_REVERSE)
+            screen.addnstr(cursor, 1, shown, max(0, width - 2))
+            if index == selected:
+                screen.attroff(curses.A_REVERSE)
+            screen.attroff(curses.color_pair(color))
+            cursor += 1
+    if not resources and row < content_bottom:
+        _put_wrapped(screen, row, 1, "No resources match this search.", content_width, color=5)
+    if row >= content_bottom and height:
+        _put_wrapped(screen, max(0, footer_top - 1), 1,
+                     "Make the terminal wider or reduce zoom to see more.", content_width, color=3)
+
+    for offset, segments in enumerate(footer_rows):
+        footer_row = footer_top + offset
+        col = 1
+        for value, color in segments:
+            if footer_row >= height:
+                break
+            screen.attron(curses.color_pair(color))
+            screen.addnstr(footer_row, col, value, max(0, width - col - 1))
+            screen.attroff(curses.color_pair(color))
+            col += len(value)
     screen.refresh()
     return scroll
 
@@ -302,9 +381,9 @@ def _show_details(screen: "curses._CursesWindow", report: dict[str, object] | No
         screen.erase()
         height, width = screen.getmaxyx()
         title = " Operation details ".ljust(max(width - 1, 0))
-        screen.attron(curses.color_pair(1) | curses.A_BOLD)
+        screen.attron(curses.color_pair(1))
         screen.addnstr(0, 0, title, max(width - 1, 0))
-        screen.attroff(curses.color_pair(1) | curses.A_BOLD)
+        screen.attroff(curses.color_pair(1))
         lines = _detail_lines(report, max(1, width - 3))
         page = max(1, height - 4)
         offset = min(max(0, offset), max(0, len(lines) - page))

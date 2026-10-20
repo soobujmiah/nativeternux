@@ -279,7 +279,34 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         with mock.patch.object(terminal_ui.curses, "color_pair", return_value=0):
             terminal_ui._draw(screen, [], 0, [], 0, "", None)
         self.assertIn((2, (60 - len(terminal_ui.BRANDING_URL)) // 2, terminal_ui.BRANDING_URL), screen.rows)
-        self.assertIn((7, 1, "Resize terminal to at least 34x13"), screen.rows)
+        self.assertTrue(any("Make the terminal wider or reduce zoom" in value
+                            for _row, _col, value in screen.rows))
+
+    def test_narrow_tui_wraps_resource_text_and_uses_colored_footer_groups(self) -> None:
+        class NarrowScreen:
+            def __init__(self): self.rows = []
+            def erase(self): self.rows.clear()
+            def getmaxyx(self): return (30, 40)
+            def attron(self, _attr): pass
+            def attroff(self, _attr): pass
+            def addnstr(self, row, col, value, _limit): self.rows.append((row, col, value))
+            def refresh(self): pass
+        screen = NarrowScreen()
+        category = [{"id": "desktop-audio", "name": "Desktop & multimedia"}]
+        name = "Very long graphics and desktop management resource name wraps safely"
+        resources = [{"id": "long-resource", "category_id": "desktop-audio", "name": name,
+                      "status": "implemented", "description": "A long item", "supported_operations": []}]
+        with mock.patch.object(terminal_ui.curses, "color_pair", return_value=0):
+            terminal_ui._draw(screen, category, 0, resources, 0, "", None)
+        rendered = " ".join(value for _row, _col, value in screen.rows)
+        for word in name.split():
+            self.assertIn(word, rendered)
+        footer = terminal_ui._footer_layout(40)
+        self.assertGreater(len(footer), 1)
+        self.assertGreaterEqual(len({color for line in footer for _text, color in line}), 4)
+        source = (ROOT / "lib" / "terminal_ui.py").read_text()
+        draw_source = source.split("def _draw(", 1)[1].split("def _detail_lines", 1)[0]
+        self.assertNotIn("A_BOLD", draw_source)
 
     def test_status_vocabulary_is_consistent_and_safe_for_unknown_values(self) -> None:
         self.assertEqual(management_presentation.status_label("planned"), "Planned")
