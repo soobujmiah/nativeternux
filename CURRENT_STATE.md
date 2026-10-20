@@ -773,3 +773,10 @@ Implemented preview/apply/rollback for the two fixed Ternuxx-owned Termux:Boot h
 On Native Termux, both installed helpers were exact known legacy versions. Reviewed and applied source-aligned plans; fresh read-only status reports both installed hashes match repository source, with mode 0700. Rollback snapshot IDs are recorded in docs/evidence/2026-10-21-boot-helper-reconciliation.md. Fixture and service/auth/catalog focused tests passed 60/60. The final full Native Termux suite passed 634/634 in 98.171 seconds. bash -n passed for both source scripts.
 
 No boot script was executed, no scheduler/service or SSH/GUI/PRoot process was restarted, and no reboot occurred. Cold-boot delivery remains unqualified. Continue P3 recovery/concurrency acceptance without closing the current Termux/Codex session.
+
+
+## 2026-10-21 — Cron boot mutation serialization and phase review
+
+The shared Cron Termux:Boot entry manager now uses the same private `cron/boot/entry.lock` as the boot-time script runner. Exact-plan apply rechecks and mutates the fixed script while holding that lock; a non-confirmed request remains read-only. The new Native concurrency fixture verifies that apply waits for a runner lock. Focused Termux:Boot tests passed 16/16; the full Native repository suite passed 635/635 in 97.501 seconds. `repo_knowledge verify` found 0 issues. No live boot script, scheduler, service, SSH, GUI, Debian guest, or boot configuration was changed; no reboot occurred. Cold-boot delivery remains unqualified.
+
+The current serial roadmap has 11 phases (P0–P10): P0–P2 complete, P3 active, P4–P10 planned; P9 is the only optional phase, gated on a demonstrated owner-approved need after P8. The sequence and dependency gates are complete and consistent. Continue P3 before P4; nested :2 draw/fresh guest replay remain P4 limits, and release provenance/license remain P10 gates. Evidence: [P3 Cron boot concurrency and roadmap review](docs/evidence/2026-10-21-p3-cron-boot-concurrency.md).

@@ -3,6 +3,8 @@ from pathlib import Path
 import sys
 import subprocess
 import tempfile
+import threading
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +47,7 @@ class TermuxBootCronTest(unittest.TestCase):
         denied = termux_boot_cron.apply("enable", home=self.home, state_dir=self.state,
                                         confirmed=False, plan_id=plan["plan_id"], boot_inspector=self.app_installed)
         self.assertFalse(denied["changed"])
+        self.assertFalse(self.state.exists())
         self.assertFalse((self.boot / termux_boot_cron.SCRIPT_NAME).exists())
         with self.assertRaisesRegex(termux_boot_cron.BootIntegrationError, "not confirmed"):
             termux_boot_cron.apply("enable", home=self.home, state_dir=self.state,
@@ -134,6 +137,43 @@ class TermuxBootCronTest(unittest.TestCase):
         self.assertFalse(management_authorization.authorize("boot.cron.enable", {"diagnostics.read"}))
         self.assertTrue(management_authorization.authorize("boot.cron.enable", {"boot.manage"}))
 
+
+
+    def test_apply_waits_for_boot_entry_runner_lock(self):
+        import fcntl
+
+        plan = termux_boot_cron.preview("enable", home=self.home, boot_inspector=self.app_installed)
+        resolved_home, state = boot_state_path.resolve_private_state(str(self.home), str(self.state))
+        directory_fd = boot_state_path.ensure_private_tree(resolved_home, state)
+        lock_fd = os.open("entry.lock", os.O_RDWR | os.O_CREAT, 0o600, dir_fd=directory_fd)
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        target = self.boot / termux_boot_cron.SCRIPT_NAME
+        started = threading.Event()
+        results = []
+        failures = []
+
+        def apply():
+            started.set()
+            try:
+                results.append(termux_boot_cron.apply("enable", home=self.home, state_dir=self.state,
+                    confirmed=True, plan_id=plan["plan_id"], boot_inspector=self.app_installed))
+            except Exception as exc:
+                failures.append(exc)
+
+        worker = threading.Thread(target=apply)
+        worker.start()
+        self.assertTrue(started.wait(2))
+        time.sleep(0.1)
+        self.assertTrue(worker.is_alive())
+        self.assertFalse(target.exists())
+        fcntl.flock(lock_fd, fcntl.LOCK_UN)
+        os.close(lock_fd)
+        os.close(directory_fd)
+        worker.join(3)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(failures, [])
+        self.assertTrue(results[0]["changed"])
+        self.assertTrue(target.is_file())
 
 
 class BootStateContainmentTests(unittest.TestCase):

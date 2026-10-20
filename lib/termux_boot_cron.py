@@ -1,6 +1,7 @@
 """Opt-in manager for the official Termux:Boot Cron-only entrypoint."""
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -9,6 +10,7 @@ import stat
 import subprocess
 from typing import Callable
 
+import boot_state_path
 import cron_scheduler
 import runtime_diagnostics
 
@@ -283,9 +285,9 @@ def preview(action: str, *, home: str | os.PathLike[str],
             "actual_device_boot_delivery": "not_yet_verified"}
 
 
-def apply(action: str, *, home: str | os.PathLike[str], state_dir: str | os.PathLike[str],
-          confirmed: bool, plan_id: str | None,
-          boot_inspector: Callable[..., dict[str, object]] = runtime_diagnostics.inspect_boot) -> dict[str, object]:
+def _apply_unlocked(action: str, *, home: str | os.PathLike[str], state_dir: str | os.PathLike[str],
+                    confirmed: bool, plan_id: str | None,
+                    boot_inspector: Callable[..., dict[str, object]] = runtime_diagnostics.inspect_boot) -> dict[str, object]:
     plan = preview(action, home=home, boot_inspector=boot_inspector)
     if not plan["ready"]:
         raise BootIntegrationError("Termux:Boot is not confirmed installed")
@@ -357,3 +359,34 @@ def apply(action: str, *, home: str | os.PathLike[str], state_dir: str | os.Path
             "actual_device_boot_delivery": "not_yet_verified",
             "safety": {"unrelated_boot_scripts_changed": False, "package_changed": False,
                        "scheduler_started": False}}
+
+
+def apply(action: str, *, home: str | os.PathLike[str], state_dir: str | os.PathLike[str],
+          confirmed: bool, plan_id: str | None,
+          boot_inspector: Callable[..., dict[str, object]] = runtime_diagnostics.inspect_boot) -> dict[str, object]:
+    """Serialize entrypoint changes with each other and the Termux:Boot runner."""
+    if not confirmed:
+        return _apply_unlocked(action, home=home, state_dir=state_dir, confirmed=False,
+                               plan_id=plan_id, boot_inspector=boot_inspector)
+    try:
+        home_path, state = boot_state_path.resolve_private_state(str(home), str(state_dir))
+        directory_fd = boot_state_path.ensure_private_tree(home_path, state)
+    except (OSError, ValueError) as exc:
+        raise BootIntegrationError("private boot state is unavailable or unsafe") from exc
+    lock_fd = -1
+    try:
+        flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        lock_fd = os.open("entry.lock", flags, 0o600, dir_fd=directory_fd)
+        info = os.fstat(lock_fd)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid()
+                or stat.S_IMODE(info.st_mode) != 0o600):
+            raise BootIntegrationError("Cron boot entry lock identity or permissions are unsafe")
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        return _apply_unlocked(action, home=home_path, state_dir=state, confirmed=confirmed,
+                               plan_id=plan_id, boot_inspector=boot_inspector)
+    except OSError as exc:
+        raise BootIntegrationError("could not safely acquire the Cron boot entry lock") from exc
+    finally:
+        if lock_fd >= 0:
+            os.close(lock_fd)
+        os.close(directory_fd)
