@@ -43,6 +43,50 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.split(), ["login", "debian", "--shared-tmp", "--user", "dev"])
 
+    def test_native_db_virgl_backend_hands_off_guest_socket_without_changing_default(self) -> None:
+        capture = self.root / "proot-args"
+        ensure = self.root / "virgl-ensure"
+        stub = self.bin / "proot-distro"
+        stub.write_text("#!/bin/sh\nprintf \"%s\\n\" \"$@\" > \"$PROOT_ARGS_CAPTURE\"\n")
+        stub.chmod(0o755)
+        script = "\n".join([
+            '_TN_LIB_DIR="$LIB_DIR"',
+            'source "$LIB_DIR/launch.sh"',
+            'nt_fail() { echo "$*" >&2; }',
+            'nt_require_command() { command -v "$1" >/dev/null; }',
+            'nt_require_termux() { return 0; }',
+            'nt_audio_ensure() { return 0; }',
+            'nt_use() { return 0; }',
+            '_nt_use() { return 0; }',
+            '_nt_guest_pulse_cookie() { return 0; }',
+            '_nt_virgl_ensure() { printf "%s\\n" "$1" > "$VIRGL_ENSURE_CAPTURE"; }',
+            'nt_cmd_db --user dev --backend virgl --display :1',
+        ])
+        env = {**self.env, "PREFIX": "/data/data/com.termux/files/usr",
+               "TERMUX_VERSION": "fixture", "LIB_DIR": str(ROOT / "lib"),
+               "PROOT_ARGS_CAPTURE": str(capture), "VIRGL_ENSURE_CAPTURE": str(ensure)}
+        result = subprocess.run([shutil.which("bash"), "-c", script], capture_output=True,
+                                text=True, env=env, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        args = capture.read_text().splitlines()
+        self.assertEqual(args[:5], ["login", "debian", "--shared-tmp", "--user", "dev"])
+        self.assertIn("GALLIUM_DRIVER=virpipe", args)
+        self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", args)
+        self.assertEqual(ensure.read_text().strip(), ":1")
+        default_capture = self.root / "default-proot-args"
+        default_env = {**env, "PROOT_ARGS_CAPTURE": str(default_capture)}
+        default_script = script.replace(
+            "nt_cmd_db --user dev --backend virgl --display :1", "nt_cmd_db --user dev"
+        )
+        default_result = subprocess.run([shutil.which("bash"), "-c", default_script],
+                                        capture_output=True, text=True, env=default_env, timeout=10)
+        self.assertEqual(default_result.returncode, 0, default_result.stderr)
+        default_args = default_capture.read_text().splitlines()
+        self.assertIn("GALLIUM_DRIVER=zink", default_args)
+        self.assertNotIn("GALLIUM_DRIVER=virpipe", default_args)
+        self.assertNotIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", default_args)
+        self.assertEqual(ensure.read_text().strip(), ":1")
+
     def test_native_android_runtime_variables_do_not_leak_to_guest_profile(self) -> None:
         capture = self.root / "proot-env"
         env = {**self.env, "PROOT_ENV_CAPTURE": str(capture),
@@ -103,6 +147,9 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertNotIn("tx pgui", result.stdout)
         self.assertIn("tx proot gui", self.cli("proot", "--help").stdout)
         self.assertIn("--root", self.tx("db", "--help").stdout)
+        self.assertIn("virgl", result.stdout)
+        self.assertIn("tx virgl", self.cli("virgl", "--help").stdout)
+        self.assertIn("zink|virgl", self.tx("db", "--help").stdout)
 
     def test_mng_is_canonical_and_long_management_route_is_deprecated_alias(self) -> None:
         canonical = self.cli("mng", "bogus")

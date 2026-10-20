@@ -15,10 +15,49 @@ _nt_guest_pulse_cookie() {
 }
 
 # Run from native Termux; inside the guest there is no proot-distro.
-nt_cmd_db() {
-  local as_root=0 guest_user="" distro="debian"
+_nt_virgl_call() {
+  python3 "$_TN_LIB_DIR/virgl_lifecycle.py" "$@"
+}
+
+_nt_virgl_ensure() {
+  local display="$1" result
+  result="$(_nt_virgl_call ensure --display "$display" 2>&1)" || {
+    nt_fail "Could not prepare Ternuxx VirGL on $display: $result"
+    return 1
+  }
+}
+
+nt_cmd_virgl() {
+  local action="${1:-status}" display=":1" flag
+  [ $# -eq 0 ] || shift
   while [ $# -gt 0 ]; do
-    case "$1" in
+    flag="$1"; shift
+    case "$flag" in
+      --display)
+        [ $# -gt 0 ] || { nt_fail "--display requires :N"; return 2; }
+        display="$1"; shift ;;
+      --help|-h) nt_help virgl; return 0 ;;
+      *) nt_fail "Unknown VirGL option: $flag"; return 2 ;;
+    esac
+  done
+  case "$action" in
+    --help|-h) nt_help virgl; return 0 ;;
+    status|start|stop) ;;
+    *) nt_fail "Use tx virgl [status|start|stop] [--display :N]."; return 2 ;;
+  esac
+  [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] && [ -n "${TERMUX_VERSION:-}" ] || {
+    nt_fail "VirGL service management requires Native Termux, not a Debian PRoot shell."
+    return 1
+  }
+  _nt_virgl_call "$action" --display "$display"
+}
+
+# Run from Native Termux; inside the guest there is no proot-distro.
+nt_cmd_db() {
+  local as_root=0 guest_user="" distro="debian" backend="zink" display=":1" option value
+  while [ $# -gt 0 ]; do
+    option="$1"
+    case "$option" in
       --root) as_root=1; shift ;;
       --user)
         [ $# -ge 2 ] || { nt_fail "--user needs a name"; return 2; }
@@ -26,16 +65,33 @@ nt_cmd_db() {
       --distro)
         [ $# -ge 2 ] || { nt_fail "--distro needs a name"; return 2; }
         distro="$2"; shift 2 ;;
-      --) shift; break ;;
+      --backend)
+        [ $# -ge 2 ] || { nt_fail "--backend needs zink or virgl"; return 2; }
+        backend="$2"; shift 2 ;;
+      --display)
+        [ $# -ge 2 ] || { nt_fail "--display needs :N"; return 2; }
+        display="$2"; shift 2 ;;
+      --)
+        shift; break ;;
+      --help|-h) nt_help db; return 0 ;;
       *) break ;;
     esac
   done
   [[ "$distro" =~ ^[a-z0-9][a-z0-9._-]*$ ]] || { nt_fail "Invalid distro name."; return 2; }
+  [[ -z "$guest_user" || "$guest_user" =~ ^[a-z_][a-z0-9_-]*$ ]] || { nt_fail "Invalid guest user name."; return 2; }
+  [[ "$display" =~ ^:[0-9]{1,2}$ ]] || { nt_fail "Display must be a local X11 display such as :1."; return 2; }
+  [[ "$backend" = zink || "$backend" = virgl ]] || { nt_fail "Backend must be zink or virgl."; return 2; }
+  if [ "$backend" = virgl ] && [ "$distro" != debian ]; then
+    nt_fail "The managed VirGL handoff is currently supported only for the existing Debian guest."
+    return 2
+  fi
   nt_require_command proot-distro || { nt_fail "Run this from native Termux; proot-distro is not available here."; return 1; }
   local args=(login "$distro" --shared-tmp)
   local -a proot_env=(env -u ANDROID_ART_ROOT -u ANDROID_DATA -u ANDROID_I18N_ROOT
     -u ANDROID_ROOT -u ANDROID_RUNTIME_ROOT -u ANDROID_TZDATA_ROOT
-    -u BOOTCLASSPATH -u DEX2OATBOOTCLASSPATH -u EXTERNAL_STORAGE)
+    -u BOOTCLASSPATH -u DEX2OATBOOTCLASSPATH -u EXTERNAL_STORAGE
+    -u GALLIUM_DRIVER -u MESA_LOADER_DRIVER_OVERRIDE -u TU_DEBUG
+    -u MESA_VK_WSI_DEBUG -u MESA_SHADER_CACHE_DISABLE -u VTEST_SOCKET_NAME)
   if [ "$as_root" -eq 0 ]; then
     if [ -z "$guest_user" ]; then
       guest_user="$(_nt_launch_guest_user "$distro")" || guest_user=""
@@ -44,18 +100,26 @@ nt_cmd_db() {
         return 1
       }
     fi
-    [[ "$guest_user" =~ ^[a-z_][a-z0-9_-]*$ ]] || { nt_fail "Invalid guest user name."; return 2; }
     args+=(--user "$guest_user")
   fi
   if [ "$distro" = debian ] && [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] && [ -n "${TERMUX_VERSION:-}" ]; then
+    if [ "$backend" = virgl ]; then
+      nt_require_termux || return 1
+      _nt_virgl_ensure "$display" || return 1
+      local virgl_guest_socket="/tmp/.ternuxx-virgl/virgl-${display#:}.sock"
+      args+=(--env "DISPLAY=$display" --env PULSE_SERVER=tcp:127.0.0.1:4713
+        --env GALLIUM_DRIVER=virpipe --env "VTEST_SOCKET_NAME=$virgl_guest_socket"
+        --env MESA_SHADER_CACHE_DISABLE=true)
+    else
+      args+=(--env "DISPLAY=$display" --env PULSE_SERVER=tcp:127.0.0.1:4713
+        --env GALLIUM_DRIVER=zink --env MESA_LOADER_DRIVER_OVERRIDE=zink
+        --env TU_DEBUG=sysmem,noconform --env MESA_VK_WSI_DEBUG=sw
+        --env MESA_SHADER_CACHE_DISABLE=true)
+    fi
     _nt_use audio || return 1
     nt_audio_ensure || true
-    local pulse_cookie display="${DISPLAY:-:1}"
+    local pulse_cookie
     pulse_cookie="$(_nt_guest_pulse_cookie)" || pulse_cookie=""
-    args+=(--env "DISPLAY=$display" --env PULSE_SERVER=tcp:127.0.0.1:4713
-      --env GALLIUM_DRIVER=zink --env MESA_LOADER_DRIVER_OVERRIDE=zink
-      --env TU_DEBUG=sysmem,noconform --env MESA_VK_WSI_DEBUG=sw
-      --env MESA_SHADER_CACHE_DISABLE=true)
     if [ -n "$pulse_cookie" ]; then
       args+=(--bind "$pulse_cookie:/tmp/.ternuxx-pulse-cookie"
         --env PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie)
@@ -64,6 +128,9 @@ nt_cmd_db() {
     fi
     if [ -c /dev/kgsl-3d0 ]; then args+=(--bind /dev/kgsl-3d0:/dev/kgsl); fi
     if [ -d /dev/dri ]; then args+=(--bind /dev/dri); fi
+  elif [ "$backend" = virgl ]; then
+    nt_fail "VirGL handoff requires the Native Termux host; it cannot be configured from PRoot."
+    return 1
   fi
   [ $# -eq 0 ] || args+=(-- "$@")
   exec "${proot_env[@]}" proot-distro "${args[@]}"

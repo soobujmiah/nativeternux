@@ -15,7 +15,7 @@ Usage:
   tx <command> [options]
 
 Quick launch:
-  tx db              Open the configured Debian PRoot shell
+  tx db              Open the Debian PRoot shell (default backend: Zink)
   tx gui             Open the Native Termux GTK management center
   tx start           Start the native Termux:X11/XFCE desktop
   tx tui             Interactive terminal management
@@ -32,6 +32,7 @@ Commands:
   mng         Shared management operations and local Web service
   proot       Inspect and manage PRoot integrations
   audio       Manage Native PulseAudio used by Debian PRoot
+  virgl       Manage the identity-checked Native VirGL server
   ssh         Inspect and manage the fixed native SSH service
   checkpoint  Prepare or verify reboot-continuity records
   remote      Preview off-home access policy
@@ -72,6 +73,29 @@ Safety:
   Remote access defaults to disabled and never enables public ingress.
 
 Short command spellings remain accepted as aliases. Help uses the full names.
+EOF
+      ;;
+    db)
+      cat <<'EOF'
+tx db [--user NAME|--root] [--distro NAME] [--display :N] [--backend zink|virgl] [-- COMMAND...]
+
+Runs from Native Termux. Debian Zink/Turnip is the default and remains unchanged.
+Use --backend virgl to ensure Ternuxx's Native virgl_test_server_android is ready,
+then pass only the VirGL client environment and display/audio handoff to Debian.
+The VirGL service persists after the shell exits because other guest workloads may
+still use it; inspect with `tx virgl status` and stop only when no client is attached.
+CPU execution is independent of the graphics backend. NPU execution is not wired.
+EOF
+      ;;
+    virgl)
+      cat <<'EOF'
+tx virgl [status|start|stop] [--display :N]
+
+Manage the Ternuxx-owned Native VirGL vtest server used by Debian PRoot clients.
+Start is identity-checked and uses a private Unix socket. Stop acts only on the
+recorded Ternuxx server and refuses when socket clients or ownership are unclear.
+The server requires the optional `virglrenderer-android` Native package. This
+command never changes the Debian rootfs or the existing Zink/Turnip userspace.
 EOF
       ;;
     remote)

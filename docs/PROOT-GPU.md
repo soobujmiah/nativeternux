@@ -15,7 +15,7 @@ The existing division is intentional:
 - Debian uses ABI-compatible glibc Mesa/Turnip libraries from its own userspace. Do not copy Native Bionic libraries into Debian.
 - Ternuxx owns its CLI, status, and service lifecycle; the separate Ternux CLI/state is not a runtime dependency.
 - CPU remains the execution baseline. No Ternuxx inference runtime/model integration is currently implemented.
-- VirGL remains a preserved, independent option. It is not the renderer observed in the current session.
+- Zink/Turnip is the current observed Debian PRoot GPU route. VirGL now has an opt-in Ternuxx Native service and `tx db --backend virgl` handoff; the live renderer has not been switched or qualified. VirGL does not replace or install the guest Mesa stack.
 - NPU remains experimental and unverified. Visible vendor libraries alone do not establish device access or execution.
 
 ## Read-only verification
@@ -30,7 +30,9 @@ DISPLAY=:1 ./tx proot verify --distro debian --guest-user-from rootfs \
 
 A complete result should report `renderer_class=zink_turnip`, X11 reachable, and audio reachable. The command enters the existing guest only for fixed read-only probes and does not change packages, services, or rootfs files.
 
-`--backend` is an expected renderer class for verification; it does not activate/switch a graphics backend. A VirGL request that observes Zink is a mismatch, not a VirGL test pass. Qualify VirGL only through a dedicated isolated test path or an explicitly controlled switch with a reviewed recovery procedure. Do not change the active session just to obtain a result.
+`--backend` is an expected renderer class for verification; it does not activate/switch a graphics backend. A VirGL request that observes Zink is a mismatch, not a VirGL test pass. `tx db` defaults to the already verified Zink/Turnip path. `tx db --backend virgl` asks the Native Ternuxx VirGL service to start or reuse its exact owned server, then sends `GALLIUM_DRIVER=virpipe` and the shared-TMP socket path to the existing Debian guest. The service is explicit and persistent because another guest process may be a client. `tx virgl stop` refuses when socket clients or ownership cannot be proven absent. Do not change an active guest session just to obtain a result.
+
+The VirGL lifecycle implementation and CLI handoff pass isolated tests. Current Native `tx virgl status --display :1` reports stopped; no server was started in this qualification increment. A live PRoot renderer/workload and GUI visual check remain required before VirGL can be called qualified. The installed optional Native provider is `virglrenderer-android`; it is not added to the base install plan.
 
 ## Preserve existing configuration
 

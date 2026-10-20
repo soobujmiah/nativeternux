@@ -105,6 +105,7 @@ _nt_dispatch() {
       return 0 ;;
     start|stop|restart|status) lib_map="desktop" ;;
     audio)                     lib_map="audio" ;;
+    virgl)                     lib_map="virgl" ;;
     db|gui)                    lib_map="launch" ;;
     tui)                        lib_map="tui" ;;
     web)                        lib_map="management" ;;
