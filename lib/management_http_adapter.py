@@ -3,8 +3,8 @@
 The foreground server binds to 127.0.0.1 and enforces worker, request, and time
 bounds before passing each request here. After session authentication, this
 adapter dispatches typed operations through the shared application service and
-does not expose generic shell or ADB forwarding. The foreground runtime keeps
-mutation dispatch disabled.
+does not expose generic shell or ADB forwarding. The default management API keeps mutation dispatch disabled. Web mode may enable
+a fixed, explicitly scoped set of typed operations.
 """
 from __future__ import annotations
 
@@ -194,6 +194,14 @@ class ManagementHTTPAdapter:
                         auth.reason, "permission_denied")
             return self._response(401 if auth.reason in {"unauthenticated", "session_expired"} else 403,
                                   {"ok": False, "error": code})
+
+        # Network clients may launch only a fixed named app. Desktop-entry IDs
+        # can select a broader guest launcher surface and remain local-only.
+        if operation == "proot.app.launch":
+            args = payload.get("args")
+            if (not isinstance(args, dict) or "app_id" not in args
+                    or set(args) - {"app_id", "display"}):
+                return self._response(400, {"ok": False, "error": "named_app_only"})
 
         request_id = payload.get("request_id")
         if not isinstance(request_id, str) or not REQUEST_ID_RE.fullmatch(request_id):

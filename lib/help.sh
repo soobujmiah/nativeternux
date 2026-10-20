@@ -152,8 +152,9 @@ the server stops without revealing it; use --show-secret-on-clipboard-failure
 for the explicit private-terminal fallback. Browser access uses the shared
 management service with scoped reads and narrow confirmed actions: Native
 desktop lifecycle, graphics status/verification and Native backend selection,
-GUI Activity-monitoring policy, managed SSH 8023 start/stop, and Cron status/job
-list reads. It does not receive every local CLI capability; PRoot lifecycle,
+GUI Activity-monitoring policy, managed SSH 8023 start/stop, named PRoot app
+launch with per-app confirmation, and Cron status/job/history reads. It does not
+receive every local CLI capability; PRoot session lifecycle, shortcut edits,
 boot changes, backup/restore, timezone mutation, and recovery writes remain
 outside the Web session.
 EOF

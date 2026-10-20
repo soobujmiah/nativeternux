@@ -90,6 +90,7 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
             port=0, bootstrap_secret=SECRET, env=self.env)
         self.assertEqual(server.address[0], "127.0.0.1")
         self.assertFalse(server.adapter._allow_mutations)
+        self.assertNotIn("applications.launch", server.adapter.sessions._bootstrap_capabilities)
         server.start()
         connection = http.client.HTTPConnection(*server.address, timeout=3)
         try:
@@ -198,6 +199,26 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 self.assertEqual(json.loads(response)["operation"], "recovery.status")
                 self.assertEqual(dispatch.call_count, 3)
 
+                dispatch.return_value = {"api_version": 1, "request_id": "web-proot-launch-001",
+                    "ok": True, "operation": "proot.app.launch", "data": {"app_id": "files"}}
+                status, _headers, response = post("proot.app.launch", "web-proot-launch-01",
+                    "web-proot-launch-key1", {"app_id": "files"})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "proot.app.launch")
+                self.assertEqual(dispatch.call_count, 4)
+
+                status, _headers, response = post("proot.app.launch", "web-proot-desktop-01",
+                    "web-proot-desktop-key1", {"desktop_id": "unreviewed.desktop"})
+                self.assertEqual(status, 400)
+                self.assertEqual(json.loads(response)["error"], "named_app_only")
+                self.assertEqual(dispatch.call_count, 4)
+
+                status, _headers, response = post("proot.start", "web-proot-session-01",
+                    "web-proot-session-key1", {"profile": "debian-login"})
+                self.assertEqual(status, 403)
+                self.assertEqual(json.loads(response)["error"], "permission_denied")
+                self.assertEqual(dispatch.call_count, 4)
+
                 dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
                     "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
                 status, _headers, response = post("desktop.restart", "web-restart-request-01",
@@ -221,7 +242,12 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("View operation history", page)
         self.assertIn('run("recovery.status")', page)
         self.assertNotIn("network.ssh.manual-8022", page.split("manageSsh(operation)", 1)[-1].split("function drawCategories", 1)[0])
-        self.assertNotIn("applications.launch", page)
+        self.assertIn("applications.launch", page)
+        self.assertIn('run("proot.shortcuts.list")', page)
+        self.assertIn('run("proot.app.launch",chosen?{app_id:select.value,display:chosen}:{app_id:select.value})', page)
+        self.assertIn("Use an X11 display like :1", page)
+        self.assertIn("Launch named PRoot app", page)
+        self.assertIn("availability unverified", page)
 
     def test_web_console_has_bounded_mobile_layout_and_touch_navigation_rules(self) -> None:
         page = (ROOT / "lib" / "management_web_ui.html").read_text()

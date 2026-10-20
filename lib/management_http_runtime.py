@@ -1,4 +1,4 @@
-"""Foreground loopback API with read-only diagnostics and narrow GUI-monitor policy writes."""
+"""Foreground loopback API with read-only diagnostics and narrowly scoped Web actions."""
 from __future__ import annotations
 
 import argparse
@@ -34,12 +34,12 @@ _MUTATING_CAPABILITIES = {
 WEB_READ_CAPABILITIES = frozenset({
     "diagnostics.read", "guest.diagnostics.read", "remote_policy.read", "continuity.read",
 })
-WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage"})
+WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage", "applications.launch"})
 _WEB_MUTATING_OPERATIONS = {
     operation for operation in management_sessions.MUTATING_OPERATIONS
     if management_authorization.required_capability(operation) in WEB_CAPABILITIES
 }
-if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select"}:
+if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch"}:
     raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy and fixed managed SSH lifecycle and typed graphics selection")
 if READ_CAPABILITIES & _MUTATING_CAPABILITIES:
     raise RuntimeError("read-only API runtime contains a mutation capability")
@@ -95,7 +95,7 @@ def copy_bootstrap_secret(secret: str, *, executable: str = "termux-clipboard-se
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tx mng http serve",
-        description="Run the loopback management API; Web mode supports desktop, managed SSH 8023, and GUI monitoring policy operations.",
+        description="Run the loopback management API; Web mode supports scoped desktop, managed SSH 8023, monitoring, graphics selection, and named PRoot app launch.",
     )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--web", action="store_true", help="open the local browser UI")

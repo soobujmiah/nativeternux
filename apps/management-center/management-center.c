@@ -348,7 +348,7 @@ static void launch_proot_app(GtkButton *button, gpointer data) {
     gtk_widget_set_margin_top(box, 16); gtk_widget_set_margin_bottom(box, 16);
     gtk_widget_set_margin_start(box, 16); gtk_widget_set_margin_end(box, 16);
     gtk_window_set_child(GTK_WINDOW(window), box);
-    gtk_box_append(GTK_BOX(box), gtk_label_new("Launches the selected Debian PRoot app in the current Native Ternuxx display. It uses the existing guest and does not install software or change its configuration."));
+    gtk_box_append(GTK_BOX(box), gtk_label_new("Launches the selected Debian PRoot app in the current Native Ternuxx display. Guest app availability is not pre-verified. It uses the existing guest and does not install software or change its configuration."));
     gtk_box_append(GTK_BOX(box), gtk_label_new("IDs: terminal, files, firefox, blender, pavucontrol, system-config-printer, thunar-bulk-rename, thunar-settings, thunar-volman-settings, vlc, xarchiver, xfce4-appfinder, xfce4-terminal-settings, shortcut-manager"));
     GtkWidget *entry = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(entry), "App ID, for example files"); gtk_box_append(GTK_BOX(box), entry);
     GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
