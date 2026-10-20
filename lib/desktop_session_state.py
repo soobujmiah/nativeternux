@@ -11,6 +11,9 @@ import sys
 import tempfile
 
 MARKERS = {"supervisor": "desktop-supervisor.sh", "x11": "termux-x11", "desktop": "xfce4-session"}
+DESKTOP_MARKERS = {"native": "xfce4-session", "proot": "proot-display0"}
+LEGACY_PROOT_DISPLAY_MARKER = "proot-display0"
+LEGACY_PROOT_WRAPPER_MARKER = "proot-xfce-wrapper.sh"
 
 class StateError(RuntimeError):
     pass
@@ -29,13 +32,13 @@ def _read_session_file(path: Path) -> tuple[bytes, os.stat_result]:
     finally:
         os.close(fd)
 
-def _proc_state(role: str, record: object, proc: Path) -> str:
+def _proc_state(role: str, record: object, proc: Path, expected_marker: str | None = None) -> str:
     if not isinstance(record, dict):
         raise StateError(f"recorded {role} identity is malformed")
     pid, ticks, marker = record.get("pid"), record.get("start_ticks"), record.get("command_marker")
     if pid is None and role in ("x11", "desktop"):
         return "absent"
-    if type(pid) is not int or pid < 1 or not isinstance(ticks, str) or not ticks.isdigit() or marker != MARKERS[role]:
+    if type(pid) is not int or pid < 1 or not isinstance(ticks, str) or not ticks.isdigit() or marker != (expected_marker or MARKERS[role]):
         raise StateError(f"recorded {role} identity is invalid")
     if role != "supervisor" and (record.get("pgid") != pid or record.get("sid") != pid):
         raise StateError(f"recorded {role} group/session identity is unsafe")
@@ -178,11 +181,19 @@ def inspect(home: Path, state_dir: Path, proc: Path, tmp_root: Path) -> dict:
             raise StateError("session record is a symlink")
         session_bytes, meta = _read_session_file(record_path)
         data = json.loads(session_bytes.decode("utf-8"))
-        if not isinstance(data, dict) or data.get("schema") != 2 or data.get("owner") != "ternuxx" or data.get("provider") != "native" or data.get("status") not in {"running", "starting", "stopping", "failed", "stopped", "stop_incomplete"} or not isinstance(data.get("display"), str) or not re.fullmatch(r":[0-9]{1,2}", data["display"]):
+        if not isinstance(data, dict) or data.get("schema") != 2 or data.get("owner") != "ternuxx" or data.get("provider") not in {"native", "proot"} or data.get("status") not in {"running", "starting", "stopping", "failed", "stopped", "stop_incomplete"} or not isinstance(data.get("display"), str) or not re.fullmatch(r":[0-9]{1,2}", data["display"]):
             raise StateError("session record is not a recognized schema-v2 Ternuxx session")
         if not proc.is_dir():
             return {"state": "unknown", "reason": "process inventory unavailable"}
-        roles = {name: _proc_state(name, data.get(name), proc) for name in MARKERS}
+        expected_desktop = DESKTOP_MARKERS.get(data.get("provider"))
+        recorded_desktop = data.get("desktop", {}).get("command_marker")
+        legacy_display_record = (data.get("provider") == "native" and data.get("display") == ":0"
+                                 and recorded_desktop in {LEGACY_PROOT_DISPLAY_MARKER, LEGACY_PROOT_WRAPPER_MARKER})
+        if (not expected_desktop or (recorded_desktop != expected_desktop and not legacy_display_record)):
+            raise StateError("recorded desktop provider marker is invalid")
+        if legacy_display_record:
+            expected_desktop = recorded_desktop
+        roles = {name: _proc_state(name, data.get(name), proc, expected_desktop if name == "desktop" else None) for name in MARKERS}
         if "unsafe" in roles.values():
             return {"state": "unsafe", "reason": "recorded process identity belongs to a different owner", "processes": roles}
         if "unknown" in roles.values():

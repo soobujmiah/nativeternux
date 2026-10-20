@@ -30,7 +30,8 @@
       "x11-utils",
       "xauth",
       "xfce4",
-      "xfce4-terminal"
+      "xfce4-terminal",
+      "xserver-xephyr"
     ],
     "desktop-compat": [
       "colord",

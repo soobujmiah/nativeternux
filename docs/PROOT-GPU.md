@@ -41,3 +41,10 @@ Do not replace the Debian rootfs, remove packages, or edit guest profile hooks b
 PulseAudio uses Ternuxx's private managed configuration and authenticated cookie in the current path. The package `$PREFIX/etc/pulse/default.pa` is not the active configuration. Leave it unchanged unless a reproduced defect is causally tied to it and a rollback is verified.
 
 See [PRoot session safety](architecture/PROOT-SESSIONS.md), [capability matrix](architecture/CAPABILITY-MATRIX.md), and the [current execution evidence](evidence/2026-10-20-workstation-qualification-execution.md).
+
+
+## Full Debian desktop through Ternuxx
+
+Run `tx pgui` from Native Termux. If Native XFCE is running on `:1`, auto mode opens a nested Debian desktop on Xephyr `:2`; Ctrl-C in that terminal closes only the nested session. If Native GUI is stopped, auto mode starts a tracked standalone Termux:X11 desktop on `:0`. `tx pgui start --mode standalone|nested` selects a route explicitly, while `tx pgui status` and `tx pgui stop` manage the standalone session. Standalone `:0` cannot overlap the Native desktop. Both routes preserve Debian's glibc Zink/Turnip driver, and the authenticated Native PulseAudio server remains shared and Native-owned.
+
+Live device evidence: standalone `:0` passed the read-only guest X11/audio/Zink-Turnip verifier. Nested Xephyr `:2` created an OpenGL ES 3.2 context with renderer `zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP))`, then ran XFCE until Ctrl-C. Repeated `DRI3 not available` and missing DPMS warnings were observed; nested GLX and visual confirmation were not verified. See [full GUI evidence](evidence/2026-10-20-proot-full-gui.md). Fresh Debian provisioning remains unavailable; `xserver-xephyr` is recorded in the versioned Debian package profile for a future explicit setup/replay workflow.

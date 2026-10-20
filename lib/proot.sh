@@ -13,6 +13,15 @@ _nt_proot_gui() {
   "$script" "$@"
 }
 
+nt_cmd_pgui() {
+  if [ "$#" -eq 0 ]; then
+    set -- start
+  elif [ "$1" = --mode ]; then
+    set -- start "$@"
+  fi
+  _nt_proot_gui "$@"
+}
+
 _nt_proot_verify() {
   local distro="$1" guest_user="$2" user_source="$3" display="$4" backend="$5"
   local args=(--operation proot.guest.verify --distro "$distro" --display "$display" --backend "$backend")
@@ -103,6 +112,6 @@ nt_cmd_proot() {
       esac
       python3 "$_TN_LIB_DIR/proot_setup.py" "${setup_args[@]}"
       ;;
-    *) nt_fail "Use proot status|inspect|verify|db|gui|setup."; return 2 ;;
+    *) nt_fail "Use proot status|inspect|verify|db|gui|setup; use tx pgui for the full Debian desktop."; return 2 ;;
   esac
 }

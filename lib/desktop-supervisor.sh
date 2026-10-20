@@ -20,6 +20,7 @@ DESKTOP_TICKS=""
 DESKTOP_PGID=""
 DESKTOP_SID=""
 DESKTOP_MARKER="${8:-xfce4-session}"
+PROVIDER="${9:-native}"
 STOP_REASON=""
 STARTUP_FAILED=0
 
@@ -126,7 +127,7 @@ write_state() {
   local phase="$1" error_text="${2:-}"
   python3 - "$STATE_FILE" "$phase" "$DISPLAY_VALUE" "$$" "$(proc_ticks "$$")" \
     "$X11_PID" "$X11_TICKS" "$X11_PGID" "$X11_SID" \
-    "$DESKTOP_PID" "$DESKTOP_TICKS" "$DESKTOP_PGID" "$DESKTOP_SID" "$error_text" "$DESKTOP_MARKER" <<'PY'
+    "$DESKTOP_PID" "$DESKTOP_TICKS" "$DESKTOP_PGID" "$DESKTOP_SID" "$error_text" "$DESKTOP_MARKER" "$PROVIDER" <<'PY'
 import json
 import os
 import sys
@@ -135,13 +136,13 @@ from datetime import datetime, timezone
 
 (path, phase, display, supervisor_pid, supervisor_ticks, x11_pid, x11_ticks,
  x11_pgid, x11_sid, desktop_pid, desktop_ticks, desktop_pgid, desktop_sid,
- error, desktop_marker) = sys.argv[1:]
+ error, desktop_marker, provider) = sys.argv[1:]
 def role(pid, ticks, pgid, sid, marker):
     return {"pid": int(pid) if pid else None, "start_ticks": ticks or None,
             "pgid": int(pgid) if pgid else None, "sid": int(sid) if sid else None,
             "command_marker": marker}
 state = {
-    "schema": 2, "owner": "ternuxx", "provider": "native",
+    "schema": 2, "owner": "ternuxx", "provider": provider,
     "display": display, "status": phase,
     "supervisor": {"pid": int(supervisor_pid), "start_ticks": supervisor_ticks,
                    "command_marker": "desktop-supervisor.sh"},
@@ -205,6 +206,7 @@ on_signal() {
 trap on_signal TERM INT HUP
 
 [[ "$DISPLAY_VALUE" =~ ^:[0-9]{1,2}$ ]] || fail "invalid display"
+[[ "$PROVIDER" = native || "$PROVIDER" = proot ]] || fail "invalid provider"
 [ -d "$STATE_DIR" ] || fail "state directory missing"
 [ -d "$TMP_ROOT/.X11-unix" ] || fail "Termux X11 socket directory missing"
 [ -x "$X11_BIN" ] || fail "termux-x11 executable missing"

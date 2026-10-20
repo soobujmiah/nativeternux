@@ -182,8 +182,11 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertIn("The Ternuxx Native desktop is not verified running", result.stderr)
         self.assertIn("Run 'tx start', then retry 'tx gui'", result.stderr)
 
-    def test_non_contract_app_and_pgui_shortcuts_are_not_registered(self) -> None:
-        for command in ("app", "apps", "pgui"):
+    def test_pgui_is_registered_with_help_and_old_app_shortcuts_are_unknown(self) -> None:
+        result = self.tx("pgui", "--help")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("tx pgui [start", result.stdout)
+        for command in ("app", "apps"):
             result = self.tx(command)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("Unknown command", result.stderr)
@@ -193,7 +196,7 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertIn("tx <command> [options]", result.stdout)
         for name in ("tx db", "tx gui"):
             self.assertIn(name, result.stdout)
-        self.assertNotIn("tx pgui", result.stdout)
+        self.assertIn("tx pgui", result.stdout)
         self.assertIn("tx proot gui", self.cli("proot", "--help").stdout)
         self.assertIn("--root", self.tx("db", "--help").stdout)
         self.assertIn("virgl", result.stdout)

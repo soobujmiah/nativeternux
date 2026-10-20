@@ -113,7 +113,7 @@ _nt_dispatch() {
     checkpoint)                lib_map="continuity" ;;
     ssh)                       lib_map="ssh" ;;
     remote)                    lib_map="remote_access" ;;
-    proot)                     lib_map="proot" ;;
+    proot|pgui)                lib_map="proot" ;;
     reboot|boot|wakelock)     lib_map="reboot" ;;
     backup|restore|recovery)  lib_map="recovery" ;;
     check|doctor)             lib_map="doctor" ;;

@@ -16,6 +16,7 @@ Usage:
 
 Quick launch:
   tx db              Open the Debian PRoot shell (default backend: Zink)
+  tx pgui            Open Debian XFCE standalone :0 or nested in Native :1
   tx gui             Open the Native Termux GTK management center
   tx start           Start the native Termux:X11/XFCE desktop
   tx tui             Interactive terminal management
@@ -31,6 +32,7 @@ Commands:
   doctor      Run diagnostic checks
   mng         Shared management operations and local Web service
   proot       Inspect and manage PRoot integrations
+  pgui        Start/status/stop the existing Debian full desktop
   audio       Manage Native PulseAudio used by Debian PRoot
   virgl       Manage the identity-checked Native VirGL server
   graphics    Select Native desktop graphics backend
@@ -62,11 +64,14 @@ Examples:
   tx web
   tx ssh inspect --json
   tx proot status
+  tx pgui
+  tx pgui status
   tx backup list
   tx recovery status
   tx recovery resolve OPERATION_ID
   tx remote access preview
   tx proot verify --distro debian --guest-user-from rootfs --display :1 --backend zink
+  tx pgui
 
 Safety:
   start/stop/restart change process and session state. install --yes requires
@@ -74,6 +79,20 @@ Safety:
   Remote access defaults to disabled and never enables public ingress.
 
 Short command spellings remain accepted as aliases. Help uses the full names.
+EOF
+      ;;
+    pgui)
+      cat <<'EOF'
+tx pgui [start [--mode auto|standalone|nested]|status|stop]
+
+Starts the existing Debian XFCE desktop. Auto starts standalone on Termux:X11
+:0 when Native GUI is stopped; when Native GUI is running on :1, it starts a
+full nested desktop through Debian Xephyr :2. Standalone and Native desktops
+are mutually exclusive. Nested mode shares Native :1 as the host display and
+uses isolated Debian Zink/Turnip plus the authenticated Native PulseAudio
+endpoint. Ctrl-C in the launching terminal closes only the nested desktop.
+`tx pgui stop` stops only a verified Ternuxx-owned standalone :0 session.
+Individual Debian apps remain available through `tx mng app launch` shortcuts.
 EOF
       ;;
     db)
@@ -206,6 +225,20 @@ tx status — Inspect the recorded native desktop session
 Reads session state and verifies recorded process identities. It does not
 start or stop processes. GUI visibility is reported as unknown because the
 Termux:X11 Android app's visible state is not inferred by the CLI.
+EOF
+      ;;
+    pgui)
+      cat <<'EOF'
+tx pgui [start [--mode auto|standalone|nested]|status|stop]
+
+Starts the existing Debian XFCE desktop. Auto starts standalone on Termux:X11
+:0 when Native GUI is stopped; when Native GUI is running on :1, it starts a
+full nested desktop through Debian Xephyr :2. Standalone and Native desktops
+are mutually exclusive. Nested mode shares Native :1 as the host display and
+uses isolated Debian Zink/Turnip plus the authenticated Native PulseAudio
+endpoint. Ctrl-C in the launching terminal closes only the nested desktop.
+`tx pgui stop` stops only a verified Ternuxx-owned standalone :0 session.
+Individual Debian apps remain available through `tx mng app launch` shortcuts.
 EOF
       ;;
     db)

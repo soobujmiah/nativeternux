@@ -214,6 +214,17 @@ nt_cmd_start() {
   _NT_ACTIVE_SESSION_LOCK="$lock"
   trap '_nt_release_session_lock' EXIT
 
+  local pgui_state_dir="$HOME/.local/share/ternuxx/proot-display0" pgui_report pgui_state
+  if [ -e "$pgui_state_dir/session.json" ]; then
+    pgui_report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" inspect "$HOME" "$pgui_state_dir" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null)" || {
+      nt_fail "Standalone PRoot GUI ownership is unknown or unsafe; Native desktop startup is blocked to protect display :0."; return 1;
+    }
+    pgui_state="$(printf '%s' "$pgui_report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state", "unknown"))')"
+    [ "$pgui_state" = stopped ] || {
+      nt_fail "Standalone PRoot GUI state is $pgui_state; stop or safely reconcile that session before starting Native GUI."; return 1;
+    }
+  fi
+
   session_report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" inspect "$HOME" "$state_root" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null)" || {
     nt_fail "Session ownership or process identity is unknown or unsafe. Processes and state were preserved; inspect session.json and desktop.log."; return 1;
   }

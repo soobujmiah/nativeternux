@@ -94,3 +94,8 @@ PRoot does not provide the same PID, network, IPC, cgroup, or security isolation
 5. **Capability proof:** run the same suitable workload in native and PRoot separately, record actual renderer/delegate, correctness, thermal/power state, and limitations. Do not infer parity from one successful layer.
 
 Each step is gated on a read-only compatibility check first. Device-changing work, installing add-on APKs, changing Android permissions, and testing boot settings require explicit owner authorization. Until then, implementation stays within repository changes or disposable fixtures.
+
+
+## Debian GUI modes managed by Ternuxx
+
+The full PRoot XFCE desktop is launched with `tx pgui`. Auto mode selects independent Termux:X11 `:0` when the Native desktop is stopped and nested Xephyr `:2` when Native `:1` is running. Explicit `standalone` and `nested` modes enforce the same lifecycle ownership checks. Native PulseAudio stays on the authenticated loopback endpoint; Debian keeps its own Zink/Turnip glibc stack. The nested desktop is foreground-controlled with Ctrl-C, while standalone has `tx pgui status|stop`. Individual Debian shortcuts remain routed through `tx mng app launch` on Native `:1`. Current device evidence and display/GLX limitations are in [the PRoot GUI report](evidence/2026-10-20-proot-full-gui.md).

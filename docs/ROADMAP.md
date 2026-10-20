@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Resolve the PRoot interactive guest cwd/UID identity contract without weakening checks or mutating the existing rootfs; then verify a bounded guest X11 workload and preserve existing Ternux sessions. Keep P4 planned until the P3 ownership and failure-recovery gates pass.
+**Next action:** Resolve the PRoot interactive guest cwd/UID identity contract without weakening checks or mutating the existing rootfs; then preserve the dedicated GUI evidence and complete the remaining P3 ownership and recovery gates before activating P4.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

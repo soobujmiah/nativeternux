@@ -6,7 +6,7 @@
 
 ## Context
 
-Ternuxx needs one launch registry shared by CLI, Web Visualizer, X11 GUI and optional Termux:Boot entry points. The proposed aliases overlap with commands that the independent Ternux project already installs. Static source review also found that the existing Ternux launcher assumes display `:0` and performs broad process/socket cleanup. On the owner's current target, the existing Ternux PRoot is assigned `:0` and native Ternuxx is assigned `:1`; Ternuxx default allocation now searches `:1` through `:10` and preserves occupied sockets/locks. This assignment avoids a default collision but does not prove shared ownership or simultaneous server operation. Neither Termux:X11 multiple-server behavior nor this device's Android activity/window routing has been tested for this combination.
+Ternuxx needs one launch registry shared by CLI, Web Visualizer, X11 GUI and optional Termux:Boot entry points. The proposed aliases overlap with commands that the independent Ternux project already installs. Static source review also found that the existing Ternux launcher assumes display `:0` and performs broad process/socket cleanup. On the owner's current target, the existing Ternux PRoot is assigned `:0` and native Ternuxx is assigned `:1`; Ternuxx default allocation now searches `:1` through `:10` and preserves occupied sockets/locks. The new tx pgui qualification now verifies the exclusive standalone :0 route while Native :1 is stopped, and a Debian Xephyr :2 session nested inside the running Native :1 server. This does not test two independent Termux:X11 servers concurrently, Android activity/window routing, or independent physical displays; those remain unqualified.
 
 ## Proposed decision
 

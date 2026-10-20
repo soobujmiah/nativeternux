@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-Doctor, recovery, managed sessions, and shared management APIs are implemented with extensive source and device evidence. A disposable PRoot headless lifecycle passed, but interactive login still fails closed on guest cwd/UID validation and GUI attachment is unqualified. Debian adoption is currently a private ownership record only; no fresh-install replay or guest migration is implemented.
+Dedicated Ternuxx PRoot GUI now has live-qualified standalone :0 and nested Xephyr :2 routes with Zink/Turnip and authenticated Native audio; the general interactive cwd/UID ownership gate remains open.
 
-**Next action:** Resolve the PRoot interactive guest cwd/UID identity contract without weakening checks or mutating the existing rootfs; then verify a bounded guest X11 workload and preserve existing Ternux sessions. Keep P4 planned until the P3 ownership and failure-recovery gates pass.
+**Next action:** Resolve the PRoot interactive guest cwd/UID identity contract without weakening checks or mutating the existing rootfs; then preserve the dedicated GUI evidence and complete the remaining P3 ownership and recovery gates before activating P4.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -166,12 +166,13 @@ Evidence:
 - [docs/evidence/2026-10-19-termux-boot-cron-integration.md](evidence/2026-10-19-termux-boot-cron-integration.md)
 - [docs/evidence/2026-10-20-proot-lifecycle.md](evidence/2026-10-20-proot-lifecycle.md)
 - [docs/evidence/2026-10-20-interactive-workstation-followup.md](evidence/2026-10-20-interactive-workstation-followup.md)
+- [docs/evidence/2026-10-20-proot-full-gui.md](evidence/2026-10-20-proot-full-gui.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 
 **Status:** planned
 
-Preparatory work now includes a versioned Debian Trixie setup profile and a live-verified adoption record for the existing Debian rootfs. It performs no guest writes. Fresh-install setup replay, config migration/rollback, safe legacy CLI retirement, and PRoot GUI/workload parity remain unimplemented; P4 stays planned until P3 ownership gates pass.
+Added a separate tx pgui adapter for the existing Debian XFCE desktop: identity-checked standalone :0 and foreground nested Xephyr :2; both routes verified Zink/Turnip and authenticated Native PulseAudio on device. xserver-xephyr is recorded in the versioned Debian package profile. P4 remains planned pending P3 gates and a reproducible fresh-guest package/config replay.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -193,6 +194,7 @@ Evidence:
 - [docs/evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md](evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md)
 - [docs/architecture/NATIVE-GRAPHICS-AUDIO.md](architecture/NATIVE-GRAPHICS-AUDIO.md)
 - [docs/evidence/2026-10-20-ternuxx-proot-consolidation.md](evidence/2026-10-20-ternuxx-proot-consolidation.md)
+- [docs/evidence/2026-10-20-proot-full-gui.md](evidence/2026-10-20-proot-full-gui.md)
 
 ## P5 — Distro and display compatibility profiles
 
