@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-CLI/TUI/Web/GTK expose bounded Native desktop, Cron scheduler, and management audit log reads; GTK log controls are visually confirmed, with Web/TUI exercise pending. Boot helper identities match; listener attribution and Native cold-boot delivery remain open.
+CLI/TUI/Web/GTK expose bounded Native desktop, Cron scheduler, and management audit log reads; GTK controls are visually confirmed and TUI read the empty Cron log successfully. Web exercise, listener attribution, and Native cold-boot delivery remain open.
 
-**Next action:** Exercise the bounded log controls in Web and TUI, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
+**Next action:** Exercise the bounded-log viewer in the Native Web Console, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

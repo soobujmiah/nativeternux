@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Exercise the bounded log controls in Web and TUI, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
+**Next action:** Exercise the bounded-log viewer in the Native Web Console, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
