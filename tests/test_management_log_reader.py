@@ -13,8 +13,13 @@ class LogReaderTests(unittest.TestCase):
  def tearDown(self): self.tmp.cleanup()
  def test_inventory_does_not_create_missing_sources(self):
   got=reader.list_logs(str(self.state),home=str(self.home))
-  self.assertEqual([x["status"] for x in got["sources"]],["missing","missing"])
+  self.assertEqual([x["status"] for x in got["sources"]],["missing","missing","missing"])
   self.assertFalse((self.state/"cron").exists())
+ def test_reads_private_native_desktop_log(self):
+  path=self.state/"desktop.log"; path.write_text("session output\n"); os.chmod(path,0o600)
+  got=reader.read_log(str(self.state),home=str(self.home),source_id="native-desktop",limit=10)
+  self.assertEqual(got["lines"],["session output"])
+  self.assertEqual(got["label"],"Native desktop session (XFCE)")
  def test_reads_only_bounded_tail_and_scrubs_ansi(self):
   root=self.state/"cron"; root.mkdir(mode=0o700)
   path=root/"scheduler.log"; path.write_text("one\ntwo\nthree\x1b[31mred\x1b[0m\n"); os.chmod(path,0o600)

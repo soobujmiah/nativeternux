@@ -10,6 +10,7 @@ import stat
 MAX_TAIL_BYTES = 256 * 1024
 ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
 SOURCES = {
+    "native-desktop": ("Native desktop session (XFCE)", ("desktop.log",)),
     "cron-scheduler": ("Cron scheduler", ("cron", "scheduler.log")),
     "management-api": ("Management API audit", ("management-api", "audit.jsonl")),
 }

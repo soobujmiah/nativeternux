@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "CLI/TUI/Web/GTK now have bounded Ternuxx scheduler and management-audit log reads; GTK is installed, with visual acceptance pending. Boot helper identities match; listener-to-port attribution and Native cold-boot delivery remain unverified.",
+      "summary": "CLI/TUI/Web/GTK now have bounded reads for the Native desktop, Ternuxx scheduler, and management-audit logs; GTK is installed, with visual acceptance pending. Boot helper identities match; listener-to-port attribution and Native cold-boot delivery remain unverified.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",

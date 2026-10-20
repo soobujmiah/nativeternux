@@ -255,7 +255,7 @@ def main(argv: list[str]) -> int:
         return 0 if result.get("ok") else 1
     if action == "logs-read" and len(argv) == 2:
         source_id = argv[1]
-        if source_id not in {"cron-scheduler", "management-api"}:
+        if source_id not in {"native-desktop", "cron-scheduler", "management-api"}:
             print(json.dumps({"ok": False, "error": {"code": "invalid_log_source"}}))
             return 2
         result = call("management.logs.read", {"source_id": source_id, "limit": 100})
