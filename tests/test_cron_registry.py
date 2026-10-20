@@ -167,23 +167,103 @@ class CronRegistryTests(unittest.TestCase):
         with self.assertRaises(cron_registry.CronError):
             cron_registry.create_job(self.state, job)
 
+    def test_preview_confirm_apply_create_update_remove_uses_exact_saved_plan(self) -> None:
+        job = self.job()
+        preview = cron_registry.preview_job_mutation(
+            self.state, action="create", job=job, now=NOW)
+        plan = preview["plan"]
+        self.assertTrue(preview["confirmation_required"])
+        self.assertEqual(plan["action"], "create")
+        self.assertEqual(plan["after"], job)
+        self.assertEqual(cron_registry.list_jobs(self.state), [])
+        plan_path = self.state / "cron" / cron_registry.MUTATION_PLAN_STORE
+        self.assertEqual(plan_path.stat().st_mode & 0o777, 0o600)
+        created = cron_registry.apply_job_mutation(
+            self.state, plan_id=plan["plan_id"], confirmed=True, now=NOW + dt.timedelta(seconds=1))
+        self.assertEqual(created["job"], job)
+        self.assertEqual(cron_registry.list_jobs(self.state), [job])
+
+        update_preview = cron_registry.preview_job_mutation(
+            self.state, action="update", job_id=job["job_id"],
+            changes={"name": "renamed"}, now=NOW + dt.timedelta(seconds=2))
+        updated = cron_registry.apply_job_mutation(
+            self.state, plan_id=update_preview["plan"]["plan_id"], confirmed=True,
+            now=NOW + dt.timedelta(seconds=3))
+        self.assertEqual(updated["job"]["name"], "renamed")
+        self.assertEqual(cron_registry.list_jobs(self.state)[0]["name"], "renamed")
+
+        remove_preview = cron_registry.preview_job_mutation(
+            self.state, action="remove", job_id=job["job_id"], now=NOW + dt.timedelta(seconds=4))
+        removed = cron_registry.apply_job_mutation(
+            self.state, plan_id=remove_preview["plan"]["plan_id"], confirmed=True,
+            now=NOW + dt.timedelta(seconds=5))
+        self.assertTrue(removed["removed"])
+        self.assertEqual(cron_registry.list_jobs(self.state), [])
+
+    def test_stale_and_expired_cron_plans_fail_without_overwriting_registry(self) -> None:
+        first = self.job()
+        preview = cron_registry.preview_job_mutation(
+            self.state, action="create", job=first, now=NOW)
+        concurrent = self.job()
+        concurrent["name"] = "concurrent"
+        cron_registry.create_job(self.state, concurrent)
+        with self.assertRaisesRegex(cron_registry.CronError, "registry changed after preview"):
+            cron_registry.apply_job_mutation(
+                self.state, plan_id=preview["plan"]["plan_id"], confirmed=True,
+                now=NOW + dt.timedelta(seconds=1))
+        jobs = cron_registry.list_jobs(self.state)
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["name"], "concurrent")
+
+        expired = cron_registry.preview_job_mutation(
+            self.state, action="remove", job_id=jobs[0]["job_id"], now=NOW)
+        with self.assertRaisesRegex(cron_registry.CronError, "expired"):
+            cron_registry.apply_job_mutation(
+                self.state, plan_id=expired["plan"]["plan_id"], confirmed=True,
+                now=NOW + dt.timedelta(seconds=cron_registry.MUTATION_PLAN_TTL_SECONDS + 1))
+        self.assertEqual(cron_registry.list_jobs(self.state), jobs)
+
+    def test_confirmation_and_private_plan_store_integrity_fail_closed(self) -> None:
+        job = self.job()
+        preview = cron_registry.preview_job_mutation(self.state, action="create", job=job, now=NOW)
+        with self.assertRaisesRegex(cron_registry.CronError, "explicit confirmation"):
+            cron_registry.apply_job_mutation(
+                self.state, plan_id=preview["plan"]["plan_id"], confirmed=False, now=NOW)
+        path = self.state / "cron" / cron_registry.MUTATION_PLAN_STORE
+        path.unlink()
+        path.symlink_to(self.state / "missing-target")
+        with self.assertRaisesRegex(cron_registry.CronError, "identity or permissions are unsafe"):
+            cron_registry.preview_job_mutation(self.state, action="create", job=job, now=NOW)
+
     def test_api_crud_and_read_write_authority(self) -> None:
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
                "HOME": self.temp.name, "TERNUXX_STATE_DIR": str(self.state)}
         request = lambda operation, args={}: {"api_version": 1, "request_id": "cron-test-1234",
                                                "operation": operation, "args": args}
         self.assertEqual(management_authorization.required_capability("cron.jobs.list"), "diagnostics.read")
-        self.assertEqual(management_authorization.required_capability("cron.jobs.create"), "cron.manage")
+        self.assertEqual(management_authorization.required_capability("cron.jobs.mutation.preview"), "cron.manage")
+        self.assertEqual(management_authorization.required_capability("cron.jobs.mutation.apply"), "cron.manage")
         self.assertTrue(management_authorization.authorize("cron.jobs.list", ["diagnostics.read"]))
-        self.assertFalse(management_authorization.authorize("cron.jobs.create", ["diagnostics.read"]))
+        self.assertFalse(management_authorization.authorize("cron.jobs.mutation.apply", ["diagnostics.read"]))
         job = self.job()
-        created = management_service.dispatch(request("cron.jobs.create", {"job": job}), env=env)
+        preview = management_service.dispatch(request("cron.jobs.mutation.preview", {
+            "action": "create", "job": job}), env=env)
+        self.assertTrue(preview["ok"], preview)
+        self.assertEqual(cron_registry.list_jobs(self.state), [])
+        direct = management_service.dispatch(request("cron.jobs.create", {"job": job}), env=env)
+        self.assertFalse(direct["ok"])
+        created = management_service.dispatch(request("cron.jobs.mutation.apply", {
+            "plan_id": preview["data"]["plan"]["plan_id"], "confirmed": True}), env=env)
         self.assertTrue(created["ok"], created)
         shown = management_service.dispatch(request("cron.jobs.show", {"job_id": job["job_id"]}), env=env)
         self.assertEqual(shown["data"]["job"], job)
         preview = management_service.dispatch(request("cron.jobs.next_runs", {"job_id": job["job_id"], "count": 2}), env=env)
         self.assertEqual(len(preview["data"]["runs"]), 2)
-        removed = management_service.dispatch(request("cron.jobs.remove", {"job_id": job["job_id"]}), env=env)
+        remove_preview = management_service.dispatch(request("cron.jobs.mutation.preview", {
+            "action": "remove", "job_id": job["job_id"]}), env=env)
+        self.assertTrue(remove_preview["ok"], remove_preview)
+        removed = management_service.dispatch(request("cron.jobs.mutation.apply", {
+            "plan_id": remove_preview["data"]["plan"]["plan_id"], "confirmed": True}), env=env)
         self.assertTrue(removed["ok"], removed)
         self.assertFalse(management_service.dispatch(request("cron.jobs.show", {"job_id": job["job_id"]}), env=env)["ok"])
 
@@ -194,15 +274,24 @@ class CronRegistryTests(unittest.TestCase):
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
                "HOME": self.temp.name, "TERNUXX_STATE_DIR": str(self.state)}
         output = StringIO()
-        argv = ["--operation", "cron.jobs.create", "--job-name", "fixture",
-                "--job-action", "diagnostics.doctor", "--schedule-type", "cron",
-                "--cron-expression", "*/30 * * * *", "--timezone", "UTC", "--json"]
+        argv = ["--operation", "cron.jobs.mutation.preview", "--mutation-action", "create",
+                "--job-name", "fixture", "--job-action", "diagnostics.doctor",
+                "--schedule-type", "cron", "--cron-expression", "*/30 * * * *",
+                "--timezone", "UTC", "--json"]
         with patch.dict("os.environ", env, clear=True), redirect_stdout(output):
             self.assertEqual(management_service.main(argv), 0)
         response = json.loads(output.getvalue())
         self.assertTrue(response["ok"])
-        self.assertFalse(response["data"]["job"]["enabled"])
-        self.assertIsNone(response["data"]["job"]["last_execution"])
+        self.assertFalse(response["data"]["plan"]["after"]["enabled"])
+        self.assertIsNone(response["data"]["plan"]["after"]["last_execution"])
+        self.assertEqual(cron_registry.list_jobs(self.state), [])
+        apply_output = StringIO()
+        apply_argv = ["--operation", "cron.jobs.mutation.apply", "--yes", "--plan-id",
+                      response["data"]["plan"]["plan_id"], "--json"]
+        with patch.dict("os.environ", env, clear=True), redirect_stdout(apply_output):
+            self.assertEqual(management_service.main(apply_argv), 0)
+        applied = json.loads(apply_output.getvalue())
+        self.assertTrue(applied["ok"], applied)
         self.assertEqual(len(cron_registry.list_jobs(self.state)), 1)
 
 

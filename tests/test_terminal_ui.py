@@ -99,11 +99,12 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertIn("select Native backend", native_actions)
         self.assertNotIn("select Native backend", debian_actions)
 
-    def test_cron_resource_exposes_status_and_saved_job_listing_only(self) -> None:
+    def test_cron_resource_exposes_preview_apply_action_and_shared_reads(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES
                         if item["id"] == "automation.cron-registry")
         self.assertIn("check status", terminal_ui._available_action_labels(resource))
         self.assertIn("list persisted job definitions", terminal_ui._available_action_labels(resource))
+        self.assertIn("preview and apply Cron job changes", terminal_ui._available_action_labels(resource))
         self.assertIn("view Cron execution history", terminal_ui._available_action_labels(resource))
         result = {"ok": True, "data": {"jobs": []}}
         with mock.patch.object(terminal_ui, "_call", return_value=result) as dispatch:

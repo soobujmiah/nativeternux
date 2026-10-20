@@ -3,7 +3,7 @@
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search;
-                 GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *cron_button, *cron_history_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *monitor_box, *monitor_enabled,
+                 GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
@@ -13,6 +13,7 @@ static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const 
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact);
 static void choose_graphics_api(GtkButton *button, gpointer data);
 static void ask_shortcut_confirmation(Center *c, const gchar *action, const gchar *app_id, const gchar *plan_id, const gchar *target, const gchar *transition);
+static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *summary);
 
 static gchar *bridge_path(void) {
     const gchar *root = g_getenv("TERNUXX_CHECKOUT");
@@ -37,7 +38,16 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
         g_clear_error(&error);
     } else {
         gboolean success = g_subprocess_get_successful(G_SUBPROCESS(source));
-        if (g_strcmp0(request->action, "shortcut-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+        if (g_strcmp0(request->action, "cron-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+            gchar **f = g_strsplit(stdout_text, "\t", 3);
+            if (f[1] && f[2] && strlen(f[1]) == 32) {
+                g_strchomp(f[2]);
+                ask_cron_confirmation(c, f[1], f[2]);
+            } else {
+                gtk_label_set_text(GTK_LABEL(c->notice), "Cron preview response was invalid.");
+            }
+            g_strfreev(f);
+        } else if (g_strcmp0(request->action, "shortcut-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
             gchar **f = g_strsplit(stdout_text, "\t", 6);
             if (f[1] && f[2] && f[3] && f[4] && g_strcmp0(f[2], "true") == 0
                     && g_strcmp0(f[1], "-") != 0 && strlen(f[1]) == 24) {
@@ -82,6 +92,8 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
             run_bridge(c,"inspect","network.ssh.managed-8023",NULL,NULL,NULL,NULL);
         else if (success && g_strcmp0(request->action,"set-monitor")==0)
             run_bridge(c,"monitor",NULL,NULL,NULL,NULL,NULL);
+        else if (success && g_strcmp0(request->action,"cron-apply")==0)
+            run_bridge(c,"cron-jobs",NULL,NULL,NULL,NULL,NULL);
     }
     g_free(stdout_text); g_free(stderr_text); g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
 }
@@ -149,7 +161,7 @@ static void show_resource(Center *c, Resource *r) {
     else if (g_strcmp0(r->id, "recovery.native-state") == 0)
         gui_actions = "Inspect recorded operation history.";
     else if (g_strcmp0(r->id, "automation.cron-registry") == 0)
-        gui_actions = "Inspect scheduler status, list saved Cron jobs, and read bounded execution history.";
+        gui_actions = "Inspect scheduler status, list saved Cron jobs, preview and confirm typed job changes, and read bounded execution history.";
     else if (g_strcmp0(r->id, "native.timezone") == 0)
         gui_actions = "Inspect available timezone data and save the Ternuxx timezone preference.";
     else if (g_strcmp0(r->id, "proot.debian.workloads") == 0)
@@ -171,6 +183,7 @@ static void show_resource(Center *c, Resource *r) {
     gtk_widget_set_visible(c->history_button, history);
     gtk_widget_set_visible(c->cron_button, cron);
     gtk_widget_set_visible(c->cron_history_button, cron);
+    gtk_widget_set_visible(c->cron_manage_button, cron);
     gtk_widget_set_visible(c->timezone_set_button, timezone);
     gtk_widget_set_visible(c->proot_app_button, proot_apps);
     gtk_widget_set_visible(c->proot_shortcut_button, proot_apps);
@@ -256,6 +269,8 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
             run_bridge(request->center, request->action, "confirmed", request->resource_id, NULL, NULL, NULL);
         else if (g_strcmp0(request->action, "shortcut-apply") == 0)
             run_bridge(request->center, "shortcut-apply", request->resource_id, request->detail_id, request->plan_id, NULL, NULL);
+        else if (g_strcmp0(request->action, "cron-apply") == 0)
+            run_bridge(request->center, "cron-apply", request->plan_id, NULL, NULL, NULL, NULL);
         else
             run_bridge(request->center, request->action, "confirmed", NULL, NULL, NULL, NULL);
     }
@@ -343,6 +358,99 @@ static void choose_graphics_api(GtkButton *button, gpointer data) {
 }
 static void show_history(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "history", NULL, NULL, NULL, NULL, NULL);
+}
+static void cron_form_submit(GtkButton *button, gpointer data) {
+    (void)data;
+    Center *c = g_object_get_data(G_OBJECT(button), "cron-center");
+    GtkWidget *mode = g_object_get_data(G_OBJECT(button), "cron-mode");
+    GtkWidget *id = g_object_get_data(G_OBJECT(button), "cron-id");
+    GtkWidget *name = g_object_get_data(G_OBJECT(button), "cron-name");
+    GtkWidget *action = g_object_get_data(G_OBJECT(button), "cron-action");
+    GtkWidget *expr = g_object_get_data(G_OBJECT(button), "cron-expr");
+    const gchar *kind = gtk_editable_get_text(GTK_EDITABLE(mode));
+    const gchar *job_id = gtk_editable_get_text(GTK_EDITABLE(id));
+    const gchar *name_value = gtk_editable_get_text(GTK_EDITABLE(name));
+    const gchar *action_id = gtk_editable_get_text(GTK_EDITABLE(action));
+    const gchar *cron_expr = gtk_editable_get_text(GTK_EDITABLE(expr));
+    if (g_strcmp0(kind, "create") == 0) {
+        if (!*name_value || !*action_id || !*cron_expr) {
+            gtk_label_set_text(GTK_LABEL(c->notice), "Create needs a name, safe action ID and five-field cron expression.");
+            return;
+        }
+        run_bridge(c, "cron-preview", "create", name_value, action_id, cron_expr, NULL);
+    } else if (g_strcmp0(kind, "update") == 0) {
+        if (!*job_id || !*name_value) {
+            gtk_label_set_text(GTK_LABEL(c->notice), "Update needs a saved job ID and new name.");
+            return;
+        }
+        run_bridge(c, "cron-preview", "update", job_id, "name", name_value, NULL);
+    } else if (g_strcmp0(kind, "remove") == 0) {
+        if (!*job_id) {
+            gtk_label_set_text(GTK_LABEL(c->notice), "Remove needs a saved job ID.");
+            return;
+        }
+        run_bridge(c, "cron-preview", "remove", job_id, NULL, NULL, NULL);
+    } else {
+        gtk_label_set_text(GTK_LABEL(c->notice), "Choose create, update, or remove.");
+    }
+}
+
+static void show_cron_form(GtkButton *button, gpointer data) {
+    (void)button;
+    Center *c = data;
+    GtkWidget *win = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(win), "Manage Cron job");
+    gtk_window_set_transient_for(GTK_WINDOW(win), GTK_WINDOW(c->window));
+    gtk_window_set_modal(GTK_WINDOW(win), TRUE);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    gtk_widget_set_margin_top(box, 14);
+    gtk_widget_set_margin_bottom(box, 14);
+    gtk_widget_set_margin_start(box, 14);
+    gtk_widget_set_margin_end(box, 14);
+    gtk_window_set_child(GTK_WINDOW(win), box);
+    gtk_box_append(GTK_BOX(box), gtk_label_new("Preview is saved first; a separate confirmation applies that exact plan."));
+    GtkWidget *mode = gtk_entry_new();
+    gtk_editable_set_text(GTK_EDITABLE(mode), "create");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(mode), "create, update, or remove");
+    gtk_box_append(GTK_BOX(box), mode);
+    GtkWidget *id = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(id), "Saved job ID (update/remove)");
+    gtk_box_append(GTK_BOX(box), id);
+    GtkWidget *name = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(name), "Job name (create/update)");
+    gtk_box_append(GTK_BOX(box), name);
+    GtkWidget *action = gtk_entry_new();
+    gtk_editable_set_text(GTK_EDITABLE(action), "diagnostics.doctor");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(action), "Registered safe action ID");
+    gtk_box_append(GTK_BOX(box), action);
+    GtkWidget *expr = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(expr), "Five-field cron expression");
+    gtk_box_append(GTK_BOX(box), expr);
+    GtkWidget *submit = gtk_button_new_with_label("Preview Cron change");
+    g_object_set_data(G_OBJECT(submit), "cron-center", c);
+    g_object_set_data(G_OBJECT(submit), "cron-mode", mode);
+    g_object_set_data(G_OBJECT(submit), "cron-id", id);
+    g_object_set_data(G_OBJECT(submit), "cron-name", name);
+    g_object_set_data(G_OBJECT(submit), "cron-action", action);
+    g_object_set_data(G_OBJECT(submit), "cron-expr", expr);
+    g_signal_connect(submit, "clicked", G_CALLBACK(cron_form_submit), NULL);
+    gtk_box_append(GTK_BOX(box), submit);
+    gtk_window_present(GTK_WINDOW(win));
+}
+
+static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *summary) {
+    gchar *message = g_strdup_printf("Review this saved Cron change and confirm only if it matches your request:\n\n%s", summary);
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
+    const char *choices[] = {"Cancel", "Apply exact plan", NULL};
+    gtk_alert_dialog_set_buttons(dialog, choices);
+    gtk_alert_dialog_set_default_button(dialog, 0);
+    Request *request = g_new0(Request, 1);
+    request->center = c;
+    request->action = g_strdup("cron-apply");
+    request->plan_id = g_strdup(plan_id);
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
+    g_object_unref(dialog);
+    g_free(message);
 }
 static void show_cron_jobs(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "cron-jobs", NULL, NULL, NULL, NULL, NULL);
@@ -493,7 +601,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->category_list=gtk_list_box_new(); gtk_widget_set_size_request(c->category_list,210,-1); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->category_list),GTK_SELECTION_SINGLE); gtk_paned_set_start_child(GTK_PANED(paned),c->category_list);
     GtkWidget *middle=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL); GtkWidget *center=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_size_request(center,260,-1); c->search=gtk_search_entry_new(); gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(c->search),"Search resources"); gtk_box_append(GTK_BOX(center),c->search); c->resource_list=gtk_list_box_new(); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->resource_list),GTK_SELECTION_SINGLE); GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),c->resource_list); gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(center),scroll); gtk_paned_set_start_child(GTK_PANED(middle),center);
     GtkWidget *right=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); c->details=gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(c->details),FALSE); gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->details),GTK_WRAP_WORD_CHAR); GtkWidget *detail_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(detail_scroll),c->details); gtk_widget_set_vexpand(detail_scroll,TRUE); gtk_box_append(GTK_BOX(right),detail_scroll);
-    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); c->proot_list_button=gtk_button_new_with_label("List PRoot app shortcuts"); gtk_widget_set_visible(c->proot_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_list_button); gtk_box_append(GTK_BOX(right),actions);
+    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); c->proot_list_button=gtk_button_new_with_label("List PRoot app shortcuts"); gtk_widget_set_visible(c->proot_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_list_button); gtk_box_append(GTK_BOX(right),actions);
     c->monitor_box=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->monitor_enabled=gtk_check_button_new_with_label("Enable Activity/focus monitoring"); c->monitor_interval=gtk_spin_button_new_with_range(1,86400,1); const gchar *units[]={"seconds","minutes","hours",NULL}; c->monitor_unit=gtk_drop_down_new_from_strings(units); c->monitor_focus=gtk_check_button_new_with_label("Check Android Activity focus"); c->monitor_launch=gtk_check_button_new_with_label("Request Activity when background"); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_enabled); gtk_box_append(GTK_BOX(c->monitor_box),gtk_label_new("Polling interval")); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_interval); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_unit); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_focus); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_launch); GtkWidget *save=gtk_button_new_with_label("Save monitoring policy"); gtk_box_append(GTK_BOX(c->monitor_box),save); gtk_widget_set_visible(c->monitor_box,FALSE); gtk_box_append(GTK_BOX(right),c->monitor_box);
     gtk_paned_set_end_child(GTK_PANED(middle),right); gtk_paned_set_end_child(GTK_PANED(paned),middle);
     c->notice=gtk_label_new("Loading resource catalog…"); gtk_widget_set_halign(c->notice,GTK_ALIGN_START); gtk_box_append(GTK_BOX(root),c->notice);
@@ -501,7 +609,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_halign(tagline,GTK_ALIGN_START); gtk_widget_add_css_class(tagline,"dim-label");
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window)); return TRUE;
 }
 int main(int argc, char **argv) {

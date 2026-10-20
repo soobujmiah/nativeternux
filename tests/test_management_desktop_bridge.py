@@ -110,6 +110,25 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("cron.jobs.list")
         self.assertIn('"jobs": []', output.getvalue())
 
+    def test_cron_preview_and_apply_bridge_use_shared_saved_plan(self) -> None:
+        preview_result = {"ok": True, "data": {"plan": {
+            "plan_id": "a" * 32, "action": "create", "before": None, "after": {"name": "daily"},
+        }}}
+        with mock.patch.object(bridge, "call", return_value=preview_result) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["cron-preview", "create", "daily", "diagnostics.doctor", "0 8 * * *"]), 0)
+        request = dispatch.call_args.args[0]
+        self.assertEqual(request, "cron.jobs.mutation.preview")
+        self.assertEqual(dispatch.call_args.args[1]["action"], "create")
+        self.assertEqual(dispatch.call_args.args[1]["job"]["action_id"], "diagnostics.doctor")
+        self.assertIn("P" + chr(9) + "a" * 32, output.getvalue())
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"applied": True}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["cron-apply", "a" * 32]), 0)
+        dispatch.assert_called_once_with("cron.jobs.mutation.apply", {"plan_id": "a" * 32, "confirmed": True})
+
     def test_proot_shortcut_list_bridge_uses_shared_service(self) -> None:
         payload = {"ok": True, "data": {"items": [
             {"id": "files", "name": "Files", "shortcut_state": "installed"}]}}

@@ -755,3 +755,21 @@ After the owner reported PRoot entries still visible in generic Accessibility/Ac
 ## 2026-10-20 management client parity audit
 
 Audited CLI, TUI, Web, and GTK against the shared operation catalog from Native Termux over SSH 8022. The service currently registers 84 typed API-v1 operations; client coverage remains intentionally uneven and catalog support is not the same as an available client action. Root CLI help now groups command families and documents aliases; TUI help/key hints and graphics actions match its actual controls. GTK now displays shared supported operations separately from its own actions and has an OpenGL/GLES/Vulkan verification picker. Web scopes remain narrow and its non-exposed mutations are documented. Native GTK source and bridge were installed with hashes recorded; full Native suite passed 582/582, TUI 19/19, bridge 12/12, CLI help and GTK syntax checks passed. No desktop/window was restarted or visually inspected. P3 remains active; P4 remains planned. Details and exact limits: [management client parity audit](docs/evidence/2026-10-20-management-client-parity-audit.md).
+
+
+## Current continuation — shared Cron mutation parity (2026-10-21)
+
+Base checkout was Native Termux `$HOME/ternuxx`, branch `main`, HEAD `3ff0cb9`, matching `origin/main` before edits. Implemented private preview and explicit exact-plan apply for Cron create/update/remove in the shared service; removed the old direct CRUD API operations; mapped both new operations to `cron.manage`; and exposed the contract in CLI, TUI, Web, and GTK. The Web path uses CSRF and idempotency, while all clients reuse the saved plan and explicit confirmation.
+
+Focused suite passed 88/88; full Native Termux suite passed 627/627 in 134.775 seconds. GTK C syntax check passed and the installed GTK client self-check/version passed after rebuilding from this checkout; installed C and bridge source hashes match repository files. Prior GTK artifact remains in the private rollback directory `$HOME/.local/share/ternuxx/rollback/management-center/2026-10-21`. The GTK window was not opened or restarted for visual acceptance.
+
+No Cron job or scheduler state was changed. Native XFCE `:1`, the current Termux/Codex session, and Debian PRoot remained untouched. Next P3 action: implement exact-target preview/apply/rollback for repository-owned boot helpers `00-ternuxx-services` and `ternuxx-recovery`, then review remaining recovery/concurrency and cold-boot gates. Cold-boot delivery remains unqualified; do not reboot or close Termux as part of this continuation.
+
+
+## Current continuation - Termux:Boot helper reconciliation (2026-10-21)
+
+Implemented preview/apply/rollback for the two fixed Ternuxx-owned Termux:Boot helpers through the shared service and CLI. Each preview binds exact before/after hashes and expires after 15 minutes. Deploy accepts only known legacy, current source, or recorded managed identity; it saves exact private rollback snapshots before atomic replacement and refuses stale/custom/symlink targets.
+
+On Native Termux, both installed helpers were exact known legacy versions. Reviewed and applied source-aligned plans; fresh read-only status reports both installed hashes match repository source, with mode 0700. Rollback snapshot IDs are recorded in docs/evidence/2026-10-21-boot-helper-reconciliation.md. Fixture and service/auth/catalog focused tests passed 60/60. The final full Native Termux suite passed 634/634 in 98.171 seconds. bash -n passed for both source scripts.
+
+No boot script was executed, no scheduler/service or SSH/GUI/PRoot process was restarted, and no reboot occurred. Cold-boot delivery remains unqualified. Continue P3 recovery/concurrency acceptance without closing the current Termux/Codex session.

@@ -93,6 +93,53 @@ def main(argv: list[str]) -> int:
         result = call(operation, operation_args) if operation_args else call(operation)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "cron-preview" and len(argv) in {3, 5}:
+        import cron_registry
+        import timezone_support
+        kind = argv[1]
+        if kind == "create" and len(argv) == 5:
+            name, action_id, expression = argv[2:]
+            if action_id not in cron_registry._ALLOWED_ACTIONS:
+                print(json.dumps({"ok": False, "error": {"code": "invalid_action"}}))
+                return 2
+            state = os.environ.get("TERNUXX_STATE_DIR") or str(Path.home() / ".local/share/ternuxx")
+            zone = timezone_support.current_timezone(state, installation_timezone=os.environ.get("TERNUXX_INSTALL_TIMEZONE"))
+            job = cron_registry.new_job(name=name, description="Scheduled Ternuxx action",
+                action_id=action_id, schedule_type="cron", schedule={"expression": expression, "timezone": zone})
+            args = {"action": "create", "job": job}
+        elif kind == "update" and len(argv) == 5:
+            job_id, field, value = argv[2:]
+            if field not in {"name", "enabled"}:
+                print(json.dumps({"ok": False, "error": {"code": "invalid_update_field"}}))
+                return 2
+            change = {"name": value} if field == "name" else {"enabled": value.lower() == "true"}
+            if field == "enabled" and value.lower() not in {"true", "false"}:
+                print(json.dumps({"ok": False, "error": {"code": "invalid_enabled_value"}}))
+                return 2
+            args = {"action": "update", "job_id": job_id, "changes": change}
+        elif kind == "remove" and len(argv) == 3:
+            args = {"action": "remove", "job_id": argv[2]}
+        else:
+            print(json.dumps({"ok": False, "error": {"code": "invalid_arguments"}}))
+            return 2
+        preview = call("cron.jobs.mutation.preview", args)
+        if not preview.get("ok"):
+            print(json.dumps(preview, ensure_ascii=False))
+            return 1
+        plan = preview.get("data", {}).get("plan", {})
+        if not isinstance(plan.get("plan_id"), str):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_preview"}}))
+            return 1
+        print("P\t" + plan["plan_id"] + "\t" + clean(json.dumps(plan, ensure_ascii=False, sort_keys=True)))
+        return 0
+    if action == "cron-apply" and len(argv) == 2:
+        plan_id = argv[1]
+        if not re.fullmatch(r"[0-9a-f]{32}", plan_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_plan_id"}}))
+            return 2
+        result = call("cron.jobs.mutation.apply", {"plan_id": plan_id, "confirmed": True})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "cron-jobs" and len(argv) == 1:
         result = call("cron.jobs.list")
         print(json.dumps(result, ensure_ascii=False, indent=2))

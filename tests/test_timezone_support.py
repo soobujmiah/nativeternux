@@ -129,7 +129,8 @@ class TimezoneSupportTests(unittest.TestCase):
         from unittest.mock import patch
         tz.set_timezone(self.state, "UTC")
         args = management_service._parser().parse_args([
-            "--operation", "cron.jobs.create", "--job-name", "daily", "--job-action",
+            "--operation", "cron.jobs.mutation.preview", "--mutation-action", "create",
+            "--job-name", "daily", "--job-action",
             "diagnostics.doctor", "--schedule-type", "calendar", "--calendar-mode",
             "daily", "--calendar-time", "07:30"])
         with patch.dict("os.environ", {"TERNUXX_STATE_DIR": str(self.state)}):

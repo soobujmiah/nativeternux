@@ -196,6 +196,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     elif resource_id == "automation.cron-registry":
         if "cron.jobs.list" in operations:
             labels.append("list persisted job definitions")
+        if {"cron.jobs.mutation.preview", "cron.jobs.mutation.apply"} <= operations:
+            labels.append("preview and apply Cron job changes")
         if "cron.executions.list" in operations:
             labels.append("view Cron execution history")
     return labels
@@ -428,6 +430,66 @@ def _timezone_action(screen: "curses._CursesWindow") -> dict[str, object]:
     return _call("timezone.set", {"timezone": selected})
 
 
+def _cron_mutation(screen: "curses._CursesWindow") -> dict[str, object]:
+    """Preview one typed Cron definition change, then apply that saved plan."""
+    action = _prompt(screen, "Cron change: create, update, remove (blank cancels)").lower()
+    if action not in {"create", "update", "remove"}:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    if action == "create":
+        name = _prompt(screen, "Job name")
+        action_id = _prompt(screen, "Safe action ID: diagnostics.doctor, management.catalog.refresh, hermes.status, scheduler.self_test")
+        expression = _prompt(screen, "Five-field cron expression (minute hour day month weekday)")
+        if not name or action_id not in management_service.cron_registry._ALLOWED_ACTIONS or not expression:
+            return {"ok": False, "error": {"code": "invalid_cron_input"}}
+        timezone_name = management_service.timezone_support.current_timezone(
+            os.environ.get("TERNUXX_STATE_DIR") or os.path.join(os.environ.get("HOME", ""), ".local/share/ternuxx"),
+            installation_timezone=os.environ.get("TERNUXX_INSTALL_TIMEZONE"))
+        try:
+            job = management_service.cron_registry.new_job(
+                name=name, description="Scheduled Ternuxx action", action_id=action_id,
+                schedule_type="cron", schedule={"expression": expression, "timezone": timezone_name})
+        except ValueError:
+            return {"ok": False, "error": {"code": "invalid_cron_input"}}
+        args = {"action": "create", "job": job}
+    else:
+        listing = _cron_jobs()
+        if not listing.get("ok"):
+            return listing
+        jobs = listing.get("data", {}).get("jobs", [])
+        if not jobs:
+            return {"ok": False, "error": {"code": "no_cron_jobs"}}
+        choices = ", ".join(f"{j.get('job_id')} ({j.get('name')})" for j in jobs if isinstance(j, dict))
+        job_id = _prompt(screen, "Job ID from saved jobs: " + choices)
+        if not any(isinstance(j, dict) and j.get("job_id") == job_id for j in jobs):
+            return {"ok": False, "error": {"code": "unknown_job_id"}}
+        if action == "remove":
+            args = {"action": action, "job_id": job_id}
+        else:
+            field = _prompt(screen, "Update field: name or enabled").lower()
+            if field == "name":
+                value = _prompt(screen, "New job name")
+                changes: dict[str, object] = {"name": value}
+            elif field == "enabled":
+                value = _prompt(screen, "Set enabled? yes or no").lower()
+                if value not in {"yes", "no"}:
+                    return {"ok": False, "error": {"code": "invalid_enabled_value"}}
+                changes = {"enabled": value == "yes"}
+            else:
+                return {"ok": False, "error": {"code": "invalid_update_field"}}
+            args = {"action": action, "job_id": job_id, "changes": changes}
+    preview = _call("cron.jobs.mutation.preview", args)
+    if not preview.get("ok"):
+        return preview
+    plan = preview.get("data", {}).get("plan", {})
+    plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
+    if not isinstance(plan_id, str):
+        return {"ok": False, "error": {"code": "invalid_cron_preview"}}
+    _show_details(screen, preview)
+    if _prompt(screen, f"Apply this exact saved Cron plan {plan_id}? type yes").lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("cron.jobs.mutation.apply", {"plan_id": plan_id, "confirmed": True})
+
+
 def _cron_executions() -> dict[str, object]:
     """Read bounded Cron execution history via the shared management service."""
     return _call("cron.executions.list", {"limit": 20})
@@ -568,8 +630,8 @@ def _run(screen: "curses._CursesWindow") -> int:
             elif resource["id"] == "native.timezone":
                 report = _timezone_action(screen)
             elif resource["id"] == "automation.cron-registry":
-                choice = _prompt(screen, "Cron action: jobs or history (blank cancels)").lower()
-                report = _cron_jobs() if choice == "jobs" else (_cron_executions() if choice == "history" else {"ok": False, "error": {"code": "cancelled"}})
+                choice = _prompt(screen, "Cron action: jobs, change, or history (blank cancels)").lower()
+                report = _cron_jobs() if choice == "jobs" else (_cron_mutation(screen) if choice == "change" else (_cron_executions() if choice == "history" else {"ok": False, "error": {"code": "cancelled"}}))
             else:
                 report = {"ok": False, "error": {"code": "guided_action_unavailable"}}
 

@@ -10,12 +10,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
 import uuid
 
 import boot_profiles
+import boot_helpers
 import termux_boot_cron
 import continuity
 import config_recovery
@@ -58,9 +60,8 @@ OPERATIONS = {
     "cron.jobs.show": {"args": {"job_id"}},
     "cron.jobs.validate": {"args": {"job", "job_id"}},
     "cron.jobs.next_runs": {"args": {"job_id", "count"}},
-    "cron.jobs.create": {"args": {"job"}},
-    "cron.jobs.update": {"args": {"job_id", "changes"}},
-    "cron.jobs.remove": {"args": {"job_id"}},
+    "cron.jobs.mutation.preview": {"args": {"action", "job", "job_id", "changes"}},
+    "cron.jobs.mutation.apply": {"args": {"plan_id", "confirmed"}},
     "cron.executions.list": {"args": {"job_id", "limit"}},
     "cron.executions.show": {"args": {"execution_id"}},
     "timezone.status": {"args": set()},
@@ -103,6 +104,9 @@ OPERATIONS = {
     "boot.status": {"args": set()},
     "boot.profile.status": {"args": set()},
     "boot.profile.preview": {"args": {"profile"}},
+    "boot.helpers.status": {"args": set()},
+    "boot.helpers.preview": {"args": {"helper_id", "action", "snapshot_id"}},
+    "boot.helpers.apply": {"args": {"helper_id", "action", "snapshot_id", "confirmed", "plan_id"}},
     "boot.enable": {"args": {"profile", "confirmed"}},
     "boot.disable": {"args": {"confirmed"}},
     "boot.cron.status": {"args": set()},
@@ -196,21 +200,31 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 or ("job" in args and not isinstance(args["job"], dict))
                 or ("job_id" in args and not isinstance(args["job_id"], str))):
             return _error(request_id, "invalid_arguments", "validation requires one typed job or job ID")
-    if operation in {"cron.jobs.show", "cron.jobs.remove"} and (set(args) != {"job_id"} or not isinstance(args.get("job_id"), str)):
+    if operation == "cron.jobs.show" and (set(args) != {"job_id"} or not isinstance(args.get("job_id"), str)):
         return _error(request_id, "invalid_arguments", "a job ID is required")
     if operation == "cron.jobs.next_runs" and (set(args) - {"job_id", "count"} or not isinstance(args.get("job_id"), str) or type(args.get("count", 5)) is not int):
         return _error(request_id, "invalid_arguments", "job ID and bounded run count are required")
-    if operation in {"cron.jobs.create"} and (set(args) != {"job"} or not isinstance(args.get("job"), dict)):
-        return _error(request_id, "invalid_arguments", "a typed job object is required")
-    if operation == "cron.jobs.update" and (set(args) != {"job_id", "changes"} or not isinstance(args.get("job_id"), str) or not isinstance(args.get("changes"), dict)):
-        return _error(request_id, "invalid_arguments", "job ID and typed changes are required")
-
+    if operation == "cron.jobs.mutation.preview":
+        action = args.get("action")
+        valid = (
+            (action == "create" and set(args) == {"action", "job"} and isinstance(args.get("job"), dict))
+            or (action == "update" and set(args) == {"action", "job_id", "changes"}
+                and isinstance(args.get("job_id"), str) and isinstance(args.get("changes"), dict))
+            or (action == "remove" and set(args) == {"action", "job_id"}
+                and isinstance(args.get("job_id"), str))
+        )
+        if not valid:
+            return _error(request_id, "invalid_arguments", "Cron preview requires a typed create, update, or remove request")
+    if operation == "cron.jobs.mutation.apply" and (
+            set(args) != {"plan_id", "confirmed"} or not isinstance(args.get("plan_id"), str)
+            or args.get("confirmed") is not True):
+        return _error(request_id, "confirmation_required", "Cron apply requires an exact plan ID and explicit confirmation")
     process_env = os.environ if env is None else env
     if process_env.get("TERMUX_VERSION") is None or process_env.get("PREFIX") != "/data/data/com.termux/files/usr":
         return _error(request_id, "native_termux_required", "operation requires the native Termux shell")
     home = process_env.get("HOME", "")
     state_dir = process_env.get("TERNUXX_STATE_DIR", "")
-    if not home or ((operation.startswith(("continuity.", "wakelock.", "boot.profile.", "backup.", "restore.", "recovery.rollback.", "recovery.service.", "recovery.resolve", "ssh.service.")) or operation == "desktop.monitor.configure") and not state_dir):
+    if not home or ((operation.startswith(("continuity.", "wakelock.", "boot.profile.", "boot.helpers.", "backup.", "restore.", "recovery.rollback.", "recovery.service.", "recovery.resolve", "ssh.service.")) or operation == "desktop.monitor.configure") and not state_dir):
         return _error(request_id, "configuration_missing", "HOME and the native state directory must be configured")
 
     try:
@@ -268,12 +282,15 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             count = args.get("count", 5)
             job = cron_registry.show_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])
             data = {"job_id": args["job_id"], "runs": cron_registry.next_runs(job, count=count)}
-        elif operation == "cron.jobs.create":
-            data = {"job": cron_registry.create_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job"])}
-        elif operation == "cron.jobs.update":
-            data = {"job": cron_registry.update_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"], args["changes"])}
-        elif operation == "cron.jobs.remove":
-            data = cron_registry.remove_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])
+        elif operation == "cron.jobs.mutation.preview":
+            plan_args = {key: args[key] for key in ("job_id", "job", "changes") if key in args}
+            data = cron_registry.preview_job_mutation(
+                state_dir or os.path.join(home, ".local/share/ternuxx"),
+                action=args["action"], **plan_args)
+        elif operation == "cron.jobs.mutation.apply":
+            data = cron_registry.apply_job_mutation(
+                state_dir or os.path.join(home, ".local/share/ternuxx"),
+                plan_id=args["plan_id"], confirmed=args["confirmed"])
         elif operation == "graphics.provider.status":
             provider = args.get("provider")
             if provider not in {"native", "debian"}:
@@ -503,6 +520,31 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         elif operation == "boot.profile.status":
             data = boot_profiles.status(home=home, state_dir=state_dir,
                                         prefix=process_env["PREFIX"])
+        elif operation == "boot.helpers.status":
+            data = boot_helpers.status(home=home, state_dir=state_dir,
+                source_root=Path(__file__).resolve().parents[1])
+        elif operation == "boot.helpers.preview":
+            helper_id, action, snapshot_id = args.get("helper_id"), args.get("action"), args.get("snapshot_id")
+            if (helper_id not in boot_helpers.HELPERS or action not in {"deploy", "rollback"}
+                    or (snapshot_id is not None and not isinstance(snapshot_id, str))
+                    or (action == "rollback" and not snapshot_id)
+                    or (action == "deploy" and snapshot_id is not None)):
+                return _error(request_id, "invalid_arguments", "preview requires one managed helper and a valid deploy/rollback request")
+            data = boot_helpers.preview(helper_id=helper_id, action=action,
+                home=home, state_dir=state_dir, source_root=Path(__file__).resolve().parents[1],
+                snapshot_id=snapshot_id)
+        elif operation == "boot.helpers.apply":
+            helper_id, action = args.get("helper_id"), args.get("action")
+            snapshot_id, confirmed, plan_id = args.get("snapshot_id"), args.get("confirmed"), args.get("plan_id")
+            if (helper_id not in boot_helpers.HELPERS or action not in {"deploy", "rollback"}
+                    or type(confirmed) is not bool or not isinstance(plan_id, str)
+                    or (snapshot_id is not None and not isinstance(snapshot_id, str))
+                    or (action == "rollback" and not snapshot_id)
+                    or (action == "deploy" and snapshot_id is not None)):
+                return _error(request_id, "invalid_arguments", "apply requires a managed helper, exact action, plan ID, and confirmation")
+            data = boot_helpers.apply(helper_id=helper_id, action=action,
+                home=home, state_dir=state_dir, source_root=Path(__file__).resolve().parents[1],
+                confirmed=confirmed, plan_id=plan_id, snapshot_id=snapshot_id)
         elif operation == "boot.profile.preview":
             profile = args.get("profile")
             if not isinstance(profile, str):
@@ -646,6 +688,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                                                   current_boot_id=args.get("current_boot_id"))
         else:
             data = reboot_recovery.resume_info(home=home, state_dir=state_dir, test_id=args["test_id"])
+    except boot_helpers.BootHelperError as exc:
+        return _error(request_id, "boot_helper_operation_failed", str(exc))
     except timezone_support.TimezoneError as exc:
         return _error(request_id, "timezone_configuration_error", str(exc))
     except cron_execution.ExecutionError as exc:
@@ -707,10 +751,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--owner")
     parser.add_argument("--profile", choices=tuple(sorted(set(boot_profiles.PROFILES) | set(proot_sessions.PROFILES))))
     parser.add_argument("--boot-action", choices=("enable", "disable"))
+    parser.add_argument("--helper-id", choices=tuple(boot_helpers.HELPERS))
+    parser.add_argument("--helper-action", choices=("deploy", "rollback"))
+    parser.add_argument("--snapshot-id")
     parser.add_argument("--name")
     parser.add_argument("--backup-id")
     parser.add_argument("--operation-id")
     parser.add_argument("--job-id")
+    parser.add_argument("--mutation-action", choices=("create", "update", "remove"))
     parser.add_argument("--execution-id")
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--poll-seconds", type=int, default=5)
@@ -961,17 +1009,17 @@ def main(argv: list[str] | None = None) -> int:
         payload = {"execution_id": args.execution_id}
     elif args.operation.startswith("cron."):
         payload = {}
-        if args.operation in {"cron.jobs.show", "cron.jobs.update", "cron.jobs.remove", "cron.jobs.validate", "cron.jobs.next_runs"}:
+        if args.operation in {"cron.jobs.show", "cron.jobs.validate", "cron.jobs.next_runs"}:
             if args.job_id:
                 payload["job_id"] = args.job_id
-            elif args.operation not in {"cron.jobs.validate"}:
+            elif args.operation != "cron.jobs.validate":
                 response = _error(request_id, "invalid_arguments", "--job-id is required")
                 if args.json: print(json.dumps(response, sort_keys=True))
                 else: print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
                 return 1
         if args.operation == "cron.jobs.next_runs":
             payload["count"] = args.count
-        if args.operation == "cron.jobs.create" or (args.operation == "cron.jobs.validate" and not args.job_id):
+        if args.operation == "cron.jobs.validate" and not args.job_id:
             job = _cli_job(args)
             if job is None:
                 response = _error(request_id, "invalid_arguments", "typed job fields are incomplete or invalid")
@@ -979,15 +1027,49 @@ def main(argv: list[str] | None = None) -> int:
                 else: print("Provide the documented typed job fields and schedule options.", file=sys.stderr)
                 return 1
             payload["job"] = job
-        if args.operation == "cron.jobs.update":
-            changes = _cli_job_changes(args)
-            if not changes:
-                response = _error(request_id, "invalid_arguments", "at least one typed update option is required")
+        if args.operation == "cron.jobs.mutation.preview":
+            action = args.mutation_action
+            if action == "create":
+                job = _cli_job(args)
+                if job is None:
+                    response = _error(request_id, "invalid_arguments", "typed job fields are incomplete or invalid")
+                    if args.json: print(json.dumps(response, sort_keys=True))
+                    else: print("Provide the documented typed job fields and schedule options.", file=sys.stderr)
+                    return 1
+                payload = {"action": action, "job": job}
+            elif action == "update":
+                changes = _cli_job_changes(args)
+                if not args.job_id or not changes:
+                    response = _error(request_id, "invalid_arguments", "update preview requires --job-id and at least one typed change")
+                    if args.json: print(json.dumps(response, sort_keys=True))
+                    else: print("Provide a job ID and a new name, enabled state, or supported change.", file=sys.stderr)
+                    return 1
+                payload = {"action": action, "job_id": args.job_id, "changes": changes}
+            elif action == "remove":
+                if not args.job_id:
+                    response = _error(request_id, "invalid_arguments", "remove preview requires --job-id")
+                    if args.json: print(json.dumps(response, sort_keys=True))
+                    else: print("Provide --job-id.", file=sys.stderr)
+                    return 1
+                payload = {"action": action, "job_id": args.job_id}
+            else:
+                response = _error(request_id, "invalid_arguments", "--mutation-action is required")
                 if args.json: print(json.dumps(response, sort_keys=True))
-                else: print("Choose a new name, enabled state, or a startup trigger option.", file=sys.stderr)
+                else: print("Provide --mutation-action create|update|remove.", file=sys.stderr)
                 return 1
-            payload["changes"] = changes
-    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "native.ssh.status", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
+            if args.yes or args.plan_id:
+                response = _error(request_id, "invalid_arguments", "Cron preview does not accept --yes or --plan-id")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print("Preview does not accept apply flags.", file=sys.stderr)
+                return 1
+        if args.operation == "cron.jobs.mutation.apply":
+            if not args.yes or not args.plan_id:
+                response = _error(request_id, "confirmation_required", "Cron apply requires --yes and the exact --plan-id from preview")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print("Preview first, then apply with --yes --plan-id PLAN_ID.", file=sys.stderr)
+                return 1
+            payload = {"plan_id": args.plan_id, "confirmed": True}
+    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "native.ssh.status", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
         payload = {}
         if args.operation == "continuity.status" and args.test_id:
             payload["test_id"] = args.test_id
@@ -1047,6 +1129,21 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
             return 1
         payload = {"confirmed": args.yes, "plan_id": args.plan_id}
+    elif args.operation == "boot.helpers.preview":
+        if not args.helper_id or not args.helper_action or (args.helper_action == "rollback" and not args.snapshot_id):
+            response = _error(request_id, "invalid_arguments", "helper ID, action, and rollback snapshot are required")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide --helper-id, --helper-action, and --snapshot-id for rollback.", file=sys.stderr)
+            return 1
+        payload = {"helper_id": args.helper_id, "action": args.helper_action, "snapshot_id": args.snapshot_id}
+    elif args.operation == "boot.helpers.apply":
+        if not args.helper_id or not args.helper_action or not args.plan_id or not args.yes or (args.helper_action == "rollback" and not args.snapshot_id):
+            response = _error(request_id, "confirmation_required", "boot helper apply requires helper, action, exact plan, and --yes")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Preview first, then apply with --yes --plan-id.", file=sys.stderr)
+            return 1
+        payload = {"helper_id": args.helper_id, "action": args.helper_action,
+                   "snapshot_id": args.snapshot_id, "confirmed": True, "plan_id": args.plan_id}
     elif args.operation == "boot.profile.preview":
         if not args.profile:
             response = _error(request_id, "invalid_arguments", "--profile is required")

@@ -18,10 +18,12 @@ tx mng cron jobs create --job-name NAME --job-action ACTION --schedule-type TYPE
 tx mng cron jobs update JOB_ID [typed update options]
 tx mng cron jobs enable JOB_ID
 tx mng cron jobs disable JOB_ID
-tx mng cron jobs remove JOB_ID\ntx mng cron executions list [--job-id JOB_ID] [--limit N]\ntx mng cron executions show EXECUTION_ID
+tx mng cron jobs remove JOB_ID
+tx mng cron jobs apply --plan-id PLAN_ID --yes
+tx mng cron executions list [--job-id JOB_ID] [--limit N]
 ```
 
-Creation defaults to disabled. Job actions are registry identifiers (`diagnostics.doctor`, `management.catalog.refresh`, `hermes.status`); they do not imply that an executor exists. No shell strings, arbitrary commands, secrets, or environment maps are accepted. Removal deletes only the job definition; there is no execution data yet.
+Create/update/enable/disable/remove commands only save and show a private preview plan; they do not change the registry. Copy the exact plan ID and run `tx mng cron jobs apply --plan-id PLAN_ID --yes` to confirm. Plans expire after 15 minutes and are refused if the registry changes in the meantime. Creation defaults to disabled. Job actions are registry identifiers (`diagnostics.doctor`, `management.catalog.refresh`, `hermes.status`); they do not imply that an executor exists. No shell strings, arbitrary commands, secrets, or environment maps are accepted. Removal deletes only the job definition; execution-ledger history is retained and can remain empty.
 
 ## Persistence and schema
 
@@ -71,7 +73,7 @@ The execution ledger and summaries are private state; credentials are redacted f
 
 ## API and client support
 
-The shared management API provides typed status/list/show/validate/next-runs/create/update/remove operations plus read-only bounded execution history (cron.executions.list/show). Reads require `diagnostics.read`; definition mutations require `cron.manage`. The current Web bootstrap does not grant `cron.manage`, so Web remains read-only for Cron. TUI, Web and GTK provide registry status/list inspection only; create/configure/remove are currently CLI/API-only and the catalog does not present UI mutation controls. The CLI exposes execution history. TUI, Web and GTK history views have not yet been wired; no client claims that a resident scheduler is ready or running.
+The shared management API provides typed Cron reads and `cron.jobs.mutation.preview` / `cron.jobs.mutation.apply`, plus read-only bounded execution history. Reads require `diagnostics.read`; preview and apply require `cron.manage`. Every client must reuse the saved plan ID and require explicit confirmation. CLI, TUI, Web, and GTK now use the shared preview/apply operations. The guided forms support typed create, update, and remove; TUI/Web can also toggle enabled state. UI behavior is covered by service/bridge and static-client checks; live interactive use was not performed in this increment. CLI, TUI, Web, and GTK expose bounded read-only execution history. No client claims that a resident scheduler is ready or running.
 
 ## Existing Debian PRoot
 

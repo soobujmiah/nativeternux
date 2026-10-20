@@ -31,9 +31,10 @@ MUTATING_OPERATIONS = frozenset({
     "recovery.rollback.apply", "wakelock.acquire", "wakelock.release",
     "continuity.prepare", "continuity.verify", "continuity.prepare-reboot-test",
     "continuity.verify-reboot-test", "proot.app.launch", "proot.shortcuts.apply", "proot.shortcuts.sync",
-    "cron.jobs.create", "cron.jobs.update", "cron.jobs.remove",
+    "cron.jobs.mutation.preview", "cron.jobs.mutation.apply",
     "proot.start", "proot.stop", "proot.recovery.reconcile",
     "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",
+    "boot.helpers.preview", "boot.helpers.apply",
 })
 READ_ONLY_OPERATIONS = frozenset({
     "management.catalog", "graphics.provider.status", "graphics.provider.verify", "agent.hermes.status", "cron.status", "cron.executor.self_test",
@@ -44,7 +45,7 @@ READ_ONLY_OPERATIONS = frozenset({
     "cron.jobs.show", "cron.jobs.validate", "cron.jobs.next_runs", "cron.executions.list", "cron.executions.show", "desktop.status", "desktop.monitor.status", "doctor.report",
     "ssh.inspect", "ssh.service.deploy.rollback.preview", "native.ssh.status", "proot.status", "proot.guest.verify",
     "proot.shortcuts.list", "proot.shortcuts.preview",
-    "remote.access.preview", "boot.status", "boot.profile.status",
+    "remote.access.preview", "boot.status", "boot.profile.status", "boot.helpers.status",
     "boot.profile.preview", "boot.cron.status", "boot.cron.validate", "boot.cron.preview", "backup.list", "backup.inspect", "restore.preview",
     "recovery.status", "recovery.inspect", "recovery.rollback.preview",
     "wakelock.status", "continuity.status", "continuity.resume-info",

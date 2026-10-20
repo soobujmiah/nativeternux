@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Define preview/explicit-confirm/apply for Cron job create/update/remove in the shared service, then expose that exact contract across CLI, TUI, Web, and GTK. Continue remaining client parity before boot-helper reconciliation.
+**Next action:** Complete remaining P3 recovery and concurrency acceptance without closing the current Termux/Codex session; cold-boot qualification stays separate and requires its own approved device window.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
@@ -121,7 +121,7 @@ Phase state is recorded in [`project/phase-state.json`](../project/phase-state.j
 7. Verify Android startup/background behavior and Termux:Boot delivery, including retry/manual-open behavior, only in a separately authorized device-boot window. A manually invoked boot script is not cold-boot evidence. Never close the active Codex/Termux session as part of ordinary P3 work.
 8. Run the P3 exit audit only after the prior items pass; report any owner-gated device check as open rather than inferring success.
 
-**Current evidence:** owner visual review of GTK/TUI/Web/PRoot Apps is accepted. Cron's installed script is duplicate-safe when manually invoked, but cold-boot delivery is unqualified. Installed `00-ternuxx-services` and `ternuxx-recovery` differ from source and have no exact state-preserving deployment/rollback path yet. See [P3 boot/Cron recheck](evidence/2026-10-20-p3-owner-visual-and-boot-cron-recheck.md) and the [management client parity audit](evidence/2026-10-20-management-client-parity-audit.md).
+**Current evidence:** owner visual review of GTK/TUI/Web/PRoot Apps is accepted. Cron definition changes now use one exact preview/apply contract across CLI, TUI, Web, and GTK; live interactive behavior was not exercised during this increment. Installed `00-ternuxx-services` and `ternuxx-recovery` now match repository source after exact preview/apply with private rollback snapshots. Boot scripts were not run and cold-boot delivery remains unqualified. See [Cron client parity evidence](evidence/2026-10-21-cron-mutation-client-parity.md), [boot-helper reconciliation evidence](evidence/2026-10-21-boot-helper-reconciliation.md), and the [management client parity audit](evidence/2026-10-20-management-client-parity-audit.md).
 
 **Exit gate:**
 - Doctor is read-only and correct for missing, failed, unknown, stale, and conflicting states; ambiguous identities fail closed.

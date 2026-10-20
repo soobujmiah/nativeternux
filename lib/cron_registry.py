@@ -24,6 +24,9 @@ MAX_TIMEOUT = 86400
 MAX_RETRIES = 10
 MAX_RETRY_DELAY = 86400
 MAX_JOBS = 1000
+MAX_MUTATION_PLANS = 128
+MUTATION_PLAN_TTL_SECONDS = 900
+MUTATION_PLAN_STORE = "mutation-plans.json"
 MAX_SEARCH_MINUTES = 5 * 366 * 24 * 60
 _ALLOWED_ACTIONS = {"diagnostics.doctor", "management.catalog.refresh", "hermes.status", "scheduler.self_test"}
 _SCHEDULE_TYPES = {"cron", "interval", "calendar", "one_time"}
@@ -429,6 +432,204 @@ def _write(root: Path, data: dict[str, object]) -> None:
             temp.unlink()
         except FileNotFoundError:
             pass
+
+
+def _canonical_digest(value: object) -> str:
+    import hashlib
+    raw = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _mutation_plan_id(plan: dict[str, object]) -> str:
+    body = {key: value for key, value in plan.items() if key != "plan_id"}
+    return _canonical_digest(body)[:32]
+
+
+def _read_mutation_plans(root: Path) -> list[dict[str, object]]:
+    path = root / MUTATION_PLAN_STORE
+    if not path.exists() and not path.is_symlink():
+        return []
+    st = path.lstat()
+    if path.is_symlink() or not path.is_file() or st.st_uid != os.getuid() or (st.st_mode & 0o077):
+        raise CronError("Cron mutation-plan store identity or permissions are unsafe")
+    try:
+        stored = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise CronError("Cron mutation-plan store is unreadable or corrupt") from exc
+    if (not isinstance(stored, dict) or set(stored) != {"schema_version", "plans"}
+            or type(stored["schema_version"]) is not int or stored["schema_version"] != 1
+            or not isinstance(stored["plans"], list) or len(stored["plans"]) > MAX_MUTATION_PLANS):
+        raise CronError("Cron mutation-plan store schema is unsupported")
+    required = {"schema_version", "action", "job_id", "before", "after",
+                "registry_digest", "created_at", "expires_at", "plan_id"}
+    plans = []
+    for plan in stored["plans"]:
+        if (not isinstance(plan, dict) or set(plan) != required
+                or type(plan["schema_version"]) is not int or plan["schema_version"] != 1
+                or plan["action"] not in {"create", "update", "remove"}
+                or not isinstance(plan["job_id"], str)
+                or not re.fullmatch(r"job-[0-9a-f]{32}", plan["job_id"])
+                or not isinstance(plan["registry_digest"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", plan["registry_digest"])
+                or not isinstance(plan["created_at"], str) or not isinstance(plan["expires_at"], str)
+                or not isinstance(plan["plan_id"], str) or not re.fullmatch(r"[0-9a-f]{32}", plan["plan_id"])):
+            raise CronError("Cron mutation-plan record is malformed")
+        for field in ("before", "after"):
+            if plan[field] is not None:
+                validate_job(plan[field], require_future=False, allow_legacy_policies=True)
+        if ((plan["action"] == "create" and (plan["before"] is not None or plan["after"] is None))
+                or (plan["action"] == "update" and (plan["before"] is None or plan["after"] is None))
+                or (plan["action"] == "remove" and (plan["before"] is None or plan["after"] is not None))
+                or (plan["before"] is not None and plan["before"]["job_id"] != plan["job_id"])
+                or (plan["after"] is not None and plan["after"]["job_id"] != plan["job_id"])
+                or plan["plan_id"] != _mutation_plan_id(plan)):
+            raise CronError("Cron mutation-plan integrity check failed")
+        _timestamp(plan["created_at"], "plan created_at")
+        _timestamp(plan["expires_at"], "plan expires_at")
+        plans.append(plan)
+    if len({plan["plan_id"] for plan in plans}) != len(plans):
+        raise CronError("Cron mutation-plan store contains duplicate IDs")
+    return plans
+
+
+def _write_mutation_plans(root: Path, plans: list[dict[str, object]]) -> None:
+    path = root / MUTATION_PLAN_STORE
+    temp = root / (".mutation-plans." + uuid.uuid4().hex + ".tmp")
+    payload = (json.dumps({"schema_version": 1, "plans": plans[-MAX_MUTATION_PLANS:]},
+                          sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode()
+    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp, path)
+        os.chmod(path, 0o600)
+        dir_fd = os.open(root, os.O_RDONLY)
+        try:
+            os.fsync(dir_fd)
+        finally:
+            os.close(dir_fd)
+    finally:
+        try:
+            temp.unlink()
+        except FileNotFoundError:
+            pass
+
+
+def _jobs_digest(data: dict[str, object]) -> str:
+    return _canonical_digest(data)
+
+
+def preview_job_mutation(state_dir: str | os.PathLike[str], *, action: str,
+                         job_id: str | None = None, job: dict[str, object] | None = None,
+                         changes: dict[str, object] | None = None,
+                         now: dt.datetime | None = None) -> dict[str, object]:
+    """Save a private 15-minute exact-change plan; it does not change the job registry."""
+    if action not in {"create", "update", "remove"}:
+        raise CronError("Cron mutation action must be create, update, or remove")
+    root = _store_root(state_dir)
+    if root is None:
+        raise CronError("Cron registry state is unavailable")
+    lock = _lock(root)
+    try:
+        data = _read(root)
+        before = None
+        after = None
+        if action == "create":
+            if job_id is not None or changes is not None or not isinstance(job, dict):
+                raise CronError("create preview requires only a typed job")
+            after = validate_job(job)
+            job_id = after["job_id"]
+            if any(item["job_id"] == job_id for item in data["jobs"]):
+                raise CronError("job ID already exists")
+            if len(data["jobs"]) >= MAX_JOBS:
+                raise CronError("Cron registry job limit reached")
+        elif action == "update":
+            if not isinstance(job_id, str) or job is not None or not isinstance(changes, dict) or not changes:
+                raise CronError("update preview requires a job ID and typed changes")
+            before = next((item for item in data["jobs"] if item["job_id"] == job_id), None)
+            if before is None:
+                raise CronError("job was not found")
+            allowed = {"name", "description", "action_id", "schedule_type", "schedule", "enabled",
+                       "run_after_device_boot", "run_after_scheduler_recovery", "timeout_seconds",
+                       "retry_policy", "missed_run_policy", "concurrency_policy", "environment",
+                       "required_capabilities", "output_policy"}
+            if set(changes) - allowed:
+                raise CronError("job update fields are invalid")
+            after = dict(before)
+            after.update(changes)
+            instant = now or dt.datetime.now(dt.timezone.utc)
+            after["updated_at"] = instant.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+            after = validate_job(after, now=instant,
+                                 require_future=("schedule" in changes or "schedule_type" in changes))
+        else:
+            if not isinstance(job_id, str) or job is not None or changes is not None:
+                raise CronError("remove preview requires only a job ID")
+            before = next((item for item in data["jobs"] if item["job_id"] == job_id), None)
+            if before is None:
+                raise CronError("job was not found")
+        instant = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc).replace(microsecond=0)
+        created = instant.isoformat().replace("+00:00", "Z")
+        expires = (instant + dt.timedelta(seconds=MUTATION_PLAN_TTL_SECONDS)).isoformat().replace("+00:00", "Z")
+        plan = {"schema_version": 1, "action": action, "job_id": job_id,
+                "before": before, "after": after, "registry_digest": _jobs_digest(data),
+                "created_at": created, "expires_at": expires}
+        plan["plan_id"] = _mutation_plan_id(plan)
+        plans = [item for item in _read_mutation_plans(root) if _timestamp(item["expires_at"], "plan expires_at") > instant]
+        plans = [item for item in plans if item["plan_id"] != plan["plan_id"]]
+        plans.append(plan)
+        _write_mutation_plans(root, plans)
+        return {"plan": plan, "confirmation_required": True, "read_only_registry": True}
+    finally:
+        _release_lock(lock)
+
+
+def apply_job_mutation(state_dir: str | os.PathLike[str], *, plan_id: str,
+                       confirmed: bool, now: dt.datetime | None = None) -> dict[str, object]:
+    """Apply one unexpired saved plan after compare-and-swap under the registry lock."""
+    if confirmed is not True or not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{32}", plan_id):
+        raise CronError("Cron job change requires an exact plan ID and explicit confirmation")
+    root = _store_root(state_dir, create=False)
+    if root is None:
+        raise CronError("Cron mutation plan was not found")
+    lock = _lock(root)
+    try:
+        plans = _read_mutation_plans(root)
+        plan = next((item for item in plans if item["plan_id"] == plan_id), None)
+        if plan is None:
+            raise CronError("Cron mutation plan was not found or has expired")
+        instant = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
+        if _timestamp(plan["expires_at"], "plan expires_at") <= instant:
+            raise CronError("Cron mutation plan has expired; preview the change again")
+        data = _read(root)
+        if _jobs_digest(data) != plan["registry_digest"]:
+            raise CronError("Cron registry changed after preview; create a fresh preview")
+        jobs = data["jobs"]
+        index = next((i for i, item in enumerate(jobs) if item["job_id"] == plan["job_id"]), None)
+        current = jobs[index] if index is not None else None
+        if current != plan["before"]:
+            raise CronError("Cron job changed after preview; create a fresh preview")
+        if plan["action"] == "create":
+            if current is not None or len(jobs) >= MAX_JOBS:
+                raise CronError("Cron registry changed after preview; create a fresh preview")
+            jobs.append(validate_job(plan["after"], require_future=False))
+        elif plan["action"] == "update":
+            if current is None or plan["after"] is None:
+                raise CronError("Cron job changed after preview; create a fresh preview")
+            jobs[index] = validate_job(plan["after"], require_future=False)
+        else:
+            if current is None:
+                raise CronError("Cron job changed after preview; create a fresh preview")
+            jobs.pop(index)
+        _write(root, data)
+        remaining = [item for item in plans if item["plan_id"] != plan_id]
+        _write_mutation_plans(root, remaining)
+        return {"action": plan["action"], "job_id": plan["job_id"],
+                "job": plan["after"], "removed": plan["action"] == "remove",
+                "execution_data_removed": False}
+    finally:
+        _release_lock(lock)
 
 
 def list_jobs(state_dir: str | os.PathLike[str]) -> list[dict[str, object]]:

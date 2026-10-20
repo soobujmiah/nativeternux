@@ -130,8 +130,13 @@ tx mng proot stop SESSION_ID — Preview exact-session stop; repeat with --yes -
 The debian-interactive profile requires a TTY and opens a foreground login shell; it does not start GUI or services.
 tx mng hermes status — Inspect optional Hermes scheduler (read-only)
 tx mng cron status/start/stop — Inspect or explicitly manage the lease-guarded scheduler
-tx mng cron jobs list|show|validate|next-runs|create|update|enable|disable|remove — Manage validated job definitions
+tx mng cron jobs list|show|validate|next-runs|create|update|enable|disable|remove|apply — Preview job changes; apply exact plan with --yes --plan-id
 tx mng cron executions list|show — Read saved execution history (does not run jobs)
+tx mng boot helpers status — Check only the two repository-owned service/recovery scripts
+tx mng boot helpers preview deploy HELPER — Show exact hashes before replacement
+tx mng boot helpers apply deploy HELPER --yes --plan-id ID — Deploy with a private rollback snapshot
+tx mng boot helpers preview rollback HELPER SNAPSHOT_ID — Preview exact restoration
+tx mng boot helpers apply rollback HELPER SNAPSHOT_ID --yes --plan-id ID — Restore saved helper
 tx mng boot cron status|validate — Inspect the opt-in official Termux:Boot Cron entry
 tx mng boot cron preview {enable|disable} — Preview exact script changes
 tx mng boot cron enable|disable --yes --plan-id ID — Apply the reviewed boot-script plan

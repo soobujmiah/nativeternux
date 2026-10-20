@@ -95,6 +95,23 @@ class ManagementServiceTests(unittest.TestCase):
             self.assertTrue(data["activity_launch"])
             self.assertEqual(data["scheduler"], "not_running")
 
+    def test_boot_helper_status_and_preview_use_shared_service(self) -> None:
+        expected = {"component": "boot_helpers", "helpers": [], "read_only": True}
+        with patch.object(management_service.boot_helpers, "status", return_value=expected) as status:
+            result = management_service.dispatch(request("boot.helpers.status"), env=NATIVE_ENV)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["data"], expected)
+        self.assertEqual(status.call_args.kwargs["home"], NATIVE_ENV["HOME"])
+        preview = {"plan": {"plan_id": "a" * 32}, "confirmation_required": True}
+        with patch.object(management_service.boot_helpers, "preview", return_value=preview) as plan:
+            result = management_service.dispatch(request("boot.helpers.preview", {
+                "helper_id": "services", "action": "deploy",
+            }), env=NATIVE_ENV)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["data"], preview)
+        self.assertEqual(plan.call_args.kwargs["helper_id"], "services")
+        self.assertEqual(plan.call_args.kwargs["action"], "deploy")
+
     def test_rejects_unknown_operation_even_if_unhashable(self) -> None:
         result = management_service.dispatch(request({"shell": "id"}), env=NATIVE_ENV)
         self.assertFalse(result["ok"])

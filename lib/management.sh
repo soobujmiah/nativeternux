@@ -278,12 +278,13 @@ nt_cmd_management() {
               case "$action" in
                 show) operation="cron.jobs.show"; [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng cron jobs show JOB_ID"; return 2; }; cron_args+=(--job-id "$job_id") ;;
                 next-runs) operation="cron.jobs.next_runs"; cron_args+=(--job-id "$job_id"); while [ "$#" -gt 0 ]; do case "$1" in --count) [ "$#" -ge 2 ] || { nt_fail "--count requires a number"; return 2; }; cron_args+=(--count "$2"); shift 2;; *) nt_fail "Unknown next-runs option: $1"; return 2;; esac; done ;;
-                remove) operation="cron.jobs.remove"; [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng cron jobs remove JOB_ID"; return 2; }; cron_args+=(--job-id "$job_id") ;;
-                enable|disable) operation="cron.jobs.update"; [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng cron jobs $action JOB_ID"; return 2; }; cron_args+=(--job-id "$job_id" "$( [ "$action" = enable ] && echo --job-enabled || echo --job-disabled )") ;;
-                update) operation="cron.jobs.update"; cron_args+=(--job-id "$job_id" "$@") ;;
+                remove) operation="cron.jobs.mutation.preview"; [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng cron jobs remove JOB_ID"; return 2; }; cron_args+=(--mutation-action remove --job-id "$job_id") ;;
+                enable|disable) operation="cron.jobs.mutation.preview"; [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng cron jobs $action JOB_ID"; return 2; }; cron_args+=(--mutation-action update --job-id "$job_id" "$( [ "$action" = enable ] && echo --job-enabled || echo --job-disabled )") ;;
+                update) operation="cron.jobs.mutation.preview"; cron_args+=(--mutation-action update --job-id "$job_id" "$@") ;;
               esac ;;
-            create) operation="cron.jobs.create"; cron_args+=("$@") ;;
-            *) nt_fail "Use tx mng cron jobs {list|show|validate|next-runs|create|update|enable|disable|remove}."; return 2 ;;
+            create) operation="cron.jobs.mutation.preview"; cron_args+=(--mutation-action create "$@") ;;
+            apply) operation="cron.jobs.mutation.apply"; cron_args+=("$@") ;;
+            *) nt_fail "Use tx mng cron jobs {list|show|validate|next-runs|create|update|enable|disable|remove|apply}."; return 2 ;;
           esac ;;
         *) nt_fail "Use tx mng cron {status|start|stop|jobs|executions}."; return 2 ;;
       esac
@@ -294,7 +295,37 @@ nt_cmd_management() {
     boot)
       local boot_area="${1:-cron}"
       [ "$#" -gt 0 ] && shift
-      [ "$boot_area" = "cron" ] || { nt_fail "Use tx mng boot cron {status|validate|preview|enable|disable}."; return 2; }
+      if [ "$boot_area" = "helpers" ]; then
+        local action="${1:-status}" helper_id="" helper_action="" snapshot_id="" plan_id="" confirmed=0 operation="boot.helpers.status"
+        [ "$#" -gt 0 ] && shift
+        case "$action" in
+          status) [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng boot helpers status"; return 2; } ;;
+          preview)
+            [ "$#" -ge 2 ] || { nt_fail "Usage: tx mng boot helpers preview {deploy|rollback} HELPER_ID [SNAPSHOT_ID]"; return 2; }
+            helper_action="$1"; helper_id="$2"; shift 2
+            [ "$helper_action" = deploy ] || [ "$helper_action" = rollback ] || { nt_fail "Helper action must be deploy or rollback."; return 2; }
+            if [ "$helper_action" = rollback ]; then [ "$#" -eq 1 ] || { nt_fail "Rollback preview needs SNAPSHOT_ID."; return 2; }; snapshot_id="$1"; shift; else [ "$#" -eq 0 ] || { nt_fail "Unexpected helper preview arguments."; return 2; }; fi
+            operation="boot.helpers.preview" ;;
+          apply)
+            [ "$#" -ge 4 ] || { nt_fail "Usage: tx mng boot helpers apply {deploy|rollback} HELPER_ID [SNAPSHOT_ID] --yes --plan-id ID"; return 2; }
+            helper_action="$1"; helper_id="$2"; shift 2
+            if [ "$helper_action" = rollback ]; then [ "$#" -ge 3 ] || { nt_fail "Rollback apply needs SNAPSHOT_ID --yes --plan-id ID."; return 2; }; snapshot_id="$1"; shift; fi
+            while [ "$#" -gt 0 ]; do case "$1" in --yes) confirmed=1; shift;; --plan-id) [ "$#" -ge 2 ] || { nt_fail "--plan-id requires ID."; return 2; }; plan_id="$2"; shift 2;; *) nt_fail "Unknown helper apply option: $1"; return 2;; esac; done
+            [ "$confirmed" -eq 1 ] && [ -n "$plan_id" ] || { nt_fail "Preview first, then apply exact plan with --yes --plan-id ID."; return 2; }
+            operation="boot.helpers.apply" ;;
+          *) nt_fail "Use tx mng boot helpers {status|preview|apply}."; return 2 ;;
+        esac
+        nt_require_termux || return 1
+        nt_require_command python3 || return 1
+        local -a helper_args=(--operation "$operation")
+        [ -z "$helper_id" ] || helper_args+=(--helper-id "$helper_id")
+        [ -z "$helper_action" ] || helper_args+=(--helper-action "$helper_action")
+        [ -z "$snapshot_id" ] || helper_args+=(--snapshot-id "$snapshot_id")
+        [ "$confirmed" -eq 0 ] || helper_args+=(--yes --plan-id "$plan_id")
+        python3 "$_TN_LIB_DIR/management_service.py" "${helper_args[@]}" --json
+        return $?
+      fi
+      [ "$boot_area" = "cron" ] || { nt_fail "Use tx mng boot {helpers|cron}."; return 2; }
       local action="${1:-status}"
       [ "$#" -gt 0 ] && shift
       local operation="boot.cron.status" boot_action="" confirmed=0 plan_id=""
