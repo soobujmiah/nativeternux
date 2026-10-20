@@ -216,30 +216,52 @@ def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], cate
     url_col = max(0, (width - len(BRANDING_URL)) // 2)
     screen.addnstr(2, url_col, BRANDING_URL, max(width - url_col - 1, 0))
     category = categories[category_index] if categories else {"name": "Resources"}
-    screen.addnstr(3, 1, f"{category['name']}  ·  {len(resources)} resources", max(width - 2, 0))
-    screen.addnstr(4, 1, f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
-                   max(width - 2, 0))
+    counts = {state: sum(1 for item in resources if item.get("status") == state)
+              for state in ("implemented", "partial", "external", "unverified", "unavailable", "planned")}
     selected_resource = resources[selected] if resources and selected < len(resources) else None
     action_text = ", ".join(_available_action_labels(selected_resource)) if selected_resource else "none"
-    screen.addnstr(5, 1, f"Available: {action_text}", max(width - 2, 0))
-    if height < 10 or width < 34:
+    if width > 2:
+        screen.attron(curses.color_pair(5))
+        screen.addnstr(3, 1, "─" * (width - 2), width - 2)
+        screen.attroff(curses.color_pair(5))
+    screen.attron(curses.color_pair(2) | curses.A_BOLD)
+    screen.addnstr(4, 1, f"{category['name']}  ·  {len(resources)} resources", max(width - 2, 0))
+    screen.attroff(curses.color_pair(2) | curses.A_BOLD)
+    summary = f"Available: {counts['implemented']} implemented · {counts['partial']} partial · {counts['external']} external · {counts['planned']} planned"
+    screen.attron(curses.color_pair(3))
+    screen.addnstr(5, 1, summary, max(width - 2, 0))
+    screen.attroff(curses.color_pair(3))
+    screen.attron(curses.color_pair(4) | curses.A_BOLD)
+    screen.addnstr(6, 1, f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
+                   max(width - 2, 0))
+    screen.attroff(curses.color_pair(4) | curses.A_BOLD)
+    if width > 2:
+        screen.attron(curses.color_pair(5))
+        screen.addnstr(7, 1, "─" * (width - 2), width - 2)
+        screen.attroff(curses.color_pair(5))
+    screen.addnstr(8, 1, f"Selected actions: {action_text}", max(width - 2, 0))
+    if height < 13 or width < 34:
         if height > 3 and width > 1:
-            screen.addnstr(height - 1, 1, "Resize terminal to at least 34x10", width - 2)
+            screen.addnstr(height - 1, 1, "Resize terminal to at least 34x13", width - 2)
         screen.refresh()
         return 0
-    capacity = max(1, height - 10)
+    capacity = max(1, height - 13)
     max_scroll = max(0, len(resources) - capacity)
     scroll = min(max(0, min(scroll, max_scroll)), max_scroll)
-    for row, resource in enumerate(resources[scroll:scroll + capacity], 6):
-        index = scroll + row - 6
+    for row, resource in enumerate(resources[scroll:scroll + capacity], 9):
+        index = scroll + row - 9
         marker = ">" if index == selected else " "
         status = management_presentation.status_label(resource.get("status", "unknown"))
         text = f"{marker} {resource.get('name', 'Resource')} · {status} · {_resource_state(resource)}"
+        state = resource.get("status", "unknown")
+        pair = 1 if state == "implemented" else (3 if state in ("partial", "external", "unverified") else 6)
+        screen.attron(curses.color_pair(pair))
         if index == selected:
             screen.attron(curses.A_REVERSE)
         screen.addnstr(row, 1, text, max(width - 2, 0))
         if index == selected:
             screen.attroff(curses.A_REVERSE)
+        screen.attroff(curses.color_pair(pair))
     if report:
         error = report.get("error") if isinstance(report.get("error"), dict) else {}
         code = error.get("code")
@@ -350,7 +372,15 @@ def _run(screen: "curses._CursesWindow") -> int:
     if curses.has_colors():
         curses.start_color()
         curses.use_default_colors()
-        curses.init_pair(1, curses.COLOR_GREEN, -1)
+        palette = (
+            (1, curses.COLOR_GREEN), (2, curses.COLOR_CYAN), (3, curses.COLOR_YELLOW),
+            (4, curses.COLOR_BLUE), (5, curses.COLOR_WHITE), (6, curses.COLOR_RED),
+        )
+        for pair, color in palette:
+            try:
+                curses.init_pair(pair, color, -1)
+            except curses.error:
+                pass
     catalog_result = _call("management.catalog")
     if not catalog_result.get("ok"):
         raise RuntimeError("Could not load the shared resource catalog")

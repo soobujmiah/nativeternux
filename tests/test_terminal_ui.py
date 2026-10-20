@@ -255,7 +255,16 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertIn("Audio server", rendered)
         self.assertIn("Enter status", rendered)
         self.assertIn("Available:", rendered)
+        self.assertIn("implemented", rendered)
         self.assertIn("check status", rendered)
+        rows = {row: value for row, _col, value in screen.rows}
+        self.assertTrue(rows[3].startswith("─"))
+        self.assertIn("Desktop & multimedia", rows[4])
+        self.assertTrue(rows[5].startswith("Available:"))
+        self.assertTrue(rows[6].startswith("Search:"))
+        self.assertTrue(rows[7].startswith("─"))
+        self.assertTrue(rows[8].startswith("Selected actions:"))
+        self.assertIn("Audio server", rows[9])
 
     def test_small_terminal_warning_does_not_overwrite_three_line_header(self) -> None:
         class SmallScreen:
@@ -270,7 +279,7 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         with mock.patch.object(terminal_ui.curses, "color_pair", return_value=0):
             terminal_ui._draw(screen, [], 0, [], 0, "", None)
         self.assertIn((2, (60 - len(terminal_ui.BRANDING_URL)) // 2, terminal_ui.BRANDING_URL), screen.rows)
-        self.assertIn((7, 1, "Resize terminal to at least 34x10"), screen.rows)
+        self.assertIn((7, 1, "Resize terminal to at least 34x13"), screen.rows)
 
     def test_status_vocabulary_is_consistent_and_safe_for_unknown_values(self) -> None:
         self.assertEqual(management_presentation.status_label("planned"), "Planned")
