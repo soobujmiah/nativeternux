@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-CLI/TUI/Web/GTK now have bounded reads for the Native desktop, Ternuxx scheduler, and management-audit logs; GTK is installed, with visual acceptance pending. Boot helper identities match; listener-to-port attribution and Native cold-boot delivery remain unverified.
+CLI/TUI/Web/GTK expose bounded Native desktop, Cron scheduler, and management audit log reads; GTK log controls are visually confirmed, with Web/TUI exercise pending. Boot helper identities match; listener attribution and Native cold-boot delivery remain open.
 
-**Next action:** Keep P3 active. Visually exercise the Web/GTK/TUI log controls, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
+**Next action:** Exercise the bounded log controls in Web and TUI, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
