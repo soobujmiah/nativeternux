@@ -356,13 +356,13 @@ EOF
       ;;
     install)
       cat <<'EOF'
-tx install — Preview or install the native desktop packages
+tx install — Preview or install Native workstation prerequisites
 
 By default, validates recent official Termux package indexes and prints a
 constrained APT simulation. It does not refresh package indexes or change
-packages. The plan is limited to the base desktop package set and refuses
-removals, upgrades, recommendations, or packages sourced outside the official
-Termux repositories.
+packages. The plan includes the Native PRoot manager and base desktop package set; it
+does not install, replace, or modify a Debian rootfs. It refuses removals,
+upgrades, recommendations, or packages sourced outside official Termux repos.
 
 Each full dependency preview is saved under the private Ternuxx state directory
 at install-transactions/. --yes rebuilds the plan, displays it, then applies it;

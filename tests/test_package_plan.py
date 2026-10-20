@@ -33,6 +33,35 @@ class PackagePlanTest(unittest.TestCase):
         finally:
             temporary.cleanup()
 
+    def test_base_workstation_plan_includes_only_the_proot_manager_from_termux_main(self):
+        temporary = tempfile.TemporaryDirectory(prefix="ternuxx-proot-manager-plan-")
+        fixture_bin = Path(temporary.name)
+        apt_get = fixture_bin / "apt-get"
+        apt_get.write_text("#!/bin/sh\nprintf 'Inst proot-distro (5.10.0 termux-main stable/main [aarch64])\\n0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.\\n'\n", encoding="utf-8")
+        apt_get.chmod(0o700)
+        command = "\n".join([
+            'source "$1"',
+            '_nt_package_installed() { [[ "$1" != proot-distro ]]; }',
+            '_nt_package_candidate_from_official_repo() { [[ "$1" = proot-distro && "$2" = termux-main ]] || return 1; printf "5.10.0\\n"; }',
+            '_nt_make_install_plan',
+            'printf "ROOTS %s\\n" "${_NT_BASE_PACKAGES[*]}"',
+            'printf "REQUEST %s\\n" "${_NT_PLAN_VERSIONS[*]}"',
+            'printf "TRANSACTION %s\\n" "${_NT_PLAN_TRANSACTION[*]}"',
+        ])
+        result = subprocess.run(
+            ["bash", "-c", command, "bash", str(PHASES)],
+            env={**os.environ, "PATH": f"{fixture_bin}:{os.environ['PATH']}"},
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+        )
+        temporary.cleanup()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        roots = result.stdout.split("ROOTS ", 1)[1].splitlines()[0].split()
+        self.assertIn("proot-distro", roots)
+        self.assertIn("REQUEST proot-distro=5.10.0", result.stdout)
+        self.assertIn("TRANSACTION proot-distro=5.10.0", result.stdout)
+        self.assertNotIn("virglrenderer-android", roots)
+        self.assertNotIn("mesa-vulkan-icd-freedreno", roots)
+
     def test_candidate_repository_is_checked_from_policy_origin_lines(self):
         policy = """xfce4-session:
   Installed: (none)

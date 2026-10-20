@@ -7,9 +7,10 @@
 # shellcheck source=lib/core.sh
 . "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
-# Keep the base desktop small and predictable. Browser/editor packages remain
-# optional and are handled by later application profiles.
+# Keep Native workstation prerequisites small and predictable. Browser/editor
+# and acceleration-provider packages remain optional and are handled separately.
 _NT_BASE_PACKAGES=(
+  proot-distro
   termux-x11-nightly
   dbus
   pulseaudio
@@ -89,7 +90,7 @@ _nt_make_install_plan() {
       continue
     fi
     case "$package" in
-      dbus|pulseaudio|python) expected_repo="termux-main" ;;
+      dbus|pulseaudio|python|proot-distro) expected_repo="termux-main" ;;
       *) expected_repo="termux-x11" ;;
     esac
     candidate="$(_nt_package_candidate_from_official_repo "$package" "$expected_repo")" || {
@@ -309,14 +310,14 @@ nt_cmd_install() {
   fi
 
   if [ ${#_NT_PLAN_PACKAGES[@]} -eq 0 ]; then
-    nt_ok "Ternuxx base desktop packages are already installed."
+    nt_ok "Ternuxx base workstation packages are already installed."
     if [ "$TERNUXX_JSON" = "1" ]; then
       printf '{"install":"already_installed","packages_changed":false}\n'
     fi
     return 0
   fi
 
-  nt_info "Ternuxx base desktop package preview (official Termux repositories only):"
+  nt_info "Ternuxx base workstation package preview (official Termux repositories only):"
   printf '  %s\n' "${_NT_PLAN_VERSIONS[@]}"
   nt_info "Resolved APT transaction (all new packages, including dependencies):"
   printf '  %s\n' "${_NT_PLAN_TRANSACTION[@]}"
@@ -357,11 +358,11 @@ nt_cmd_install() {
     return 1
   fi
   if [ ${#_NT_PLAN_PACKAGES[@]} -eq 0 ]; then
-    nt_ok "Ternuxx base desktop packages are already installed."
+    nt_ok "Ternuxx base workstation packages are already installed."
     return 0
   fi
 
-  nt_step "Installing the reviewed Ternuxx base desktop packages (preview $plan_id)..."
+  nt_step "Installing the reviewed Ternuxx base workstation packages (preview $plan_id)..."
   _nt_apply_install_transaction || {
     nt_fail "APT reported an installation failure. Review its output before retrying."
     return 1
@@ -369,7 +370,7 @@ nt_cmd_install() {
   if ! _nt_write_install_record applied; then
     nt_warn "Packages were installed, but the transaction record could not be persisted under $TERNUXX_STATE_DIR/install-transactions."
   fi
-  nt_ok "Ternuxx base desktop packages installed. The Termux:X11 Android app still must be installed separately if absent."
+  nt_ok "Ternuxx base workstation packages installed. The Termux:X11 Android app still must be installed separately if absent."
   if [ "$TERNUXX_JSON" = "1" ]; then
     local package_json
     package_json="$(nt_json_array "${_NT_PLAN_VERSIONS[@]}")"
