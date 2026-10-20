@@ -1,0 +1,7 @@
+event_id: commit-9c3d30cea6e9-6c65cf20dcbc21f5
+repository: soobujmiah/ternuxx
+commit: 9c3d30cea6e960767db51deb3cfcff9f07a8e75c
+kind: commit
+occurred_at: '2026-10-20T11:39:33Z'
+status: completed
+summary: 'feat(web): launch named PRoot apps with scoped confirmation'
