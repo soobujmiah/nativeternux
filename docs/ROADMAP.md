@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Keep P3 active. Continue any source/fixture ownership and recovery work; listener attribution needs a permitted Android diagnostic source, and cold-boot delivery needs its separately authorized device-boot window.
+**Next action:** Keep P3 active. Visually exercise the Web/GTK/TUI log controls, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

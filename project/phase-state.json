@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "CLI, TUI, Web, and GTK now share PRoot session controls; GTK layout and safe preview/cancel were visually exercised on Native :1. Boot/helper identities match; Android denies unprivileged TCP listener diagnostics and cold-boot delivery remains unverified.",
+      "summary": "CLI/TUI/Web/GTK now have bounded Ternuxx scheduler and management-audit log reads; GTK is installed, with visual acceptance pending. Boot helper identities match; listener-to-port attribution and Native cold-boot delivery remain unverified.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -179,9 +179,10 @@
         "docs/evidence/2026-10-21-p3-managed-ssh-process-identity.md",
         "docs/evidence/2026-10-21-p3-proot-tty-contract-audit.md",
         "docs/evidence/2026-10-21-p3-session-client-parity-audit.md",
-        "docs/evidence/2026-10-21-p3-session-client-implementation.md"
+        "docs/evidence/2026-10-21-p3-session-client-implementation.md",
+        "docs/evidence/2026-10-21-p3-managed-logs.md"
       ],
-      "next_action": "Keep P3 active. Continue any source/fixture ownership and recovery work; listener attribution needs a permitted Android diagnostic source, and cold-boot delivery needs its separately authorized device-boot window."
+      "next_action": "Keep P3 active. Visually exercise the Web/GTK/TUI log controls, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window."
     },
     {
       "id": "P4",

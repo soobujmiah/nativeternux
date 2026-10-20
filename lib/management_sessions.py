@@ -37,7 +37,7 @@ MUTATING_OPERATIONS = frozenset({
     "boot.helpers.preview", "boot.helpers.apply",
 })
 READ_ONLY_OPERATIONS = frozenset({
-    "management.catalog", "graphics.provider.status", "graphics.provider.verify", "agent.hermes.status", "cron.status", "cron.executor.self_test",
+    "management.catalog", "management.logs.list", "management.logs.read", "graphics.provider.status", "graphics.provider.verify", "agent.hermes.status", "cron.status", "cron.executor.self_test",
     "proot.sessions.list", "proot.sessions.show", "proot.sessions.health", "proot.recovery.inspect",
     "proot.recovery.reconcile.preview", "proot.profiles.list", "proot.profiles.show",
     "proot.start.preview", "proot.stop.preview", "cron.jobs.list",

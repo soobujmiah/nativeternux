@@ -13,6 +13,8 @@ from collections.abc import Iterable
 # reviewed here before any non-CLI adapter can expose them.
 OPERATION_CAPABILITIES: dict[str, str] = {
     "management.catalog": "diagnostics.read",
+    "management.logs.list": "diagnostics.read",
+    "management.logs.read": "diagnostics.read",
     "graphics.provider.status": "diagnostics.read",
     "graphics.provider.verify": "guest.diagnostics.read",
     "graphics.provider.select": "graphics.manage",

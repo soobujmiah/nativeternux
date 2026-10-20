@@ -253,6 +253,14 @@ def main(argv: list[str]) -> int:
         result = call("cron.executions.list", {"limit": 20})
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "logs-read" and len(argv) == 2:
+        source_id = argv[1]
+        if source_id not in {"cron-scheduler", "management-api"}:
+            print(json.dumps({"ok": False, "error": {"code": "invalid_log_source"}}))
+            return 2
+        result = call("management.logs.read", {"source_id": source_id, "limit": 100})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "history" and len(argv) == 1:
         result = call("recovery.status")
         print(json.dumps(result, ensure_ascii=False, indent=2))

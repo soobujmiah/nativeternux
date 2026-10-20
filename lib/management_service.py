@@ -34,6 +34,7 @@ import remote_access_policy
 import proot_shortcuts
 import doctor_report
 import management_catalog
+import management_log_reader
 import graphics_manager
 import gui_monitoring
 import hermes_adapter
@@ -48,6 +49,8 @@ import timezone_support
 API_VERSION = 1
 OPERATIONS = {
     "management.catalog": {"args": {"category", "query", "status"}},
+    "management.logs.list": {"args": set()},
+    "management.logs.read": {"args": {"source_id", "limit"}},
     "graphics.provider.status": {"args": {"provider"}},
     "graphics.provider.verify": {"args": {"provider", "api", "display"}},
     "graphics.provider.select": {"args": {"provider", "backend", "confirmed"}},
@@ -316,6 +319,16 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = management_catalog.build_catalog(
                 set(OPERATIONS), category=args.get("category"),
                 query=args.get("query"), status=args.get("status"))
+        elif operation == "management.logs.list":
+            data = management_log_reader.list_logs(
+                state_dir or os.path.join(home, ".local/share/ternuxx"), home=home)
+        elif operation == "management.logs.read":
+            source_id, limit = args.get("source_id"), args.get("limit", 100)
+            if not isinstance(source_id, str) or type(limit) is not int:
+                return _error(request_id, "invalid_arguments", "a supported source ID and integer line limit are required")
+            data = management_log_reader.read_log(
+                state_dir or os.path.join(home, ".local/share/ternuxx"),
+                home=home, source_id=source_id, limit=limit)
         elif operation in {"desktop.status", "desktop.start", "desktop.stop", "desktop.restart"}:
             action = operation.removeprefix("desktop.")
             display = args.get("display")
@@ -761,6 +774,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--mutation-action", choices=("create", "update", "remove"))
     parser.add_argument("--execution-id")
     parser.add_argument("--limit", type=int, default=100)
+    parser.add_argument("--source-id", choices=tuple(management_log_reader.SOURCES))
     parser.add_argument("--poll-seconds", type=int, default=5)
     parser.add_argument("--job-name")
     parser.add_argument("--job-description", default="Scheduled Ternuxx action")
@@ -919,6 +933,14 @@ def main(argv: list[str] | None = None) -> int:
             payload["user_source"] = "rootfs"
     elif args.operation == "management.catalog":
         payload = {key: value for key, value in (("category", args.category), ("query", args.query), ("status", args.status)) if value is not None}
+    elif args.operation == "management.logs.list":
+        payload = {}
+    elif args.operation == "management.logs.read":
+        if not args.source_id:
+            response = _error(request_id, "invalid_arguments", "--source-id is required")
+            print(json.dumps(response, sort_keys=True) if args.json else "Provide --source-id.", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"source_id": args.source_id, "limit": args.limit}
     elif args.operation == "graphics.provider.status":
         if not args.provider:
             response = _error(request_id, "invalid_arguments", "--provider is required")

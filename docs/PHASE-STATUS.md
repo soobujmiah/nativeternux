@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-CLI, TUI, Web, and GTK now share PRoot session controls; GTK layout and safe preview/cancel were visually exercised on Native :1. Boot/helper identities match; Android denies unprivileged TCP listener diagnostics and cold-boot delivery remains unverified.
+CLI/TUI/Web/GTK now have bounded Ternuxx scheduler and management-audit log reads; GTK is installed, with visual acceptance pending. Boot helper identities match; listener-to-port attribution and Native cold-boot delivery remain unverified.
 
-**Next action:** Keep P3 active. Continue any source/fixture ownership and recovery work; listener attribution needs a permitted Android diagnostic source, and cold-boot delivery needs its separately authorized device-boot window.
+**Next action:** Keep P3 active. Visually exercise the Web/GTK/TUI log controls, continue the shared-action and ownership/recovery audit, pursue permitted listener attribution, and reserve cold-boot delivery for its separate authorized device-boot window.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)
@@ -184,6 +184,7 @@ Evidence:
 - [docs/evidence/2026-10-21-p3-proot-tty-contract-audit.md](evidence/2026-10-21-p3-proot-tty-contract-audit.md)
 - [docs/evidence/2026-10-21-p3-session-client-parity-audit.md](evidence/2026-10-21-p3-session-client-parity-audit.md)
 - [docs/evidence/2026-10-21-p3-session-client-implementation.md](evidence/2026-10-21-p3-session-client-implementation.md)
+- [docs/evidence/2026-10-21-p3-managed-logs.md](evidence/2026-10-21-p3-managed-logs.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 

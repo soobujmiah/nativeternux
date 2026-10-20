@@ -13,6 +13,21 @@ nt_cmd_management() {
         *) nt_fail "Usage: tx mng graphics status {native|debian} | verify {native|debian} {opengl|gles|vulkan} [:N]"; return 2 ;;
       esac
       ;;
+    logs)
+      local action="list"
+      if [ "$#" -gt 0 ]; then action="$1"; shift; fi
+      case "$action" in
+        list)
+          [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng logs list"; return 2; }
+          python3 "$_TN_LIB_DIR/management_service.py" --operation management.logs.list --json
+          ;;
+        read)
+          [ "$#" -eq 1 ] || { nt_fail "Usage: tx mng logs read SOURCE_ID"; return 2; }
+          python3 "$_TN_LIB_DIR/management_service.py" --operation management.logs.read --source-id "$1" --json
+          ;;
+        *) nt_fail "Usage: tx mng logs {list|read SOURCE_ID}"; return 2 ;;
+      esac
+      ;;
     papps)
       local action="${1:-}"
       [ "$#" -gt 0 ] && shift
@@ -433,11 +448,11 @@ nt_cmd_management() {
           python3 "$_TN_LIB_DIR/management_http_runtime.py" --port "$port"
           ;;
         --help|-h|"") nt_help management ;;
-        *) nt_fail "Use 'tx mng center', 'tx mng catalog list', 'tx mng doctor', 'tx mng shortcuts', or 'tx mng http serve'."; return 2 ;;
+        *) nt_fail "Use 'tx mng center', 'tx mng catalog list', 'tx mng logs', 'tx mng doctor', 'tx mng shortcuts', or 'tx mng http serve'."; return 2 ;;
       esac
       ;;
     --help|-h|"") nt_help management ;;
-    *) nt_fail "Use 'tx mng center', 'tx mng catalog list', 'tx mng doctor', 'tx mng shortcuts', or 'tx mng http serve'."; return 2 ;;
+    *) nt_fail "Use 'tx mng center', 'tx mng catalog list', 'tx mng logs', 'tx mng doctor', 'tx mng shortcuts', or 'tx mng http serve'."; return 2 ;;
   esac
 }
 

@@ -221,6 +221,23 @@ def _resource_state(resource: dict[str, Any]) -> str:
     return management_presentation.status_label(state.get("current", "unknown"))
 
 
+def _manage_logs(screen: "curses._CursesWindow") -> dict[str, object]:
+    """Read a bounded exact-source log tail through the shared service."""
+    inventory = _call("management.logs.list")
+    if not inventory.get("ok"):
+        return inventory
+    sources = inventory.get("data", {}).get("sources", [])
+    available = [item for item in sources if isinstance(item, dict) and item.get("status") == "available"]
+    if not available:
+        return {"ok": True, "operation": "management.logs.list",
+                "data": {"sources": sources, "message": "No Ternuxx log files are present."}}
+    choices = ", ".join(str(item.get("source_id")) for item in available)
+    source_id = _prompt(screen, "Log source (" + choices + ")")
+    if not any(item.get("source_id") == source_id for item in available):
+        return {"ok": False, "error": {"code": "unknown_log_source"}}
+    return _call("management.logs.read", {"source_id": source_id, "limit": 100})
+
+
 def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     """Describe only guided controls implemented by this TUI for this resource."""
     resource_id = resource.get("id")
@@ -228,6 +245,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     labels: list[str] = []
     if _selected_status_operation(resource):
         labels.append("check status")
+    if resource_id == "native.system.health" and "management.logs.list" in operations:
+        labels.append("view bounded Ternuxx logs")
     if resource_id == "native.desktop.session":
         labels.extend(name for op, name in (("desktop.start", "start desktop"),
                                             ("desktop.stop", "stop desktop")) if op in operations)
@@ -673,6 +692,8 @@ def _run(screen: "curses._CursesWindow") -> int:
                     report = {"ok": False, "error": {"code": "cancelled"}}
             elif resource["id"] == "native.gui.activity-monitor":
                 report = _edit_monitor_policy(screen)
+            elif resource["id"] == "native.system.health":
+                report = _manage_logs(screen)
             elif resource["id"] == "native.desktop.session":
                 report = _desktop_action(screen, resource)
             elif resource["id"] == "proot.debian.workloads":

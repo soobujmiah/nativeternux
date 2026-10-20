@@ -122,6 +122,7 @@ EOF
       cat <<'EOF'
 tx mng center [install] — Open/install the native GTK management app
 tx mng catalog list — Browse shared categories and resources
+tx mng logs list|read SOURCE_ID  Read bounded Ternuxx-owned log tails
 tx mng proot status — Inspect installed guest and Ternuxx session ownership
 tx mng proot profiles list|show — Inspect validated headless and interactive profiles
 tx mng proot sessions list|show|health — Inspect owned sessions, liveness, exit and attachment capability
