@@ -1,0 +1,7 @@
+event_id: commit-53fd8c811bba-6596012a5cf2d910
+repository: soobujmiah/ternuxx
+commit: 53fd8c811bba2a07acf8d8c15986e5882258b053
+kind: commit
+occurred_at: '2026-10-20T12:31:37Z'
+status: completed
+summary: 'fix(tui): center three-line management header'
