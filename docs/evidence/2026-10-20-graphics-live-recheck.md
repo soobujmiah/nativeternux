@@ -19,7 +19,7 @@ The earlier context-only and unobserved es2gears_x11 attempts above are supersed
 
 ## Fresh PRoot display-route comparison
 
-After starting the Ternuxx-managed full nested XFCE on Xephyr :2 while Native :1 remained running, the shared Debian OpenGL verifier on :2 reported X11 and PulseAudio reachable, a GLES 3.2 context string zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP)), but GLX renderer unavailable and glx_draw=failed with zero frames. The output contained blocker GLX renderer unavailable; GLES context does not verify a draw. Xephyr/XFCE emitted repeated DRI3 not available warnings. This is a repeated live failure of nested GLX drawing/presentation, not evidence of nested GPU acceleration.
+After starting the Ternuxx-managed full nested XFCE on Xephyr :2 while Native :1 remained running, the shared Debian OpenGL verifier on :2 reported X11 and PulseAudio reachable, a GLES 3.2 context string zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP)), but GLX renderer unavailable and glx_draw=failed with zero frames. The output contained blocker GLX renderer unavailable; GLES context does not verify a draw. Xephyr/XFCE emitted repeated DRI3 not available warnings. The verifier now queries the X server extension list directly and reports `dri3_extension=unavailable`, alongside `glx_draw=failed` and zero frames. The GLES value remains context-only. This is a repeated live failure of nested GLX drawing/presentation, not evidence of nested GPU acceleration.
 
 The same fixed read-only verifier on Debian display :1 then completed with status=complete, glx_draw=verified, 580 frames, and requested Zink/Turnip renderer zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP)); X11 and authenticated Native PulseAudio were reachable. This verifies the direct PRoot application display route on Native :1. It does not qualify the full nested :2 desktop.
 
@@ -38,11 +38,11 @@ A fresh nested XFCE run on Xephyr `:2` was queried with the updated structured v
 ## Verification
 
 - `python3 -m unittest tests.test_graphics_management -v`: 9/9 passed, including GLES context-vs-draw reporting, forced-failure llvmpipe fallback, and rejection of an unqualified fallback renderer.
-- `bash scripts/repo_test.sh`: 606/606 passed in 117.656 seconds on Native Termux. The suite includes the longer bounded fixture teardown allowance and the fresh-image digest rejection regression.
+- `bash scripts/repo_test.sh`: latest full run passed 612/612 in 103.849 seconds on Native Termux. The previous recorded run passed 606/606 in 117.656 seconds. The suite includes the longer bounded fixture teardown allowance and the fresh-image digest rejection regression.
 - Python compilation and `git diff --check` passed.
 
 ## Evidence
 
 Live observations were captured through Native Termux SSH 8022. The nested context and presentation details are further described in [`2026-10-20-proot-full-gui.md`](2026-10-20-proot-full-gui.md).
 
-The read-only PRoot verifier reports GLX and GLES separately, requires frame output and the requested renderer for GLX draw success, and never promotes an ES context to a draw result. Focused PRoot diagnostic tests passed 23/23 and graphics-manager tests passed 9/9 after this change.
+The read-only PRoot verifier reports GLX and GLES separately, requires frame output and the requested renderer for GLX draw success, and never promotes an ES context to a draw result. Focused PRoot diagnostic tests passed 23/23 after adding the structured DRI3 extension check; graphics-manager tests passed 9/9. A fresh nested rerun on :2 again returned partial, DRI3 unavailable, GLX draw failed with zero frames, GLES 3.2 Zink/Turnip context, and reachable X11/audio. The managed nested terminal was closed with Ctrl-C; a follow-up check confirmed :2 absent while Native :1 remained live.

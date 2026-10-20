@@ -191,6 +191,8 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertEqual(command[-2], "-c")
         self.assertIn("glxinfo -B", command[-1])
         self.assertIn("glxgears -info -geometry 180x100", command[-1])
+        self.assertIn("xdpyinfo -display", command[-1])
+        self.assertIn("-queryExtensions", command[-1])
         self.assertIn("timeout -s TERM 7s", command[-1])
         self.assertEqual(report["checks"]["glx_draw"], "verified")
         self.assertEqual(report["checks"]["glx_draw_frames"], 214)
@@ -209,7 +211,7 @@ class ProotDiagnosticsTests(unittest.TestCase):
             "Display: :2\nX11: reachable\nAudio: PulseAudio reachable\n"
             "Renderer: unavailable\nGLES context: verified\n"
             "GLES renderer: zink Vulkan 1.4 (Adreno (TM) 825 (MESA_TURNIP))\n"
-            "GLES version: OpenGL ES 3.2 Mesa\n",
+            "GLES version: OpenGL ES 3.2 Mesa\nDRI3 extension: unavailable\n",
         ]
         def runner(*_args, **_kwargs):
             return SimpleNamespace(returncode=0, stdout=outputs.pop(0))
@@ -227,6 +229,7 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertIn("zink Vulkan", checks["gles_renderer"])
         self.assertEqual(checks["gles_version"], "OpenGL ES 3.2 Mesa")
         self.assertFalse(checks["gles_draw_verified"])
+        self.assertEqual(checks["dri3_extension"], "unavailable")
         self.assertEqual(checks["glx_draw"], "unknown")
         self.assertEqual(checks["glx_draw_frames"], 0)
         self.assertIsNone(checks["glx_draw_renderer"])

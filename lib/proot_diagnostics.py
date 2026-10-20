@@ -298,7 +298,7 @@ def _verification_result(*, status: str, display: str, backend: str,
                          gles_context: str = "unknown", gles_renderer: str | None = None,
                          gles_version: str | None = None, glx_draw: str = "unavailable",
                          glx_draw_frames: int = 0, glx_draw_renderer: str | None = None,
-                         blockers: list[str] | None = None,
+                         dri3_extension: str = "unknown", blockers: list[str] | None = None,
                          native_pulseaudio_endpoint: dict[str, str | None] | None = None
                          ) -> dict[str, object]:
     return {
@@ -317,7 +317,7 @@ def _verification_result(*, status: str, display: str, backend: str,
                    "gles_context": gles_context, "gles_renderer": gles_renderer,
                    "gles_version": gles_version, "gles_draw_verified": False,
                    "glx_draw": glx_draw, "glx_draw_frames": glx_draw_frames,
-                   "glx_draw_renderer": glx_draw_renderer},
+                   "glx_draw_renderer": glx_draw_renderer, "dri3_extension": dri3_extension},
         "blockers": blockers or [],
         "read_only": True,
         "safety": {"packages_changed": False, "guest_write_command_invoked": False,
@@ -376,6 +376,15 @@ if command -v glxinfo >/dev/null 2>&1; then
   [ -n "$renderer" ] && x11=reachable
 fi
 printf 'X11: %s\n' "$x11"
+dri3_extension=unknown
+if command -v xdpyinfo >/dev/null 2>&1; then
+  if xdpyinfo -display "${DISPLAY:-}" -queryExtensions 2>/dev/null | awk '$1 == "DRI3" { found=1 } END { exit !found }'; then
+    dri3_extension=available
+  else
+    dri3_extension=unavailable
+  fi
+fi
+printf 'DRI3 extension: %s\n' "$dri3_extension"
 printf 'Renderer: %s\n' "${renderer:-unavailable}"
 glx_draw=unavailable
 glx_draw_frames=0
@@ -467,7 +476,7 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
         key, value = line.split(":", 1)
         key, value = key.strip().lower(), value.strip()
         if key in {"display", "x11", "audio", "renderer", "gles context", "gles renderer", "gles version",
-                   "glx draw", "glx draw frames", "glx draw renderer"}:
+                   "glx draw", "glx draw frames", "glx draw renderer", "dri3 extension"}:
             values[key] = value
     observed_display = values.get("display")
     x11 = "reachable" if values.get("x11") == "reachable" else "unavailable" if "x11" in values else "unknown"
@@ -501,6 +510,9 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
         glx_draw_frames = 0
     if not 0 <= glx_draw_frames <= 1000000000:
         glx_draw_frames = 0
+    dri3_extension = values.get("dri3 extension")
+    if dri3_extension not in {"available", "unavailable"}:
+        dri3_extension = "unknown"
     glx_draw_status = values.get("glx draw")
     if glx_draw_status not in {"verified", "failed", "unavailable"}:
         glx_draw_status = "unknown"
@@ -544,4 +556,4 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
                                renderer_class=renderer_class, gles_context=gles_context,
                                gles_renderer=gles_renderer, gles_version=gles_version,
                                glx_draw=glx_draw_status, glx_draw_frames=glx_draw_frames,
-                               glx_draw_renderer=glx_draw_renderer, blockers=blockers)
+                               glx_draw_renderer=glx_draw_renderer, dri3_extension=dri3_extension, blockers=blockers)

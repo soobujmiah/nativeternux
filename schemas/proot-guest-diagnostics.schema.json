@@ -69,7 +69,8 @@
         "gles_draw_verified",
         "glx_draw",
         "glx_draw_frames",
-        "glx_draw_renderer"
+        "glx_draw_renderer",
+        "dri3_extension"
       ],
       "properties": {
         "observed_display": {
@@ -152,6 +153,9 @@
             "null"
           ],
           "maxLength": 1024
+        },
+        "dri3_extension": {
+          "enum": ["available", "unavailable", "unknown"]
         }
       }
     },
