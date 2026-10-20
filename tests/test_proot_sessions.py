@@ -452,6 +452,72 @@ class PRootVerificationFixtureTests(unittest.TestCase):
     def test_synthetic_complete_identity_is_verified(self):
         self.assertTrue(self.verified())
 
+    def test_interactive_pty_relay_forwards_input_output_resizes_and_restores_terminal(self):
+        import termios
+        old_handler = object()
+        installed = []
+        writes = []
+        ioctl_calls = []
+        def set_handler(_sig, handler):
+            if callable(handler):
+                installed.append(handler)
+            return old_handler
+        def fake_select(readers, _writers, _errors, _timeout):
+            self.assertIn(20, readers)
+            self.assertIn(21, readers)
+            installed[-1](proot_sessions.signal.SIGWINCH, None)
+            return [21, 20], [], []
+        with mock.patch("termios.tcgetattr", return_value=["saved"]), \
+             mock.patch("termios.tcsetattr") as restore_termios, \
+             mock.patch("tty.setraw") as setraw, \
+             mock.patch("signal.getsignal", return_value=old_handler), \
+             mock.patch("signal.signal", side_effect=set_handler) as set_signal, \
+             mock.patch("fcntl.ioctl", side_effect=lambda fd, op, value: (
+                 ioctl_calls.append((fd, op, value)) or b"window-size")), \
+             mock.patch("select.select", side_effect=fake_select), \
+             mock.patch("os.read", side_effect=[b"typed", b"rendered", b""]), \
+             mock.patch("os.write", side_effect=lambda fd, data: writes.append((fd, data)) or len(data)), \
+             mock.patch("os.waitpid", return_value=(77, 0)), \
+             mock.patch.object(proot_sessions, "_members", return_value=[]), \
+             mock.patch("os.close") as close_master:
+            status = proot_sessions._relay_interactive_pty(21, 77, input_fd=20, output_fd=22)
+        self.assertEqual(status, 0)
+        setraw.assert_called_once_with(20)
+        self.assertEqual(writes, [(21, b"typed"), (22, b"rendered")])
+        self.assertEqual([(fd, op) for fd, op, _ in ioctl_calls],
+                         [(20, termios.TIOCGWINSZ),
+                          (21, termios.TIOCSWINSZ)] * 2)
+        self.assertEqual(ioctl_calls[1][2], b"window-size")
+        self.assertEqual(ioctl_calls[3][2], b"window-size")
+        restore_termios.assert_called_once_with(20, termios.TCSADRAIN, ["saved"])
+        self.assertEqual(set_signal.call_args_list[-1].args, (proot_sessions.signal.SIGWINCH, old_handler))
+        close_master.assert_called_once_with(21)
+
+    def test_interactive_pty_relay_closes_master_when_terminal_probe_fails(self):
+        with mock.patch("termios.tcgetattr", side_effect=OSError("no terminal")), \
+             mock.patch("os.close") as close_master:
+            with self.assertRaisesRegex(OSError, "no terminal"):
+                proot_sessions._relay_interactive_pty(21, 77, input_fd=20, output_fd=22)
+        close_master.assert_called_once_with(21)
+
+    def test_interactive_pty_relay_restores_terminal_after_relay_error(self):
+        import termios
+        old_handler = object()
+        def set_handler(_sig, handler):
+            return old_handler
+        with mock.patch("termios.tcgetattr", return_value=["saved"]), \
+             mock.patch("termios.tcsetattr") as restore_termios, \
+             mock.patch("tty.setraw"), \
+             mock.patch("signal.getsignal", return_value=old_handler), \
+             mock.patch("signal.signal", side_effect=set_handler), \
+             mock.patch("fcntl.ioctl", return_value=b"window-size"), \
+             mock.patch("select.select", side_effect=RuntimeError("fixture relay failure")), \
+             mock.patch("os.close") as close_master:
+            with self.assertRaisesRegex(RuntimeError, "fixture relay failure"):
+                proot_sessions._relay_interactive_pty(21, 77, input_fd=20, output_fd=22)
+        restore_termios.assert_called_once_with(20, termios.TCSADRAIN, ["saved"])
+        close_master.assert_called_once_with(21)
+
     def test_interactive_start_waits_for_proot_distro_exec_transition(self):
         from unittest.mock import patch
         record = {"pid": 42, "process_start": "same", "process_group": 42}

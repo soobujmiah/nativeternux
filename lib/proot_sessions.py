@@ -832,6 +832,91 @@ def _update_session(state_dir: str | os.PathLike[str], session_id: str, update) 
         lock.close()
 
 
+def _relay_interactive_pty(master: int, child_pid: int, *, input_fd: int = 0,
+                           output_fd: int = 1) -> int:
+    """Relay one owned foreground PTY and always restore the caller terminal."""
+    import errno
+    import fcntl
+    import select
+    import termios
+    import tty
+
+    try:
+        original_termios = termios.tcgetattr(input_fd)
+    except BaseException:
+        os.close(master)
+        raise
+    old_winch = signal.getsignal(signal.SIGWINCH)
+    termios_changed = False
+    winch_changed = False
+
+    def resize(_signum=None, _frame=None):
+        try:
+            size = fcntl.ioctl(input_fd, termios.TIOCGWINSZ, b"\0" * 8)
+            fcntl.ioctl(master, termios.TIOCSWINSZ, size)
+        except OSError:
+            pass
+
+    status = None
+    input_open = True
+    try:
+        termios_changed = True
+        tty.setraw(input_fd)
+        signal.signal(signal.SIGWINCH, resize)
+        winch_changed = True
+        resize()
+        while True:
+            ready, _, _ = select.select(
+                [master] + ([input_fd] if input_open else []), [], [], 0.2)
+            if input_fd in ready:
+                data = os.read(input_fd, 4096)
+                if data:
+                    os.write(master, data)
+                else:
+                    input_open = False
+                    try:
+                        os.write(master, b"\x04")
+                    except OSError:
+                        pass
+            if master in ready:
+                try:
+                    data = os.read(master, 65536)
+                except OSError as exc:
+                    if exc.errno == errno.EIO:
+                        data = b""
+                    else:
+                        raise
+                if not data:
+                    break
+                os.write(output_fd, data)
+            if status is None:
+                waited, wait_status = os.waitpid(child_pid, os.WNOHANG)
+                if waited:
+                    status = os.waitstatus_to_exitcode(wait_status)
+            if status is not None and not _members(child_pid):
+                try:
+                    data = os.read(master, 65536)
+                except OSError:
+                    data = b""
+                if data:
+                    os.write(output_fd, data)
+                break
+        if status is None:
+            _, wait_status = os.waitpid(child_pid, 0)
+            status = os.waitstatus_to_exitcode(wait_status)
+        return status
+    finally:
+        try:
+            if termios_changed:
+                termios.tcsetattr(input_fd, termios.TCSADRAIN, original_termios)
+        finally:
+            try:
+                if winch_changed:
+                    signal.signal(signal.SIGWINCH, old_winch)
+            finally:
+                os.close(master)
+
+
 def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirmed: bool,
                       plan_id: str) -> dict[str, object]:
     """Run the supported interactive Debian login on an owned controlling PTY."""
@@ -891,54 +976,7 @@ def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirm
             saved["last_verified_at"] = _timestamp()
         record = _update_session(state_dir, record["session_id"], mark_running)
         print("Ternuxx Debian session " + record["session_id"] + " is attached. Type exit to leave.", file=sys.stderr)
-        import errno, fcntl, select, termios, tty
-        input_fd, output_fd = 0, 1
-        original_termios = termios.tcgetattr(input_fd)
-        old_winch = signal.getsignal(signal.SIGWINCH)
-        def resize(_signum=None, _frame=None):
-            try:
-                size = fcntl.ioctl(input_fd, termios.TIOCGWINSZ, b"\0" * 8)
-                fcntl.ioctl(master, termios.TIOCSWINSZ, size)
-            except OSError:
-                pass
-        tty.setraw(input_fd)
-        signal.signal(signal.SIGWINCH, resize)
-        resize()
-        status = None
-        input_open = True
-        try:
-            while True:
-                ready, _, _ = select.select([master] + ([input_fd] if input_open else []), [], [], 0.2)
-                if input_fd in ready:
-                    data = os.read(input_fd, 4096)
-                    if data:
-                        os.write(master, data)
-                    else:
-                        input_open = False
-                        try: os.write(master, b"\x04")
-                        except OSError: pass
-                if master in ready:
-                    try: data = os.read(master, 65536)
-                    except OSError as exc:
-                        if exc.errno == errno.EIO: data = b""
-                        else: raise
-                    if not data: break
-                    os.write(output_fd, data)
-                if status is None:
-                    waited, wait_status = os.waitpid(child_pid, os.WNOHANG)
-                    if waited: status = os.waitstatus_to_exitcode(wait_status)
-                if status is not None and not _members(child_pid):
-                    try: data = os.read(master, 65536)
-                    except OSError: data = b""
-                    if data: os.write(output_fd, data)
-                    break
-        finally:
-            termios.tcsetattr(input_fd, termios.TCSADRAIN, original_termios)
-            signal.signal(signal.SIGWINCH, old_winch)
-            os.close(master)
-        if status is None:
-            _, wait_status = os.waitpid(child_pid, 0)
-            status = os.waitstatus_to_exitcode(wait_status)
+        status = _relay_interactive_pty(master, child_pid)
         remaining = _members(child_pid)
         final_state = "stopped" if not remaining else "unknown"
         source = "login-exited" if not remaining else "login-exited-processes-remain"

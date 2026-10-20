@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "TTY ownership fixtures strengthened; interactive runtime mismatch and PTY relay remain open, alongside client parity, boot helper drift, and cold-boot gates.",
+      "summary": "TTY relay and ownership fixtures now cover the declared foreground contract; client action parity, helper drift, and cold-boot gates remain open.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -171,7 +171,7 @@
         "docs/evidence/2026-10-20-phase-roadmap-audit.md",
         "docs/evidence/2026-10-20-p3-tty-fixture-audit.md"
       ],
-      "next_action": "Add isolated PTY-relay fixtures for input/output, window-size propagation, terminal restoration, and foreground behavior; then diagnose the recorded cwd/guest-ID mismatch from read-only runtime evidence before any safe live retry."
+      "next_action": "Add a shared preview/explicit-confirm/apply contract for Cron job create/update/remove, then expose it consistently in CLI, TUI, Web, and GTK. Keep P3 boot-helper reconciliation and authorized cold-boot gates open."
     },
     {
       "id": "P4",

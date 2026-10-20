@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Add isolated PTY-relay fixtures for input/output, window-size propagation, terminal restoration, and foreground behavior; then diagnose the recorded cwd/guest-ID mismatch from read-only runtime evidence before any safe live retry.
+**Next action:** Add a shared preview/explicit-confirm/apply contract for Cron job create/update/remove, then expose it consistently in CLI, TUI, Web, and GTK. Keep P3 boot-helper reconciliation and authorized cold-boot gates open.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

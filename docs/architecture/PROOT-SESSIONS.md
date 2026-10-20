@@ -1,6 +1,6 @@
 # Ternuxx-owned Debian PRoot sessions
 
-**Status (2026-10-20):** fixed profile inventory, exact-session ownership controls, foreground TTY login path, bounded health reads, and safe stale-record reconciliation are implemented. The dedicated `tx pgui` desktop lifecycle is now live-qualified for standalone `:0` and nested Xephyr `:2` inside Native `:1`; it uses a separate tracked supervisor, the existing Zink/Turnip handoff, and authenticated Native PulseAudio. General TTY login qualification still fails closed on its runtime cwd/UID identity signature. General profile-session attach/detach, arbitrary session stop, guest service management, and PRoot boot launch remain unqualified.
+**Status (2026-10-20):** fixed profile inventory, exact-session ownership controls, foreground TTY login path, bounded health reads, and safe stale-record reconciliation are implemented. The dedicated `tx pgui` desktop lifecycle is now live-qualified for standalone `:0` and nested Xephyr `:2` inside Native `:1`; it uses a separate tracked supervisor, the existing Zink/Turnip handoff, and authenticated Native PulseAudio. The foreground PTY relay now has fixture coverage for input/output, SIGWINCH sizing, exit status, and terminal/fd cleanup; general live TTY login qualification still fails closed on its runtime cwd/UID identity signature. General profile-session attach/detach, arbitrary session stop, guest service management, and PRoot boot launch remain unqualified.
 
 ## Rootfs and legacy integration
 
