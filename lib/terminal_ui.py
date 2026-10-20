@@ -151,6 +151,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
             labels.append("select Native backend")
     elif resource_id == "native.gui.activity-monitor":
         labels.append("configure monitoring policy")
+    elif resource_id == "native.timezone" and "timezone.set" in operations:
+        labels.append("configure Ternuxx timezone preference")
     elif resource_id == "proot.debian.workloads":
         labels.append("launch named PRoot app")
     elif resource_id == "network.ssh.managed-8023":
@@ -268,6 +270,25 @@ def _show_details(screen: "curses._CursesWindow", report: dict[str, object] | No
 def _cron_jobs() -> dict[str, object]:
     """Read persisted Cron definitions via the shared management service."""
     return _call("cron.jobs.list")
+
+
+def _timezone_action(screen: "curses._CursesWindow") -> dict[str, object]:
+    current = _call("timezone.status")
+    if not current.get("ok"):
+        return current
+    current_zone = str(current.get("data", {}).get("timezone", "unknown"))
+    zones = _call("timezone.list")
+    if not zones.get("ok"):
+        return zones
+    available = zones.get("data", {}).get("timezones", [])
+    selected = _prompt(screen, f"IANA timezone (current {current_zone}; available zones via tx mng timezone list)")
+    if not selected:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    if selected not in available:
+        return {"ok": False, "error": {"code": "timezone_unavailable"}}
+    if _prompt(screen, f"Set Ternuxx preference to {selected}? type yes").lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("timezone.set", {"timezone": selected})
 
 
 def _cron_executions() -> dict[str, object]:
@@ -396,6 +417,8 @@ def _run(screen: "curses._CursesWindow") -> int:
                 report = _launch_proot_app(screen)
             elif resource["id"] == "network.ssh.managed-8023":
                 report = _managed_ssh_action(screen, resource)
+            elif resource["id"] == "native.timezone":
+                report = _timezone_action(screen)
             elif resource["id"] == "automation.cron-registry":
                 choice = _prompt(screen, "Cron action: jobs or history (blank cancels)").lower()
                 report = _cron_jobs() if choice == "jobs" else (_cron_executions() if choice == "history" else {"ok": False, "error": {"code": "cancelled"}})

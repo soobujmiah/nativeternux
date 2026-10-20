@@ -89,6 +89,30 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             self.assertIs(terminal_ui._cron_executions(), history)
         dispatch.assert_called_once_with("cron.executions.list", {"limit": 20})
 
+    def test_timezone_action_checks_available_zones_and_confirms_before_saving(self) -> None:
+        resource = next(item for item in management_service.management_catalog.RESOURCES
+                        if item["id"] == "native.timezone")
+        self.assertIn("configure Ternuxx timezone preference", terminal_ui._available_action_labels(resource))
+        current = {"ok": True, "data": {"timezone": "Asia/Dhaka"}}
+        zones = {"ok": True, "data": {"timezones": ["Asia/Dhaka", "UTC"]}}
+        with mock.patch.object(terminal_ui, "_call", side_effect=[current, zones, {"ok": True}]) as dispatch, \
+             mock.patch.object(terminal_ui, "_prompt", side_effect=["UTC", "yes"]):
+            result = terminal_ui._timezone_action(object())
+        self.assertTrue(result["ok"])
+        dispatch.assert_has_calls([
+            mock.call("timezone.status"), mock.call("timezone.list"),
+            mock.call("timezone.set", {"timezone": "UTC"}),
+        ])
+
+    def test_timezone_action_rejects_unavailable_zone_without_write(self) -> None:
+        current = {"ok": True, "data": {"timezone": "Asia/Dhaka"}}
+        zones = {"ok": True, "data": {"timezones": ["Asia/Dhaka"]}}
+        with mock.patch.object(terminal_ui, "_call", side_effect=[current, zones]) as dispatch, \
+             mock.patch.object(terminal_ui, "_prompt", return_value="../UTC"):
+            result = terminal_ui._timezone_action(object())
+        self.assertEqual(result["error"]["code"], "timezone_unavailable")
+        self.assertEqual(dispatch.call_count, 2)
+
     def test_operation_history_is_available_only_from_recovery_resource(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES
                         if item["id"] == "recovery.native-state")

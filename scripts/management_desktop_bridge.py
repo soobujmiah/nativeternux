@@ -97,6 +97,10 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.list")
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "timezone-set" and len(argv) == 2:
+        result = call("timezone.set", {"timezone": argv[1]})
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "cron-history" and len(argv) == 1:
         result = call("cron.executions.list", {"limit": 20})
         print(json.dumps(result, ensure_ascii=False, indent=2))

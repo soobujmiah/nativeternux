@@ -243,6 +243,9 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('b.textContent="List saved jobs"', page)
         self.assertIn('b.onclick=()=>run("cron.jobs.list")', page)
         self.assertIn('b.onclick=()=>run("cron.executions.list",{limit:20})', page)
+        self.assertIn('b.onclick=()=>run("timezone.list")', page)
+        self.assertIn("timezone.status", page)
+        self.assertNotIn("timezone.set", page)
 
     def test_liveness_and_readiness_are_distinct_and_readiness_tracks_listener(self) -> None:
         server = management_http_runtime.build_server(

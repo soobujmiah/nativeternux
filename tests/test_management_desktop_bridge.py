@@ -110,6 +110,14 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("cron.jobs.list")
         self.assertIn('"jobs": []', output.getvalue())
 
+    def test_timezone_set_bridge_calls_typed_preference_operation(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"timezone": "UTC"}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["timezone-set", "UTC"]), 0)
+        dispatch.assert_called_once_with("timezone.set", {"timezone": "UTC"})
+        self.assertIn("UTC", output.getvalue())
+
     def test_cron_history_bridge_reads_bounded_shared_execution_history(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"executions": []}}) as dispatch:
             output = StringIO()

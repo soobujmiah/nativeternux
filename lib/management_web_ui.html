@@ -52,7 +52,7 @@
   const supported=document.createElement("details"),summary=document.createElement("summary");summary.textContent="Supported capabilities ("+operations.length+")";supported.append(summary);
   const opList=document.createElement("ul");for(const op of operations){const item=document.createElement("li");item.textContent=operationLabel(op);opList.append(item)}supported.append(opList);detail.append(supported);
   if((r.planned_operations||[]).length){const planned=document.createElement("details"),s=document.createElement("summary"),list=document.createElement("ul");s.textContent="Planned capabilities ("+r.planned_operations.length+")";for(const op of r.planned_operations){const li=document.createElement("li");li.textContent=operationLabel(op);list.append(li)}planned.append(s,list);detail.append(planned)}
-  const statusOp=operations.find(x=>["desktop.status","desktop.monitor.status","proot.status","ssh.inspect","native.ssh.status","boot.status","boot.profile.status","recovery.status","doctor.report","proot.shortcuts.list","cron.status"].includes(x));
+  const statusOp=operations.find(x=>["desktop.status","desktop.monitor.status","proot.status","ssh.inspect","native.ssh.status","boot.status","boot.profile.status","recovery.status","doctor.report","proot.shortcuts.list","cron.status","timezone.status"].includes(x));
   if(statusOp){const b=document.createElement("button");b.className="primary";b.textContent="Check live status";b.onclick=()=>run(statusOp);actions.append(b)}
   for(const [op,label] of [["desktop.start","Start"],["desktop.stop","Stop"],["desktop.restart","Restart"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label+" desktop";b.onclick=()=>run(op);actions.append(b)}
   if(r.id==="network.ssh.managed-8023"){for(const [op,label] of [["ssh.service.start","Start managed SSH"],["ssh.service.stop","Stop managed SSH"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label;b.onclick=()=>manageSsh(op);actions.append(b)}}
@@ -63,6 +63,7 @@
    if(provider==="native")for(const [backend,label] of [["kgsl-freedreno","Use verified KGSL candidate"],["system","Use system graphics stack"]]){const b=document.createElement("button");b.textContent=label;b.onclick=()=>run("graphics.provider.select",{provider,backend,confirmed:true});actions.append(b)}
   }
   if(r.id==="native.gui.activity-monitor"){const b=document.createElement("button");b.textContent="Load monitoring policy";b.onclick=()=>run("desktop.monitor.status");actions.append(b)}
+  if(r.id==="native.timezone"&&operations.includes("timezone.list")){const b=document.createElement("button");b.textContent="List available timezones";b.onclick=()=>run("timezone.list");actions.append(b)}
   if(r.id==="automation.cron-registry"){if(operations.includes("cron.jobs.list")){const b=document.createElement("button");b.textContent="List saved jobs";b.onclick=()=>run("cron.jobs.list");actions.append(b)}if(operations.includes("cron.executions.list")){const b=document.createElement("button");b.textContent="View execution history";b.onclick=()=>run("cron.executions.list",{limit:20});actions.append(b)}}
  }
  function operationLabel(op){return op.replaceAll("."," ").replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}
