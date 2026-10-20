@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases resolved (3 completed, 0 skipped)
 
-CLI, TUI, Web, and GTK now share PRoot session controls; GTK responsive layout and safe preview/cancel were visually exercised on Native :1. Boot/helper identities match, while SSH listener attribution and Android cold-boot delivery remain unverified.
+CLI, TUI, Web, and GTK now share PRoot session controls; GTK layout and safe preview/cancel were visually exercised on Native :1. Boot/helper identities match; Android denies unprivileged TCP listener diagnostics and cold-boot delivery remains unverified.
 
-**Next action:** Run the final P3 exit audit against current read-only state, close any remaining non-reboot ownership/recovery gaps including listener attribution, and keep Android cold-boot delivery open until its separately authorized device-boot window.
+**Next action:** Keep P3 active. Continue any source/fixture ownership and recovery work; listener attribution needs a permitted Android diagnostic source, and cold-boot delivery needs its separately authorized device-boot window.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

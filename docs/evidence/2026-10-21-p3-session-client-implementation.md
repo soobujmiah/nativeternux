@@ -38,3 +38,8 @@ On Native Termux, `tx status --json` verified the existing desktop running on `:
 ## Remaining P3 gates
 
 GTK session controls are source-, compile-, install-, and live-UI-checked. Managed SSH listener attribution and Android cold-boot delivery remain unverified. Cold-boot delivery is not inferred from a manual script run. P3 stays active; P4-P10 must remain planned until P3 passes.
+
+
+## Follow-up: unprivileged listener attribution probe
+
+A read-only attempt to use Android NETLINK_SOCK_DIAG for TCP listener enumeration was denied at socket creation with PermissionError: [Errno 13]. No listener rows or inode mappings were obtained. lsof exposed no 8022/8023 listener rows, and the existing /proc/net/tcp* path remains denied. No package was installed, no privilege was requested, and no SSH process or configuration was changed. Listener ownership remains unknown.
