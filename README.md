@@ -36,7 +36,7 @@ Run these commands in Native Termux from the checkout:
 ./tx web
 ```
 
-`./tx mng center` opens the Native GTK management app when the desktop and GTK dependencies are installed. `./tx db` opens the existing Debian PRoot shell. `./tx pgui` opens the existing Debian XFCE desktop: standalone on `:0` when Native GUI is stopped, or nested through Xephyr on `:2` inside Native `:1`. Individual Debian applications remain available through `tx mng app launch` and shared shortcuts. The four management clients use the shared service, though feature coverage still differs by client.
+`./tx mng center` opens the Native GTK management app when the desktop and GTK dependencies are installed. `./tx db` opens the existing Debian PRoot shell. `./tx pgui` opens the existing Debian XFCE desktop: standalone on `:0` when Native GUI is stopped, or nested through Xephyr on `:2` inside Native `:1`. Installed Debian GUI apps are auto-listed in a separate Native XFCE **PRoot Apps** menu. Refresh after changing guest apps with `./tx mng papps sync`; launch by menu or `./tx mng app launch --desktop-id APP.desktop`. The four management clients use the shared service, though feature coverage still differs by client.
 
 ## Planned use and current workstation boundary
 
@@ -46,6 +46,10 @@ Run these commands in Native Termux from the checkout:
 
 The separate Ternux project remains independent and reference-only. Ternuxx does not require its CLI or state files. Existing Debian user data, packages, GPU setup, db/launcher aliases, x.sh, xgo, and killx are preserved; any targeted guest config adaptation requires a bounded impact assessment and recovery plan. Native Bionic libraries are not copied into Debian glibc paths. NPU execution remains unverified.
 
+
+## PRoot Apps menu
+
+Native XFCE gets a separate **PRoot Apps** category built from the visible application entries installed in the existing Debian guest. Ternuxx refreshes these launchers when its Native desktop starts; after adding or removing a Debian app while the desktop is open, run `./tx mng papps sync`. Each menu item goes through the shared management service and opens the matching guest desktop entry. Unrecognized or shell-command entries are skipped, and conflicting user-owned launchers are preserved.
 
 ## Existing Debian setup
 

@@ -33,6 +33,8 @@ Commands:
   mng         Shared management operations and local Web service
   proot       Inspect and manage PRoot integrations
   pgui        Start/status/stop the existing Debian full desktop
+  app         Launch allowlisted Debian apps from Native XFCE menu entries
+  mng papps sync  Refresh the separate PRoot Apps menu from installed Debian apps
   audio       Manage Native PulseAudio used by Debian PRoot
   virgl       Manage the identity-checked Native VirGL server
   graphics    Select Native desktop graphics backend

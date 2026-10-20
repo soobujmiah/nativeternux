@@ -22,6 +22,49 @@ nt_cmd_pgui() {
   _nt_proot_gui "$@"
 }
 
+
+# Compatibility entry used by existing Native XFCE menu items. These are
+# fixed desktop commands mapped to the shared, provider-aware app launcher.
+nt_cmd_app() {
+  [ "$#" -ge 2 ] && [ "$1" = -- ] || {
+    nt_fail "Usage: tx app -- ALLOWLISTED_DEBIAN_APP [fixed options]"
+    return 2
+  }
+  shift
+  local app_id="" program="$1"
+  case "$program" in
+    thunar)
+      if [ "$#" -eq 1 ]; then app_id=files
+      elif [ "$#" -eq 2 ] && [ "$2" = --bulk-rename ]; then app_id=thunar-bulk-rename
+      fi
+      ;;
+    xfce4-terminal)
+      if [ "$#" -eq 1 ]; then app_id=terminal
+      elif [ "$#" -eq 2 ] && [ "$2" = --preferences ]; then app_id=xfce4-terminal-settings
+      fi
+      ;;
+    firefox-esr|/usr/lib/firefox-esr/firefox-esr) [ "$#" -eq 1 ] && app_id=firefox ;;
+    /usr/bin/vlc)
+      if [ "$#" -eq 1 ] || { [ "$#" -eq 2 ] && [ "$2" = --started-from-file ]; }; then app_id=vlc; fi
+      ;;
+    blender|pavucontrol|system-config-printer|thunar-settings|thunar-volman-settings|xarchiver|xfce4-appfinder)
+      [ "$#" -eq 1 ] && app_id="$program" ;;
+    --help|-h)
+      printf '%s\n' "Usage: tx app -- ALLOWLISTED_DEBIAN_APP [fixed options]"         "Compatibility route for existing Native XFCE PRoot menu entries."
+      return 0
+      ;;
+  esac
+  [ -n "$app_id" ] || {
+    nt_fail "Unsupported or malformed Debian menu app; no guest command was run."
+    return 2
+  }
+  nt_require_termux || return 1
+  nt_require_command python3 || return 1
+  local -a launch_args=(--operation proot.app.launch --app-id "$app_id")
+  [ "$TERNUXX_JSON" = "1" ] && launch_args+=(--json)
+  python3 "$_TN_LIB_DIR/management_service.py" "${launch_args[@]}"
+}
+
 _nt_proot_verify() {
   local distro="$1" guest_user="$2" user_source="$3" display="$4" backend="$5"
   local args=(--operation proot.guest.verify --distro "$distro" --display "$display" --backend "$backend")

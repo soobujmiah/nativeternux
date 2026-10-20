@@ -56,6 +56,7 @@ OPERATION_CAPABILITIES: dict[str, str] = {
     "proot.start": "proot.session.manage",
     "proot.stop": "proot.session.manage",
     "proot.app.launch": "applications.launch",
+    "proot.shortcuts.sync": "applications.manage",
     "proot.shortcuts.list": "diagnostics.read",
     "proot.shortcuts.preview": "diagnostics.read",
     "proot.shortcuts.apply": "applications.manage",

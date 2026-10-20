@@ -182,14 +182,71 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertIn("The Ternuxx Native desktop is not verified running", result.stderr)
         self.assertIn("Run 'tx start', then retry 'tx gui'", result.stderr)
 
-    def test_pgui_is_registered_with_help_and_old_app_shortcuts_are_unknown(self) -> None:
+    def test_pgui_is_registered_and_app_route_requires_allowlisted_command(self) -> None:
         result = self.tx("pgui", "--help")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("tx pgui [start", result.stdout)
-        for command in ("app", "apps"):
-            result = self.tx(command)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("Unknown command", result.stderr)
+        result = self.tx("apps")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Unknown command", result.stderr)
+        result = self.tx("app")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Usage: tx app --", result.stderr)
+
+    def test_native_xfce_app_shortcut_commands_map_to_shared_allowlisted_launch(self) -> None:
+        cases = (
+            (("thunar",), "files"),
+            (("thunar", "--bulk-rename"), "thunar-bulk-rename"),
+            (("xfce4-terminal",), "terminal"),
+            (("xfce4-terminal", "--preferences"), "xfce4-terminal-settings"),
+            (("/usr/lib/firefox-esr/firefox-esr",), "firefox"),
+            (("/usr/bin/vlc", "--started-from-file"), "vlc"),
+            (("blender",), "blender"),
+            (("pavucontrol",), "pavucontrol"),
+            (("system-config-printer",), "system-config-printer"),
+            (("thunar-settings",), "thunar-settings"),
+            (("thunar-volman-settings",), "thunar-volman-settings"),
+            (("xarchiver",), "xarchiver"),
+            (("xfce4-appfinder",), "xfce4-appfinder"),
+        )
+        for argv, app_id in cases:
+            with self.subTest(argv=argv):
+                capture = self.root / "app-launch-args"
+                script = """_TN_LIB_DIR="$LIB_DIR"
+TERNUXX_JSON=1
+nt_fail() { echo "$*" >&2; }
+nt_require_termux() { return 0; }
+nt_require_command() { return 0; }
+python3() { printf '%s\n' "$@" > "$APP_CAPTURE"; }
+source "$LIB_DIR/proot.sh"
+nt_cmd_app "$@"
+"""
+                env = {**self.env, "LIB_DIR": str(ROOT / "lib"),
+                       "APP_CAPTURE": str(capture)}
+                result = subprocess.run(
+                    [shutil.which("bash"), "-c", script, "app", "--", *argv],
+                    capture_output=True, text=True, env=env, timeout=10,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("--operation\nproot.app.launch\n--app-id\n" + app_id,
+                              capture.read_text())
+        script = """_TN_LIB_DIR="$LIB_DIR"
+nt_fail() { echo "$*" >&2; }
+nt_require_termux() { return 0; }
+nt_require_command() { return 0; }
+python3() { touch "$APP_CAPTURE"; }
+source "$LIB_DIR/proot.sh"
+nt_cmd_app "$@"
+"""
+        capture = self.root / "blocked-app-launch"
+        result = subprocess.run(
+            [shutil.which("bash"), "-c", script, "app", "--", "sh", "-c", "false"],
+            capture_output=True, text=True,
+            env={**self.env, "LIB_DIR": str(ROOT / "lib"), "APP_CAPTURE": str(capture)},
+            timeout=10,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse(capture.exists())
 
     def test_help_lists_short_form_and_commands(self) -> None:
         result = self.tx("--help")

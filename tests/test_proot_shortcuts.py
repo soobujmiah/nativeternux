@@ -180,6 +180,34 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertEqual(launch.call_args.kwargs["display"], ":1")
         self.assertNotIn("session_owner", launch.call_args.kwargs)
 
+    def test_management_launch_routes_guest_desktop_id(self) -> None:
+        env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
+               "HOME": str(self.home), "PATH": "/bin"}
+        request = {"api_version": 1, "request_id": "request-proot-desktop-id-01",
+                   "operation": "proot.app.launch", "args": {"desktop_id": "thunar.desktop"}}
+        with patch.object(proot_shortcuts, "launch_desktop_application",
+                          return_value={"status": "process_exited"}) as launch:
+            result = management_service.dispatch(request, env=env)
+        self.assertTrue(result["ok"])
+        self.assertEqual(launch.call_args.args[0], "thunar.desktop")
+
+    def test_shortcut_sync_is_a_typed_shared_operation(self) -> None:
+        env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
+               "HOME": str(self.home), "PATH": "/bin",
+               "TERNUXX_STATE_DIR": str(self.home / ".local/share/ternuxx")}
+        request = {"api_version": 1, "request_id": "request-proot-sync-01",
+                   "operation": "proot.shortcuts.sync", "args": {}}
+        with patch.object(proot_shortcuts, "sync_desktop_applications",
+                          return_value={"status": "complete", "discovered": 1}) as sync:
+            result = management_service.dispatch(request, env=env)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["data"]["discovered"], 1)
+        self.assertEqual(sync.call_args.kwargs["home"], str(self.home))
+        self.assertEqual(sync.call_args.kwargs["xdg_data_home"],
+                         str(self.home / ".local/share/ternuxx/xfce/data"))
+        self.assertEqual(sync.call_args.kwargs["xdg_config_home"],
+                         str(self.home / ".local/share/ternuxx/xfce/config"))
+
     def test_management_launch_rejects_legacy_ternux_session_owner(self) -> None:
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
                "HOME": str(self.home), "PATH": "/bin"}
@@ -198,6 +226,59 @@ class ProotShortcutTests(unittest.TestCase):
         result = management_service.dispatch(request, env=env)
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "invalid_arguments")
+
+
+    def test_sync_discovers_visible_guest_apps_and_adds_separate_menu_category(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        root = prefix / "var/lib/proot-distro/containers/debian/rootfs"
+        apps = root / "usr/share/applications"
+        apps.mkdir(parents=True)
+        (apps / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor %f\nIcon=editor\n")
+        (apps / "hidden.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Hidden\nExec=hidden\nNoDisplay=true\n")
+        config = self.home / "xfce-config"
+        data = self.home / "xfce-data"
+        result = proot_shortcuts.sync_desktop_applications(
+            home=str(self.home), prefix=str(prefix), repo_root=str(self.repo),
+            xdg_data_home=str(data), xdg_config_home=str(config),
+        )
+        self.assertEqual(result["discovered"], 1)
+        launcher = data / "applications/ternuxx-proot-app-org.example.Editor.desktop"
+        self.assertIn("Categories=Utility;X-Ternuxx-PRoot;", launcher.read_text())
+        self.assertIn("--desktop-id", launcher.read_text())
+        self.assertIn(str(self.repo / "tx"), launcher.read_text())
+        self.assertIn("PRoot Apps", (config / "menus/xfce-applications.menu").read_text())
+        self.assertIn("MergeFile type=\"parent\"", (config / "menus/xfce-applications.menu").read_text())
+        self.assertTrue((data / "desktop-directories/ternuxx-proot-apps.directory").is_file())
+
+    def test_dynamic_launch_reads_desktop_exec_without_shell(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        apps = prefix / "var/lib/proot-distro/containers/debian/rootfs/usr/share/applications"
+        apps.mkdir(parents=True)
+        (apps / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor --title=\"My Editor\" %f\n")
+        with patch.object(proot_shortcuts.subprocess, "run", return_value=type("Result", (), {"returncode": 0})()) as run:
+            proot_shortcuts.launch_desktop_application(
+                "org.example.Editor.desktop", prefix=str(prefix), repo_root=str(self.repo),
+                env={"DISPLAY": ":1"}, display=":1",
+            )
+        self.assertEqual(run.call_args.args[0][-2:], ["/usr/bin/editor", "--title=My Editor"])
+        (apps / "unsafe.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Unsafe\nExec=sh -c 'false'\n")
+        with self.assertRaisesRegex(proot_shortcuts.ShortcutError, "interpreter command"):
+            proot_shortcuts.launch_desktop_application(
+                "unsafe.desktop", prefix=str(prefix), repo_root=str(self.repo), env={})
+        (apps / "wrapped-unsafe.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Wrapped\nExec=env sh -c 'false'\n")
+        with self.assertRaisesRegex(proot_shortcuts.ShortcutError, "interpreter command"):
+            proot_shortcuts.launch_desktop_application(
+                "wrapped-unsafe.desktop", prefix=str(prefix), repo_root=str(self.repo), env={})
+        (apps / "xfce4-session-logout.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Log out\nExec=xfce4-session-logout\n")
+        with self.assertRaisesRegex(proot_shortcuts.ShortcutError, "allowed visible"):
+            proot_shortcuts.launch_desktop_application(
+                "xfce4-session-logout.desktop", prefix=str(prefix), repo_root=str(self.repo), env={})
 
 
 if __name__ == "__main__":

@@ -13,14 +13,33 @@ nt_cmd_management() {
         *) nt_fail "Usage: tx mng graphics status {native|debian} | verify {native|debian} {opengl|gles|vulkan} [:N]"; return 2 ;;
       esac
       ;;
+    papps)
+      local action="${1:-}"
+      [ "$#" -gt 0 ] && shift
+      case "$action" in
+        sync)
+          [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng papps sync"; return 2; }
+          nt_require_termux || return 1
+          nt_require_command python3 || return 1
+          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync --json
+          ;;
+        ""|--help|-h) nt_help management ;;
+        *) nt_fail "Usage: tx mng papps sync"; return 2 ;;
+      esac
+      ;;
     app)
       local action="${1:-}"
       [ "$#" -gt 0 ] && shift
       case "$action" in
         launch)
-          [ "$#" -ge 1 ] || { nt_fail "Usage: tx mng app launch APP_ID [--display :N]"; return 2; }
-          local app_id="$1" display=""
-          shift
+          [ "$#" -ge 1 ] || { nt_fail "Usage: tx mng app launch APP_ID | --desktop-id ID [--display :N]"; return 2; }
+          local app_id="" desktop_id="" display=""
+          if [ "$1" = "--desktop-id" ]; then
+            [ "$#" -ge 2 ] || { nt_fail "--desktop-id requires an installed Debian desktop entry ID"; return 2; }
+            desktop_id="$2"; shift 2
+          else
+            app_id="$1"; shift
+          fi
           while [ "$#" -gt 0 ]; do
             case "$1" in
               --display)
@@ -31,7 +50,8 @@ nt_cmd_management() {
           done
           nt_require_termux || return 1
           nt_require_command python3 || return 1
-          local -a launch_args=(--operation proot.app.launch --app-id "$app_id")
+          local -a launch_args=(--operation proot.app.launch)
+          if [ -n "$desktop_id" ]; then launch_args+=(--desktop-id "$desktop_id"); else launch_args+=(--app-id "$app_id"); fi
           [ -z "$display" ] || launch_args+=(--display "$display")
           python3 "$_TN_LIB_DIR/management_service.py" "${launch_args[@]}" --json
           ;;

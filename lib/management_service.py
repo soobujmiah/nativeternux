@@ -87,7 +87,8 @@ OPERATIONS = {
     "proot.start": {"args": {"profile", "confirmed", "plan_id", "timeout_seconds"}},
     "proot.stop.preview": {"args": {"session_id"}},
     "proot.stop": {"args": {"session_id", "confirmed", "plan_id"}},
-    "proot.app.launch": {"args": {"app_id", "display"}},
+    "proot.app.launch": {"args": {"app_id", "desktop_id", "display"}},
+    "proot.shortcuts.sync": {"args": set()},
     "proot.shortcuts.list": {"args": set()},
     "proot.shortcuts.preview": {"args": {"action", "app_id"}},
     "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
@@ -389,15 +390,31 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 confirmed=args["confirmed"], plan_id=args["plan_id"])
         elif operation == "proot.app.launch":
             app_id = args.get("app_id")
-            if not isinstance(app_id, str):
-                return _error(request_id, "invalid_arguments", "app ID is required")
+            desktop_id = args.get("desktop_id")
+            if (isinstance(app_id, str)) == (isinstance(desktop_id, str)):
+                return _error(request_id, "invalid_arguments", "exactly one app ID or desktop ID is required")
             display = args.get("display")
             if display is not None and (not isinstance(display, str) or not re.fullmatch(r":[0-9]{1,2}", display)):
                 return _error(request_id, "invalid_arguments", "display must be an X11 display such as :1")
-            data = proot_shortcuts.launch(
-                app_id, prefix=process_env["PREFIX"],
+            repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            if isinstance(desktop_id, str):
+                data = proot_shortcuts.launch_desktop_application(
+                    desktop_id, prefix=process_env["PREFIX"], repo_root=repo_root,
+                    env=process_env, display=display,
+                )
+            else:
+                data = proot_shortcuts.launch(
+                    app_id, prefix=process_env["PREFIX"], repo_root=repo_root,
+                    env=process_env, display=display,
+                )
+        elif operation == "proot.shortcuts.sync":
+            data = proot_shortcuts.sync_desktop_applications(
+                home=home, prefix=process_env["PREFIX"],
                 repo_root=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                env=process_env, display=display,
+                xdg_data_home=process_env.get("XDG_DATA_HOME") or os.path.join(
+                    state_dir or os.path.join(home, ".local/share/ternuxx"), "xfce/data"),
+                xdg_config_home=process_env.get("XDG_CONFIG_HOME") or os.path.join(
+                    state_dir or os.path.join(home, ".local/share/ternuxx"), "xfce/config"),
             )
         elif operation == "proot.shortcuts.list":
             data = proot_shortcuts.list_shortcuts(
@@ -728,6 +745,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--count", type=int, default=5)
     parser.add_argument("--shortcut-action", choices=("add", "remove"))
     parser.add_argument("--app-id")
+    parser.add_argument("--desktop-id")
     parser.add_argument("--plan-id")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--persistent", action="store_true")
@@ -1180,18 +1198,27 @@ def main(argv: list[str] | None = None) -> int:
         else:
             payload = {"backup_id": args.backup_id, "confirmed": args.yes, "plan_id": args.plan_id}
     elif args.operation == "proot.app.launch":
-        if not args.app_id or args.shortcut_action or args.yes or args.plan_id:
-            response = _error(request_id, "invalid_arguments", "--app-id is required for a PRoot app launch")
+        if (bool(args.app_id) == bool(args.desktop_id) or args.shortcut_action or args.yes or args.plan_id):
+            response = _error(request_id, "invalid_arguments", "exactly one of --app-id or --desktop-id is required for a PRoot app launch")
             if args.json:
                 print(json.dumps(response, sort_keys=True))
             else:
-                print("Ternuxx operation failed [invalid_arguments]: --app-id is required", file=sys.stderr)
+                print("Ternuxx operation failed [invalid_arguments]: provide exactly one of --app-id or --desktop-id", file=sys.stderr)
             return 1
-        payload = {"app_id": args.app_id}
+        payload = {"app_id": args.app_id} if args.app_id else {"desktop_id": args.desktop_id}
         if args.display is not None:
             payload["display"] = args.display
+    elif args.operation == "proot.shortcuts.sync":
+        if args.shortcut_action or args.app_id or args.desktop_id or args.yes or args.plan_id:
+            response = _error(request_id, "invalid_arguments", "PRoot Apps sync takes no arguments")
+            if args.json:
+                print(json.dumps(response, sort_keys=True))
+            else:
+                print(f"Ternuxx operation failed [{response['error']['code']}]: {response['error']['message']}", file=sys.stderr)
+            return 1
+        payload = {}
     elif args.operation == "proot.shortcuts.list":
-        if args.shortcut_action or args.app_id or args.yes or args.plan_id:
+        if args.shortcut_action or args.app_id or args.desktop_id or args.yes or args.plan_id:
             response = _error(request_id, "invalid_arguments", "shortcut list takes no arguments")
             if args.json:
                 print(json.dumps(response, sort_keys=True))

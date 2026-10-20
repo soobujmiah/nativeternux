@@ -30,7 +30,7 @@ MUTATING_OPERATIONS = frozenset({
     "backup.create", "restore.apply", "recovery.resolve",
     "recovery.rollback.apply", "wakelock.acquire", "wakelock.release",
     "continuity.prepare", "continuity.verify", "continuity.prepare-reboot-test",
-    "continuity.verify-reboot-test", "proot.app.launch", "proot.shortcuts.apply",
+    "continuity.verify-reboot-test", "proot.app.launch", "proot.shortcuts.apply", "proot.shortcuts.sync",
     "cron.jobs.create", "cron.jobs.update", "cron.jobs.remove",
     "proot.start", "proot.stop", "proot.recovery.reconcile",
     "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",

@@ -24,6 +24,7 @@ class ManagementAuthorizationTests(unittest.TestCase):
         self.assertEqual(management_authorization.required_capability("proot.shortcuts.preview"), "diagnostics.read")
         self.assertEqual(management_authorization.required_capability("proot.app.launch"), "applications.launch")
         self.assertEqual(management_authorization.required_capability("proot.shortcuts.apply"), "applications.manage")
+        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync"), "applications.manage")
         self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["diagnostics.read"]))
         self.assertTrue(management_authorization.authorize("proot.shortcuts.apply", ["applications.manage"]))
 

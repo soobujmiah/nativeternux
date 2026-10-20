@@ -7,6 +7,7 @@ import os
 import re
 from pathlib import Path
 import subprocess
+import shlex
 import tempfile
 from typing import Any
 
@@ -24,10 +25,56 @@ CATALOG: dict[str, dict[str, str]] = {
         "name": "PRoot Firefox", "comment": "Browse the web with Debian PRoot Firefox",
         "icon": "firefox", "program": "firefox-esr",
     },
+    "blender": {
+        "name": "Blender (PRoot)", "comment": "Open Blender from Debian PRoot",
+        "icon": "blender", "program": "blender",
+    },
+    "pavucontrol": {
+        "name": "Volume Control (PRoot)", "comment": "Open Debian PulseAudio controls",
+        "icon": "multimedia-volume-control", "program": "pavucontrol",
+    },
+    "system-config-printer": {
+        "name": "Print Settings (PRoot)", "comment": "Open Debian printer settings",
+        "icon": "printer", "program": "system-config-printer",
+    },
+    "thunar-bulk-rename": {
+        "name": "Bulk Rename (PRoot)", "comment": "Open Debian Thunar bulk rename",
+        "icon": "system-file-manager", "program": "thunar",
+    },
+    "thunar-settings": {
+        "name": "Thunar Preferences (PRoot)", "comment": "Open Debian Thunar preferences",
+        "icon": "system-file-manager", "program": "thunar-settings",
+    },
+    "thunar-volman-settings": {
+        "name": "Removable Drives and Media (PRoot)", "comment": "Open Debian removable media settings",
+        "icon": "drive-removable-media", "program": "thunar-volman-settings",
+    },
+    "vlc": {
+        "name": "VLC media player (PRoot)", "comment": "Open VLC from Debian PRoot",
+        "icon": "vlc", "program": "/usr/bin/vlc",
+    },
+    "xarchiver": {
+        "name": "Xarchiver (PRoot)", "comment": "Open Debian archive manager",
+        "icon": "package-x-generic", "program": "xarchiver",
+    },
+    "xfce4-appfinder": {
+        "name": "Application Finder (PRoot)", "comment": "Open Debian application finder",
+        "icon": "system-search", "program": "xfce4-appfinder",
+    },
+    "xfce4-terminal-settings": {
+        "name": "Xfce Terminal Settings (PRoot)", "comment": "Open Debian terminal preferences",
+        "icon": "utilities-terminal", "program": "xfce4-terminal",
+    },
     "shortcut-manager": {
         "name": "Manage PRoot Shortcuts", "comment": "Add, remove, and view PRoot app shortcuts",
         "icon": "preferences-desktop", "program": "manager",
     },
+}
+
+APP_ARGUMENTS: dict[str, tuple[str, ...]] = {
+    "thunar-bulk-rename": ("--bulk-rename",),
+    "vlc": ("--started-from-file",),
+    "xfce4-terminal-settings": ("--preferences",),
 }
 
 
@@ -139,6 +186,249 @@ def _available(app_id: str, *, prefix: str, home: str, path: str, repo_root: str
     return result.returncode == 0
 
 
+
+DESKTOP_APP_CATEGORIES = "Utility;X-Ternuxx-PRoot;"
+_DESKTOP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,199}\.desktop\Z")
+
+
+def _guest_app_dir(prefix: str) -> Path:
+    root = Path(prefix) / "var/lib/proot-distro/containers/debian/rootfs"
+    if root.is_symlink() or not root.is_dir():
+        raise ShortcutError("installed Debian rootfs is unavailable or not a regular directory")
+    app_dir = root / "usr/share/applications"
+    if app_dir.is_symlink() or not app_dir.is_dir():
+        raise ShortcutError("Debian application directory is unavailable")
+    return app_dir
+
+
+def _desktop_group(path: Path) -> dict[str, str]:
+    import configparser
+    parser = configparser.ConfigParser(interpolation=None, strict=False)
+    parser.optionxform = str
+    try:
+        parser.read(path, encoding="utf-8")
+        return dict(parser["Desktop Entry"])
+    except (OSError, UnicodeError, KeyError, configparser.Error):
+        return {}
+
+
+def discover_desktop_apps(*, prefix: str) -> list[dict[str, str]]:
+    """Read visible application entries from the selected Debian rootfs."""
+    app_dir = _guest_app_dir(prefix)
+    found: list[dict[str, str]] = []
+    for path in sorted(app_dir.glob("*.desktop")):
+        if path.is_symlink() or not path.is_file() or not _DESKTOP_ID.fullmatch(path.name):
+            continue
+        entry = _desktop_group(path)
+        truth = lambda key: entry.get(key, "false").strip().lower() == "true"
+        if (entry.get("Type") != "Application" or not entry.get("Name")
+                or not entry.get("Exec") or truth("NoDisplay") or truth("Hidden")
+                or truth("Terminal") or path.name == "xfce4-session-logout.desktop"):
+            continue
+        only = {item for item in entry.get("OnlyShowIn", "").split(";") if item}
+        excluded = {item for item in entry.get("NotShowIn", "").split(";") if item}
+        if (only and "XFCE" not in only) or "XFCE" in excluded:
+            continue
+        try:
+            _desktop_app_argv(path.name, prefix=prefix)
+        except ShortcutError:
+            continue
+        found.append({
+            "desktop_id": path.name, "name": entry["Name"],
+            "comment": entry.get("Comment", ""), "icon": entry.get("Icon", "applications-other"),
+        })
+    return found
+
+
+def _desktop_app_argv(desktop_id: str, *, prefix: str) -> tuple[list[str], dict[str, str]]:
+    if not _DESKTOP_ID.fullmatch(desktop_id):
+        raise ShortcutError("invalid Debian desktop application ID")
+    app_dir = _guest_app_dir(prefix)
+    path = app_dir / desktop_id
+    if path.is_symlink() or not path.is_file():
+        raise ShortcutError("Debian desktop application is no longer installed")
+    entry = _desktop_group(path)
+    if (entry.get("Type") != "Application" or not entry.get("Exec")
+            or entry.get("Hidden", "false").lower() == "true"
+            or entry.get("NoDisplay", "false").lower() == "true"
+            or entry.get("Terminal", "false").lower() == "true"
+            or desktop_id == "xfce4-session-logout.desktop"):
+        raise ShortcutError("Debian desktop entry is not an allowed visible GUI application")
+    only = {item for item in entry.get("OnlyShowIn", "").split(";") if item}
+    excluded = {item for item in entry.get("NotShowIn", "").split(";") if item}
+    if (only and "XFCE" not in only) or "XFCE" in excluded:
+        raise ShortcutError("Debian desktop entry is not available in XFCE")
+    try:
+        argv = shlex.split(entry["Exec"], posix=True)
+    except ValueError as exc:
+        raise ShortcutError("Debian desktop entry has invalid Exec quoting") from exc
+    if not argv or not argv[0] or len(argv) > 128:
+        raise ShortcutError("Debian desktop entry has an invalid launch command")
+    expanded: list[str] = []
+    field = re.compile(r"%(.)")
+    for token in argv:
+        if token in {"%f", "%F", "%u", "%U"}:
+            continue
+        if token == "%i":
+            icon = entry.get("Icon", "")
+            if icon:
+                expanded.extend(["--icon", icon])
+            continue
+        def replace(match: re.Match[str]) -> str:
+            code = match.group(1)
+            if code == "%":
+                return "%"
+            if code == "c":
+                return entry.get("Name", "")
+            if code == "k":
+                return f"/usr/share/applications/{desktop_id}"
+            if code in {"f", "F", "u", "U", "d", "D", "n", "N", "v", "m"}:
+                return ""
+            raise ShortcutError("Debian desktop entry uses an unsupported field code")
+        expanded.append(field.sub(replace, token))
+    expanded = [part for part in expanded if part != ""]
+    if not expanded:
+        raise ShortcutError("Debian desktop entry has no launchable command")
+    interpreters = {"sh", "bash", "dash", "zsh", "fish", "busybox", "python", "python2",
+                    "python3", "perl", "ruby", "node"}
+    for index, token in enumerate(expanded[:-1]):
+        if Path(token).name.lower() in interpreters and "-c" in expanded[index + 1:index + 4]:
+            raise ShortcutError("shell or interpreter command desktop entries are not launched from shortcuts")
+    return expanded, entry
+
+
+def _safe_desktop_value(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("\x00", "")
+
+
+def _dynamic_entry(desktop_id: str, item: dict[str, str], *, cli: str) -> bytes:
+    command = f"{_desktop_quote(cli)} mng app launch --desktop-id {_desktop_quote(desktop_id)}"
+    lines = [
+        "[Desktop Entry]", "Version=1.0", "Type=Application",
+        f"Name={_safe_desktop_value(item['name'])} (PRoot)",
+        f"Comment={_safe_desktop_value(item.get('comment', ''))}",
+        f"Exec={command}", f"Icon={_safe_desktop_value(item.get('icon', 'applications-other'))}",
+        "Terminal=false", "StartupNotify=true", f"Categories={DESKTOP_APP_CATEGORIES}",
+        "X-Ternuxx-Generated=proot-app-v2", f"X-Ternuxx-Desktop-ID={desktop_id}",
+    ]
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def _atomic_write(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".ternuxx-proot-apps-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(temporary, 0o644)
+        os.replace(temporary, path)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+
+
+def sync_desktop_applications(*, home: str, prefix: str, repo_root: str,
+                               xdg_data_home: str | None = None,
+                               xdg_config_home: str | None = None) -> dict[str, Any]:
+    home_path, app_dir = _paths(home, xdg_data_home)
+    config_home = Path(xdg_config_home).expanduser() if xdg_config_home else home_path / ".config"
+    if not config_home.is_absolute():
+        config_home = home_path / config_home
+    config_home = config_home.resolve()
+    try:
+        config_home.relative_to(home_path)
+    except ValueError as exc:
+        raise ShortcutError("XDG config directory must remain inside the native home directory") from exc
+    items = discover_desktop_apps(prefix=prefix)
+    installed_cli = Path(prefix) / "bin" / "tx"
+    cli = str(installed_cli if installed_cli.is_file() and os.access(installed_cli, os.X_OK)
+              else Path(repo_root) / "tx")
+    desired: dict[str, bytes] = {}
+    for item in items:
+        desktop_id = item["desktop_id"]
+        filename = "ternuxx-proot-app-" + desktop_id
+        desired[filename] = _dynamic_entry(desktop_id, item, cli=cli)
+    app_dir.mkdir(parents=True, exist_ok=True)
+    written, conflicts, removed = [], [], []
+    for filename, payload in desired.items():
+        target = app_dir / filename
+        existing = _file_bytes(target)
+        if existing == payload:
+            continue
+        if existing is not None and b"X-Ternuxx-Generated=proot-app" not in existing and b"X-Ternuxx-Generated=proot-app-v2" not in existing:
+            conflicts.append(filename)
+            continue
+        _atomic_write(target, payload)
+        written.append(filename)
+    for target in app_dir.glob("ternuxx-proot-app-*.desktop"):
+        if target.name in desired:
+            continue
+        raw = _file_bytes(target)
+        if raw is not None and (b"X-Ternuxx-Generated=proot-app" in raw or b"X-Ternuxx-Generated=proot-app-v2" in raw):
+            target.unlink()
+            removed.append(target.name)
+
+    menus = config_home / "menus"
+    menu_file = menus / "xfce-applications.menu"
+    menu_payload = ('''<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+<Menu>
+  <Name>Xfce</Name>
+  <MergeFile type="parent">xfce-applications.menu</MergeFile>
+  <Menu>
+    <Name>Accessories</Name>
+    <Exclude><Category>X-Ternuxx-PRoot</Category></Exclude>
+  </Menu>
+  <Menu>
+    <Name>PRoot Apps</Name>
+    <Directory>ternuxx-proot-apps.directory</Directory>
+    <Include><Category>X-Ternuxx-PRoot</Category></Include>
+  </Menu>
+</Menu>
+''').encode("utf-8")
+    directory_file = app_dir.parent / "desktop-directories" / "ternuxx-proot-apps.directory"
+    directory_payload = (b"[Desktop Entry]\nType=Directory\nName=PRoot Apps\n"
+                         b"Icon=applications-system\nX-Ternuxx-Generated=true\n")
+    legacy_directory_payload = (b"[Desktop Entry]\nType=Directory\nName=PRoot Apps\n"
+                                b"Icon=applications-system\n")
+    menu_status = "unchanged"
+    for target, payload in ((menu_file, menu_payload), (directory_file, directory_payload)):
+        old = _file_bytes(target)
+        if old == payload:
+            continue
+        owned = (b"X-Ternuxx-PRoot" in old if target == menu_file and old is not None else
+                 b"X-Ternuxx-Generated=true" in old if old is not None else False)
+        if old is not None and not owned and not (target == directory_file and old == legacy_directory_payload):
+            conflicts.append(str(target.relative_to(home_path)))
+            continue
+        _atomic_write(target, payload)
+        menu_status = "updated"
+    return {"status": "complete", "discovered": len(items), "written": written,
+            "removed": removed, "conflicts": conflicts, "menu": menu_status,
+            "desktop_ids": [item["desktop_id"] for item in items], "read_only": False}
+
+
+def launch_desktop_application(desktop_id: str, *, prefix: str, repo_root: str,
+                               env: dict[str, str], display: str | None = None) -> dict[str, Any]:
+    argv, _entry_data = _desktop_app_argv(desktop_id, prefix=prefix)
+    if display is not None and not re.fullmatch(r":[0-9]{1,2}", display):
+        raise ShortcutError("unsupported X11 display")
+    script = Path(repo_root) / "scripts" / "proot-x11-app.sh"
+    command = [f"{prefix}/bin/bash", str(script)]
+    if display is not None:
+        command += ["--display", display]
+    command += ["--", *argv]
+    result = subprocess.run(command, env=env, check=False)
+    if result.returncode != 0:
+        raise ShortcutError("the PRoot GUI application did not complete successfully")
+    return {"resource_id": f"proot.x11.app.{desktop_id}", "provider": "proot_debian",
+            "status": "process_exited", "exit_status": result.returncode,
+            "gui_visible": "unknown", "read_only": False}
+
 def list_shortcuts(*, home: str, prefix: str, xdg_data_home: str | None = None,
                    repo_root: str | None = None) -> dict[str, Any]:
     _, app_dir = _paths(home, xdg_data_home)
@@ -243,7 +533,7 @@ def launch(app_id: str, *, prefix: str, repo_root: str, env: dict[str, str],
         command = [f"{prefix}/bin/bash", str(script)]
         if display is not None:
             command += ["--display", display]
-        command += [CATALOG[app_id]["program"]]
+        command += [CATALOG[app_id]["program"], *APP_ARGUMENTS.get(app_id, ())]
     result = subprocess.run(command, env=env, check=False)
     if result.returncode != 0:
         raise ShortcutError("the PRoot GUI application did not complete successfully")

@@ -234,6 +234,12 @@ done
 
 mkdir -p "$STATE_DIR/xfce/config" "$STATE_DIR/xfce/cache" "$STATE_DIR/xfce/data" "$STATE_DIR/xfce/runtime"
 chmod 700 "$STATE_DIR/xfce" "$STATE_DIR/xfce/config" "$STATE_DIR/xfce/cache" "$STATE_DIR/xfce/data" "$STATE_DIR/xfce/runtime" 2>/dev/null || true
+if [ "$PROVIDER" = native ]; then
+  ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd -P)"
+  XDG_CONFIG_HOME="$STATE_DIR/xfce/config" XDG_DATA_HOME="$STATE_DIR/xfce/data" \
+    python3 "$ROOT_DIR/lib/management_service.py" --operation proot.shortcuts.sync --json \
+      >> "$STATE_DIR/desktop.log" 2>&1 || printf '%s\n' "PRoot Apps menu sync skipped; run tx mng papps sync after checking Debian setup." >> "$STATE_DIR/desktop.log"
+fi
 DISPLAY="$DISPLAY_VALUE" \
 XDG_CONFIG_HOME="$STATE_DIR/xfce/config" XDG_CACHE_HOME="$STATE_DIR/xfce/cache" \
 XDG_DATA_HOME="$STATE_DIR/xfce/data" XDG_RUNTIME_DIR="$STATE_DIR/xfce/runtime" \
