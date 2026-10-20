@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "TUI, Web, and installed GTK now expose shared-service PRoot session reads, fixed probe preview/apply, and exact verified-owned stop; GTK visual acceptance, live interactive TTY qualification, and cold-boot delivery gates remain open.",
+      "summary": "CLI, TUI, Web, and GTK now share PRoot session controls; GTK responsive layout and safe preview/cancel were visually exercised on Native :1. Boot/helper identities match, while SSH listener attribution and Android cold-boot delivery remain unverified.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -181,7 +181,7 @@
         "docs/evidence/2026-10-21-p3-session-client-parity-audit.md",
         "docs/evidence/2026-10-21-p3-session-client-implementation.md"
       ],
-      "next_action": "Visually qualify the GTK session actions in an approved GUI window, then continue the remaining P3 live ownership and cold-boot gates without restarting the current sessions."
+      "next_action": "Run the final P3 exit audit against current read-only state, close any remaining non-reboot ownership/recovery gaps including listener attribution, and keep Android cold-boot delivery open until its separately authorized device-boot window."
     },
     {
       "id": "P4",

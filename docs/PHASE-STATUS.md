@@ -46,9 +46,9 @@ Evidence:
 
 **Status:** in_progress
 
-TUI, Web, and installed GTK now expose shared-service PRoot session reads, fixed probe preview/apply, and exact verified-owned stop; GTK visual acceptance, live interactive TTY qualification, and cold-boot delivery gates remain open.
+CLI, TUI, Web, and GTK now share PRoot session controls; GTK responsive layout and safe preview/cancel were visually exercised on Native :1. Boot/helper identities match, while SSH listener attribution and Android cold-boot delivery remain unverified.
 
-**Next action:** Visually qualify the GTK session actions in an approved GUI window, then continue the remaining P3 live ownership and cold-boot gates without restarting the current sessions.
+**Next action:** Run the final P3 exit audit against current read-only state, close any remaining non-reboot ownership/recovery gaps including listener attribution, and keep Android cold-boot delivery open until its separately authorized device-boot window.
 
 Evidence:
 - [docs/evidence/P3-doctor-progress.md](evidence/P3-doctor-progress.md)

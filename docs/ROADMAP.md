@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Visually qualify the GTK session actions in an approved GUI window, then continue the remaining P3 live ownership and cold-boot gates without restarting the current sessions.
+**Next action:** Run the final P3 exit audit against current read-only state, close any remaining non-reboot ownership/recovery gaps including listener attribution, and keep Android cold-boot delivery open until its separately authorized device-boot window.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

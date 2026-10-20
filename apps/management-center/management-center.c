@@ -3,8 +3,8 @@
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search;
-                 GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_stop_button, *monitor_box, *monitor_enabled,
-                 *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; GPtrArray *categories,
+                 GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_stop_button, *proot_confirm_button, *proot_cancel_button, *monitor_box, *monitor_enabled,
+                 *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; gchar *proot_pending_action, *proot_pending_session_id, *proot_pending_plan_id; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
 static Center *app_center;
@@ -30,6 +30,30 @@ static gchar *python_path(void) {
 static void set_text(Center *c, const gchar *text) {
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(c->details));
     gtk_text_buffer_set_text(buffer, text ? text : "", -1);
+}
+static void clear_proot_confirmation(Center *c) {
+    g_clear_pointer(&c->proot_pending_action,g_free); g_clear_pointer(&c->proot_pending_session_id,g_free);
+    g_clear_pointer(&c->proot_pending_plan_id,g_free);
+    gtk_widget_set_visible(c->proot_confirm_button,FALSE); gtk_widget_set_visible(c->proot_cancel_button,FALSE);
+}
+static void proot_confirm_clicked(GtkButton *button, gpointer data) {
+    (void)button; Center *c=data;
+    if (g_strcmp0(c->proot_pending_action,"proot-probe-apply")==0)
+        run_bridge(c,"proot-probe-apply",c->proot_pending_plan_id,NULL,NULL,NULL,NULL);
+    else if (g_strcmp0(c->proot_pending_action,"proot-session-stop-apply")==0)
+        run_bridge(c,"proot-session-stop-apply",c->proot_pending_session_id,c->proot_pending_plan_id,NULL,NULL,NULL);
+    clear_proot_confirmation(c);
+}
+static void proot_cancel_clicked(GtkButton *button, gpointer data) {
+    (void)button; Center *c=data; clear_proot_confirmation(c);
+    gtk_label_set_text(GTK_LABEL(c->notice),"PRoot action cancelled; no session change was applied.");
+}
+static void queue_proot_confirmation(Center *c, const gchar *action, const gchar *session_id,
+                                     const gchar *plan_id, const gchar *message) {
+    clear_proot_confirmation(c); c->proot_pending_action=g_strdup(action);
+    c->proot_pending_session_id=session_id?g_strdup(session_id):NULL; c->proot_pending_plan_id=g_strdup(plan_id);
+    set_text(c,message); gtk_button_set_label(GTK_BUTTON(c->proot_confirm_button),g_strcmp0(action,"proot-probe-apply")==0?"Start 300-second probe":"Stop this verified session"); gtk_widget_set_visible(c->proot_confirm_button,TRUE); gtk_widget_set_visible(c->proot_cancel_button,TRUE);
+    gtk_label_set_text(GTK_LABEL(c->notice),"Review the exact PRoot plan, then confirm or cancel.");
 }
 static void request_done(GObject *source, GAsyncResult *result, gpointer user_data) {
     Request *request = user_data; Center *c = request->center; GError *error = NULL;
@@ -78,20 +102,13 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
             if (valid_plan && g_strcmp0(request->action, "proot-probe-preview") == 0 && f[2]) {
                 g_strchomp(f[2]);
                 gchar *message = g_strdup_printf("Start only the fixed 300-second isolated Debian diagnostic probe?\n\n%s", f[2]);
-                GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
-                const char *choices[] = {"Cancel", "Start probe", NULL}; gtk_alert_dialog_set_buttons(dialog, choices);
-                Request *next = g_new0(Request, 1); next->center = c; next->action = g_strdup("proot-probe-apply"); next->plan_id = g_strdup(f[1]);
-                gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, next);
-                g_object_unref(dialog); g_free(message);
+                queue_proot_confirmation(c, "proot-probe-apply", NULL, f[1], message);
+                g_free(message);
             } else if (valid_plan && g_strcmp0(request->action, "proot-session-stop-preview") == 0 && f[2] && f[3]) {
                 g_strchomp(f[3]);
                 gchar *message = g_strdup_printf("Stop only this Ternuxx-owned PRoot session?\n\nSession: %s\nProfile: %s", f[3], f[2]);
-                GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
-                const char *choices[] = {"Cancel", "Stop exact session", NULL}; gtk_alert_dialog_set_buttons(dialog, choices);
-                Request *next = g_new0(Request, 1); next->center = c; next->action = g_strdup("proot-session-stop-apply");
-                next->resource_id = g_strdup(f[3]); next->plan_id = g_strdup(f[1]);
-                gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, next);
-                g_object_unref(dialog); g_free(message);
+                queue_proot_confirmation(c, "proot-session-stop-apply", f[3], f[1], message);
+                g_free(message);
             } else {
                 gtk_label_set_text(GTK_LABEL(c->notice), "PRoot preview did not contain a valid exact plan.");
             }
@@ -212,6 +229,8 @@ static void show_resource(Center *c, Resource *r) {
     gtk_widget_set_visible(c->proot_recovery_button, proot_apps);
     gtk_widget_set_visible(c->proot_probe_button, proot_apps);
     gtk_widget_set_visible(c->proot_stop_button, proot_apps);
+    gtk_widget_set_visible(c->proot_confirm_button, proot_apps && c->proot_pending_action != NULL);
+    gtk_widget_set_visible(c->proot_cancel_button, proot_apps && c->proot_pending_action != NULL);
     gtk_widget_set_visible(c->history_button, history);
     gtk_widget_set_visible(c->cron_button, cron);
     gtk_widget_set_visible(c->cron_history_button, cron);
@@ -244,7 +263,7 @@ static void fill_resource_rows(Center *c) {
         gchar *raw=g_strconcat(r->name," ",r->description,NULL); gchar *haystack=g_utf8_strdown(raw,-1); g_free(raw);
         gboolean match=!needle||!*needle||g_strstr_len(haystack,-1,needle)!=NULL; g_free(haystack); if(!match) continue;
         GtkWidget *line = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3); GtkWidget *title = gtk_label_new(r->name);
-        GtkWidget *meta = gtk_label_new(status_label(r->status)); gtk_widget_set_halign(title, GTK_ALIGN_START);
+        GtkWidget *meta = gtk_label_new(status_label(r->status)); gtk_label_set_wrap(GTK_LABEL(title),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(title),PANGO_WRAP_WORD_CHAR); gtk_label_set_max_width_chars(GTK_LABEL(title),22); gtk_widget_set_hexpand(title,TRUE); gtk_widget_set_halign(title,GTK_ALIGN_FILL);
         gtk_widget_set_halign(meta, GTK_ALIGN_START); gtk_widget_add_css_class(meta, "dim-label");
         gtk_box_append(GTK_BOX(line), title); gtk_box_append(GTK_BOX(line), meta);
         GtkWidget *listrow = gtk_list_box_row_new(); gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(listrow), line);
@@ -264,7 +283,7 @@ static void search_changed(GtkEditable *entry, gpointer data) {
 }
 static void append_category(Center *c, gchar **fields) {
     GtkWidget *row = gtk_list_box_row_new(); GtkWidget *label = gtk_label_new(fields[2]);
-    gtk_widget_set_halign(label, GTK_ALIGN_START); gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(row), label);
+    gtk_label_set_wrap(GTK_LABEL(label),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(label),PANGO_WRAP_WORD_CHAR); gtk_label_set_max_width_chars(GTK_LABEL(label),22); gtk_widget_set_hexpand(label,TRUE); gtk_widget_set_halign(label,GTK_ALIGN_FILL); gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(row), label);
     g_object_set_data_full(G_OBJECT(row), "category-id", g_strdup(fields[1]), g_free);
     gtk_list_box_append(GTK_LIST_BOX(c->category_list), row);
 }
@@ -687,30 +706,30 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     (void)user_data; Center *c=g_new0(Center,1); app_center=c;
     c->categories=g_ptr_array_new_with_free_func(g_free); c->resources=g_ptr_array_new_with_free_func(resource_free);
     c->window=gtk_application_window_new(app); gtk_window_set_title(GTK_WINDOW(c->window),"Ternuxx Management Center");
-    gtk_window_set_default_size(GTK_WINDOW(c->window),1100,680);
+    gtk_window_set_default_size(GTK_WINDOW(c->window),720,900);
     GtkCssProvider *theme=gtk_css_provider_new();
-    gtk_css_provider_load_from_string(theme,"window{background:#0c1511;color:#e6f1e9} list,row{background:#111e18;color:#e6f1e9} list row:selected{background:#245638} button{background:#17271f;color:#e6f1e9;border:1px solid #2b4034;border-radius:9px;padding:8px} button:hover{border-color:#62d58a} label.dim-label{color:#9eb2a3}");
+    gtk_css_provider_load_from_string(theme,"window{background:#0c1511;color:#e6f1e9;} list,row{background:#111e18;color:#e6f1e9;} list row:selected{background:#245638;} button{background:#17271f;color:#e6f1e9;border:1px solid #2b4034;border-radius:9px;padding:8px;} button:hover{border-color:#62d58a;} label.dim-label{color:#9eb2a3;} textview,textview text{background-color:#111e18;color:#e6f1e9;}");
     gtk_style_context_add_provider_for_display(gdk_display_get_default(),GTK_STYLE_PROVIDER(theme),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     g_object_unref(theme);
-    GtkWidget *root=gtk_box_new(GTK_ORIENTATION_VERTICAL,10); gtk_widget_set_margin_top(root,14); gtk_widget_set_margin_bottom(root,14); gtk_widget_set_margin_start(root,14); gtk_widget_set_margin_end(root,14); gtk_window_set_child(GTK_WINDOW(c->window),root);
+    GtkWidget *root=gtk_box_new(GTK_ORIENTATION_VERTICAL,10); gtk_widget_set_margin_top(root,8); gtk_widget_set_margin_bottom(root,8); gtk_widget_set_margin_start(root,8); gtk_widget_set_margin_end(root,8); gtk_window_set_child(GTK_WINDOW(c->window),root);
     GtkWidget *heading=gtk_label_new("TERN UXX   ·   MANAGEMENT CENTER"); gtk_widget_add_css_class(heading,"title-1"); gtk_widget_set_halign(heading,GTK_ALIGN_START); gtk_box_append(GTK_BOX(root),heading);
     GtkWidget *paned=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL); gtk_widget_set_vexpand(paned,TRUE); gtk_box_append(GTK_BOX(root),paned);
-    c->category_list=gtk_list_box_new(); gtk_widget_set_size_request(c->category_list,210,-1); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->category_list),GTK_SELECTION_SINGLE); gtk_paned_set_start_child(GTK_PANED(paned),c->category_list);
-    GtkWidget *middle=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL); GtkWidget *center=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_size_request(center,260,-1); c->search=gtk_search_entry_new(); gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(c->search),"Search resources"); gtk_box_append(GTK_BOX(center),c->search); c->resource_list=gtk_list_box_new(); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->resource_list),GTK_SELECTION_SINGLE); GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),c->resource_list); gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(center),scroll); gtk_paned_set_start_child(GTK_PANED(middle),center);
+    c->category_list=gtk_list_box_new(); gtk_widget_set_size_request(c->category_list,150,-1); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->category_list),GTK_SELECTION_SINGLE); gtk_paned_set_start_child(GTK_PANED(paned),c->category_list);
+    GtkWidget *middle=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL); GtkWidget *center=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_size_request(center,170,-1); c->search=gtk_search_entry_new(); gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(c->search),"Search resources"); gtk_box_append(GTK_BOX(center),c->search); c->resource_list=gtk_list_box_new(); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->resource_list),GTK_SELECTION_SINGLE); GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),c->resource_list); gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(center),scroll); gtk_paned_set_start_child(GTK_PANED(middle),center);
     GtkWidget *right=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); c->details=gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(c->details),FALSE); gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->details),GTK_WRAP_WORD_CHAR); GtkWidget *detail_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(detail_scroll),c->details); gtk_widget_set_vexpand(detail_scroll,TRUE); gtk_box_append(GTK_BOX(right),detail_scroll);
-    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); c->proot_list_button=gtk_button_new_with_label("List PRoot app shortcuts"); gtk_widget_set_visible(c->proot_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_list_button);
+    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); c->proot_list_button=gtk_button_new_with_label("List PRoot app shortcuts"); gtk_widget_set_visible(c->proot_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_list_button);
     c->proot_sessions_button=gtk_button_new_with_label("List PRoot sessions"); gtk_widget_set_visible(c->proot_sessions_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_sessions_button);
     c->proot_recovery_button=gtk_button_new_with_label("Inspect PRoot recovery..."); gtk_widget_set_visible(c->proot_recovery_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_recovery_button);
     c->proot_probe_button=gtk_button_new_with_label("Start isolated probe..."); gtk_widget_set_visible(c->proot_probe_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_probe_button);
-    c->proot_stop_button=gtk_button_new_with_label("Stop verified session..."); gtk_widget_set_visible(c->proot_stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_stop_button); gtk_box_append(GTK_BOX(right),actions);
+    c->proot_stop_button=gtk_button_new_with_label("Stop verified session..."); gtk_widget_set_visible(c->proot_stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_stop_button); c->proot_confirm_button=gtk_button_new_with_label("Confirm exact PRoot action"); gtk_widget_set_visible(c->proot_confirm_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_confirm_button); c->proot_cancel_button=gtk_button_new_with_label("Cancel PRoot action"); gtk_widget_set_visible(c->proot_cancel_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_cancel_button); gtk_box_append(GTK_BOX(right),actions);
     c->monitor_box=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->monitor_enabled=gtk_check_button_new_with_label("Enable Activity/focus monitoring"); c->monitor_interval=gtk_spin_button_new_with_range(1,86400,1); const gchar *units[]={"seconds","minutes","hours",NULL}; c->monitor_unit=gtk_drop_down_new_from_strings(units); c->monitor_focus=gtk_check_button_new_with_label("Check Android Activity focus"); c->monitor_launch=gtk_check_button_new_with_label("Request Activity when background"); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_enabled); gtk_box_append(GTK_BOX(c->monitor_box),gtk_label_new("Polling interval")); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_interval); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_unit); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_focus); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_launch); GtkWidget *save=gtk_button_new_with_label("Save monitoring policy"); gtk_box_append(GTK_BOX(c->monitor_box),save); gtk_widget_set_visible(c->monitor_box,FALSE); gtk_box_append(GTK_BOX(right),c->monitor_box);
-    gtk_paned_set_end_child(GTK_PANED(middle),right); gtk_paned_set_end_child(GTK_PANED(paned),middle);
+    gtk_paned_set_end_child(GTK_PANED(middle),right); gtk_paned_set_end_child(GTK_PANED(paned),middle); gtk_paned_set_position(GTK_PANED(paned),160); gtk_paned_set_position(GTK_PANED(middle),185);
     c->notice=gtk_label_new("Loading resource catalog…"); gtk_widget_set_halign(c->notice,GTK_ALIGN_START); gtk_box_append(GTK_BOX(root),c->notice);
     GtkWidget *brand=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,4); GtkWidget *tagline=gtk_label_new("Workstation in your pocket — by Sobuj Miah");
     gtk_widget_set_halign(tagline,GTK_ALIGN_START); gtk_widget_add_css_class(tagline,"dim-label");
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(c->proot_sessions_button,"clicked",G_CALLBACK(show_proot_sessions),c); g_signal_connect(c->proot_probe_button,"clicked",G_CALLBACK(start_proot_probe),c); g_signal_connect(c->proot_recovery_button,"clicked",G_CALLBACK(proot_recovery_clicked),c); g_signal_connect(c->proot_stop_button,"clicked",G_CALLBACK(stop_proot_session),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(c->proot_sessions_button,"clicked",G_CALLBACK(show_proot_sessions),c); g_signal_connect(c->proot_probe_button,"clicked",G_CALLBACK(start_proot_probe),c); g_signal_connect(c->proot_recovery_button,"clicked",G_CALLBACK(proot_recovery_clicked),c); g_signal_connect(c->proot_stop_button,"clicked",G_CALLBACK(stop_proot_session),c); g_signal_connect(c->proot_confirm_button,"clicked",G_CALLBACK(proot_confirm_clicked),c); g_signal_connect(c->proot_cancel_button,"clicked",G_CALLBACK(proot_cancel_clicked),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window)); return TRUE;
 }
 int main(int argc, char **argv) {
