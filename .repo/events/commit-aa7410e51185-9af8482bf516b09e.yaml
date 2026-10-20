@@ -1,0 +1,7 @@
+event_id: commit-aa7410e51185-9af8482bf516b09e
+repository: soobujmiah/ternuxx
+commit: aa7410e5118568bd05038affa9af4d4aef6d8688
+kind: commit
+occurred_at: '2026-10-20T16:28:42Z'
+status: completed
+summary: 'feat(graphics): report nested DRI3 availability'
