@@ -1,0 +1,7 @@
+event_id: commit-9df52d5db77a-fa5342cac6990f3d
+repository: soobujmiah/ternuxx
+commit: 9df52d5db77a5afc7ebb8c8d57fcbb8fc4d00b72
+kind: commit
+occurred_at: '2026-10-20T05:31:37Z'
+status: completed
+summary: Clarify Android VirGL socket ownership refusal
