@@ -8,6 +8,13 @@ _nt_launch_guest_user() {
     "$distro" 2>/dev/null
 }
 
+_nt_launch_guest_shell() {
+  local distro="${1:-debian}" user="${2:-root}"
+  PYTHONPATH="$_TN_LIB_DIR" python3 -c \
+    'import os,sys,proot_diagnostics; print(proot_diagnostics.resolve_proot_guest_shell(distro=sys.argv[1], user=sys.argv[2], prefix=os.environ["PREFIX"]))' \
+    "$distro" "$user" 2>/dev/null
+}
+
 _nt_guest_pulse_cookie() {
   PYTHONPATH="$_TN_LIB_DIR" python3 -c \
     'import proot_diagnostics; p=proot_diagnostics._native_pulse_cookie_path(); print(p or "")' \
@@ -54,7 +61,7 @@ nt_cmd_virgl() {
 
 # Run from Native Termux; inside the guest there is no proot-distro.
 nt_cmd_db() {
-  local as_root=0 guest_user="" distro="debian" backend="zink" display=":1" option value
+  local as_root=0 guest_user="" distro="debian" backend="zink" display=":1" option
   while [ $# -gt 0 ]; do
     option="$1"
     case "$option" in
@@ -92,6 +99,9 @@ nt_cmd_db() {
     -u BOOTCLASSPATH -u DEX2OATBOOTCLASSPATH -u EXTERNAL_STORAGE
     -u GALLIUM_DRIVER -u MESA_LOADER_DRIVER_OVERRIDE -u TU_DEBUG
     -u MESA_VK_WSI_DEBUG -u MESA_SHADER_CACHE_DISABLE -u VTEST_SOCKET_NAME)
+  local native_debian=0 shell_user="" guest_shell="" shell_command="" assignment
+  local virgl_guest_socket="/tmp/.ternuxx-virgl/virgl-${display#:}.sock"
+  local -a session_env=()
   if [ "$as_root" -eq 0 ]; then
     if [ -z "$guest_user" ]; then
       guest_user="$(_nt_launch_guest_user "$distro")" || guest_user=""
@@ -101,21 +111,36 @@ nt_cmd_db() {
       }
     fi
     args+=(--user "$guest_user")
+    shell_user="$guest_user"
+  else
+    shell_user="root"
   fi
   if [ "$distro" = debian ] && [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] && [ -n "${TERMUX_VERSION:-}" ]; then
+    native_debian=1
+    if [ $# -eq 0 ]; then
+      guest_shell="$(_nt_launch_guest_shell "$distro" "$shell_user")" || guest_shell=""
+      [[ "$guest_shell" =~ ^/[A-Za-z0-9_.+-]+(/[A-Za-z0-9_.+-]+)*$ ]] || {
+        nt_fail "Could not resolve a safe login shell from the selected Debian account."
+        return 1
+      }
+    fi
     if [ "$backend" = virgl ]; then
       nt_require_termux || return 1
       _nt_virgl_ensure "$display" || return 1
-      local virgl_guest_socket="/tmp/.ternuxx-virgl/virgl-${display#:}.sock"
-      args+=(--env "DISPLAY=$display" --env PULSE_SERVER=tcp:127.0.0.1:4713
-        --env GALLIUM_DRIVER=virpipe --env "VTEST_SOCKET_NAME=$virgl_guest_socket"
-        --env MESA_SHADER_CACHE_DISABLE=true)
+      session_env+=(-u MESA_LOADER_DRIVER_OVERRIDE -u TU_DEBUG -u MESA_VK_WSI_DEBUG
+        "GALLIUM_DRIVER=virpipe" "VTEST_SOCKET_NAME=$virgl_guest_socket")
     else
-      args+=(--env "DISPLAY=$display" --env PULSE_SERVER=tcp:127.0.0.1:4713
-        --env GALLIUM_DRIVER=zink --env MESA_LOADER_DRIVER_OVERRIDE=zink
-        --env TU_DEBUG=sysmem,noconform --env MESA_VK_WSI_DEBUG=sw
-        --env MESA_SHADER_CACHE_DISABLE=true)
+      session_env+=("GALLIUM_DRIVER=zink" "MESA_LOADER_DRIVER_OVERRIDE=zink"
+        "TU_DEBUG=sysmem,noconform" "MESA_VK_WSI_DEBUG=sw")
     fi
+    session_env+=("DISPLAY=$display" "PULSE_SERVER=tcp:127.0.0.1:4713"
+      "MESA_SHADER_CACHE_DISABLE=true")
+    # proot-distro persists --env in the shared guest profile. Keep this
+    # baseline identical across backends; apply selection to each process.
+    args+=(--env DISPLAY=:1 --env PULSE_SERVER=tcp:127.0.0.1:4713
+      --env GALLIUM_DRIVER=zink --env MESA_LOADER_DRIVER_OVERRIDE=zink
+      --env TU_DEBUG=sysmem,noconform --env MESA_VK_WSI_DEBUG=sw
+      --env MESA_SHADER_CACHE_DISABLE=true)
     _nt_use audio || return 1
     nt_audio_ensure || true
     local pulse_cookie
@@ -123,6 +148,7 @@ nt_cmd_db() {
     if [ -n "$pulse_cookie" ]; then
       args+=(--bind "$pulse_cookie:/tmp/.ternuxx-pulse-cookie"
         --env PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie)
+      session_env+=("PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie")
     else
       nt_warn "Native PulseAudio cookie is unavailable; guest audio may not connect."
     fi
@@ -132,7 +158,35 @@ nt_cmd_db() {
     nt_fail "VirGL handoff requires the Native Termux host; it cannot be configured from PRoot."
     return 1
   fi
-  [ $# -eq 0 ] || args+=(-- "$@")
+
+  if [ "$native_debian" -eq 1 ]; then
+    if [ $# -gt 0 ]; then
+      args+=(-- /usr/bin/env "${session_env[@]}" "$@")
+    else
+      # Load the normal shared login profile first; apply the selected backend
+      # only to this interactive child shell.
+      shell_command="exec /usr/bin/env"
+      while [ ${#session_env[@]} -gt 0 ]; do
+        assignment="${session_env[0]}"
+        session_env=("${session_env[@]:1}")
+        if [ "$assignment" = "-u" ]; then
+          [ ${#session_env[@]} -gt 0 ] || { nt_fail "Invalid session environment."; return 1; }
+          shell_command+=" -u ${session_env[0]}"
+          session_env=("${session_env[@]:1}")
+        else
+          [[ "$assignment" =~ ^[A-Za-z_][A-Za-z0-9_]*=[A-Za-z0-9_./:+,-]+$ ]] || {
+            nt_fail "Invalid session environment value."
+            return 1
+          }
+          shell_command+=" '$assignment'"
+        fi
+      done
+      shell_command+=" '$guest_shell' -i"
+      args+=(-- "$guest_shell" -l -c "$shell_command")
+    fi
+  elif [ $# -gt 0 ]; then
+    args+=(-- "$@")
+  fi
   exec "${proot_env[@]}" proot-distro "${args[@]}"
 }
 

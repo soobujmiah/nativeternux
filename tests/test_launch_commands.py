@@ -17,6 +17,10 @@ class LaunchCommandTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.bin = self.root / "bin"
         self.bin.mkdir()
+        passwd = self.root / "var/lib/proot-distro/containers/debian/rootfs/etc/passwd"
+        passwd.parent.mkdir(parents=True)
+        passwd.write_text("root:x:0:0:root:/root:/bin/bash\n"
+                          "dev:x:1000:1000:Dev:/home/dev:/bin/bash\n", encoding="utf-8")
         stub = self.bin / "proot-distro"
         stub.write_text('#!/bin/sh\nif [ -n \"${PROOT_ENV_CAPTURE:-}\" ]; then env > \"$PROOT_ENV_CAPTURE\"; fi\nprintf \"%s\\n\" \"$@\"\n')
         stub.chmod(0o755)
@@ -43,7 +47,7 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.split(), ["login", "debian", "--shared-tmp", "--user", "dev"])
 
-    def test_native_db_virgl_backend_hands_off_guest_socket_without_changing_default(self) -> None:
+    def test_native_db_backend_is_per_process_and_shared_profile_stays_zink(self) -> None:
         capture = self.root / "proot-args"
         ensure = self.root / "virgl-ensure"
         stub = self.bin / "proot-distro"
@@ -53,13 +57,15 @@ class LaunchCommandTests(unittest.TestCase):
             '_TN_LIB_DIR="$LIB_DIR"',
             'source "$LIB_DIR/launch.sh"',
             'nt_fail() { echo "$*" >&2; }',
+            'nt_warn() { echo "$*" >&2; }',
             'nt_require_command() { command -v "$1" >/dev/null; }',
             'nt_require_termux() { return 0; }',
             'nt_audio_ensure() { return 0; }',
             'nt_use() { return 0; }',
             '_nt_use() { return 0; }',
             '_nt_guest_pulse_cookie() { return 0; }',
-            '_nt_virgl_ensure() { printf "%s\\n" "$1" > "$VIRGL_ENSURE_CAPTURE"; }',
+            '_nt_launch_guest_shell() { printf "/bin/bash"; }',
+            '_nt_virgl_ensure() { printf "%s\n" "$1" > "$VIRGL_ENSURE_CAPTURE"; }',
             'nt_cmd_db --user dev --backend virgl --display :1',
         ])
         env = {**self.env, "PREFIX": "/data/data/com.termux/files/usr",
@@ -68,24 +74,67 @@ class LaunchCommandTests(unittest.TestCase):
         result = subprocess.run([shutil.which("bash"), "-c", script], capture_output=True,
                                 text=True, env=env, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
-        args = capture.read_text().splitlines()
-        self.assertEqual(args[:5], ["login", "debian", "--shared-tmp", "--user", "dev"])
-        self.assertIn("GALLIUM_DRIVER=virpipe", args)
-        self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", args)
+        virgl_args = capture.read_text().splitlines()
+        separator = virgl_args.index("--")
+        persisted = virgl_args[:separator]
+        self.assertEqual(persisted[:5], ["login", "debian", "--shared-tmp", "--user", "dev"])
+        self.assertIn("DISPLAY=:1", persisted)
+        self.assertIn("GALLIUM_DRIVER=zink", persisted)
+        self.assertIn("MESA_LOADER_DRIVER_OVERRIDE=zink", persisted)
+        self.assertNotIn("GALLIUM_DRIVER=virpipe", persisted)
+        self.assertFalse(any(arg.startswith("VTEST_SOCKET_NAME=") for arg in persisted))
+        self.assertIn("GALLIUM_DRIVER=virpipe", virgl_args[separator + 4])
+        self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", virgl_args[separator + 4])
         self.assertEqual(ensure.read_text().strip(), ":1")
-        default_capture = self.root / "default-proot-args"
-        default_env = {**env, "PROOT_ARGS_CAPTURE": str(default_capture)}
-        default_script = script.replace(
-            "nt_cmd_db --user dev --backend virgl --display :1", "nt_cmd_db --user dev"
-        )
-        default_result = subprocess.run([shutil.which("bash"), "-c", default_script],
-                                        capture_output=True, text=True, env=default_env, timeout=10)
-        self.assertEqual(default_result.returncode, 0, default_result.stderr)
-        default_args = default_capture.read_text().splitlines()
-        self.assertIn("GALLIUM_DRIVER=zink", default_args)
-        self.assertNotIn("GALLIUM_DRIVER=virpipe", default_args)
-        self.assertNotIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", default_args)
-        self.assertEqual(ensure.read_text().strip(), ":1")
+
+        zink_capture = self.root / "zink-proot-args"
+        zink_env = {**env, "PROOT_ARGS_CAPTURE": str(zink_capture)}
+        zink_script = script.replace(
+            "nt_cmd_db --user dev --backend virgl --display :1",
+            "nt_cmd_db --user dev --backend zink --display :1")
+        zink_result = subprocess.run([shutil.which("bash"), "-c", zink_script],
+                                     capture_output=True, text=True, env=zink_env, timeout=10)
+        self.assertEqual(zink_result.returncode, 0, zink_result.stderr)
+        zink_args = zink_capture.read_text().splitlines()
+        zink_separator = zink_args.index("--")
+        self.assertEqual(zink_args[:zink_separator], persisted)
+        self.assertIn("GALLIUM_DRIVER=zink", zink_args[zink_separator + 4])
+        self.assertNotIn("VTEST_SOCKET_NAME=", zink_args[zink_separator + 4])
+
+        parallel = []
+        for label, invocation in (
+                ("parallel-virgl", "nt_cmd_db --user dev --backend virgl --display :2"),
+                ("parallel-zink", "nt_cmd_db --user dev --backend zink --display :1")):
+            parallel_capture = self.root / f"{label}-args"
+            parallel_script = script.replace(
+                "nt_cmd_db --user dev --backend virgl --display :1", invocation)
+            parallel_env = {**env, "PROOT_ARGS_CAPTURE": str(parallel_capture)}
+            process = subprocess.Popen([shutil.which("bash"), "-c", parallel_script],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=parallel_env)
+            parallel.append((process, parallel_capture, label))
+        parallel_profiles = {}
+        for process, parallel_capture, label in parallel:
+            stdout, stderr = process.communicate(timeout=10)
+            self.assertEqual(process.returncode, 0, stderr or stdout)
+            parallel_args = parallel_capture.read_text().splitlines()
+            parallel_profiles[label] = parallel_args[:parallel_args.index("--")]
+        self.assertEqual(parallel_profiles["parallel-virgl"], parallel_profiles["parallel-zink"])
+        parallel_virgl_args = (self.root / "parallel-virgl-args").read_text().splitlines()
+        self.assertIn("DISPLAY=:2", parallel_virgl_args[parallel_virgl_args.index("--") + 4])
+
+        command_capture = self.root / "command-proot-args"
+        command_env = {**env, "PROOT_ARGS_CAPTURE": str(command_capture)}
+        command_script = script.replace(
+            "nt_cmd_db --user dev --backend virgl --display :1",
+            "nt_cmd_db --user dev --backend virgl --display :1 -- glxinfo -B")
+        command_result = subprocess.run([shutil.which("bash"), "-c", command_script],
+                                        capture_output=True, text=True, env=command_env, timeout=10)
+        self.assertEqual(command_result.returncode, 0, command_result.stderr)
+        command_args = command_capture.read_text().splitlines()
+        command_separator = command_args.index("--")
+        self.assertEqual(command_args[command_separator + 1], "/usr/bin/env")
+        self.assertIn("GALLIUM_DRIVER=virpipe", command_args[command_separator + 1:])
+        self.assertEqual(command_args[-2:], ["glxinfo", "-B"])
 
     def test_native_android_runtime_variables_do_not_leak_to_guest_profile(self) -> None:
         capture = self.root / "proot-env"
@@ -114,7 +163,7 @@ class LaunchCommandTests(unittest.TestCase):
                          ["login", "debian", "--shared-tmp", "--", "echo", "a b"])
 
     def test_shell_refuses_unresolvable_user_and_bad_names(self) -> None:
-        self.assertNotEqual(self.tx("db").returncode, 0)
+        self.assertNotEqual(self.tx("db", "--distro", "missing").returncode, 0)
         self.assertEqual(self.tx("db", "--user", "a;b").returncode, 2)
         self.assertEqual(self.tx("db", "--root", "--distro", "../x").returncode, 2)
 

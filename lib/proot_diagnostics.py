@@ -21,8 +21,7 @@ class GuestProfileError(ValueError):
     """A PRoot guest profile cannot be safely used for bounded discovery."""
 
 
-def resolve_proot_guest_user(*, distro: str, prefix: str) -> str:
-    """Resolve one ordinary account from an installed rootfs without Ternux."""
+def _read_proot_guest_passwd(*, distro: str, prefix: str) -> tuple[Path, list[str]]:
     if not isinstance(distro, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,31}", distro):
         raise GuestProfileError("distro name is invalid")
     root = Path(prefix) / "var/lib/proot-distro/containers" / distro / "rootfs"
@@ -42,6 +41,12 @@ def resolve_proot_guest_user(*, distro: str, prefix: str) -> str:
         raise
     except (OSError, UnicodeError) as exc:
         raise GuestProfileError("installed guest account database is unavailable") from exc
+    return root, lines
+
+
+def resolve_proot_guest_user(*, distro: str, prefix: str) -> str:
+    """Resolve one ordinary account from an installed rootfs without Ternux."""
+    _root, lines = _read_proot_guest_passwd(distro=distro, prefix=prefix)
     users = []
     for line in lines:
         fields = line.split(":")
@@ -50,12 +55,33 @@ def resolve_proot_guest_user(*, distro: str, prefix: str) -> str:
         name, _password, uid_text, _gid, _gecos, home, shell = fields
         if (not _GUEST_USER.fullmatch(name) or name == "root" or not uid_text.isdecimal()
                 or len(uid_text) > 5 or not 1000 <= int(uid_text) < 60000
-                or home != f"/home/{name}" or not shell.startswith("/")):
+                or home != f"/home/{name}" or not _valid_guest_shell(shell)):
             continue
         users.append(name)
     if len(users) != 1:
         raise GuestProfileError("guest account is ambiguous; pass --user NAME")
     return users[0]
+
+
+def _valid_guest_shell(shell: str) -> bool:
+    return (isinstance(shell, str)
+            and re.fullmatch(r"/[A-Za-z0-9_.+-]+(?:/[A-Za-z0-9_.+-]+)*", shell) is not None
+            and all(part not in {".", ".."} for part in shell.split("/")[1:]))
+
+
+def resolve_proot_guest_shell(*, distro: str, user: str, prefix: str) -> str:
+    """Read one account's absolute shell path without entering or changing its rootfs."""
+    if not isinstance(user, str) or (user != "root" and not _GUEST_USER.fullmatch(user)):
+        raise GuestProfileError("guest user name is invalid")
+    _root, lines = _read_proot_guest_passwd(distro=distro, prefix=prefix)
+    matches = []
+    for line in lines:
+        fields = line.split(":")
+        if len(fields) == 7 and fields[0] == user:
+            matches.append(fields[6])
+    if len(matches) != 1 or not _valid_guest_shell(matches[0]):
+        raise GuestProfileError("guest login shell is unavailable or ambiguous")
+    return matches[0]
 
 
 _DISPLAY = re.compile(r"^:(?:[0-9]|10)$")

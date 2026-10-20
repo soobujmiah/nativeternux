@@ -683,3 +683,8 @@ Tightened `tx virgl stop` diagnostics and added fixtures for Android lsof path m
 ### Stop-guard verification — 2026-10-20
 
 The Android-specific stop diagnostic and fixtures passed the 560-test Native suite. GitHub Contract 39375369245 and Knowledge Sync 39375369134 succeeded on `9df52d5`; sync commit `d660c92` contained only generated `.repo` state and was fast-forwarded. The VirGL service is still running and stop remains fail-closed because Android denies Unix-socket client enumeration.
+
+
+### 2026-10-20 latest Native PRoot graphics checkpoint
+
+Native `tx db` now keeps backend selection per process while using one stable shared Debian profile baseline. The full Native suite passed 562/562; concurrent Zink and VirGL environment-only logins both exited 0 and left the profile hash unchanged. Active Codex PRoot PID 14360, Native `:1` GUI/XFCE, PulseAudio, VirGL service, and SSH 8022 remain intact. Debian Zink/Turnip is accelerated and verified. VirGL environment handoff is correct, but a live VirGL GLX probe still rendered Zink; VirGL renderer therefore remains unqualified. CI runs 39376909364/39376909365 succeeded only for base `0ad4a58`; the current dirty source change still requires CI. Owner `.superdesign/` remains untouched. Overall status: NOT RELEASE-READY. Details: [workstation qualification execution evidence](docs/evidence/2026-10-20-workstation-qualification-execution.md).

@@ -33,6 +33,35 @@ class ProotDiagnosticsTests(unittest.TestCase):
             self.assertEqual(proot_diagnostics.resolve_proot_guest_user(
                 distro="debian", prefix=str(prefix)), "sbj")
 
+    def test_resolves_selected_guest_login_shell_without_entering_rootfs(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-rootfs-shell-") as temp:
+            prefix = self._rootfs_fixture(Path(temp),
+                "root:x:0:0:root:/root:/bin/bash\n"
+                "sbj:x:1000:1000:Owner:/home/sbj:/usr/bin/zsh\n")
+            self.assertEqual(proot_diagnostics.resolve_proot_guest_shell(
+                distro="debian", user="sbj", prefix=str(prefix)), "/usr/bin/zsh")
+            self.assertEqual(proot_diagnostics.resolve_proot_guest_shell(
+                distro="debian", user="root", prefix=str(prefix)), "/bin/bash")
+
+    def test_guest_login_shell_resolution_rejects_unsafe_or_ambiguous_entries(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-rootfs-shell-") as temp:
+            prefix = self._rootfs_fixture(Path(temp),
+                "root:x:0:0:root:/root:/bin/bash\n"
+                "sbj:x:1000:1000:Owner:/home/sbj:/bin/bash;touch\n")
+            with self.assertRaisesRegex(proot_diagnostics.GuestProfileError, "unavailable or ambiguous"):
+                proot_diagnostics.resolve_proot_guest_shell(
+                    distro="debian", user="sbj", prefix=str(prefix))
+            passwd = prefix / "var/lib/proot-distro/containers/debian/rootfs/etc/passwd"
+            passwd.write_text("root:x:0:0:root:/root:/bin/bash\n"
+                              "sbj:x:1000:1000:Owner:/home/sbj:/bin/bash\n"
+                              "sbj:x:1001:1001:Duplicate:/home/sbj:/bin/zsh\n")
+            with self.assertRaisesRegex(proot_diagnostics.GuestProfileError, "unavailable or ambiguous"):
+                proot_diagnostics.resolve_proot_guest_shell(
+                    distro="debian", user="sbj", prefix=str(prefix))
+            with self.assertRaisesRegex(proot_diagnostics.GuestProfileError, "invalid"):
+                proot_diagnostics.resolve_proot_guest_shell(
+                    distro="debian", user="../sbj", prefix=str(prefix))
+
     def test_guest_user_resolution_rejects_ambiguous_or_unsafe_rootfs(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-rootfs-user-") as temp:
             prefix = self._rootfs_fixture(Path(temp),
