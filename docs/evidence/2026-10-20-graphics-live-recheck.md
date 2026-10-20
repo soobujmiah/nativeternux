@@ -5,13 +5,17 @@ Phase: `P6`
 
 ## Native Termux
 
-On the live Adreno 825 device, `tx mng graphics verify native opengl :1` completed an off-screen glmark2 run with renderer `Adreno (TM) 825`, score 581, and `render_verified=true`. `tx mng graphics verify native gles :1` created an OpenGL ES 3.2 context with the selected KGSL candidate and renderer `Adreno (TM) 825`; it remains context-only evidence. A follow-up bounded Native Vulkan draw through the saved candidate rendered 120 `vkcube` frames on `:1` using Adreno 825; see [Vulkan draw evidence](2026-10-20-native-vulkan-draw.md). The stock ICD invocation still fails for this GPU, so the passing result is scoped to the selected candidate environment.
+On the live Adreno 825 device, `tx mng graphics verify native opengl :1` completed an off-screen glmark2 run with renderer `Adreno (TM) 825`, score 581, and `render_verified=true`. `tx mng graphics verify native gles :1` later compiled and ran the tracked GLES 3 pbuffer shader workload through the shared manager; see [Native GLES draw evidence](2026-10-20-native-gles-draw.md). A follow-up bounded Native Vulkan draw through the saved candidate rendered 120 `vkcube` frames on `:1` using Adreno 825; see [Vulkan draw evidence](2026-10-20-native-vulkan-draw.md). The stock ICD invocation still fails for this GPU, so the passing result is scoped to the selected candidate environment.
 
 A safe deliberate failure used an isolated empty graphics state and the intentional invalid `GALLIUM_DRIVER=ternuxx-intentional-missing-driver` value. The OpenGL primary attempt exited 1; the verifier then rendered off-screen using `llvmpipe (LLVM 21.1.8, 128 bits)`, score 109, and returned `fallback-rendered`, `accelerated=false`. This verifies the manager's bounded OpenGL verification fallback on this device. The verifier now tries `llvmpipe` first and `softpipe` second, and accepts only a renderer matching the attempted software backend. This policy applies to OpenGL verification workloads; it does not yet retry ordinary application launches or choose per-workload GPU/NPU backends. NPU runtime and clean-install driver reproduction remain unverified.
 
 A plain `es2_info` invocation without the saved candidate context reported llvmpipe and DRI3/Zink initialization warnings. The managed GLES probe, which loads the exact selected candidate path, reported Adreno instead. An `es2gears_x11` window could not be observed under the tested X11 route; an actual GLES draw/presentation therefore remains unverified.
 
 The owner reports that Debian XFCE's device information displayed the GPU on standalone `:0`, and that Native XFCE is visible on the Android screen. Earlier live verification in [the full GUI evidence](2026-10-20-proot-full-gui.md) independently recorded Zink/Turnip on `:0`. These observations do not establish successful GPU draw/presentation for the full nested desktop.
+
+## Native GLES draw follow-up
+
+The earlier context-only and unobserved es2gears_x11 attempts above are superseded for the shared verification path by the later bounded surfaceless pbuffer workload. The integrated manager compiled the tracked GLES runner and verified a 1280x720 GLES 3.2 Adreno 825 shader draw: 1,098 frames in five seconds (219.47 frames/sec). This remains off-screen synthetic workload evidence, not UI presentation or screen FPS. Full implementation and test details: [Native GLES draw verification](2026-10-20-native-gles-draw.md).
 
 ## Existing Debian PRoot
 

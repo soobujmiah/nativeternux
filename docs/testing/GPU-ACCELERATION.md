@@ -7,8 +7,8 @@ Target: Native Termux on Android 16, aarch64, Adreno 825. Results below are scop
 | Provider and API | Current result | What the evidence establishes |
 |---|---|---|
 | Native OpenGL | Verified on display `:1`; Adreno 825 / Freedreno reports `Accelerated: yes` | The selected local Mesa KGSL candidate rendered GLX and the bounded `glmark2` workload. The stock Mesa path uses llvmpipe when the candidate is not selected. |
-| Native OpenGL ES | A prior standalone EGL/GLES pbuffer test rendered on the candidate; shared manager verification is unavailable | The shared manager has no dedicated GLES runner and does not infer GLES support from `glmark2`. |
-| Native Vulkan | Adreno 825 enumerates through Turnip | Enumeration only. No Vulkan draw has been verified. The stock package route previously returned `VK_ERROR_INCOMPATIBLE_DRIVER`. |
+| Native OpenGL ES | Shared manager rendered 1,098 frames in five seconds (219.47 frames/sec) at 1280x720; GLES 3.2; Adreno 825; `accelerated=true` | The tracked surfaceless EGL/GLES runner drew a shader to a pbuffer with `glFinish` each frame. This is synthetic off-screen throughput, not presented UI FPS. The verifier compiles into private temporary state and removes the binary after the run. |
+| Native Vulkan | Adreno 825 rendered the bounded 120-frame `vkcube` workload through the selected candidate | Vulkan device enumeration and selected draw device matched. Stock ICD separately returned `VK_ERROR_INCOMPATIBLE_DRIVER`. |
 | Debian OpenGL | Verified through the existing guest on `:1`; Zink over Turnip reports Adreno 825 | Existing Debian glibc stack only. The fixed verifier is read-only and does not install or alter guest files. |
 | Debian OpenGL ES | Unavailable through the current adapter | The guest verifier checks OpenGL/Zink, not a GLES workload. |
 | VirGL | Unqualified | A Native server process or available package alone does not prove a guest VirGL renderer. |
@@ -22,12 +22,13 @@ The current desktop preference is stored in private Ternuxx state. The running G
 ./tx mng graphics status native
 ./tx mng graphics status debian
 ./tx mng graphics verify native opengl
+./tx mng graphics verify native gles
 ./tx mng graphics verify native vulkan
 ./tx mng graphics select native system
 ./tx mng graphics select native kgsl-freedreno
 ```
 
-OpenGL verification runs a bounded off-screen-mode `glmark2` workload. If the selected accelerated path fails, it tries software in order: `llvmpipe`, then `softpipe`; it only reports fallback success when the renderer matches the attempted backend. This is verification-workload behavior and is not yet wired into ordinary app launches. Vulkan verification runs a bounded 120-frame `vkcube` draw on the active X11 display. It reports rendered only when the workload-selected GPU matches `vulkaninfo`; absent display/tool remains enumeration-only. OpenGL ES currently returns `unavailable` unless a dedicated runner is added. The Debian adapter supports only its configured OpenGL/Zink read-only check. CLI, TUI, Web, and GTK send these operations to the shared management service; action coverage varies by client.
+OpenGL verification runs a bounded off-screen-mode `glmark2` workload. If the selected accelerated path fails, it tries software in order: `llvmpipe`, then `softpipe`; it only reports fallback success when the renderer matches the attempted backend. This is verification-workload behavior and is not yet wired into ordinary app launches. Vulkan verification runs a bounded 120-frame `vkcube` draw on the active X11 display. It reports rendered only when the workload-selected GPU matches `vulkaninfo`; absent display/tool remains enumeration-only. Native OpenGL ES verification builds the checked-in GLES 3 pbuffer source with `clang` into the private Ternuxx state directory, runs a bounded shader draw, then cleans up the temporary binary. It returns `unavailable` if clang, source, EGL/GLES development libraries, or a private state directory is missing. Debian GLES remains unavailable through the current adapter. The Debian adapter supports only its configured OpenGL/Zink read-only check. CLI, TUI, Web, and GTK send these operations to the shared management service; action coverage varies by client.
 
 To use stock Native Mesa for the next desktop start, select `system`. To use the verified candidate for future starts, select `kgsl-freedreno`. Neither operation restarts the current desktop. The selected candidate must already exist in private provider state. This checkout does not yet download or install it on a fresh device.
 
@@ -41,6 +42,7 @@ The checked-in evidence records the device package versions, candidate and stock
 - [Native off-screen benchmark results](../evidence/2026-10-20-native-offscreen-glmark2.md)
 - [KGSL session selection](../evidence/2026-10-20-native-kgsl-session-selection.md)
 - [Shared graphics manager and client coverage](../evidence/2026-10-20-shared-graphics-manager.md)
+- [Native GLES draw verification](../evidence/2026-10-20-native-gles-draw.md)
 - [Debian adapter audit and current adoption record](../evidence/2026-10-20-ternuxx-proot-consolidation.md)
 
 ## GPU inference requirements

@@ -8,6 +8,7 @@ import re
 import shutil
 import stat
 import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -152,7 +153,65 @@ def status(provider: str, *, home: str, state_dir: str, process_env: dict[str, s
     raise ValueError("provider must be native or debian")
 
 
-def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: dict[str, str], prefix: str) -> dict[str, object]:
+def _gles_draw(env: dict[str, str], *, repo_root: str, state_dir: str) -> dict[str, object]:
+    source = Path(repo_root) / "docs/evidence/graphics/native-mesa-0219ff84/offscreen-gles.c"
+    try:
+        meta = source.lstat()
+        if not source.is_file() or source.is_symlink() or meta.st_size > 32_768:
+            return {"status": "unavailable", "context_verified": False, "render_verified": False,
+                    "reason": "tracked GLES verification source is missing or unsafe"}
+        source_text = source.read_text(encoding="utf-8")
+    except OSError:
+        return {"status": "unavailable", "context_verified": False, "render_verified": False,
+                "reason": "tracked GLES verification source is unavailable"}
+    if "glDrawArrays" not in source_text or "glFinish" not in source_text or "eglCreatePbufferSurface" not in source_text:
+        return {"status": "unavailable", "context_verified": False, "render_verified": False,
+                "reason": "tracked GLES source does not meet the draw-verification contract"}
+    compiler = shutil.which("clang", path=env.get("PATH"))
+    if not compiler:
+        return {"status": "unavailable", "context_verified": False, "render_verified": False,
+                "reason": "clang is not installed; cannot build the GLES verifier"}
+    try:
+        state = Path(state_dir)
+        state_meta = state.lstat()
+        if (not state.is_dir() or state.is_symlink() or state_meta.st_uid != os.getuid()
+                or stat.S_IMODE(state_meta.st_mode) != 0o700):
+            return {"status": "unavailable", "context_verified": False, "render_verified": False,
+                    "reason": "Ternuxx state directory is not private"}
+        with tempfile.TemporaryDirectory(prefix="gles-verify-", dir=str(state)) as temp_dir:
+            binary = os.path.join(temp_dir, "offscreen-gles")
+            compile_code, compile_output = _run(
+                [compiler, "-O2", "-Wall", "-Wextra", "-o", binary, str(source), "-lEGL", "-lGLESv2"],
+                env, 45)
+            if compile_code != 0:
+                return {"status": "unavailable" if compile_code == 127 else "failed",
+                        "context_verified": False, "render_verified": False,
+                        "compile_exit_code": compile_code, "reason": "GLES verifier compilation failed",
+                        "detail": compile_output[-2000:]}
+            code, output = _run([binary, "1280", "720", "5"], env, 15)
+    except OSError:
+        return {"status": "unavailable", "context_verified": False, "render_verified": False,
+                "reason": "private GLES verifier workspace is unavailable"}
+    renderer_match = re.search(r"renderer=([^|\n]+)", output)
+    version_match = re.search(r"GLES=([^|\n]+)", output)
+    frames_match = re.search(r"frames=(\d+)", output)
+    fps_match = re.search(r"throughput=([0-9]+(?:\.[0-9]+)?) frames/sec", output)
+    renderer = renderer_match.group(1).strip() if renderer_match else None
+    version = version_match.group(1).strip() if version_match else None
+    frames = int(frames_match.group(1)) if frames_match else 0
+    throughput = float(fps_match.group(1)) if fps_match else 0.0
+    context_ok = bool(version and re.search(r"OpenGL ES 3\.", version) and renderer)
+    rendered = code == 0 and context_ok and frames > 0 and throughput > 0
+    return {"status": "rendered" if rendered else ("failed" if code != 127 else "unavailable"),
+            "context_verified": context_ok, "render_verified": rendered, "renderer": renderer,
+            "version": version, "accelerated": _renderer_accelerated(renderer), "frames": frames or None,
+            "throughput_fps": throughput or None, "resolution": "1280x720", "duration_seconds": 5,
+            "display": "surfaceless EGL pbuffer", "exit_code": code,
+            "proof": "GLES 3 shader draw with glFinish per frame" if rendered else "GLES draw was not verified"}
+
+
+def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: dict[str, str], prefix: str,
+           repo_root: str) -> dict[str, object]:
     if provider == "debian":
         if api != "opengl":
             return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
@@ -160,7 +219,7 @@ def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: d
         return status(provider, home=home, state_dir=state_dir, process_env=process_env, prefix=prefix)
     env = _native_env(home=home, state_dir=state_dir, process_env=process_env)
     if api == "gles":
-        result = _gles_context(env)
+        result = _gles_draw(env, repo_root=repo_root, state_dir=state_dir)
         return {"provider": provider, "api": api, **result}
     if api == "opengl":
         tool = shutil.which("glmark2", path=env.get("PATH"))

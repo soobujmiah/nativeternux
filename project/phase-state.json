@@ -215,14 +215,15 @@
       "title": "CPU/GPU/NPU capability, optimization, and fallback",
       "status": "planned",
       "completed_on": null,
-      "summary": "Native off-screen OpenGL is verified; the selected experimental KGSL/Freedreno candidate also rendered a bounded 120-frame Vulkan vkcube workload on :1. The stock ICD route separately fails with VK_ERROR_INCOMPATIBLE_DRIVER. Existing Debian GLX rendered 486 frames on Zink/Turnip Adreno 825. GLES draw, nested Xephyr :2 draw/presentation, ordinary workload routing, clean-device setup, and NPU runtime remain open.",
+      "summary": "Native off-screen OpenGL, GLES 3 shader draw, and selected-candidate 120-frame Vulkan draw are verified on Adreno 825. OpenGL verification has llvmpipe then softpipe software fallback. Debian GLX/Zink/Turnip draw is separately verified. P6 remains open: ordinary API-aware workload routing, nested Xephyr presentation, clean-install provider reproduction, and NPU workload are not qualified.",
       "evidence": [
         "docs/evidence/2026-10-20-shared-graphics-manager.md",
         "docs/evidence/2026-10-20-native-offscreen-glmark2.md",
         "docs/evidence/2026-10-20-graphics-live-recheck.md",
-        "docs/evidence/2026-10-20-native-vulkan-draw.md"
+        "docs/evidence/2026-10-20-native-vulkan-draw.md",
+        "docs/evidence/2026-10-20-native-gles-draw.md"
       ],
-      "next_action": "Connect API-aware backend assessment and software fallback to named workload launch paths; qualify Native GLES draw, nested Xephyr presentation, and fresh-device reproduction while keeping unsupported APIs fail-closed."
+      "next_action": "Connect API-aware backend assessment and software fallback to named workload launch paths; qualify nested Xephyr presentation and fresh-device provider reproduction while keeping unsupported APIs fail-closed. Keep NPU runtime/workload as unverified."
     },
     {
       "id": "P7",

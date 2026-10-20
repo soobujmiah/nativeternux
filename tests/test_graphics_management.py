@@ -75,24 +75,60 @@ class GraphicsManagementTests(unittest.TestCase):
 
     def test_gles_is_not_reported_from_an_opengl_only_probe(self) -> None:
         native = graphics_manager.verify("native", "gles", home=str(self.home), state_dir=str(self.state),
-                                         process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux")
+                                         process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         guest = graphics_manager.verify("debian", "gles", home=str(self.home), state_dir=str(self.state),
-                                        process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux")
+                                        process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(native["status"], "unavailable")
         self.assertFalse(native["render_verified"])
         self.assertEqual(guest["status"], "unavailable")
         self.assertFalse(guest["render_verified"])
 
-    def test_gles_probe_reports_context_without_claiming_a_draw(self) -> None:
-        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/es2_info"), \
-             patch.object(graphics_manager, "_run", return_value=(0, "GL_VERSION: OpenGL ES 3.2\nGL_RENDERER: llvmpipe (LLVM fixture)\n")):
+    def test_gles_draw_verification_reports_real_frames_and_renderer(self) -> None:
+        with patch.object(graphics_manager, "_gles_draw", return_value={
+                "status": "rendered", "context_verified": True, "render_verified": True,
+                "renderer": "Adreno (TM) 825", "version": "OpenGL ES 3.2", "accelerated": True,
+                "frames": 120, "throughput_fps": 24.0}):
             result = graphics_manager.verify("native", "gles", home=str(self.home), state_dir=str(self.state),
-                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
-        self.assertEqual(result["status"], "context-verified")
-        self.assertTrue(result["context_verified"])
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"},
+                                             prefix="/termux", repo_root=str(self.repo))
+        self.assertEqual(result["status"], "rendered")
+        self.assertTrue(result["render_verified"])
+        self.assertEqual(result["renderer"], "Adreno (TM) 825")
+        self.assertEqual(result["frames"], 120)
+
+    def test_gles_draw_runner_reports_hardware_shader_frames_and_cleans_up(self) -> None:
+        source = self.repo / "docs/evidence/graphics/native-mesa-0219ff84/offscreen-gles.c"
+        source.parent.mkdir(parents=True)
+        source.write_text("eglCreatePbufferSurface glDrawArrays glFinish", encoding="utf-8")
+        self.state.mkdir(parents=True, mode=0o700, exist_ok=True)
+        self.state.chmod(0o700)
+        outputs = [(0, "compiler ok"), (0, "EGL=1.5 | GLES=OpenGL ES 3.2 | renderer=Adreno (TM) 825 | pbuffer=1280x720\nelapsed=5.000 seconds frames=240 throughput=48.00 frames/sec\n")]
+        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/clang"), \
+             patch.object(graphics_manager, "_run", side_effect=outputs) as runner:
+            result = graphics_manager._gles_draw({"PATH": "/fixture"}, repo_root=str(self.repo),
+                                                 state_dir=str(self.state))
+        self.assertEqual(result["status"], "rendered")
+        self.assertTrue(result["render_verified"])
+        self.assertTrue(result["accelerated"])
+        self.assertEqual(result["frames"], 240)
+        self.assertEqual(runner.call_count, 2)
+        self.assertFalse(Path(runner.call_args_list[0].args[0][5]).exists())
+
+    def test_gles_draw_runner_rejects_zero_frames(self) -> None:
+        source = self.repo / "docs/evidence/graphics/native-mesa-0219ff84/offscreen-gles.c"
+        source.parent.mkdir(parents=True)
+        source.write_text("eglCreatePbufferSurface glDrawArrays glFinish", encoding="utf-8")
+        self.state.mkdir(parents=True, mode=0o700, exist_ok=True)
+        self.state.chmod(0o700)
+        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/clang"), \
+             patch.object(graphics_manager, "_run", side_effect=[
+                 (0, "compiler ok"),
+                 (0, "EGL=1.5 | GLES=OpenGL ES 3.2 | renderer=llvmpipe (LLVM fixture)\nelapsed=5 seconds frames=0 throughput=0 frames/sec\n")]):
+            result = graphics_manager._gles_draw({"PATH": "/fixture"}, repo_root=str(self.repo),
+                                                 state_dir=str(self.state))
+        self.assertEqual(result["status"], "failed")
         self.assertFalse(result["render_verified"])
         self.assertFalse(result["accelerated"])
-        self.assertIn("no draw", result["proof"])
 
     def test_opengl_failed_primary_tries_llvmpipe_and_reports_software(self) -> None:
         with patch.object(graphics_manager.shutil, "which", return_value="/fixture/glmark2"), \
@@ -101,7 +137,7 @@ class GraphicsManagementTests(unittest.TestCase):
                  (0, "GL_RENDERER: llvmpipe (LLVM fixture)\nglmark2 Score: 123\n"),
              ]) as runner:
             result = graphics_manager.verify("native", "opengl", home=str(self.home), state_dir=str(self.state),
-                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(result["status"], "fallback-rendered")
         self.assertTrue(result["render_verified"])
         self.assertFalse(result["accelerated"])
@@ -118,7 +154,7 @@ class GraphicsManagementTests(unittest.TestCase):
                  (0, "GL_RENDERER: softpipe (LLVM fixture)\nglmark2 Score: 33\n"),
              ]) as runner:
             result = graphics_manager.verify("native", "opengl", home=str(self.home), state_dir=str(self.state),
-                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(result["status"], "fallback-rendered")
         self.assertEqual(result["fallback_order"], ["llvmpipe", "softpipe"])
         self.assertEqual([item["backend"] for item in result["fallback_attempts"]], ["llvmpipe", "softpipe"])
@@ -133,7 +169,7 @@ class GraphicsManagementTests(unittest.TestCase):
                  (0, "GL_RENDERER: another virtual renderer\nglmark2 Score: 100\n"),
              ]):
             result = graphics_manager.verify("native", "opengl", home=str(self.home), state_dir=str(self.state),
-                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(result["status"], "failed")
         self.assertFalse(result["render_verified"])
         self.assertFalse(result["fallback_attempts"][0]["status"] == "rendered")
@@ -146,7 +182,7 @@ class GraphicsManagementTests(unittest.TestCase):
                  (0, "Selected WSI platform: xcb\nSelected GPU 0: Adreno (TM) 825, type: IntegratedGpu\n"),
              ]):
             result = graphics_manager.verify("native", "vulkan", home=str(self.home), state_dir=str(self.state),
-                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(result["status"], "rendered")
         self.assertTrue(result["render_verified"])
         self.assertEqual(result["draw_frames"], 120)
@@ -159,7 +195,7 @@ class GraphicsManagementTests(unittest.TestCase):
                  (0, "Selected GPU 0: llvmpipe (LLVM fixture), type: Cpu\n"),
              ]):
             result = graphics_manager.verify("native", "vulkan", home=str(self.home), state_dir=str(self.state),
-                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(result["status"], "failed")
         self.assertFalse(result["render_verified"])
 
@@ -168,7 +204,7 @@ class GraphicsManagementTests(unittest.TestCase):
              patch.object(graphics_manager, "_native_env", return_value={"PATH": "/fixture"}), \
              patch.object(graphics_manager, "_run", return_value=(0, "deviceName = Adreno (TM) 825\n")) as runner:
             result = graphics_manager.verify("native", "vulkan", home=str(self.home), state_dir=str(self.state),
-                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux")
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(result["status"], "enumerated")
         self.assertFalse(result["render_verified"])
         self.assertEqual(runner.call_count, 1)

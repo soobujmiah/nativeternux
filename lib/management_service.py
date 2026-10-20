@@ -293,7 +293,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             if provider == "debian":
                 process_env = dict(process_env)
                 process_env["TERNUXX_GRAPHICS_DISPLAY"] = display
-            data = graphics_manager.verify(provider, api, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), process_env=process_env, prefix=process_env["PREFIX"])
+            repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            data = graphics_manager.verify(provider, api, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), process_env=process_env, prefix=process_env["PREFIX"], repo_root=repo_root)
         elif operation == "management.catalog":
             data = management_catalog.build_catalog(
                 set(OPERATIONS), category=args.get("category"),
