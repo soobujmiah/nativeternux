@@ -1,0 +1,7 @@
+event_id: commit-416f3a7c096d-288158476cbaead7
+repository: soobujmiah/ternuxx
+commit: 416f3a7c096dddab46f50bfc655b6587c689b478
+kind: commit
+occurred_at: '2026-10-20T10:07:45Z'
+status: completed
+summary: 'fix(proot): keep app shortcuts out of generic XFCE menus'
