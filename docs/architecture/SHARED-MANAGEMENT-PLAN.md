@@ -58,7 +58,7 @@ Provide guided setup, optional provider selection, dependency previews, applicat
 
 ## Current disposition
 
-The M1 domain registry and Doctor service entry are implemented; M1 is not complete because several domain adapters and all PRoot lifecycle operations remain. The first app slice and M2 source/fixture gates pass. The Web client is authenticated and read-only; the TUI uses the shared service and asks for confirmation on mutations. Physical X11 manager interaction, complete browser onboarding, general Graphical management, and HTTP mutation remain open. P3 remains active; do not infer phase completion from these source gates.
+The M1 domain registry and Doctor service entry are implemented; M1 is not complete because several domain adapters and PRoot lifecycle operations remain. The first app slice and M2 source/fixture gates pass. Web mode grants narrow, durable and CSRF-protected mutations for selected desktop, graphics, SSH, named-app and shortcut actions; the ordinary API stays read-only. TUI and GTK use the shared service with typed actions and confirmations. Physical X11 manager interaction, complete browser onboarding and broad resource parity remain open. P3 remains active; do not infer phase completion from these source gates.
 
 ## Completion gates
 

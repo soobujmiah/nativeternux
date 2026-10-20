@@ -46,7 +46,7 @@ Evidence:
 
 **Status:** in_progress
 
-Native Adreno 825 OpenGL, read-only session inventory and foreground Debian login have device evidence; CLI/TUI help and TUI/GTK client affordances were corrected; remaining P3 recovery, concurrency, visual and boot gates stay open.
+TUI, Web, and GTK now have source-verified exact-plan PRoot shortcut add/remove actions; visual client acceptance, native recovery concurrency, boot gates, and P3 exit review remain open.
 
 **Next action:** Owner visually inspect the installed GTK client, TUI key flow, Web layout and PRoot Apps menu; finish desktop recovery concurrency and boot acceptance; keep P4 planned until the P3 exit gate is reviewed.
 
@@ -169,6 +169,7 @@ Evidence:
 - [docs/evidence/2026-10-20-proot-full-gui.md](evidence/2026-10-20-proot-full-gui.md)
 - [docs/evidence/2026-10-20-a-z-audit-followup.md](evidence/2026-10-20-a-z-audit-followup.md)
 - [docs/evidence/2026-10-20-management-client-parity-audit.md](evidence/2026-10-20-management-client-parity-audit.md)
+- [docs/evidence/2026-10-20-proot-shortcut-client-parity.md](evidence/2026-10-20-proot-shortcut-client-parity.md)
 
 ## P4 — Existing Ternux PRoot feature-parity provider
 

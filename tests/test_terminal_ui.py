@@ -29,6 +29,31 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertIn("Native Ternuxx X11 display", labels[1])
         self.assertNotIn("ternux or ternuxx", " ".join(labels).lower())
 
+    def test_proot_shortcut_change_previews_and_applies_the_exact_confirmed_plan(self) -> None:
+        plan = {"plan_id": "a" * 24, "changed": True, "affected_resources": [
+            {"path": "xfce/data/applications/ternuxx-proot-files.desktop",
+             "before": "absent", "after": "present"}]}
+        preview = {"ok": True, "data": plan}
+        applied = {"ok": True, "data": {"status": "complete"}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["add", "files", "yes"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[preview, applied]) as call:
+            result = terminal_ui._manage_proot_shortcut(mock.Mock())
+        self.assertIs(result, applied)
+        call.assert_has_calls([
+            mock.call("proot.shortcuts.preview", {"action": "add", "app_id": "files"}),
+            mock.call("proot.shortcuts.apply", {
+                "action": "add", "app_id": "files", "confirmed": True, "plan_id": "a" * 24,
+            }),
+        ])
+
+    def test_proot_shortcut_cancel_does_not_apply(self) -> None:
+        preview = {"ok": True, "data": {"changed": True, "plan_id": "b" * 24}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["remove", "files", "no"]), \
+             mock.patch.object(terminal_ui, "_call", return_value=preview) as call:
+            result = terminal_ui._manage_proot_shortcut(mock.Mock())
+        self.assertEqual(result["error"]["code"], "cancelled")
+        call.assert_called_once_with("proot.shortcuts.preview", {"action": "remove", "app_id": "files"})
+
     def test_catalog_categories_and_resources_define_navigation(self) -> None:
         with mock.patch.dict(os.environ, {"PREFIX": "/data/data/com.termux/files/usr",
                                           "TERMUX_VERSION": "fixture"}):

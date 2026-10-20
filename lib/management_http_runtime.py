@@ -34,13 +34,13 @@ _MUTATING_CAPABILITIES = {
 WEB_READ_CAPABILITIES = frozenset({
     "diagnostics.read", "guest.diagnostics.read", "remote_policy.read", "continuity.read",
 })
-WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage", "applications.launch"})
+WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage", "applications.launch", "applications.shortcuts.manage"})
 _WEB_MUTATING_OPERATIONS = {
     operation for operation in management_sessions.MUTATING_OPERATIONS
     if management_authorization.required_capability(operation) in WEB_CAPABILITIES
 }
-if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch"}:
-    raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy and fixed managed SSH lifecycle and typed graphics selection")
+if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply"}:
+    raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy, managed SSH, typed graphics/app actions, and previewed PRoot shortcuts")
 if READ_CAPABILITIES & _MUTATING_CAPABILITIES:
     raise RuntimeError("read-only API runtime contains a mutation capability")
 if WEB_READ_CAPABILITIES & _MUTATING_CAPABILITIES:
@@ -95,7 +95,7 @@ def copy_bootstrap_secret(secret: str, *, executable: str = "termux-clipboard-se
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tx mng http serve",
-        description="Run the loopback management API; Web mode supports scoped desktop, managed SSH 8023, monitoring, graphics selection, and named PRoot app launch.",
+        description="Run the loopback management API; Web mode supports scoped desktop, managed SSH 8023, monitoring, graphics selection, named PRoot launch, and previewed shortcut management.",
     )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--web", action="store_true", help="open the local browser UI")

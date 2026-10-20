@@ -157,7 +157,7 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
         self.assertIn("proot.shortcuts.preview", management_sessions.READ_ONLY_OPERATIONS)
         for operation, capability, args in (
             ("proot.app.launch", "applications.launch", {"app_id": "files"}),
-            ("proot.shortcuts.apply", "applications.manage", {
+            ("proot.shortcuts.apply", "applications.shortcuts.manage", {
                 "action": "remove", "app_id": "files", "confirmed": True, "plan_id": "a" * 24,
             }),
         ):

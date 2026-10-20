@@ -68,6 +68,37 @@ def _launch_proot_app(screen: "curses._CursesWindow") -> dict[str, object] | Non
     return _call("proot.app.launch", args)
 
 
+def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
+    """Preview an exact catalog shortcut change, then apply only that plan."""
+    action = _prompt(screen, "Shortcut action: add or remove").lower()
+    if action not in {"add", "remove"}:
+        return {"ok": False, "error": {"code": "invalid_shortcut_action"}}
+    app_id = _prompt(screen, "PRoot app ID (" + ", ".join(proot_shortcuts.CATALOG) + ")")
+    if app_id not in proot_shortcuts.CATALOG:
+        return {"ok": False, "error": {"code": "unknown_proot_app"}}
+    preview = _call("proot.shortcuts.preview", {"action": action, "app_id": app_id})
+    if not preview.get("ok"):
+        return preview
+    data = preview.get("data", {})
+    if not isinstance(data, dict):
+        return {"ok": False, "error": {"code": "invalid_shortcut_preview"}}
+    if not data.get("changed"):
+        return preview
+    plan_id = data.get("plan_id")
+    if not isinstance(plan_id, str):
+        return {"ok": False, "error": {"code": "invalid_shortcut_preview"}}
+    affected = data.get("affected_resources") or []
+    target = affected[0].get("path", "the selected launcher") if affected and isinstance(affected[0], dict) else "the selected launcher"
+    before = affected[0].get("before", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
+    after = affected[0].get("after", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
+    confirm = _prompt(screen, f"{action.title()} {proot_shortcuts.CATALOG[app_id]['name']} at {target} ({before} → {after}). Type yes")
+    if confirm.lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("proot.shortcuts.apply", {
+        "action": action, "app_id": app_id, "confirmed": True, "plan_id": plan_id,
+    })
+
+
 def _desktop_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
     action = _prompt(screen, "Desktop action: start or stop (blank cancels)").lower()
     operation = {"start": "desktop.start", "stop": "desktop.stop"}.get(action)
@@ -155,6 +186,7 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         labels.append("configure Ternuxx timezone preference")
     elif resource_id == "proot.debian.workloads":
         labels.append("launch named PRoot app")
+        labels.append("preview and manage PRoot app shortcut")
     elif resource_id == "network.ssh.managed-8023":
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)")) if op in operations)
@@ -414,7 +446,10 @@ def _run(screen: "curses._CursesWindow") -> int:
             elif resource["id"] == "native.desktop.session":
                 report = _desktop_action(screen, resource)
             elif resource["id"] == "proot.debian.workloads":
-                report = _launch_proot_app(screen)
+                choice = _prompt(screen, "PRoot action: launch or shortcut").lower()
+                report = (_launch_proot_app(screen) if choice == "launch" else
+                          _manage_proot_shortcut(screen) if choice == "shortcut" else
+                          {"ok": False, "error": {"code": "cancelled"}})
             elif resource["id"] == "network.ssh.managed-8023":
                 report = _managed_ssh_action(screen, resource)
             elif resource["id"] == "native.timezone":

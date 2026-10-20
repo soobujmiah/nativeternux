@@ -126,6 +126,28 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_not_called()
         self.assertIn("unknown_proot_app", output.getvalue())
 
+    def test_proot_shortcut_preview_emits_exact_review_fields(self) -> None:
+        payload = {"ok": True, "data": {"plan_id": "a" * 24, "changed": True,
+            "affected_resources": [{"path": "xfce/data/applications/files.desktop",
+                                    "before": "absent", "after": "present"}]}}
+        with mock.patch.object(bridge, "call", return_value=payload) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["shortcut-preview", "add", "files"]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.preview", {"action": "add", "app_id": "files"})
+        self.assertIn("P\t" + "a" * 24 + "\ttrue\t", output.getvalue())
+
+    def test_proot_shortcut_apply_requires_catalog_id_and_exact_plan(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"status": "complete"}}) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["shortcut-apply", "remove", "files", "b" * 24]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.apply", {
+            "action": "remove", "app_id": "files", "confirmed": True, "plan_id": "b" * 24,
+        })
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["shortcut-apply", "add", "unknown", "b" * 24]), 2)
+        dispatch.assert_not_called()
+
     def test_timezone_set_bridge_calls_typed_preference_operation(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"timezone": "UTC"}}) as dispatch:
             output = StringIO()

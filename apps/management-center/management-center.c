@@ -3,15 +3,16 @@
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search;
-                 GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *cron_button, *cron_history_button, *timezone_set_button, *proot_app_button, *monitor_box, *monitor_enabled,
+                 GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *cron_button, *cron_history_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; } Center;
-typedef struct { Center *center; gchar *action; gchar *resource_id; } Request;
+typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
 static Center *app_center;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5);
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact);
 static void choose_graphics_api(GtkButton *button, gpointer data);
+static void ask_shortcut_confirmation(Center *c, const gchar *action, const gchar *app_id, const gchar *plan_id, const gchar *target, const gchar *transition);
 
 static gchar *bridge_path(void) {
     const gchar *root = g_getenv("TERNUXX_CHECKOUT");
@@ -36,7 +37,18 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
         g_clear_error(&error);
     } else {
         gboolean success = g_subprocess_get_successful(G_SUBPROCESS(source));
-        if ((g_strcmp0(request->action, "ssh-preview-start") == 0 || g_strcmp0(request->action, "ssh-preview-stop") == 0)
+        if (g_strcmp0(request->action, "shortcut-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+            gchar **f = g_strsplit(stdout_text, "\t", 6);
+            if (f[1] && f[2] && f[3] && f[4] && g_strcmp0(f[2], "true") == 0
+                    && g_strcmp0(f[1], "-") != 0 && strlen(f[1]) == 24) {
+                g_strchomp(f[4]);
+                ask_shortcut_confirmation(c, request->resource_id, request->detail_id, f[1], f[3], f[4]);
+            } else {
+                set_text(c, "Shortcut is already in the requested state. No change was made.");
+                gtk_label_set_text(GTK_LABEL(c->notice), "No shortcut change needed");
+            }
+            g_strfreev(f);
+        } else if ((g_strcmp0(request->action, "ssh-preview-start") == 0 || g_strcmp0(request->action, "ssh-preview-stop") == 0)
                 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
             gchar **f = g_strsplit(stdout_text, "\t", 4);
             if (f[1] && f[2] && f[3] && g_strcmp0(f[2], "true") == 0 && g_strcmp0(f[1], "-") != 0) {
@@ -71,7 +83,7 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
         else if (success && g_strcmp0(request->action,"set-monitor")==0)
             run_bridge(c,"monitor",NULL,NULL,NULL,NULL,NULL);
     }
-    g_free(stdout_text); g_free(stderr_text); g_free(request->action); g_free(request->resource_id); g_free(request);
+    g_free(stdout_text); g_free(stderr_text); g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
 }
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5) {
@@ -97,7 +109,7 @@ static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const 
         g_clear_error(&error);
     } else {
         Request *request = g_new0(Request, 1); request->center = c;
-        request->action = g_strdup(action); request->resource_id = g_strdup(arg1);
+        request->action = g_strdup(action); request->resource_id = g_strdup(arg1); request->detail_id = g_strdup(arg2); request->plan_id = g_strdup(arg3);
         g_subprocess_communicate_utf8_async(process, NULL, NULL, request_done, request);
         g_object_unref(process);
     }
@@ -141,7 +153,7 @@ static void show_resource(Center *c, Resource *r) {
     else if (g_strcmp0(r->id, "native.timezone") == 0)
         gui_actions = "Inspect available timezone data and save the Ternuxx timezone preference.";
     else if (g_strcmp0(r->id, "proot.debian.workloads") == 0)
-        gui_actions = "Launch a named app from the verified Ternuxx PRoot app catalog into the current Native display.";
+        gui_actions = "Launch a named PRoot app; preview and confirm add/remove for one Ternuxx-owned Native menu shortcut.";
     gchar *summary = g_strdup_printf("%s\n\nCapability: %s\nLive state: queried from the shared service\nAvailability: %s\n\n%s\n\nShared supported operations:\n%s\n\nActions available in this GTK app:\n%s\n\nAn operation listed by the shared catalog may require another client or a capability not granted to this app.",
         r->name, status_label(r->status), r->availability, r->description,
         r->operations && *r->operations ? r->operations : "None",
@@ -161,6 +173,7 @@ static void show_resource(Center *c, Resource *r) {
     gtk_widget_set_visible(c->cron_history_button, cron);
     gtk_widget_set_visible(c->timezone_set_button, timezone);
     gtk_widget_set_visible(c->proot_app_button, proot_apps);
+    gtk_widget_set_visible(c->proot_shortcut_button, proot_apps);
     gtk_widget_set_visible(c->graphics_api_button, graphics);
     gtk_button_set_label(GTK_BUTTON(c->start_button), managed_ssh ? "Start managed SSH (8023)" : "Start desktop");
     gtk_button_set_label(GTK_BUTTON(c->stop_button), managed_ssh ? "Stop managed SSH (8023)" : "Stop desktop");
@@ -240,12 +253,27 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
     if (!error && choice == 1) {
         if (g_str_has_prefix(request->action, "ssh-apply-"))
             run_bridge(request->center, request->action, "confirmed", request->resource_id, NULL, NULL, NULL);
+        else if (g_strcmp0(request->action, "shortcut-apply") == 0)
+            run_bridge(request->center, "shortcut-apply", request->resource_id, request->detail_id, request->plan_id, NULL, NULL);
         else
             run_bridge(request->center, request->action, "confirmed", NULL, NULL, NULL, NULL);
     }
     else if (error) { gtk_label_set_text(GTK_LABEL(request->center->notice), error->message); g_clear_error(&error); }
     else gtk_label_set_text(GTK_LABEL(request->center->notice), "Action cancelled");
-    g_free(request->action); g_free(request);
+    g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
+}
+static void ask_shortcut_confirmation(Center *c, const gchar *action, const gchar *app_id,
+                                      const gchar *plan_id, const gchar *target, const gchar *transition) {
+    gchar *message = g_strdup_printf("Confirm %s shortcut for %s?\n\nTarget: %s\nChange: %s\n\nOnly this exact Ternuxx-owned launcher will change.", action, app_id, target, transition);
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
+    const char *choices[] = {"Cancel", "Confirm", NULL}; gtk_alert_dialog_set_buttons(dialog, choices);
+    gtk_alert_dialog_set_default_button(dialog, 0);
+    Request *request = g_new0(Request, 1); request->center = c;
+    request->action = g_strdup("shortcut-apply"); request->resource_id = g_strdup(action);
+    request->detail_id = g_strdup(app_id); request->plan_id = g_strdup(plan_id);
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
+    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact PRoot shortcut change");
+    g_object_unref(dialog); g_free(message);
 }
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact) {
     gboolean start = g_strcmp0(preview_action, "ssh-preview-start") == 0;
@@ -359,6 +387,44 @@ static void launch_proot_app(GtkButton *button, gpointer data) {
     g_signal_connect(launch, "clicked", G_CALLBACK(proot_app_launch_clicked), window);
     gtk_window_present(GTK_WINDOW(window));
 }
+static void proot_shortcut_preview_clicked(GtkButton *button, gpointer data) {
+    (void)button; GtkWidget *window = data;
+    Center *c = g_object_get_data(G_OBJECT(window), "shortcut-center");
+    GtkWidget *action_entry = g_object_get_data(G_OBJECT(window), "shortcut-action-entry");
+    GtkWidget *app_entry = g_object_get_data(G_OBJECT(window), "shortcut-app-entry");
+    const gchar *action = gtk_editable_get_text(GTK_EDITABLE(action_entry));
+    const gchar *app_id = gtk_editable_get_text(GTK_EDITABLE(app_entry));
+    if ((g_strcmp0(action, "add") != 0 && g_strcmp0(action, "remove") != 0) || !app_id || !*app_id) {
+        gtk_label_set_text(GTK_LABEL(c->notice), "Enter add/remove and a catalog app ID.");
+    } else {
+        run_bridge(c, "shortcut-preview", action, app_id, NULL, NULL, NULL);
+        gtk_window_destroy(GTK_WINDOW(window));
+    }
+}
+static void manage_proot_shortcut(GtkButton *button, gpointer data) {
+    (void)button; Center *c = data;
+    GtkWidget *window = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(window), "Manage one PRoot app shortcut");
+    gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window));
+    gtk_window_set_modal(GTK_WINDOW(window), TRUE); gtk_window_set_default_size(GTK_WINDOW(window), 480, 220);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_widget_set_margin_top(box, 16); gtk_widget_set_margin_bottom(box, 16);
+    gtk_widget_set_margin_start(box, 16); gtk_widget_set_margin_end(box, 16);
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    gtk_box_append(GTK_BOX(box), gtk_label_new("This edits only the selected Ternuxx-owned launcher in the Native PRoot Apps menu. Existing conflicts are preserved."));
+    GtkWidget *action = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(action), "Action: add or remove");
+    GtkWidget *app = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(app), "Catalog app ID, for example files");
+    gtk_box_append(GTK_BOX(box), action); gtk_box_append(GTK_BOX(box), app);
+    GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *cancel = gtk_button_new_with_label("Cancel"); GtkWidget *preview = gtk_button_new_with_label("Preview change");
+    gtk_box_append(GTK_BOX(buttons), cancel); gtk_box_append(GTK_BOX(buttons), preview); gtk_box_append(GTK_BOX(box), buttons);
+    g_object_set_data(G_OBJECT(window), "shortcut-center", c);
+    g_object_set_data(G_OBJECT(window), "shortcut-action-entry", action);
+    g_object_set_data(G_OBJECT(window), "shortcut-app-entry", app);
+    g_signal_connect(cancel, "clicked", G_CALLBACK(proot_app_cancel_clicked), window);
+    g_signal_connect(preview, "clicked", G_CALLBACK(proot_shortcut_preview_clicked), window);
+    gtk_window_present(GTK_WINDOW(window));
+}
 static void timezone_save_clicked(GtkButton *button, gpointer data) {
     (void)button; GtkWidget *window = data;
     Center *c = g_object_get_data(G_OBJECT(window), "timezone-center");
@@ -423,7 +489,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->category_list=gtk_list_box_new(); gtk_widget_set_size_request(c->category_list,210,-1); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->category_list),GTK_SELECTION_SINGLE); gtk_paned_set_start_child(GTK_PANED(paned),c->category_list);
     GtkWidget *middle=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL); GtkWidget *center=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_size_request(center,260,-1); c->search=gtk_search_entry_new(); gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(c->search),"Search resources"); gtk_box_append(GTK_BOX(center),c->search); c->resource_list=gtk_list_box_new(); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->resource_list),GTK_SELECTION_SINGLE); GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),c->resource_list); gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(center),scroll); gtk_paned_set_start_child(GTK_PANED(middle),center);
     GtkWidget *right=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); c->details=gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(c->details),FALSE); gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->details),GTK_WRAP_WORD_CHAR); GtkWidget *detail_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(detail_scroll),c->details); gtk_widget_set_vexpand(detail_scroll,TRUE); gtk_box_append(GTK_BOX(right),detail_scroll);
-    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); gtk_box_append(GTK_BOX(right),actions);
+    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); gtk_box_append(GTK_BOX(right),actions);
     c->monitor_box=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->monitor_enabled=gtk_check_button_new_with_label("Enable Activity/focus monitoring"); c->monitor_interval=gtk_spin_button_new_with_range(1,86400,1); const gchar *units[]={"seconds","minutes","hours",NULL}; c->monitor_unit=gtk_drop_down_new_from_strings(units); c->monitor_focus=gtk_check_button_new_with_label("Check Android Activity focus"); c->monitor_launch=gtk_check_button_new_with_label("Request Activity when background"); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_enabled); gtk_box_append(GTK_BOX(c->monitor_box),gtk_label_new("Polling interval")); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_interval); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_unit); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_focus); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_launch); GtkWidget *save=gtk_button_new_with_label("Save monitoring policy"); gtk_box_append(GTK_BOX(c->monitor_box),save); gtk_widget_set_visible(c->monitor_box,FALSE); gtk_box_append(GTK_BOX(right),c->monitor_box);
     gtk_paned_set_end_child(GTK_PANED(middle),right); gtk_paned_set_end_child(GTK_PANED(paned),middle);
     c->notice=gtk_label_new("Loading resource catalog…"); gtk_widget_set_halign(c->notice,GTK_ALIGN_START); gtk_box_append(GTK_BOX(root),c->notice);
@@ -431,7 +497,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_halign(tagline,GTK_ALIGN_START); gtk_widget_add_css_class(tagline,"dim-label");
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window)); return TRUE;
 }
 int main(int argc, char **argv) {

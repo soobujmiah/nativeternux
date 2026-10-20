@@ -105,6 +105,36 @@ def main(argv: list[str]) -> int:
         result = call("proot.app.launch", {"app_id": argv[1]})
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "shortcut-preview" and len(argv) == 3:
+        import proot_shortcuts
+        shortcut_action, app_id = argv[1:]
+        if shortcut_action not in {"add", "remove"} or app_id not in proot_shortcuts.CATALOG:
+            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
+            return 2
+        result = call("proot.shortcuts.preview", {"action": shortcut_action, "app_id": app_id})
+        if not result.get("ok"):
+            print(json.dumps(result, ensure_ascii=False))
+            return 1
+        data = result.get("data", {})
+        changed = str(bool(data.get("changed"))).lower()
+        affected = data.get("affected_resources") or []
+        target = clean(affected[0].get("path")) if affected and isinstance(affected[0], dict) else "-"
+        before = clean(affected[0].get("before")) if affected and isinstance(affected[0], dict) else "-"
+        after = clean(affected[0].get("after")) if affected and isinstance(affected[0], dict) else "-"
+        print("\t".join(("P", clean(data.get("plan_id")) or "-", changed, target, before + " -> " + after)))
+        return 0
+    if action == "shortcut-apply" and len(argv) == 4:
+        import proot_shortcuts
+        shortcut_action, app_id, plan_id = argv[1:]
+        if (shortcut_action not in {"add", "remove"} or app_id not in proot_shortcuts.CATALOG
+                or not re.fullmatch(r"[0-9a-f]{24}", plan_id)):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
+            return 2
+        result = call("proot.shortcuts.apply", {
+            "action": shortcut_action, "app_id": app_id, "confirmed": True, "plan_id": plan_id,
+        })
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if action == "timezone-set" and len(argv) == 2:
         result = call("timezone.set", {"timezone": argv[1]})
         print(json.dumps(result, ensure_ascii=False, indent=2))

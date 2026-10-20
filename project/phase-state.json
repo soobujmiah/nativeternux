@@ -45,7 +45,7 @@
       "title": "Doctor, management, and recovery",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Native Adreno 825 OpenGL, read-only session inventory and foreground Debian login have device evidence; CLI/TUI help and TUI/GTK client affordances were corrected; remaining P3 recovery, concurrency, visual and boot gates stay open.",
+      "summary": "TUI, Web, and GTK now have source-verified exact-plan PRoot shortcut add/remove actions; visual client acceptance, native recovery concurrency, boot gates, and P3 exit review remain open.",
       "evidence": [
         "docs/evidence/P3-doctor-progress.md",
         "docs/evidence/2026-10-18-desktop-session-recovery.json",
@@ -164,7 +164,8 @@
         "docs/evidence/2026-10-20-interactive-workstation-followup.md",
         "docs/evidence/2026-10-20-proot-full-gui.md",
         "docs/evidence/2026-10-20-a-z-audit-followup.md",
-        "docs/evidence/2026-10-20-management-client-parity-audit.md"
+        "docs/evidence/2026-10-20-management-client-parity-audit.md",
+        "docs/evidence/2026-10-20-proot-shortcut-client-parity.md"
       ],
       "next_action": "Owner visually inspect the installed GTK client, TUI key flow, Web layout and PRoot Apps menu; finish desktop recovery concurrency and boot acceptance; keep P4 planned until the P3 exit gate is reviewed."
     },

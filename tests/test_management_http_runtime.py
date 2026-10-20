@@ -219,6 +219,29 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 self.assertEqual(json.loads(response)["error"], "permission_denied")
                 self.assertEqual(dispatch.call_count, 4)
 
+                dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-preview-1",
+                    "ok": True, "operation": "proot.shortcuts.preview", "data": {
+                        "plan_id": "b" * 24, "changed": True}}
+                status, _headers, response = post("proot.shortcuts.preview", "web-shortcut-preview-1",
+                    "web-shortcut-preview-key1", {"action": "add", "app_id": "files"})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(dispatch.call_count, 5)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-apply-01",
+                    "ok": True, "operation": "proot.shortcuts.apply", "data": {"status": "complete"}}
+                status, _headers, response = post("proot.shortcuts.apply", "web-shortcut-apply-001",
+                    "web-shortcut-apply-key1", {"action": "add", "app_id": "files",
+                                                "confirmed": True, "plan_id": "b" * 24})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "proot.shortcuts.apply")
+                self.assertEqual(dispatch.call_count, 6)
+
+                status, _headers, response = post("proot.shortcuts.sync", "web-shortcut-sync-001",
+                    "web-shortcut-sync-key1", {})
+                self.assertEqual(status, 403)
+                self.assertEqual(json.loads(response)["error"], "permission_denied")
+                self.assertEqual(dispatch.call_count, 6)
+
                 dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
                     "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
                 status, _headers, response = post("desktop.restart", "web-restart-request-01",
@@ -243,8 +266,13 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('run("recovery.status")', page)
         self.assertNotIn("network.ssh.manual-8022", page.split("manageSsh(operation)", 1)[-1].split("function drawCategories", 1)[0])
         self.assertIn("applications.launch", page)
+        self.assertIn("applications.shortcuts.manage", page)
+        self.assertIn('run("proot.shortcuts.preview",{action,app_id:select.value})', page)
+        self.assertIn('run("proot.shortcuts.apply",{action,app_id:select.value,confirmed:true,plan_id:data.plan_id})', page)
         self.assertIn('run("proot.shortcuts.list")', page)
         self.assertIn('run("proot.app.launch",chosen?{app_id:select.value,display:chosen}:{app_id:select.value})', page)
+        self.assertIn("Remove owned shortcut", page)
+        self.assertIn("proot.shortcuts.apply", page)
         self.assertIn("Use an X11 display like :1", page)
         self.assertIn("Launch named PRoot app", page)
         self.assertIn("availability unverified", page)
