@@ -1,0 +1,7 @@
+event_id: commit-aaf3d79a5b0b-b16aedc21ddce1b9
+repository: soobujmiah/ternuxx
+commit: aaf3d79a5b0bd718fe290fe170c43894fe669320
+kind: commit
+occurred_at: '2026-10-20T01:15:54Z'
+status: completed
+summary: 'docs(evidence): record workstation installer CI'
