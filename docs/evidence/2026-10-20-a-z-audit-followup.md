@@ -42,4 +42,8 @@ The live private XFCE data directory contains 35 generated PRoot entries; all 35
 - `tests.test_proot_sessions` passed 29/29 on Native Termux. `git diff --check`, strict README bridge, and repository knowledge verification passed after the inventory change.
 - Final live check reports Native `:1` supervisor, Termux:X11, and XFCE running; graphics status remains Adreno 825 / accelerated, Vulkan enumeration-only. Every Ternuxx-managed interactive record is stopped/released, and the unrelated PRoot process remains unmanaged and preserved.
 
+## CI portability follow-up
+
+The first GitHub Actions run after the push passed dependency, repository-knowledge, and README-bridge checks, but the Ubuntu test suite exposed one environment-specific failure: `test_gui_and_canonical_proot_gui_reject_unknown_actions` received exit 127 because `lib/proot.sh` directly executed a helper whose shebang names the Termux Bash path. The Native 581-test suite passed. The helper now runs under the active `$BASH` interpreter, preserving the Native interpreter while making the checkout tests portable. The exact failing CI test passes locally after this change; the next pushed CI result is pending.
+
 Overall release remains **NOT RELEASE-READY**; P3 stays in progress and P4 stays planned.

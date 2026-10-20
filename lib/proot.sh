@@ -10,7 +10,7 @@ _nt_proot_call() {
 _nt_proot_gui() {
   local script="$_TN_LIB_DIR/../scripts/proot-gui0.sh"
   [ -x "$script" ] || { nt_fail "Ternuxx PRoot GUI script is unavailable: $script"; return 1; }
-  "$script" "$@"
+  "$BASH" "$script" "$@"
 }
 
 nt_cmd_pgui() {
