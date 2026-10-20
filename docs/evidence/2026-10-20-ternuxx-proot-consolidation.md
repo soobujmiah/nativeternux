@@ -1,5 +1,9 @@
 # Ternuxx-owned Debian PRoot consolidation — 2026-10-20
 
+Phase: `P4` (preparatory work; phase remains planned)
+
+## Evidence
+
 ## Read-only baseline
 
 - Native runtime: Android 16, aarch64, Termux; repository checkout $HOME/ternuxx.

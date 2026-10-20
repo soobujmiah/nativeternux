@@ -165,6 +165,12 @@ def main() -> int:
     update.add_argument("phase_id")
     update.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
     update.add_argument("--summary", required=True, help="updated one-line phase summary")
+    update.add_argument("--next-action", help="updated next action for the active phase")
+    annotate = sub.add_parser("annotate", help="record preparatory evidence for a planned phase without activating or completing it")
+    annotate.add_argument("phase_id")
+    annotate.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
+    annotate.add_argument("--summary", required=True, help="one-line preparatory progress summary")
+    annotate.add_argument("--next-action", help="next action to take when this phase becomes active")
     complete = sub.add_parser("complete", help="record a reviewed completion for the active phase")
     complete.add_argument("phase_id")
     complete.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
@@ -179,19 +185,37 @@ def main() -> int:
             return 0
 
         summary = args.summary.strip()
-        summary_limit = 10000 if args.command == "update" else 500
+        summary_limit = 10000 if args.command in {"update", "annotate"} else 500
         if not summary or len(summary) > summary_limit or "\n" in summary or "\r" in summary:
             raise ValueError(f"Summary must be one line with 1–{summary_limit} characters")
-        if state.get("active_phase") != args.phase_id:
+        if args.command != "annotate" and state.get("active_phase") != args.phase_id:
             raise ValueError(f"Only the active phase can be updated (active: {state.get('active_phase') or 'none'})")
         phase = next(p for p in state["phases"] if p["id"] == args.phase_id)
         evidence = [evidence_path(item, args.phase_id, completion=args.command == "complete")[0]
                     for item in args.evidence]
+        if args.command == "annotate":
+            if phase["status"] != "planned":
+                raise ValueError("Preparatory annotations require a planned phase")
+            merged = list(dict.fromkeys([*phase.get("evidence", []), *evidence]))
+            phase.update(summary=summary, evidence=merged)
+            if args.next_action:
+                action = args.next_action.strip()
+                if not action or "\n" in action or "\r" in action:
+                    raise ValueError("Next action must be a non-empty single line")
+                phase["next_action"] = action
+            write_all(render(state), state)
+            print(f"Recorded preparatory {args.phase_id} evidence without changing phase status.")
+            return 0
         if args.command == "update":
             if phase["status"] != "in_progress":
                 raise ValueError("Only an in-progress phase can record incremental evidence")
             merged = list(dict.fromkeys([*phase.get("evidence", []), *evidence]))
             phase.update(summary=summary, evidence=merged)
+            if args.next_action:
+                action = args.next_action.strip()
+                if not action or "\n" in action or "\r" in action:
+                    raise ValueError("Next action must be a non-empty single line")
+                phase["next_action"] = action
             write_all(render(state), state)
             print(f"Recorded {args.phase_id} progress and refreshed generated phase documentation.")
             return 0

@@ -1,5 +1,9 @@
 # Shared Native and Debian graphics management — 2026-10-20
 
+Phase: `P6` (preparatory implementation; phase remains planned)
+
+## Evidence
+
 ## Scope and implementation
 
 The graphics inventory, verification, and Native backend preference now use Ternuxx's shared management service (`graphics.provider.status`, `graphics.provider.verify`, and `graphics.provider.select`). CLI, interactive TUI, Web, and GTK clients call these typed operations. Native and Debian results remain separate providers and libc environments.

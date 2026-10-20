@@ -1,5 +1,9 @@
 # Native off-screen graphics benchmark — 2026-10-20
 
+Phase: `P6` (preparatory evidence; phase remains planned)
+
+## Evidence
+
 ## Setup and workload
 
 Ran in Native Termux checkout $HOME/ternuxx over SSH 8022. Installed configured Termux X11 repository package glmark2 version 2023.01-3 after previewing its transaction: 6,851,468 bytes downloaded, 11.5 MB additional installed size, and no new dependencies. The Mesa candidate remains extracted only; no Mesa or graphics driver package was installed.

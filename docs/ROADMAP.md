@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P3 — Doctor, management, and recovery
 
-**Next action:** Continue P3 provider, diagnostics, and recovery acceptance from the roadmap. Keep 8022 and the existing Debian/X11 workstation intact; do not qualify reboot readiness without explicit owner-approved post-reboot checks.
+**Next action:** Resolve the PRoot interactive guest cwd/UID identity contract without weakening checks or mutating the existing rootfs; then verify a bounded guest X11 workload and preserve existing Ternux sessions. Keep P4 planned until the P3 ownership and failure-recovery gates pass.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
@@ -147,6 +147,8 @@ See [Doctor, management, and recovery](OPERATIONS.md) for command and safety con
 
 **Goal:** let users opt into the existing Ternux Debian environment without losing any working capability. Ternuxx may reuse the existing rootfs and independently manage only guest processes/sessions it launches and can verify. Preserve the legacy Ternux lifecycle and its configured Zink/Turnip route; rootfs sharing alone never transfers ownership of a running session.
 
+**Current preparation (P4 remains planned):** Ternuxx now has a versioned Debian Trixie profile and a live-verified, guest-write-free adoption record for the existing rootfs. This records ownership only; it does not install packages, migrate guest settings, replay a fresh setup, or qualify GUI/workload parity. See [Debian consolidation evidence](evidence/2026-10-20-ternuxx-proot-consolidation.md). P4 work waits for the P3 ownership and recovery gates.
+
 **Deliverables:**
 - Source-reviewed capability/behavior matrix of the existing Ternux setup: desktop/session, display/audio, configured graphics backend, and owner-demonstrated Linux workloads. The pinned source baseline is recorded in [P4 Ternux source and capability matrix](evidence/P4-ternux-source-capability-matrix-2026-10-18.md); this is not yet a live parity qualification.
 - Read-only detection of distro, guest user, backend, active display, and Ternux-managed environment.
@@ -188,6 +190,8 @@ See [Doctor, management, and recovery](OPERATIONS.md) for command and safety con
 **Goal:** establish truthful CPU, GPU, and NPU capability tiers for each supported device and process context, then optimize measured workloads sustainably and provide useful CPU fallback when accelerators are unavailable. Candidate backends are discovered, not assumed.
 
 **Free-core rule:** CPU inference and dependable fallback, supported GPU/NPU inference, essential diagnostics, and basic reproduction of published tests remain free-core capabilities. This is a product policy, not a statement that an inference runtime currently exists. Current evidence and status are in [testing and acceleration](testing/README.md).
+
+**Current preparation (P6 remains planned):** Shared graphics operations are available through CLI, TUI, Web, and GTK for Native and Debian status/verification, with a Native backend preference. The device has workload-specific Adreno 825 OpenGL evidence and a GLES pbuffer benchmark; Vulkan draw and automatic API-aware fallback are not verified. The Native candidate is an extracted community draft and cannot yet be reproduced by a clean install. See [shared graphics evidence](evidence/2026-10-20-shared-graphics-manager.md) and [benchmark evidence](evidence/2026-10-20-native-offscreen-glmark2.md).
 
 **Deliverables:**
 - CPU inference is the first free-core runtime target, with a dependable fallback and workload-specific performance/thermal limits documented. It is not implemented until a runtime/model passes the gate.
@@ -301,11 +305,17 @@ See [Doctor, management, and recovery](OPERATIONS.md) for command and safety con
 # Rebuild generated status from the recorded state; safe to run repeatedly.
 python3 tools/phase_docs.py refresh
 
+# Record preparatory evidence for a still-planned later phase without activating or completing it.
+python3 tools/phase_docs.py annotate P4 --evidence docs/evidence/2026-10-20-ternuxx-proot-consolidation.md --summary "Adoption record exists; fresh setup replay and migration remain open."
+
+# Update verified progress and the next action for the active phase.
+python3 tools/phase_docs.py update P3 --evidence docs/evidence/example-p3-progress.md --summary "Current evidence-backed progress." --next-action "Next bounded acceptance action."
+
 # After reviewing a gate, create an evidence file from the [completion template](evidence/PHASE-COMPLETION-TEMPLATE.md) and record completion.
 python3 tools/phase_docs.py complete P0 --evidence docs/evidence/P0-foundation.md --summary "Foundation gate passed; evidence and owner review recorded."
 ```
 
-Completion is an explicit reviewed transition, never inferred from a commit or checklist alone. The tool requires a repo-local evidence document containing `Gate: PASS`, `## Acceptance criteria`, and `## Evidence` sections, completes only the active phase, activates the next phase, and regenerates all status views. It does not commit or push. If docs are edited manually or a transition is interrupted, `refresh` restores them from the state file.
+Completion is an explicit reviewed transition, never inferred from a commit or checklist alone. The tool requires a repo-local evidence document containing `Gate: PASS`, `## Acceptance criteria`, and `## Evidence` sections, completes only the active phase, activates the next phase, and regenerates all status views. `update` records evidence on the active phase without completing it; `annotate` records preparatory evidence for a planned phase without changing the phase order or status. All evidence files must identify their phase and include `## Evidence`. The tool does not commit or push. If docs are edited manually or a transition is interrupted, `refresh` restores generated views from the state file.
 
 ## Management Center interface milestone — in progress (2026-10-19)
 

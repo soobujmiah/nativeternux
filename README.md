@@ -16,9 +16,9 @@
 
 **Progress:** 3/11 phases complete
 
-Ownership diagnostics and bounded health reads are implemented; headless lifecycle remains live-qualified, but current interactive login fails closed on cwd/guest-identity checks and GUI/reattach remain unqualified.
+Doctor, recovery, managed sessions, and shared management APIs are implemented with extensive source and device evidence. A disposable PRoot headless lifecycle passed, but interactive login still fails closed on guest cwd/UID validation and GUI attachment is unqualified. Debian adoption is currently a private ownership record only; no fresh-install replay or guest migration is implemented.
 
-**Next action:** Continue P3 provider, diagnostics, and recovery acceptance from the roadmap. Keep 8022 and the existing Debian/X11 workstation intact; do not qualify reboot readiness without explicit owner-approved post-reboot checks.
+**Next action:** Resolve the PRoot interactive guest cwd/UID identity contract without weakening checks or mutating the existing rootfs; then verify a bounded guest X11 workload and preserve existing Ternux sessions. Keep P4 planned until the P3 ownership and failure-recovery gates pass.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
