@@ -36,6 +36,12 @@ The Debian PRoot continues to use its glibc Zink/Turnip stack with `DISPLAY` sco
 - The same active Native `:1` Debian OpenGL verifier returned `renderer_class=zink_turnip`, X11/audio reachable. This is separate from nested `:2` and does not establish nested GLX.
 - Ctrl-C in the owning terminal closed the nested desktop. Follow-up confirmed the `:2` socket absent, Native `:1` running, Native PulseAudio running, guest `:1` verifier still complete, and pre-existing Debian PRoot PID 25612 still alive.
 
+### Xephyr launch-mode comparison — 2026-10-20
+
+- Compared the committed `-glamor_gles2` launch with two bounded experiments: `-glamor` and no explicit glamor flag. Each used the Ternuxx-managed nested wrapper while Native XFCE `:1` stayed live.
+- Both alternatives produced the same device result: DRI3 extension unavailable, GLX draw failed with zero frames, and a Zink/Turnip GLES 3.2 context without a verified draw. Repeated `DRI3 not available` messages remained.
+- Neither alternative improves or qualifies nested GPU rendering. Restored the tracked launcher to `-glamor_gles2`; the worktree has no launcher change. Both test sessions were closed from their owning terminals and the `:2` socket is absent.
+- No package was installed and no existing Debian user configuration or service was changed. Normal Ternuxx startup initialized only its isolated private XFCE XDG overlay.
 
 ## Native PRoot Apps shortcut repair — 2026-10-20
 
