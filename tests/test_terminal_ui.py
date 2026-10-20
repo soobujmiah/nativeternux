@@ -15,8 +15,8 @@ import terminal_ui
 
 class TerminalUISharedServiceTests(unittest.TestCase):
     def test_compact_branding_is_available_in_tui_header(self) -> None:
-        self.assertIn("Workstation in your pocket — by Sobuj Miah", terminal_ui.BRANDING_LINE)
-        self.assertIn("soobujmiah.github.io", terminal_ui.BRANDING_LINE)
+        self.assertEqual(terminal_ui.BRANDING_TAGLINE, "Workstation in your pocket — by Sobuj Miah")
+        self.assertEqual(terminal_ui.BRANDING_URL, "soobujmiah.github.io")
 
     def test_guided_proot_launch_uses_only_native_ternuxx_display(self) -> None:
         prompts = ["files", "", "yes"]
@@ -233,7 +233,7 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             def getmaxyx(self): return (14, 100)
             def attron(self, _attr): pass
             def attroff(self, _attr): pass
-            def addnstr(self, row, _col, value, _limit): self.rows.append((row, value))
+            def addnstr(self, row, col, value, _limit): self.rows.append((row, col, value))
             def refresh(self): pass
         screen = FakeScreen()
         category = [{"id": "desktop-audio", "name": "Desktop & multimedia"}]
@@ -242,12 +242,35 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                       "supported_operations": ["desktop.status"]}]
         with mock.patch.object(terminal_ui.curses, "color_pair", return_value=0):
             terminal_ui._draw(screen, category, 0, resources, 0, "", {"ok": True}, 0)
-        rendered = "\n".join(text for _row, text in screen.rows)
+        rendered = "\n".join(text for _row, _col, text in screen.rows)
+        self.assertIn("Ternuxx Management Center", rendered)
+        self.assertIn("Workstation in your pocket — by Sobuj Miah", rendered)
+        self.assertIn("soobujmiah.github.io", rendered)
+        header = {row: (col, value) for row, col, value in screen.rows if row < 3}
+        self.assertEqual(set(header), {0, 1, 2})
+        self.assertEqual(header[0][0], (100 - len("Ternuxx Management Center")) // 2)
+        self.assertEqual(header[1][0], (100 - len(terminal_ui.BRANDING_TAGLINE)) // 2)
+        self.assertEqual(header[2][0], (100 - len(terminal_ui.BRANDING_URL)) // 2)
         self.assertIn("Desktop & multimedia", rendered)
         self.assertIn("Audio server", rendered)
         self.assertIn("Enter status", rendered)
         self.assertIn("Available:", rendered)
         self.assertIn("check status", rendered)
+
+    def test_small_terminal_warning_does_not_overwrite_three_line_header(self) -> None:
+        class SmallScreen:
+            def __init__(self): self.rows = []
+            def erase(self): self.rows.clear()
+            def getmaxyx(self): return (8, 60)
+            def attron(self, _attr): pass
+            def attroff(self, _attr): pass
+            def addnstr(self, row, col, value, _limit): self.rows.append((row, col, value))
+            def refresh(self): pass
+        screen = SmallScreen()
+        with mock.patch.object(terminal_ui.curses, "color_pair", return_value=0):
+            terminal_ui._draw(screen, [], 0, [], 0, "", None)
+        self.assertIn((2, (60 - len(terminal_ui.BRANDING_URL)) // 2, terminal_ui.BRANDING_URL), screen.rows)
+        self.assertIn((7, 1, "Resize terminal to at least 34x10"), screen.rows)
 
     def test_status_vocabulary_is_consistent_and_safe_for_unknown_values(self) -> None:
         self.assertEqual(management_presentation.status_label("planned"), "Planned")

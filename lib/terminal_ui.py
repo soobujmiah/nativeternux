@@ -17,7 +17,8 @@ import management_presentation
 import proot_shortcuts
 
 
-BRANDING_LINE = "Workstation in your pocket — by Sobuj Miah · soobujmiah.github.io"
+BRANDING_TAGLINE = "Workstation in your pocket — by Sobuj Miah"
+BRANDING_URL = "soobujmiah.github.io"
 
 
 READ_WITHOUT_ARGUMENTS = {
@@ -205,29 +206,32 @@ def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], cate
           report: dict[str, object] | None, scroll: int = 0) -> int:
     screen.erase()
     height, width = screen.getmaxyx()
-    title = " Ternuxx Management Center ".ljust(max(width - 1, 0))
+    title = "Ternuxx Management Center"
     screen.attron(curses.color_pair(1) | curses.A_BOLD)
-    screen.addnstr(0, 0, title, max(width - 1, 0))
+    title_col = max(0, (width - len(title)) // 2)
+    screen.addnstr(0, title_col, title, max(width - title_col - 1, 0))
     screen.attroff(curses.color_pair(1) | curses.A_BOLD)
-    screen.addnstr(1, 1, BRANDING_LINE,
-                   max(width - 2, 0))
+    tagline_col = max(0, (width - len(BRANDING_TAGLINE)) // 2)
+    screen.addnstr(1, tagline_col, BRANDING_TAGLINE, max(width - tagline_col - 1, 0))
+    url_col = max(0, (width - len(BRANDING_URL)) // 2)
+    screen.addnstr(2, url_col, BRANDING_URL, max(width - url_col - 1, 0))
     category = categories[category_index] if categories else {"name": "Resources"}
-    screen.addnstr(2, 1, f"{category['name']}  ·  {len(resources)} resources", max(width - 2, 0))
-    screen.addnstr(3, 1, f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
+    screen.addnstr(3, 1, f"{category['name']}  ·  {len(resources)} resources", max(width - 2, 0))
+    screen.addnstr(4, 1, f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
                    max(width - 2, 0))
     selected_resource = resources[selected] if resources and selected < len(resources) else None
     action_text = ", ".join(_available_action_labels(selected_resource)) if selected_resource else "none"
-    screen.addnstr(4, 1, f"Available: {action_text}", max(width - 2, 0))
+    screen.addnstr(5, 1, f"Available: {action_text}", max(width - 2, 0))
     if height < 10 or width < 34:
-        if height > 2 and width > 1:
-            screen.addnstr(2, 1, "Resize terminal to at least 34x10", width - 2)
+        if height > 3 and width > 1:
+            screen.addnstr(height - 1, 1, "Resize terminal to at least 34x10", width - 2)
         screen.refresh()
         return 0
-    capacity = max(1, height - 9)
+    capacity = max(1, height - 10)
     max_scroll = max(0, len(resources) - capacity)
     scroll = min(max(0, min(scroll, max_scroll)), max_scroll)
-    for row, resource in enumerate(resources[scroll:scroll + capacity], 5):
-        index = scroll + row - 5
+    for row, resource in enumerate(resources[scroll:scroll + capacity], 6):
+        index = scroll + row - 6
         marker = ">" if index == selected else " "
         status = management_presentation.status_label(resource.get("status", "unknown"))
         text = f"{marker} {resource.get('name', 'Resource')} · {status} · {_resource_state(resource)}"
