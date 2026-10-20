@@ -1,0 +1,7 @@
+event_id: commit-e027c5b30f83-cc8d9c7306279b8c
+repository: soobujmiah/ternuxx
+commit: e027c5b30f83273745933504849782d6c13cb09e
+kind: commit
+occurred_at: '2026-10-20T19:44:33Z'
+status: completed
+summary: 'docs: reconcile P3 client capability matrix'
