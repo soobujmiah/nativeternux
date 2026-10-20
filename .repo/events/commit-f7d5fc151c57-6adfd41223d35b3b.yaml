@@ -1,0 +1,7 @@
+event_id: commit-f7d5fc151c57-6adfd41223d35b3b
+repository: soobujmiah/ternuxx
+commit: f7d5fc151c57f9e5eb872ff29f5c25285ec522dc
+kind: commit
+occurred_at: '2026-10-20T01:02:42Z'
+status: completed
+summary: Clarify Native and PRoot acceleration boundaries
