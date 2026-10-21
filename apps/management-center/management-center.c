@@ -6,7 +6,7 @@ typedef struct { gchar *id, *category, *name, *status, *availability, *descripti
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search;
                  GtkWidget *start_button, *stop_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_terminal_button, *proot_stop_button, *proot_confirm_button, *proot_cancel_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; gchar *proot_pending_action, *proot_pending_session_id, *proot_pending_plan_id; GPtrArray *categories,
-                 *resources; gchar *selected_category, *selected_resource_id; } Center;
+                 *resources; gchar *selected_category, *selected_resource_id; guint category_count; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
 static Center *app_center;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
@@ -245,7 +245,7 @@ static void show_resource(Center *c, Resource *r) {
     else if (g_strcmp0(r->id, "graphics.debian") == 0)
         gui_actions = "Check status; verify OpenGL, GLES or Vulkan (read-only guest inspection).";
     else if (g_strcmp0(r->id, "network.ssh.managed-8023") == 0)
-        gui_actions = "Inspect status; preview and confirm start or stop of managed SSH on 127.0.0.1:8023.";
+        gui_actions = "Inspect status; preview and confirm start or stop of managed SSH on 127.0.0.1:8023. A login key is a client identity; keep its private half on the client and add only its public half to Termux. Keep password login enabled until a replacement key passes a real login test. Managed SSH currently starts through the installed Ternuxx boot service; separate SSH boot policy and credential controls are not available here yet.";
     else if (g_strcmp0(r->id, "native.gui.activity-monitor") == 0)
         gui_actions = "Inspect and save the Activity/focus monitoring policy.";
     else if (g_strcmp0(r->id, "recovery.native-state") == 0)
@@ -256,11 +256,14 @@ static void show_resource(Center *c, Resource *r) {
         gui_actions = "Inspect available timezone data and save the Ternuxx timezone preference.";
     else if (g_strcmp0(r->id, "proot.debian.workloads") == 0)
         gui_actions = "List PRoot app shortcuts, launch a named app, and preview/confirm add/remove for one Ternuxx-owned Native menu shortcut.";
-    gchar *summary = g_strdup_printf("%s\n\nCapability: %s\nLive state: queried from the shared service\nAvailability: %s\n\n%s\n\nShared supported operations:\n%s\n\nActions available in this GTK app:\n%s\n\nAn operation listed by the shared catalog may require another client or a capability not granted to this app.",
-        r->name, status_label(r->status), r->availability, r->description,
+    gchar *availability = g_strdup(r->availability && *r->availability ? r->availability : "unknown");
+    g_strdelimit(availability, "-_", ' ');
+    availability[0] = g_ascii_toupper(availability[0]);
+    gchar *summary = g_strdup_printf("%s\n\nStatus: %s\nLive state: queried from the shared service\nAvailability: %s\n\n%s\n\nSupported controls:\n%s\n\nActions available in this GTK app:\n%s\n\nA supported operation may still need another client or permission not granted to this app.",
+        r->name, status_label(r->status), availability, r->description,
         r->operations && *r->operations ? r->operations : "None",
         gui_actions);
-    set_text(c, summary); g_free(summary);
+    set_text(c, summary); g_free(summary); g_free(availability);
     g_free(c->selected_resource_id); c->selected_resource_id = g_strdup(r->id);
     gboolean graphics = g_str_has_prefix(r->id, "graphics.");
     gboolean desktop = g_strcmp0(r->id, "native.desktop.session") == 0;
@@ -305,20 +308,33 @@ static void resource_selected(GtkListBox *box, GtkListBoxRow *row, gpointer data
     (void)box; Center *c = data; if (!row) return;
     Resource *r = g_object_get_data(G_OBJECT(row), "resource"); show_resource(c, r);
 }
+static gint resource_name_compare(gconstpointer a, gconstpointer b, gpointer data) {
+    (void)data;
+    const Resource *left = *(Resource * const *)a;
+    const Resource *right = *(Resource * const *)b;
+    return g_utf8_collate(left->name, right->name);
+}
 static void fill_resource_rows(Center *c) {
     clear_rows(c->resource_list); const gchar *query=gtk_editable_get_text(GTK_EDITABLE(c->search));
     gchar *needle=g_utf8_strdown(query?query:"",-1);
+    GPtrArray *visible = g_ptr_array_new();
     for (guint i = 0; i < c->resources->len; i++) {
         Resource *r = g_ptr_array_index(c->resources, i); if (g_strcmp0(r->category, c->selected_category)) continue;
         gchar *raw=g_strconcat(r->name," ",r->description,NULL); gchar *haystack=g_utf8_strdown(raw,-1); g_free(raw);
         gboolean match=!needle||!*needle||g_strstr_len(haystack,-1,needle)!=NULL; g_free(haystack); if(!match) continue;
-        GtkWidget *line = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3); GtkWidget *title = gtk_label_new(r->name);
+        g_ptr_array_add(visible, r);
+    }
+    g_ptr_array_sort_with_data(visible, (GCompareDataFunc)resource_name_compare, NULL);
+    for (guint i = 0; i < visible->len; i++) {
+        Resource *r = g_ptr_array_index(visible, i);
+        GtkWidget *line = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3); gchar *numbered = g_strdup_printf("%02u  %s", i + 1, r->name); GtkWidget *title = gtk_label_new(numbered); g_free(numbered);
         GtkWidget *meta = gtk_label_new(status_label(r->status)); gtk_label_set_wrap(GTK_LABEL(title),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(title),PANGO_WRAP_WORD_CHAR); gtk_label_set_max_width_chars(GTK_LABEL(title),22); gtk_widget_set_hexpand(title,TRUE); gtk_widget_set_halign(title,GTK_ALIGN_FILL);
         gtk_widget_set_halign(meta, GTK_ALIGN_START); gtk_widget_add_css_class(meta, "dim-label");
         gtk_box_append(GTK_BOX(line), title); gtk_box_append(GTK_BOX(line), meta);
         GtkWidget *listrow = gtk_list_box_row_new(); gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(listrow), line);
         g_object_set_data(G_OBJECT(listrow), "resource", r); gtk_list_box_append(GTK_LIST_BOX(c->resource_list), listrow);
     }
+    g_ptr_array_unref(visible);
     GtkListBoxRow *first = gtk_list_box_get_row_at_index(GTK_LIST_BOX(c->resource_list), 0);
     if (first) gtk_list_box_select_row(GTK_LIST_BOX(c->resource_list), first);
     g_free(needle);
@@ -332,7 +348,7 @@ static void search_changed(GtkEditable *entry, gpointer data) {
     (void)entry; Center *c=data; if(c->selected_category) fill_resource_rows(c);
 }
 static void append_category(Center *c, gchar **fields) {
-    GtkWidget *row = gtk_list_box_row_new(); GtkWidget *label = gtk_label_new(fields[2]);
+    GtkWidget *row = gtk_list_box_row_new(); gchar *numbered = g_strdup_printf("%u. %s", ++c->category_count, fields[2]); GtkWidget *label = gtk_label_new(numbered); g_free(numbered);
     gtk_label_set_wrap(GTK_LABEL(label),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(label),PANGO_WRAP_WORD_CHAR); gtk_label_set_max_width_chars(GTK_LABEL(label),22); gtk_widget_set_hexpand(label,TRUE); gtk_widget_set_halign(label,GTK_ALIGN_FILL); gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(row), label);
     g_object_set_data_full(G_OBJECT(row), "category-id", g_strdup(fields[1]), g_free);
     gtk_list_box_append(GTK_LIST_BOX(c->category_list), row);

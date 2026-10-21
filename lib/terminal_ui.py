@@ -51,6 +51,37 @@ def _prompt(screen: "curses._CursesWindow", label: str, limit: int = 2048) -> st
     return value.decode("utf-8", errors="replace").strip()
 
 
+def _choose(screen: "curses._CursesWindow", title: str, options: list[tuple[str, str]]) -> str:
+    """Compact keyboard menu: arrows or number, Enter selects, Esc cancels."""
+    if not options:
+        return ""
+    index = 0
+    while True:
+        screen.erase()
+        height, width = screen.getmaxyx()
+        screen.addnstr(0, 0, title, max(0, width - 1))
+        for row, (value, label) in enumerate(options[:max(0, height - 3)], 2):
+            marker = ">" if row - 2 == index else " "
+            line = f"{marker} {row - 1}. {label}"
+            screen.addnstr(row, 0, line, max(0, width - 1))
+        screen.addnstr(height - 1, 0, "↑/↓ move · 1–9 select · Enter choose · Esc cancel", max(0, width - 1))
+        screen.refresh()
+        key = screen.getch()
+        visible = min(len(options), max(0, height - 3))
+        if visible == 0:
+            return ""
+        if key in (27, ord("q"), ord("Q")):
+            return ""
+        if key in (curses.KEY_UP, ord("k")):
+            index = (index - 1) % max(1, visible)
+        elif key in (curses.KEY_DOWN, ord("j")):
+            index = (index + 1) % max(1, visible)
+        elif key in (curses.KEY_ENTER, 10, 13):
+            return options[index][0]
+        elif ord("1") <= key <= ord("9") and key - ord("1") < visible:
+            return options[key - ord("1")][0]
+
+
 def _launch_proot_app(screen: "curses._CursesWindow") -> dict[str, object] | None:
     """Guide a named app launch through the shared provider-aware operation."""
     app_id = _prompt(screen, "App name (" + ", ".join(proot_shortcuts.CATALOG) + ")")
@@ -190,7 +221,9 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
 
 
 def _desktop_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
-    action = _prompt(screen, "Desktop action: start or stop (blank cancels)").lower()
+    allowed = resource.get("supported_operations", [])
+    action = _choose(screen, "Native desktop", [(name, f"{name.title()} desktop") for name in ("start", "stop")
+                      if f"desktop.{name}" in allowed])
     operation = {"start": "desktop.start", "stop": "desktop.stop"}.get(action)
     if not operation or operation not in resource.get("supported_operations", []):
         return {"ok": False, "error": {"code": "action_unavailable"}}
@@ -202,7 +235,9 @@ def _desktop_action(screen: "curses._CursesWindow", resource: dict[str, Any]) ->
 def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
     if resource.get("id") != "network.ssh.managed-8023":
         return {"ok": False, "error": {"code": "externally_managed_resource"}}
-    action = _prompt(screen, "Managed SSH 8023 action: start or stop (blank cancels)").lower()
+    action = _choose(screen, "Managed SSH · port 8023", [(name, f"{name.title()} SSH service")
+                      for name in ("start", "stop")
+                      if f"ssh.service.{name}" in resource.get("supported_operations", [])])
     operation = {"start": "ssh.service.start", "stop": "ssh.service.stop"}.get(action)
     if not operation or operation not in resource.get("supported_operations", []):
         return {"ok": False, "error": {"code": "action_unavailable"}}
@@ -273,6 +308,63 @@ def _manage_logs(screen: "curses._CursesWindow") -> dict[str, object]:
     return _call("management.logs.read", {"source_id": source_id, "limit": 100})
 
 
+def _boot_action(screen: "curses._CursesWindow") -> dict[str, object]:
+    """Guide a preview-first Native Termux startup-profile change."""
+    choice = _prompt(screen, "Startup: status, preview, enable, disable (blank cancels)").lower()
+    if choice == "status":
+        return _call("boot.profile.status")
+    if choice == "preview":
+        profile = _prompt(screen, "Profile: cli-only or native (PRoot/hybrid are not ready)").lower()
+        if profile not in {"cli-only", "native"}:
+            return {"ok": False, "error": {"code": "unsupported_boot_profile"}}
+        return _call("boot.profile.preview", {"profile": profile})
+    if choice == "enable":
+        profile = _prompt(screen, "Enable at Termux boot: cli-only or native").lower()
+        if profile not in {"cli-only", "native"}:
+            return {"ok": False, "error": {"code": "unsupported_boot_profile"}}
+        preview = _call("boot.profile.preview", {"profile": profile})
+        if not preview.get("ok") or preview.get("data", {}).get("ready") is not True:
+            return preview
+        _show_details(screen, preview)
+        if _prompt(screen, "Review the startup profile and enable it? type yes").lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("boot.enable", {"profile": profile, "confirmed": True})
+    if choice == "disable":
+        current = _call("boot.profile.status")
+        if not current.get("ok"):
+            return current
+        _show_details(screen, current)
+        if _prompt(screen, "Disable only the Ternuxx-managed startup profile? type yes").lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("boot.disable", {"confirmed": True})
+    return {"ok": False, "error": {"code": "cancelled"}}
+
+
+def _cron_scheduler_action(screen: "curses._CursesWindow") -> dict[str, object]:
+    """Start or stop the Ternuxx scheduler only after an explicit review."""
+    choice = _prompt(screen, "Cron service: status, start, stop (blank cancels)").lower()
+    if choice == "status":
+        return _call("cron.status")
+    if choice == "start":
+        raw_interval = _prompt(screen, "Check interval in seconds (1-60, default 5)") or "5"
+        if not raw_interval.isdigit() or not 1 <= int(raw_interval) <= 60:
+            return {"ok": False, "error": {"code": "invalid_poll_interval"}}
+        interval = int(raw_interval)
+        _show_details(screen, {"ok": True, "data": {
+            "action": "Start the Ternuxx Cron scheduler", "interval_seconds": interval,
+            "boot_start": "not enabled by this action",
+        }})
+        if _prompt(screen, "Start this Ternuxx service now? type yes").lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("cron.scheduler.start", {"poll_seconds": interval, "confirmed": True})
+    if choice == "stop":
+        _show_details(screen, {"ok": True, "data": {"action": "Stop only the Ternuxx Cron scheduler"}})
+        if _prompt(screen, "Stop the Ternuxx Cron scheduler now? type yes").lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("cron.scheduler.stop", {"confirmed": True})
+    return {"ok": False, "error": {"code": "cancelled"}}
+
+
 def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     """Describe only guided controls implemented by this TUI for this resource."""
     resource_id = resource.get("id")
@@ -300,9 +392,21 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     elif resource_id == "network.ssh.managed-8023":
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)")) if op in operations)
+        labels.append("inspect 8023 login methods; preserve password recovery")
+    elif resource_id == "native.wakelock":
+        labels.append("inspect Ternuxx-owned Wake Lock leases")
+        if {"wakelock.acquire", "wakelock.release"} <= operations:
+            labels.append("lease controls require a workload-bound owner and are not exposed in this TUI")
+    elif resource_id == "boot.termux.profile":
+        labels.extend(name for op, name in (("boot.profile.status", "check startup profile"),
+                                            ("boot.profile.preview", "preview startup profile"),
+                                            ("boot.enable", "enable startup profile"),
+                                            ("boot.disable", "disable startup profile")) if op in operations)
     elif resource_id == "recovery.native-state" and "recovery.status" in operations:
         labels.append("view operation history")
     elif resource_id == "automation.cron-registry":
+        if {"cron.scheduler.start", "cron.scheduler.stop"} <= operations:
+            labels.append("check, start, or stop Cron scheduler")
         if "cron.jobs.list" in operations:
             labels.append("list persisted job definitions")
         if {"cron.jobs.mutation.preview", "cron.jobs.mutation.apply"} <= operations:
@@ -333,10 +437,28 @@ def _put_wrapped(screen: "curses._CursesWindow", row: int, col: int, value: obje
     return row
 
 
+def _put_fixed_line(screen: "curses._CursesWindow", row: int, col: int, value: object,
+                    width: int, color: int | None = None) -> None:
+    """Write a single clipped line so selection changes never move the list."""
+    height, screen_width = screen.getmaxyx()
+    if row < 0 or row >= height or col >= screen_width:
+        return
+    limit = max(0, min(width, screen_width - col - 1))
+    text = str(value)
+    if len(text) > limit:
+        text = text[:max(0, limit - 1)] + ("…" if limit else "")
+    if color is not None:
+        screen.attron(curses.color_pair(color))
+    screen.addnstr(row, col, text, limit)
+    if color is not None:
+        screen.attroff(curses.color_pair(color))
+
+
 def _footer_layout(width: int) -> list[list[tuple[str, int]]]:
     limit = max(1, width - 2)
     groups = [
         ("←/→", "category", 2), ("↑/↓", "resource", 2), ("Enter", "status", 1),
+        ("1–9/0", "jump", 2), ("PgUp/PgDn", "page", 2),
         ("H", "history", 3), ("v", "details", 4), ("a", "actions", 1),
         ("r", "refresh", 3), ("q", "quit", 6),
     ]
@@ -393,7 +515,8 @@ def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], cate
         return at + 1
 
     row = divider(row)
-    row = _put_wrapped(screen, row, 1, f"{category['name']}  ·  {len(resources)} resources",
+    row = _put_wrapped(screen, row, 1,
+                       f"{category['name']}  ·  category {category_index + 1}/{len(categories)}  ·  {len(resources)} resources",
                        content_width, color=2)
     summary = (f"Available: {counts['implemented']} implemented · {counts['partial']} partial · "
                f"{counts['external']} external · {counts['planned']} planned")
@@ -402,32 +525,27 @@ def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], cate
                        f"Search: {query or '—'}  ·  ←/→ category  / search  Enter status  H history  v details",
                        content_width, color=4)
     row = divider(row)
-    row = _put_wrapped(screen, row, 1, f"Selected actions: {action_text}", content_width, color=2)
+    _put_fixed_line(screen, row, 1, f"Actions · {action_text}", content_width, color=2)
+    row += 1
 
     footer_rows = _footer_layout(width)
     footer_top = max(0, height - len(footer_rows))
+    feedback_top = max(row, footer_top - 2)
     if report:
         error = report.get("error") if isinstance(report.get("error"), dict) else {}
         code = error.get("code")
-        message = "Last action: " + (str(code) if code else ("complete" if report.get("ok") else "failed"))
-        data = report.get("data") if isinstance(report.get("data"), dict) else {}
-        values = [f"{key.replace('_', ' ')}: {value}" for key, value in list(data.items())[:2]
-                  if not isinstance(value, (dict, list))]
-        report_lines = _wrap_line(message, content_width)
-        if values:
-            report_lines += _wrap_line(" · ".join(values), content_width)
-        report_top = max(row, footer_top - len(report_lines))
-        for offset, line in enumerate(report_lines):
-            _put_wrapped(screen, report_top + offset, 1, line, content_width,
-                         color=6 if not report.get("ok") else 1)
-        content_bottom = report_top
-    else:
-        content_bottom = footer_top
+        message = "Last action · " + ("Complete" if report.get("ok") else management_presentation.human_value(code or "failed"))
+        formatted = management_presentation.format_report(report).splitlines()
+        values = [line.strip() for line in formatted if line.strip() and not line.lstrip().startswith(("Ok:", "Error:"))][:2]
+        _put_fixed_line(screen, feedback_top, 1, message, content_width,
+                        color=6 if not report.get("ok") else 1)
+        _put_fixed_line(screen, feedback_top + 1, 1, " · ".join(values), content_width, color=5)
+    content_bottom = feedback_top
 
     item_lines = []
-    for resource in resources:
+    for resource_index, resource in enumerate(resources, 1):
         status = management_presentation.status_label(resource.get("status", "unknown"))
-        label = f"  {resource.get('name', 'Resource')} · {status} · {_resource_state(resource)}"
+        label = f"{resource_index:>2}. {resource.get('name', 'Resource')} · {status} · {_resource_state(resource)}"
         item_lines.append(_wrap_line(label, content_width))
     scroll = min(max(0, scroll), max(0, len(resources) - 1))
     while scroll < selected and sum(len(item_lines[index]) for index in range(scroll, selected + 1)) > max(0, content_bottom - row):
@@ -473,7 +591,7 @@ def _draw(screen: "curses._CursesWindow", categories: list[dict[str, Any]], cate
 def _detail_lines(report: dict[str, object] | None, width: int) -> list[str]:
     if not report:
         return ["No operation details are available."]
-    rendered = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)
+    rendered = management_presentation.format_report(report)
     lines: list[str] = []
     for raw in rendered.splitlines():
         indent = len(raw) - len(raw.lstrip())
@@ -635,8 +753,8 @@ def _run(screen: "curses._CursesWindow") -> int:
     if not catalog_result.get("ok"):
         raise RuntimeError("Could not load the shared resource catalog")
     catalog = catalog_result["data"]
-    categories: list[dict[str, Any]] = catalog["categories"]
-    all_resources: list[dict[str, Any]] = catalog["resources"]
+    categories: list[dict[str, Any]] = sorted(catalog["categories"], key=lambda item: item["name"].casefold())
+    all_resources: list[dict[str, Any]] = sorted(catalog["resources"], key=lambda item: (item["category_id"], item["name"].casefold()))
     category_index = selected = scroll = 0
     query = ""
     report: dict[str, object] | None = None
@@ -672,6 +790,19 @@ def _run(screen: "curses._CursesWindow") -> int:
         elif key in (curses.KEY_UP, ord("k")) and resources:
             selected = max(0, selected - 1)
             scroll = min(scroll, selected)
+        elif key in (curses.KEY_NPAGE, ord("}")) and resources:
+            page_size = max(1, screen.getmaxyx()[0] - 9)
+            selected = min(len(resources) - 1, selected + page_size)
+            scroll = min(max(0, selected - page_size + 1), max(0, len(resources) - 1))
+        elif key in (curses.KEY_PPAGE, ord("{")) and resources:
+            page_size = max(1, screen.getmaxyx()[0] - 9)
+            selected = max(0, selected - page_size)
+            scroll = max(0, min(scroll, selected))
+        elif ord("0") <= key <= ord("9") and resources:
+            target = 9 if key == ord("0") else key - ord("1")
+            if target < len(resources):
+                selected = target
+                scroll = max(0, min(scroll, selected))
         elif key in (ord("/"),):
             query = _prompt(screen, "Search resources (blank clears)")[:120]
             selected = scroll = 0
@@ -694,7 +825,8 @@ def _run(screen: "curses._CursesWindow") -> int:
             report = _call("management.catalog")
             if report.get("ok"):
                 catalog = report["data"]
-                categories, all_resources = catalog["categories"], catalog["resources"]
+                categories = sorted(catalog["categories"], key=lambda item: item["name"].casefold())
+                all_resources = sorted(catalog["resources"], key=lambda item: (item["category_id"], item["name"].casefold()))
                 category_index = min(category_index, len(categories) - 1)
         elif key in (ord("a"), ord("A")) and resources:
             resource = resources[selected]
@@ -703,7 +835,12 @@ def _run(screen: "curses._CursesWindow") -> int:
                 actions = "status, opengl, gles, vulkan"
                 if provider == "native" and "graphics.provider.select" in resource.get("supported_operations", []):
                     actions += ", select"
-                action = _prompt(screen, f"Graphics action: {actions} (blank cancels)").lower()
+                action = _choose(screen, "Graphics verification", [
+                    (name, label) for name, label in (("status", "Check provider status"),
+                    ("opengl", "Verify OpenGL"), ("gles", "Verify OpenGL ES"),
+                    ("vulkan", "Verify Vulkan"), ("select", "Select Native backend"))
+                    if name != "select" or provider == "native" and "graphics.provider.select" in resource.get("supported_operations", [])
+                ]).lower()
                 if action == "status":
                     report = _call("graphics.provider.status", {"provider": provider})
                 elif action == "select" and provider == "native":
@@ -732,7 +869,8 @@ def _run(screen: "curses._CursesWindow") -> int:
             elif resource["id"] == "native.desktop.session":
                 report = _desktop_action(screen, resource)
             elif resource["id"] == "proot.debian.workloads":
-                choice = _prompt(screen, "PRoot action: launch, shortcut, or sessions").lower()
+                choice = _choose(screen, "PRoot workloads", [("launch", "Launch named app"),
+                    ("shortcut", "Add or remove app shortcut"), ("sessions", "Inspect or manage sessions")]).lower()
                 report = (_launch_proot_app(screen) if choice == "launch" else
                           _manage_proot_shortcut(screen) if choice == "shortcut" else
                           _manage_proot_sessions(screen) if choice == "sessions" else
@@ -742,8 +880,19 @@ def _run(screen: "curses._CursesWindow") -> int:
             elif resource["id"] == "native.timezone":
                 report = _timezone_action(screen)
             elif resource["id"] == "automation.cron-registry":
-                choice = _prompt(screen, "Cron action: jobs, change, or history (blank cancels)").lower()
-                report = _cron_jobs() if choice == "jobs" else (_cron_mutation(screen) if choice == "change" else (_cron_executions() if choice == "history" else {"ok": False, "error": {"code": "cancelled"}}))
+                choice = _choose(screen, "Cron automation", [("status", "Check scheduler status"),
+                    ("service", "Start or stop scheduler"), ("jobs", "List saved jobs"),
+                    ("change", "Create, edit, or remove a job"), ("history", "View recent runs")]).lower()
+                report = (_call("cron.status") if choice == "status" else
+                          _cron_jobs() if choice == "jobs" else
+                          _cron_mutation(screen) if choice == "change" else
+                          _cron_executions() if choice == "history" else
+                          _cron_scheduler_action(screen) if choice == "service" else
+                          {"ok": False, "error": {"code": "cancelled"}})
+            elif resource["id"] == "boot.termux.profile":
+                report = _boot_action(screen)
+            elif resource["id"] == "native.wakelock":
+                report = _call("wakelock.status")
             else:
                 report = {"ok": False, "error": {"code": "guided_action_unavailable"}}
 

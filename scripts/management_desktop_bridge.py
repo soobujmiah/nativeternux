@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
 import management_service  # noqa: E402
 import management_sessions  # noqa: E402
+import management_presentation  # noqa: E402
 
 
 def call(operation: str, args: dict[str, object] | None = None) -> dict[str, object]:
@@ -52,12 +53,16 @@ def main(argv: list[str]) -> int:
             print(json.dumps(result, ensure_ascii=False))
             return 1
         data = result["data"]
-        for item in data["categories"]:
+        categories = sorted(data["categories"], key=lambda item: str(item.get("name", "")).casefold())
+        for item in categories:
             print("C\t" + "\t".join(clean(item.get(k)) for k in ("id", "name", "description", "status")))
-        for item in data["resources"]:
+        resources = sorted(data["resources"], key=lambda item: (str(item.get("category_id", "")), str(item.get("name", "")).casefold()))
+        for item in resources:
+            operation_names = [management_presentation.operation_label(op)
+                               for op in item.get("supported_operations", [])]
             print("R\t" + "\t".join(clean(item.get(k)) for k in (
                 "id", "category_id", "name", "status", "availability", "description"))
-                  + "\t" + clean(", ".join(item.get("supported_operations", []))))
+                  + "\t" + clean(", ".join(operation_names)))
         return 0
     if action == "inspect" and len(argv) == 2:
         rid = argv[1]
@@ -78,7 +83,8 @@ def main(argv: list[str]) -> int:
             catalog = call("management.catalog")
             resource = next((r for r in catalog.get("data", {}).get("resources", []) if r["id"] == rid), None)
             if resource is None:
-                print(json.dumps({"ok": False, "error": {"code": "unknown_resource"}}))
+                print(management_presentation.format_report(
+                    {"ok": False, "error": {"code": "unknown_resource"}}))
                 return 2
             operation = next((op for op in resource["supported_operations"]
                               if op != "management.catalog"
@@ -88,10 +94,11 @@ def main(argv: list[str]) -> int:
             if operation == "doctor.report":
                 operation_args = {"graphics": False}
             if operation is None:
-                print(json.dumps({"ok": False, "error": {"code": "live_status_unavailable"}}))
+                print(management_presentation.format_report(
+                    {"ok": False, "error": {"code": "live_status_unavailable"}}))
                 return 3
         result = call(operation, operation_args) if operation_args else call(operation)
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "cron-preview" and len(argv) in {3, 5}:
         import cron_registry

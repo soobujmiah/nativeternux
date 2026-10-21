@@ -14,6 +14,19 @@ import terminal_ui
 
 
 class TerminalUISharedServiceTests(unittest.TestCase):
+    def test_choose_supports_arrow_and_number_selection(self) -> None:
+        class MenuScreen:
+            def __init__(self, keys): self.keys = iter(keys)
+            def erase(self): pass
+            def getmaxyx(self): return (12, 60)
+            def addnstr(self, row, col, value, limit): pass
+            def refresh(self): pass
+            def getch(self): return next(self.keys)
+        self.assertEqual(terminal_ui._choose(MenuScreen([terminal_ui.curses.KEY_DOWN, 10]),
+                         "Choose", [("a", "Alpha"), ("b", "Beta")]), "b")
+        self.assertEqual(terminal_ui._choose(MenuScreen([ord("1")]),
+                         "Choose", [("a", "Alpha"), ("b", "Beta")]), "a")
+
     def test_optional_terminal_broker_resource_uses_read_only_shared_status(self):
         resource = {
             "id": "proot.interactive-terminal-broker",
@@ -252,9 +265,9 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         report = {"ok": True, "data": {"operations": [{"operation_id": "a" * 32,
                   "kind": "service.stop", "status": "complete"}]}}
         rendered = "\n".join(terminal_ui._detail_lines(report, 52))
-        self.assertIn("operation_id", rendered)
-        self.assertIn("service.stop", rendered)
-        self.assertIn("complete", rendered)
+        self.assertIn("Action: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", rendered)
+        self.assertIn("Service stop", rendered)
+        self.assertIn("Complete", rendered)
 
     def test_monitoring_policy_uses_typed_shared_operation_and_bounds_interval(self) -> None:
         status = {"ok": True, "data": {"enabled": False, "interval_seconds": 300,
@@ -276,13 +289,15 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         resource = next(item for item in management_service.management_catalog.RESOURCES
                         if item["id"] == "native.desktop.session")
         self.assertIn("desktop.start", resource["supported_operations"])
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["stop", "no"]), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="stop"), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="no"), \
              mock.patch.object(terminal_ui, "_call") as dispatch:
             result = terminal_ui._desktop_action(object(), resource)
         self.assertEqual(result["error"]["code"], "cancelled")
         dispatch.assert_not_called()
         success = {"ok": True, "data": {"state": "running"}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["start", "yes"]), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="start"), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
              mock.patch.object(terminal_ui, "_call", return_value=success) as dispatch:
             self.assertIs(terminal_ui._desktop_action(object(), resource), success)
         dispatch.assert_called_once_with("desktop.start")
@@ -293,7 +308,8 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         preview = {"ok": True, "data": {"requires_confirmation": True,
                    "plan_id": "a" * 64, "impact": "Stops only ternuxx-sshd."}}
         result = {"ok": True, "data": {"status": "stopped"}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["stop", "yes"]), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="stop"), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
              mock.patch.object(terminal_ui, "_call", side_effect=[preview, result]) as dispatch:
             self.assertIs(terminal_ui._managed_ssh_action(object(), resource), result)
         self.assertEqual(dispatch.call_args_list, [
@@ -308,7 +324,8 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                       if item["id"] == "network.ssh.manual-8022")
         preview = {"ok": True, "data": {"requires_confirmation": True,
                    "plan_id": "b" * 64, "impact": "Client connections may close."}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["stop", "no"]), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="stop"), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="no"), \
              mock.patch.object(terminal_ui, "_call", return_value=preview) as dispatch:
             self.assertEqual(terminal_ui._managed_ssh_action(object(), managed)["error"]["code"], "cancelled")
         dispatch.assert_called_once_with("ssh.service.stop", {"confirmed": False, "plan_id": None})
@@ -361,8 +378,28 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertTrue(rows[5].startswith("Available:"))
         self.assertTrue(rows[6].startswith("Search:"))
         self.assertTrue(rows[7].startswith("─"))
-        self.assertTrue(rows[8].startswith("Selected actions:"))
+        self.assertTrue(rows[8].startswith("Actions ·"))
         self.assertIn("Audio server", rows[9])
+
+    def test_tui_action_and_feedback_changes_keep_resource_list_anchor_fixed(self) -> None:
+        class Screen:
+            def __init__(self): self.rows = []
+            def erase(self): self.rows.clear()
+            def getmaxyx(self): return (24, 100)
+            def attron(self, _attr): pass
+            def attroff(self, _attr): pass
+            def addnstr(self, row, col, value, _limit): self.rows.append((row, value))
+            def refresh(self): pass
+        screen = Screen()
+        category = [{"id": "x", "name": "System"}]
+        resource = {"id": "native.system.health", "category_id": "x", "name": "Health",
+                    "status": "implemented", "description": "Health", "supported_operations": ["management.logs.list"]}
+        with mock.patch.object(terminal_ui.curses, "color_pair", return_value=0):
+            terminal_ui._draw(screen, category, 0, [resource], 0, "", None)
+            first = min(row for row, text in screen.rows if "Health" in text)
+            terminal_ui._draw(screen, category, 0, [resource], 0, "", {"ok": True, "data": {"details": "x" * 300}}, 0)
+            second = min(row for row, text in screen.rows if "Health" in text)
+        self.assertEqual(first, second)
 
     def test_small_terminal_warning_does_not_overwrite_three_line_header(self) -> None:
         class SmallScreen:
@@ -410,6 +447,48 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertEqual(management_presentation.status_label("planned"), "Planned")
         self.assertEqual(management_presentation.status_label("failed"), "Failed")
         self.assertEqual(management_presentation.status_label(None), "Unknown")
+
+    def test_human_report_labels_states_and_hides_credential_material(self) -> None:
+        report = management_presentation.format_report({
+            "ok": True,
+            "data": {"status": "running", "boot_status": "disabled-by-default",
+                     "private_key": "never show this", "nested": [{"ownership": "ternuxx_verified"}]},
+        })
+        self.assertIn("Status: Running", report)
+        self.assertIn("Boot status: Off by default", report)
+        self.assertIn("Verified as managed by Ternuxx", report)
+        self.assertNotIn("never show this", report)
+
+    def test_human_report_explains_status_unavailable_without_machine_code(self) -> None:
+        report = management_presentation.format_report({
+            "ok": False, "error": {"code": "live_status_unavailable"},
+        })
+        self.assertIn("Result: Needs attention", report)
+        self.assertIn("No live status check is available for this item.", report)
+        self.assertNotIn("live_status_unavailable", report)
+
+    def test_boot_enable_previews_profile_and_requires_explicit_confirmation(self) -> None:
+        calls = []
+        preview = {"ok": True, "data": {"ready": True, "profile": "native"}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["enable", "native", "yes"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=lambda op, args=None:
+                               calls.append((op, args)) or (preview if op.endswith("preview") else {"ok": True})), \
+             mock.patch.object(terminal_ui, "_show_details"):
+            result = terminal_ui._boot_action(mock.Mock())
+        self.assertTrue(result["ok"])
+        self.assertEqual(calls, [
+            ("boot.profile.preview", {"profile": "native"}),
+            ("boot.enable", {"profile": "native", "confirmed": True}),
+        ])
+
+    def test_boot_enable_does_not_apply_profile_when_preview_is_not_ready(self) -> None:
+        calls = []
+        preview = {"ok": True, "data": {"ready": False, "blockers": ["Termux:X11 unavailable"]}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["enable", "native"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=lambda op, args=None: calls.append(op) or preview):
+            result = terminal_ui._boot_action(mock.Mock())
+        self.assertEqual(result, preview)
+        self.assertEqual(calls, ["boot.profile.preview"])
 
     def test_cli_tui_no_longer_exposes_raw_operation_json_prompt(self) -> None:
         source = (ROOT / "lib" / "terminal_ui.py").read_text()
