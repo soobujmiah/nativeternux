@@ -1,0 +1,7 @@
+event_id: commit-085ea793965b-e8b697160f41f1ae
+repository: soobujmiah/ternuxx
+commit: 085ea793965bf9e80373ac9eb8e0b8579e3b2bfa
+kind: commit
+occurred_at: '2026-10-21T22:12:16Z'
+status: completed
+summary: 'fix(web): hide duplicate catalog capabilities'
