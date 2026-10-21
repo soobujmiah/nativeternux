@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Broker dispatcher, CLI/TUI/GTK terminal paths and GTK visual corrections are implemented; foreground no-guest status smoke check passed, while persistent service and Web terminal client remain open.
+Preview-first Native Runit broker wiring is installed and source-matched; authenticated Web terminal transport/renderer is implemented and focused tests pass. Broker is live without a guest; Web server/browser attach and a managed interactive guest remain unqualified.
 
-**Next action:** Add previewed persistent broker service wiring and authenticated Web terminal operations/renderer, then verify interactive attach end to end without touching the existing guest.
+**Next action:** Visually review the Web terminal in a browser, then verify a full managed interactive attach using a disposable Ternuxx test guest; keep the existing tx db guest untouched.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

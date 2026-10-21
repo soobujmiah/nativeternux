@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -276,6 +276,87 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
             method="POST", path="/api/v1/operations?x=1", headers=headers_for(body), body=body)
         self.assertEqual(status, 404)
         self.assertEqual(json.loads(response)["error"], "route_not_found")
+
+
+    def test_terminal_http_route_requires_csrf_and_never_uses_generic_operations_route(self):
+        dispatch = Mock()
+        adapter = make_adapter(dispatcher=dispatch, caps={"proot.session.manage"})
+        _status, issued = bootstrap(adapter, ["proot.session.manage"])
+        session = issued["session"]
+        body = payload_bytes({
+            "operation": "terminal.start.preview", "request_id": "terminal-request-1",
+            "session_id": None, "generation": None, "attachment_id": None,
+            "channel_ticket": None, "args": {},
+        })
+        base = headers_for(body, Authorization=f"Bearer {session['bearer_token']}")
+        status, _headers, raw = adapter.handle(method="POST", path="/api/v1/terminal",
+                                               headers=base, body=body)
+        self.assertEqual(status, 403)
+        self.assertEqual(json.loads(raw)["error"], "csrf_rejected")
+        base["X-Ternuxx-CSRF"] = session["csrf_token"]
+        generic_body = payload_bytes({
+            "api_version": 1, "request_id": "terminal-request-2",
+            "operation": "terminal.start.preview", "args": {},
+        })
+        generic_headers = headers_for(generic_body, Authorization=f"Bearer {session['bearer_token']}",
+                                      **{"X-Ternuxx-CSRF": session["csrf_token"]})
+        status, _headers, raw = adapter.handle(method="POST", path="/api/v1/operations",
+                                               headers=generic_headers, body=generic_body)
+        self.assertEqual(status, 403)
+        self.assertEqual(json.loads(raw)["error"], "terminal_channel_transport_required")
+        dispatch.assert_not_called()
+
+    def test_web_terminal_channel_ticket_is_single_use_and_bound_to_session_and_origin(self):
+        adapter = make_adapter(caps={"diagnostics.read", "proot.session.manage"})
+        _status, issued = bootstrap(adapter, ["diagnostics.read", "proot.session.manage"])
+        session = issued["session"]
+        session_id = "proot-" + "a" * 32
+        lease = {"ok": True, "session_id": session_id, "generation": 17,
+                 "attachment_id": "attach-" + "b" * 32, "writer_attached": True}
+        broker = Mock()
+        broker.request.side_effect = [
+            lease,
+            {"ok": True, "chunks": [], "next_sequence": 0, "truncated": False},
+            {"ok": True, "session_id": session_id, "writer_attached": False,
+             "session_closed": False},
+        ]
+
+        def call(operation, request_id, *, args=None, channel_ticket=None,
+                 selected=session_id, generation=None, attachment_id=None,
+                 origin=ORIGIN):
+            value = {"operation": operation, "request_id": request_id,
+                     "session_id": selected, "generation": generation,
+                     "attachment_id": attachment_id, "channel_ticket": channel_ticket,
+                     "args": args or {}}
+            body = payload_bytes(value)
+            headers = headers_for(body, Authorization=f"Bearer {session['bearer_token']}",
+                                  **{"X-Ternuxx-CSRF": session["csrf_token"], "Origin": origin})
+            return adapter.handle(method="POST", path="/api/v1/terminal",
+                                  headers=headers, body=body)
+
+        with patch.object(management_http_adapter.terminal_broker, "UnixBrokerClient",
+                          return_value=broker):
+            status, _h, raw = call("terminal.channel.issue", "terminal-issue-1")
+            self.assertEqual(status, 200)
+            grant = json.loads(raw)["data"]
+            ticket = grant["channel_ticket"]
+            status, _h, raw = call("terminal.attach", "terminal-attach-1",
+                                  channel_ticket=ticket)
+            self.assertEqual(status, 200)
+            self.assertEqual(json.loads(raw)["data"]["attachment_id"], lease["attachment_id"])
+            status, _h, raw = call("terminal.attach", "terminal-replay-1",
+                                  channel_ticket=ticket)
+            self.assertEqual(status, 403)
+            self.assertEqual(json.loads(raw)["error"], "terminal_channel_rejected")
+            status, _h, raw = call("terminal.output", "terminal-output-1",
+                                  args={"after_sequence": 0}, generation=17,
+                                  attachment_id=lease["attachment_id"])
+            self.assertEqual(status, 200)
+            status, _h, raw = call("terminal.detach", "terminal-detach-1",
+                                  generation=17, attachment_id=lease["attachment_id"])
+            self.assertEqual(status, 200)
+            self.assertEqual(broker.request.call_args_list[0].args, ("terminal.attach",))
+            self.assertEqual(broker.request.call_args_list[1].args, ("terminal.output",))
 
 
 if __name__ == "__main__":

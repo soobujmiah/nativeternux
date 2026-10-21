@@ -35,6 +35,36 @@ class ManagementHTTPServerTests(unittest.TestCase):
         self.assertTrue(server.close(grace_seconds=2))
         self.assertTrue(server.close(grace_seconds=2))
 
+    def test_vendored_terminal_assets_are_served_with_same_origin_security_headers(self) -> None:
+        server = self.make_server()
+        server.start()
+        try:
+            for path, expected in (
+                ("/assets/xterm-6.0.0/xterm.js", b"Terminal"),
+                ("/assets/xterm-6.0.0/xterm.css", b".xterm"),
+                ("/assets/xterm-6.0.0/addon-fit.js", b"FitAddon"),
+            ):
+                connection = http.client.HTTPConnection(*server.address, timeout=2)
+                connection.request("GET", path, headers={
+                    "Host": f"127.0.0.1:{server.port}",
+                    "Origin": f"http://127.0.0.1:{server.port}",
+                })
+                response = connection.getresponse()
+                body = response.read()
+                self.assertEqual(response.status, 200, path)
+                self.assertIn(expected, body)
+                self.assertIn("'self'", response.getheader("Content-Security-Policy"))
+                connection.close()
+            connection = http.client.HTTPConnection(*server.address, timeout=2)
+            connection.request("GET", "/assets/../../README.md", headers={
+                "Host": f"127.0.0.1:{server.port}",
+            })
+            response = connection.getresponse()
+            self.assertNotIn(b"README", response.read())
+            connection.close()
+        finally:
+            self.assertTrue(server.close(grace_seconds=2))
+
     def test_factory_receives_bound_ephemeral_port(self) -> None:
         observed = []
         server = self.make_server(adapter_factory=lambda port: observed.append(port) or _Adapter())

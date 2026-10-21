@@ -35,6 +35,9 @@ MUTATING_OPERATIONS = frozenset({
     "proot.start", "proot.stop", "proot.recovery.reconcile",
     "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",
     "boot.helpers.preview", "boot.helpers.apply",
+    "terminal.start.preview", "terminal.start", "terminal.channel.issue",
+    "terminal.attach", "terminal.input", "terminal.resize", "terminal.output",
+    "terminal.detach", "terminal.close.preview", "terminal.close",
 })
 READ_ONLY_OPERATIONS = frozenset({
     "management.catalog", "management.logs.list", "management.logs.read", "graphics.provider.status", "graphics.provider.verify", "agent.hermes.status", "cron.status", "cron.executor.self_test",

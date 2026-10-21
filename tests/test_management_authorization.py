@@ -14,8 +14,10 @@ import management_service  # noqa: E402
 
 class ManagementAuthorizationTests(unittest.TestCase):
     def test_every_application_operation_has_exactly_one_explicit_scope(self) -> None:
+        # Ticket issuance is a transport-only Web operation handled by the
+        # authenticated terminal endpoint, not generic management dispatch.
         self.assertEqual(set(management_authorization.OPERATION_CAPABILITIES),
-                         set(management_service.OPERATIONS))
+                         set(management_service.OPERATIONS) | {"terminal.channel.issue"})
         self.assertTrue(all(isinstance(scope, str) and scope and "." in scope
                             for scope in management_authorization.OPERATION_CAPABILITIES.values()))
 

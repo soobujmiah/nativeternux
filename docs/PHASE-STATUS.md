@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Broker dispatcher, CLI/TUI/GTK terminal paths and GTK visual corrections are implemented; foreground no-guest status smoke check passed, while persistent service and Web terminal client remain open.
+Preview-first Native Runit broker wiring is installed and source-matched; authenticated Web terminal transport/renderer is implemented and focused tests pass. Broker is live without a guest; Web server/browser attach and a managed interactive guest remain unqualified.
 
-**Next action:** Add previewed persistent broker service wiring and authenticated Web terminal operations/renderer, then verify interactive attach end to end without touching the existing guest.
+**Next action:** Visually review the Web terminal in a browser, then verify a full managed interactive attach using a disposable Ternuxx test guest; keep the existing tx db guest untouched.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -87,6 +87,7 @@ Evidence:
 - [docs/evidence/2026-10-22-p4-legacy-cli-and-runtime-recheck.md](evidence/2026-10-22-p4-legacy-cli-and-runtime-recheck.md)
 - [docs/evidence/2026-10-22-canonical-name-and-broker-audit.md](evidence/2026-10-22-canonical-name-and-broker-audit.md)
 - [docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md](evidence/2026-10-22-p4-terminal-client-and-gui-review.md)
+- [docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md](evidence/2026-10-22-p4-persistent-broker-web-terminal.md)
 
 ## P5 — Distro and display compatibility profiles
 

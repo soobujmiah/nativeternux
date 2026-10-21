@@ -40,8 +40,8 @@ _WEB_MUTATING_OPERATIONS = {
     if management_authorization.required_capability(operation) in WEB_CAPABILITIES
     and operation != "proot.recovery.reconcile"
 }
-if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply", "proot.start", "proot.stop", "cron.jobs.mutation.preview", "cron.jobs.mutation.apply"}:
-    raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy, managed SSH, typed graphics/app actions, previewed PRoot session/shortcut actions, and previewed Cron job mutations")
+if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply", "proot.start", "proot.stop", "terminal.start.preview", "terminal.start", "terminal.channel.issue", "terminal.attach", "terminal.input", "terminal.resize", "terminal.output", "terminal.detach", "terminal.close.preview", "terminal.close", "cron.jobs.mutation.preview", "cron.jobs.mutation.apply"}:
+    raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy, managed SSH, typed graphics/app actions, previewed PRoot and terminal sessions, shortcuts, and previewed Cron job mutations")
 if READ_CAPABILITIES & _MUTATING_CAPABILITIES:
     raise RuntimeError("read-only API runtime contains a mutation capability")
 if WEB_READ_CAPABILITIES & _MUTATING_CAPABILITIES:

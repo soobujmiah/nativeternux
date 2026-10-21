@@ -99,6 +99,15 @@ OPERATIONS = {
     "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
     "proot.guest.verify": {"args": {"distro", "user", "user_source", "display", "backend"}},
     "terminal.broker.status": {"args": set()},
+    "terminal.start.preview": {"args": set()},
+    "terminal.start": {"args": {"confirmed", "plan_id"}},
+    "terminal.attach": {"args": {"session_id"}},
+    "terminal.input": {"args": {"session_id", "generation", "attachment_id", "data_base64"}},
+    "terminal.resize": {"args": {"session_id", "generation", "attachment_id", "columns", "rows"}},
+    "terminal.output": {"args": {"session_id", "generation", "attachment_id", "after_sequence"}},
+    "terminal.detach": {"args": {"session_id", "generation", "attachment_id"}},
+    "terminal.close.preview": {"args": {"session_id", "generation", "attachment_id"}},
+    "terminal.close": {"args": {"session_id", "generation", "attachment_id", "confirmed", "plan_id"}},
     "remote.access.preview": {"args": {"policy"}},
     "ssh.service.start": {"args": {"confirmed", "plan_id"}},
     "ssh.service.stop": {"args": {"confirmed", "plan_id"}},
@@ -394,6 +403,18 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             except terminal_broker.BrokerError:
                 data = {"component": "terminal_broker", "status": "not_running",
                         "provider_optional": True, "pty_relay": "unavailable"}
+        elif operation.startswith("terminal.") and operation not in {"terminal.broker.status", "terminal.channel.issue"}:
+            try:
+                fields = dict(args)
+                session_id = fields.pop("session_id", None)
+                generation = fields.pop("generation", None)
+                attachment_id = fields.pop("attachment_id", None)
+                data = terminal_broker.UnixBrokerClient(
+                    state_dir or os.path.join(home, ".local/share/ternuxx")
+                ).request(operation, session_id=session_id, generation=generation,
+                          attachment_id=attachment_id, args=fields)
+            except terminal_broker.BrokerError as exc:
+                return _error(request_id, "terminal_operation_failed", str(exc))
         elif operation == "proot.profiles.list":
             data = proot_sessions.profile_inventory(prefix=process_env["PREFIX"])
         elif operation == "proot.profiles.show":

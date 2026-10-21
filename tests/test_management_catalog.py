@@ -105,9 +105,15 @@ class ManagementCatalogTests(unittest.TestCase):
         self.assertEqual(provider["status"], "availability-requires-explicit-probe")
         terminal = next(item for item in catalog["resources"]
                         if item["id"] == "proot.interactive-terminal-broker")
-        self.assertEqual(terminal["supported_operations"], ["terminal.broker.status"])
+        self.assertEqual(terminal["supported_operations"], [
+            "terminal.broker.status", "terminal.start.preview", "terminal.start",
+            "terminal.attach", "terminal.input", "terminal.resize", "terminal.output",
+            "terminal.detach", "terminal.close.preview", "terminal.close",
+        ])
         self.assertEqual(terminal["operation_capabilities"]["terminal.broker.status"],
                          "diagnostics.read")
+        self.assertEqual(terminal["operation_capabilities"]["terminal.start"],
+                         "proot.session.manage")
 
 
 if __name__ == "__main__":

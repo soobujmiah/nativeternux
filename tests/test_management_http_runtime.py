@@ -335,7 +335,7 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                         '$("#refresh").onclick=', '$("#search").oninput=drawResources',
                         '$("#status").onchange=drawResources', '$("#save-monitor").onclick='):
             self.assertIn(handler, page)
-        self.assertIn('b.onclick=()=>run(b.dataset.op)', page)
+        self.assertIn('document.querySelectorAll("[data-op]").forEach(button=>button.onclick=()=>run(button.dataset.op))', page)
         self.assertIn('card.onclick=()=>selectResource(resource)', page)
         self.assertIn('automation.cron-registry', page)
         self.assertIn('b.textContent="List saved jobs"', page)

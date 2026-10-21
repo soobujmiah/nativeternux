@@ -15,6 +15,7 @@ import time
 import tty
 
 import terminal_broker
+import terminal_service_deployment
 
 
 def _client() -> terminal_broker.UnixBrokerClient:
@@ -116,11 +117,29 @@ def run(argv: list[str] | None=None) -> int:
     attach_parser.add_argument("session_id")
     close_parser=sub.add_parser("close",help="preview and stop one verified Ternuxx session")
     close_parser.add_argument("session_id")
+    service_parser=sub.add_parser("service",help="preview or install the persistent Runit broker service")
+    service_sub=service_parser.add_subparsers(dest="service_action",required=True)
+    service_sub.add_parser("status",help="show the installed broker service state")
+    service_sub.add_parser("preview-install",help="preview the exact fixed Runit service registration")
+    install_parser=service_sub.add_parser("install",help="apply a fresh service registration preview")
+    install_parser.add_argument("--yes",action="store_true")
+    install_parser.add_argument("--plan-id")
     args=parser.parse_args(argv)
     try:
         if args.action=="serve":
             import terminal_broker_service
             return terminal_broker_service.serve()
+        if args.action=="service":
+            prefix=os.environ.get("PREFIX","/data/data/com.termux/files/usr")
+            if args.service_action=="status":
+                print(json.dumps(terminal_service_deployment.status(prefix=prefix),indent=2));return 0
+            if args.service_action=="preview-install":
+                print(json.dumps(terminal_service_deployment.preview_install(prefix=prefix),indent=2));return 0
+            if args.service_action=="install":
+                if not args.yes or not args.plan_id:
+                    print("Preview first, then apply with --yes --plan-id PLAN_ID.",file=sys.stderr);return 1
+                result=terminal_service_deployment.install(prefix=prefix,confirmed=True,plan_id=args.plan_id)
+                print(json.dumps(result,indent=2));return 0
         client=_client()
         if args.action=="status":
             print(json.dumps(_ok(client.request("broker.status")),indent=2)); return 0
@@ -148,7 +167,8 @@ def run(argv: list[str] | None=None) -> int:
                 try: client.request("terminal.detach",session_id=args.session_id,generation=generation,attachment_id=attachment)
                 except terminal_broker.BrokerError: pass
         return 2
-    except (OSError,ValueError,InterruptedError,terminal_broker.BrokerError) as exc:
+    except (OSError,ValueError,InterruptedError,terminal_broker.BrokerError,
+            terminal_service_deployment.ServiceInstallError) as exc:
         print(f"tx terminal: {exc}",file=sys.stderr); return 1
 
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 import json
 import socket
 import threading
@@ -219,7 +220,13 @@ class LoopbackManagementServer:
                         return
                     normalized[key] = values[0]
 
-                if self.command == "GET" and self.path == "/":
+                static_assets = {
+                    "/": (Path(__file__).with_name("management_web_ui.html"), "text/html; charset=utf-8"),
+                    "/assets/xterm-6.0.0/xterm.js": (Path(__file__).resolve().parents[1] / "assets/vendor/xterm-6.0.0/xterm.js", "text/javascript; charset=utf-8"),
+                    "/assets/xterm-6.0.0/xterm.css": (Path(__file__).resolve().parents[1] / "assets/vendor/xterm-6.0.0/xterm.css", "text/css; charset=utf-8"),
+                    "/assets/xterm-6.0.0/addon-fit.js": (Path(__file__).resolve().parents[1] / "assets/vendor/xterm-6.0.0/addon-fit-0.11.0.js", "text/javascript; charset=utf-8"),
+                }
+                if self.command == "GET" and self.path in static_assets:
                     expected_host = f"127.0.0.1:{server_owner.port}"
                     if normalized.get("host") != expected_host:
                         self._send(403, {"ok": False, "error": "host_rejected"})
@@ -227,15 +234,19 @@ class LoopbackManagementServer:
                     if normalized.get("origin") not in (None, f"http://{expected_host}"):
                         self._send(403, {"ok": False, "error": "origin_rejected"})
                         return
-                    from pathlib import Path
-                    page = Path(__file__).with_name("management_web_ui.html").read_bytes()
+                    asset, content_type = static_assets[self.path]
+                    try:
+                        page = asset.read_bytes()
+                    except OSError:
+                        self._send(404, {"ok": False, "error": "asset_not_found"})
+                        return
                     headers = {
-                        "Content-Type": "text/html; charset=utf-8",
+                        "Content-Type": content_type,
                         "Content-Length": str(len(page)),
                         "Cache-Control": "no-store",
                         "X-Content-Type-Options": "nosniff",
                         "Referrer-Policy": "no-referrer",
-                        "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'",
+                        "Content-Security-Policy": "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'",
                         "Connection": "close",
                     }
                     self._send(200, headers, page)

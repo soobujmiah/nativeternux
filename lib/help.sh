@@ -76,6 +76,7 @@ EOF
     terminal)
       cat <<'EOF'
 tx terminal serve — Run the Native Termux terminal broker in the foreground
+tx terminal service status|preview-install|install — Manage its previewed Runit service
 tx terminal status — Read the optional broker status
 tx terminal start — Preview, confirm, and attach to the fixed Debian login
 tx terminal attach SESSION_ID — Attach to one Ternuxx-owned session
@@ -255,6 +256,7 @@ EOF
     terminal)
       cat <<'EOF'
 tx terminal serve — Run the Native Termux terminal broker in the foreground
+tx terminal service status|preview-install|install — Manage its previewed Runit service
 tx terminal status — Read the optional broker status
 tx terminal start — Preview, confirm, and attach to the fixed Debian login
 tx terminal attach SESSION_ID — Attach to one Ternuxx-owned session
