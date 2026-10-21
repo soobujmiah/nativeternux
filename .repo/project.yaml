@@ -1,13 +1,13 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-20T20:25:42Z'
+generated_at: '2026-10-21T20:50:27Z'
 generated_by: tools/repo_knowledge collect
-version: dfa3f63
+version: b3f61d4
 head:
-  commit: dfa3f63dec45afccd9de06b3ff9d0652b325c2b8
+  commit: b3f61d49963b78bc344f33b349e634ed23f73e24
   branch: main
-  committed_at: '2026-10-20T20:23:46Z'
+  committed_at: '2026-10-21T20:50:27Z'
 phases:
   source: not_configured
   completed: []
@@ -26,16 +26,13 @@ build:
   run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39491612966
 test:
   status: passed
-  run_id: '39491612966'
-  commit: dfa3f63dec45afccd9de06b3ff9d0652b325c2b8
+  run_id: null
+  commit: b3f61d49963b78bc344f33b349e634ed23f73e24
   run_attempt: '1'
-  at: '2026-10-20T20:25:42Z'
-  timestamp_source: observed
-  workflow_name: Repository Knowledge Sync
-  event_type: push
-  actor: soobujmiah
-  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39491612966
-  summary: null
+  at: '2026-10-21T20:50:27Z'
+  timestamp_source: commit
+  summary: 'Native scripts/repo_test.sh: 687/687 passed in 98.336 seconds; broker
+    focused tests 10/10 passed'
 last_successful_build: null
 last_failed_build:
   commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
@@ -43,5 +40,5 @@ last_failed_build:
   run_id: '39159994935'
 sync:
   status: ok
-  last_synced_at: '2026-10-20T20:25:42Z'
-  source: ci
+  last_synced_at: '2026-10-21T20:50:27Z'
+  source: local
