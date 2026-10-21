@@ -2,7 +2,7 @@
 
 ## Project scope
 
-Ternuxx is an independent project aiming to become a world-class mobile workstation in a pocket with CPU baseline and verified GPU/NPU acceleration. Treat native Termux and the existing Ternux Debian PRoot as complementary first-class layers: native tools and permitted Android-facing integrations have their place; the PRoot provides its Linux userland, established desktop/workloads, and configured GPU route. Hybrid workflows should join their strengths through scoped handoffs. The `soobujmiah/ternux` source project remains independent. Its existing Debian rootfs is the owner-selected Ternuxx adapter target and may be changed only through the bounded Ternuxx guest plan described below. The supported source-checkout command is `./tx`; the installed `tx` shim dispatches to `$HOME/ternuxx`. Installed paths use the Ternuxx state and library directories.
+Ternuxx is an independent, Native Termux-first project aiming to become a world-class mobile workstation with a CPU baseline and verified GPU/NPU acceleration. Ternuxx core features—boot/recovery, SSH, CLI, management, state, and native workloads—must work when PRoot is stopped, absent, or broken. The existing Ternux Debian PRoot is an optional, independently managed Linux workload provider; its failure may block only an operation explicitly routed to it. Hybrid workflows are scoped handoffs, never core dependencies. The `soobujmiah/ternux` source project remains independent. Its existing Debian rootfs may be targeted only through an optional bounded Ternuxx guest plan with exact target, explicit apply, preserved user data, and rollback. The supported source-checkout command is `./tx`; the installed `tx` shim dispatches to `$HOME/ternuxx`. Installed paths use the Ternuxx state and library directories.
 
 Read `README.md`, `CURRENT_STATE.md`, `PROJECT_MANIFEST.yaml`, `PROJECT_CLASSIFICATION.yaml`, `AI_ASSISTANT.md`, `SECURITY.md`, `docs/PRODUCT-VISION.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/KNOWLEDGE-SYNC.md`, `SKB_KNOWLEDGE_SYNC.md`, relevant ADRs, and task-relevant evidence in `docs/RESEARCH.md` before changing behavior. Keep vision-facing docs in my plain first-person voice. Do not turn my goals into generic marketing copy or claim that I verified something I have not. For existing Ternux PRoot GPU use, read `docs/PROOT-GPU.md` first.
 
@@ -30,6 +30,12 @@ A device node, driver library, Vulkan instance, or shader cache is not proof tha
 - Until an ownership-aware adapter exists, Ternuxx must not start or stop Ternux or claim its display/audio lifecycle. Existing Ternux GPU workloads are run from the Ternux Debian desktop.
 - Keep Native and Debian package installation preview-first with explicit consent. Debian Bionic/Termux libraries must never cross into the Debian glibc guest. Never describe a stub as implemented or a manifest as a working installer.
 
+## Canonical product identity
+
+- The product and repository name is **Ternuxx**; the public command is `tx`.
+- Use only `TERNUXX_STATE_DIR`, `$HOME/.local/share/ternuxx`, and `$PREFIX/lib/ternuxx` for Ternuxx state and runtime modules. Do not add alternate product-name variables, paths, command aliases, or recovery fallbacks.
+- Historical evidence may describe earlier names as historical facts, but current source, installed boot helpers, and runtime modules must use the canonical name. Preserve old private data by an exact, verified archive or migration; do not discard or merge conflicting records.
+
 ## Engineering workflow
 
 - Inspect `git status`, current branch, and relevant diffs before editing; preserve unrelated changes.
@@ -43,12 +49,12 @@ A device node, driver library, Vulkan instance, or shader cache is not proof tha
 
 ## Session handoff: SSH work and managed test shells
 
-- The native Termux-side Codex integration is not ready. For repository implementation, connect to the available work shell with `ssh -p 8022 u0_a490@127.0.0.1`; use that shell to inspect and edit this Ternuxx checkout. Confirm the live runtime with `uname`, `$PREFIX`, and repository path instead of assuming which layer is active.
+- Repository implementation runs through the owner-provisioned Native Termux development shell. Use the configured `termux` SSH alias (`ssh termux`, port 8022) to inspect and edit this Ternuxx checkout; do not put key paths or credentials in project files. Confirm the live runtime with `uname`, `$PREFIX`, and repository path instead of assuming which layer is active.
 - Port `8022` is the owner-started native Termux repository development shell. Use it for repo inspection, implementation, and repository test runs. Port `8023` is the loopback-only, Runit-managed Ternuxx SSH/CLI endpoint and is part of the product being developed; use it to exercise managed CLI/service behavior, not as the default repo-work shell. Both endpoints currently reach the same Ternuxx checkout, but their roles must be recorded distinctly.
 - Do not store SSH passwords, keys, tokens, or private runtime state in repository documentation or evidence. Never expose 8023 beyond loopback without a separately reviewed remote-access plan.
 - Authentication continuity: use credentials provisioned outside the repository. Do not assume either endpoint will authenticate in a later session. Never persist passwords or private keys in repo files/evidence. Changing `authorized_keys`, SSH authentication settings, or service configuration requires explicit owner authorization.
 - Keep all implementation inside `soobujmiah/ternuxx`. The separate `soobujmiah/ternux` repository and its installed PRoot/rootfs are external dependencies to adapt through supported interfaces; do not edit that repository or mutate the existing guest/launcher as part of ordinary Ternuxx work.
-- Current phase remains P3 (`in_progress`); consult `CURRENT_STATE.md`, `project/phase-state.json`, and the newest P3 gate audit before choosing the next task.
+- Current phase is P4 (`in_progress`); consult `CURRENT_STATE.md`, `project/phase-state.json`, and the latest P3/P4 evidence before choosing the next task. Do not make PRoot availability a prerequisite for native Ternuxx operations.
 
 ## Latest continuation: 8023 reconciliation (2026-10-18)
 
@@ -94,7 +100,7 @@ At HEAD 5232a20b63c5f9f66d8f3e74208ed5bff8c4340a, default CLI status initially m
 
 ## Latest verified continuation - 8023 lifecycle and shared state (2026-10-18)
 
-Base HEAD `5232a20b63c5f9f66d8f3e74208ed5bff8c4340a`; Native Termux checkout `$HOME/ternuxx`; changes remain uncommitted. The installed `$PREFIX/bin/ternuxx` shim now invokes the checkout through `$PREFIX/bin/bash`; legacy `$PREFIX/bin/nativeternux` and its library remain preserved. The 8023 run definition is deployed from source; stale lease PID 12951 was removed only after the kernel confirmed it absent. Current Runit service and loopback SSH banner pass; checkout and installed CLI share one active native.sshd lease. A key-only BatchMode attempt was denied, then owner-provided interactive authentication returned `authenticated-loopback-ok`. ADB socket inode 2372520 maps to managed sshd PID 22443 FD 6 and Runit ancestry; current authenticated readiness/listener ownership are VERIFIED. 8022 inode 135149 maps to PID 16337 FD 7 and remained active. Full Native Termux suite passed 324/324; focused entrypoint/service/wakelock tests passed 18/18. No reboot, commit, or push. Reboot remains UNVERIFIED. Evidence: `docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md`.
+Base HEAD `5232a20b63c5f9f66d8f3e74208ed5bff8c4340a`; Native Termux checkout `$HOME/ternuxx`; changes remain uncommitted. The installed `tx` shim invokes the checkout through `$PREFIX/bin/bash`; a prior-name executable/module alias was still preserved at that historical checkpoint. The 8023 run definition is deployed from source; stale lease PID 12951 was removed only after the kernel confirmed it absent. Current Runit service and loopback SSH banner pass; checkout and installed CLI share one active native.sshd lease. A key-only BatchMode attempt was denied, then owner-provided interactive authentication returned `authenticated-loopback-ok`. ADB socket inode 2372520 maps to managed sshd PID 22443 FD 6 and Runit ancestry; current authenticated readiness/listener ownership are VERIFIED. 8022 inode 135149 maps to PID 16337 FD 7 and remained active. Full Native Termux suite passed 324/324; focused entrypoint/service/wakelock tests passed 18/18. No reboot, commit, or push. Reboot remains UNVERIFIED. Evidence: `docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md`.
 
 
 ## Current P3 continuation — 2026-10-19

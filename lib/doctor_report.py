@@ -558,6 +558,9 @@ def check_service_manager() -> None:
         process_identity = service.get("process_identity", "unknown") if isinstance(service, dict) else "unknown"
         listener_correlation = checks.get("listener_daemon_correlation", "unknown") if isinstance(checks, dict) else "unknown"
         listener_observation = checks.get("tcp_listener_observation", "unknown") if isinstance(checks, dict) else "unknown"
+        listener_procfs = checks.get("tcp_listener_procfs_observation", "unknown") if isinstance(checks, dict) else "unknown"
+        listener_netlink = checks.get("tcp_listener_netlink_observation", "unknown") if isinstance(checks, dict) else "unknown"
+        listener_source = checks.get("tcp_listener_source", "unknown") if isinstance(checks, dict) else "unknown"
         if not isinstance(probe_status, str):
             probe_status = "not_attempted"
         if not isinstance(definition_status, str):
@@ -568,11 +571,18 @@ def check_service_manager() -> None:
             listener_correlation = "unknown"
         if not isinstance(listener_observation, str):
             listener_observation = "unknown"
+        if not isinstance(listener_procfs, str):
+            listener_procfs = "unknown"
+        if not isinstance(listener_netlink, str):
+            listener_netlink = "unknown"
+        if not isinstance(listener_source, str):
+            listener_source = "unknown"
         if not isinstance(configured_scope, str):
             configured_scope = "unknown"
     except (OSError, TypeError, ValueError):
         manager, service_id, status, syntax, probe_status, definition_status = "unknown", "unknown", "unknown", "unknown", "not_attempted", "unavailable"
         process_identity, listener_correlation, listener_observation = "unknown", "unknown", "unknown"
+        listener_procfs, listener_netlink, listener_source = "unknown", "unknown", "unknown"
         configured_scope, password_auth = "unknown", "not_reported_enabled"
     if configured_scope in {"wildcard", "non_loopback"}:
         add("NTX-SSH-001", "warning" if configured_scope == "wildcard" else "info", "native-ssh-configuration",
@@ -588,15 +598,15 @@ def check_service_manager() -> None:
             "No manager fallback is automatic; review native SSH diagnostics before any service action.")
     elif status == "running" and syntax == "valid" and process_identity == "not_verified":
         add("NTX-SVC-001", "warning", "native-service-manager",
-            f"manager=runit; service={service_id}; status=running; config syntax=valid; managed process identity=not_verified; loopback SSH probe={probe_status}; listener-to-port correlation={listener_correlation} (tcp observation={listener_observation})",
+            f"manager=runit; service={service_id}; status=running; config syntax=valid; managed process identity=not_verified; loopback SSH probe={probe_status}; listener-to-port correlation={listener_correlation} (tcp observation={listener_observation}; procfs={listener_procfs}; netlink={listener_netlink}; source={listener_source})",
             "Keep the service unchanged and inspect its exact runit-to-daemon process identity; Doctor does not start, stop, or repair it.")
     elif status == "running" and syntax == "valid" and probe_status in {"unreachable", "no_banner", "unexpected_protocol", "timeout"}:
         add("NTX-SVC-001", "warning", "native-service-manager",
-            f"manager=runit; service={service_id}; status=running; config syntax=valid; managed process identity={process_identity}; loopback SSH probe={probe_status}; listener-to-port correlation={listener_correlation} (tcp observation={listener_observation})",
+            f"manager=runit; service={service_id}; status=running; config syntax=valid; managed process identity={process_identity}; loopback SSH probe={probe_status}; listener-to-port correlation={listener_correlation} (tcp observation={listener_observation}; procfs={listener_procfs}; netlink={listener_netlink}; source={listener_source})",
             "Inspect the named Ternuxx service and port configuration; Doctor will not start, stop, or repair it.")
     elif status == "running" and syntax == "valid":
         add("NTX-SVC-001", "pass", "native-service-manager",
-            f"manager=runit; service={service_id}; status=running; config syntax=valid; managed process identity={process_identity}; loopback SSH probe={probe_status}; listener-to-port correlation={listener_correlation} (tcp observation={listener_observation})",
+            f"manager=runit; service={service_id}; status=running; config syntax=valid; managed process identity={process_identity}; loopback SSH probe={probe_status}; listener-to-port correlation={listener_correlation} (tcp observation={listener_observation}; procfs={listener_procfs}; netlink={listener_netlink}; source={listener_source})",
             "The process identity and SSH banner are reported separately from listener-to-port correlation and external reachability.")
     else:
         add("NTX-SVC-001", "warning", "native-service-manager",

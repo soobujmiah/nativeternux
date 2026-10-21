@@ -14,6 +14,14 @@ import terminal_ui
 
 
 class TerminalUISharedServiceTests(unittest.TestCase):
+    def test_optional_terminal_broker_resource_uses_read_only_shared_status(self):
+        resource = {
+            "id": "proot.interactive-terminal-broker",
+            "supported_operations": ["terminal.broker.status"],
+        }
+        self.assertEqual(terminal_ui._selected_status_operation(resource),
+                         "terminal.broker.status")
+
     def test_compact_branding_is_available_in_tui_header(self) -> None:
         self.assertEqual(terminal_ui.BRANDING_TAGLINE, "Workstation in your pocket — by Sobuj Miah")
         self.assertEqual(terminal_ui.BRANDING_URL, "soobujmiah.github.io")
@@ -69,6 +77,59 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             mock.call("proot.start", {"profile": "isolated-probe", "confirmed": True,
                                       "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300}),
         ])
+
+    def test_proot_interactive_login_preview_confirms_then_attaches_outside_curses(self) -> None:
+        inventory = {"ok": True, "data": {"sessions": []}}
+        plan_id = "plan-" + "e" * 64
+        preview = {"ok": True, "data": {"profile": "debian-interactive",
+                    "mode": "foreground-tty", "impact": "Attached login", "plan_id": plan_id}}
+        applied = {"ok": True, "data": {"profile": "debian-interactive", "state": "stopped"}}
+        events = []
+        screen = mock.Mock()
+
+        def call(operation, args=None):
+            events.append(("call", operation))
+            if operation == "proot.sessions.list":
+                return inventory
+            if operation == "proot.start.preview":
+                return preview
+            if operation == "proot.start":
+                self.assertEqual(events[-2:], [("endwin", None), ("call", "proot.start")])
+                return applied
+            self.fail(f"unexpected operation: {operation}")
+
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["start-login", "yes"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=call), \
+             mock.patch.object(terminal_ui, "_show_details") as details, \
+             mock.patch.object(terminal_ui.curses, "def_prog_mode", side_effect=lambda: events.append(("def_prog_mode", None))), \
+             mock.patch.object(terminal_ui.curses, "endwin", side_effect=lambda: events.append(("endwin", None))), \
+             mock.patch.object(terminal_ui.curses, "reset_prog_mode", side_effect=lambda: events.append(("reset_prog_mode", None))):
+            result = terminal_ui._manage_proot_sessions(screen)
+
+        self.assertIs(result, applied)
+        details.assert_called_once_with(screen, preview)
+        self.assertEqual(events, [
+            ("call", "proot.sessions.list"),
+            ("call", "proot.start.preview"),
+            ("def_prog_mode", None),
+            ("endwin", None),
+            ("call", "proot.start"),
+            ("reset_prog_mode", None),
+        ])
+        self.assertEqual(screen.clear.call_count, 1)
+        self.assertEqual(screen.refresh.call_count, 1)
+
+    def test_proot_interactive_login_refuses_invalid_preview_before_terminal_handoff(self) -> None:
+        inventory = {"ok": True, "data": {"sessions": []}}
+        preview = {"ok": True, "data": {"profile": "debian-interactive",
+                    "mode": "foreground-tty", "plan_id": "invalid"}}
+        with mock.patch.object(terminal_ui, "_prompt", return_value="start-login"), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview]) as call, \
+             mock.patch.object(terminal_ui.curses, "endwin") as endwin:
+            result = terminal_ui._manage_proot_sessions(mock.Mock())
+        self.assertEqual(result["error"]["code"], "invalid_session_preview")
+        endwin.assert_not_called()
+        self.assertEqual(call.call_count, 2)
 
     def test_proot_session_stop_requires_verified_inventory_and_exact_plan(self) -> None:
         session_id = "proot-" + "b" * 32

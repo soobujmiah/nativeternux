@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 import management_authorization
@@ -81,13 +82,32 @@ class ManagementCatalogTests(unittest.TestCase):
 
     def test_catalog_api_accepts_filters_without_live_probes(self):
         env = {"TERMUX_VERSION":"test", "PREFIX":"/data/data/com.termux/files/usr", "HOME":"/tmp", "TERNUXX_STATE_DIR":"/tmp/state"}
-        response = management_service.dispatch({"api_version":1,"request_id":"catalog-filter-1234","operation":"management.catalog","args":{"category":"networking"}}, env=env)
+        # Native clients share this static discovery operation. A missing or
+        # broken PRoot installation must not be consulted on this path.
+        with patch.object(
+                management_service.proot_diagnostics, "inspect_installed",
+                side_effect=AssertionError("catalog must not probe PRoot")), \
+             patch.object(
+                management_service.proot_sessions, "list_sessions",
+                side_effect=AssertionError("catalog must not inspect PRoot sessions")):
+            response = management_service.dispatch({"api_version":1,"request_id":"catalog-filter-1234","operation":"management.catalog","args":{"category":"networking"}}, env=env)
         self.assertTrue(response["ok"])
         self.assertEqual(response["data"]["filters"]["category"], "networking")
         self.assertTrue(all(item["category_id"] == "networking" for item in response["data"]["resources"]))
         bad = management_service.dispatch({"api_version":1,"request_id":"catalog-filter-5678","operation":"management.catalog","args":{"category":[]}}, env=env)
         self.assertFalse(bad["ok"])
         self.assertEqual(bad["error"]["code"], "invalid_arguments")
+
+    def test_catalog_labels_proot_as_optional_and_unprobed(self):
+        catalog = management_catalog.build_catalog(set(management_service.OPERATIONS))
+        provider = next(item for item in catalog["providers"] if item["id"] == "proot-debian")
+        self.assertEqual(provider["kind"], "optional-unprobed-guest-runtime")
+        self.assertEqual(provider["status"], "availability-requires-explicit-probe")
+        terminal = next(item for item in catalog["resources"]
+                        if item["id"] == "proot.interactive-terminal-broker")
+        self.assertEqual(terminal["supported_operations"], ["terminal.broker.status"])
+        self.assertEqual(terminal["operation_capabilities"]["terminal.broker.status"],
+                         "diagnostics.read")
 
 
 if __name__ == "__main__":

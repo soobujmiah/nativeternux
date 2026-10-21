@@ -105,6 +105,23 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
         self.assertEqual(json.loads(raw)["data"]["state"], "ready")
         dispatch.assert_called_once_with(payload, caller="local_cli", env=adapter._env)
 
+    def test_web_can_inspect_optional_terminal_broker_status(self) -> None:
+        dispatch = Mock(return_value={"ok": True, "api_version": 1,
+                                      "request_id": "request-1234",
+                                      "data": {"status": "not_running"}})
+        adapter = make_adapter(dispatcher=dispatch, caps={"diagnostics.read"})
+        _status, issued = bootstrap(adapter, ["diagnostics.read"])
+        session = issued["session"]
+        payload = {"api_version": 1, "request_id": "request-1234",
+                   "operation": "terminal.broker.status", "args": {}}
+        body = payload_bytes(payload)
+        headers = headers_for(body, Authorization=f"Bearer {session['bearer_token']}")
+        status, _response_headers, raw = adapter.handle(
+            method="POST", path="/api/v1/operations", headers=headers, body=body)
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(raw)["data"]["status"], "not_running")
+        dispatch.assert_called_once_with(payload, caller="local_cli", env=adapter._env)
+
     def test_scope_denial_and_csrf_rejection_happen_before_dispatch(self) -> None:
         dispatch = Mock()
         adapter = make_adapter(dispatcher=dispatch, caps={"diagnostics.read"})

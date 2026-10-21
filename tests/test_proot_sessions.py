@@ -376,6 +376,46 @@ class PRootSessionRegistryTests(unittest.TestCase):
                     self.state, prefix=str(self.base), confirmed=True, plan_id="plan-x")
         self.assertFalse((self.state / "proot").exists())
 
+    def test_spawn_login_returns_verified_master_without_client_tty(self):
+        record = {
+            "session_id": "proot-" + "9" * 32,
+            "marker": "TERNUXX_PROOT_SESSION=" + "8" * 32,
+            "expected_argv": [str(self.launcher), "login", "debian"],
+            "process_start": "fixture-start", "process_group": 2468,
+        }
+        discovery = {
+            "rootfs": str(self.rootfs), "rootfs_device": self.rootfs.stat().st_dev,
+            "rootfs_inode": self.rootfs.stat().st_ino, "launcher": str(self.launcher),
+            "launcher_device": self.launcher.stat().st_dev,
+            "launcher_inode": self.launcher.stat().st_ino,
+        }
+        identity = {"state": "S", "session": 2468, "pgrp": 2468,
+                    "start": "fixture-start"}
+        with mock.patch.object(proot_sessions.os, "isatty",
+                               side_effect=AssertionError("broker spawn must not require a client TTY")), \
+             mock.patch.object(proot_sessions, "preview_start",
+                               return_value={"plan_id": "plan-fixture"}), \
+             mock.patch.object(proot_sessions, "_start_plan",
+                               return_value="plan-fixture"), \
+             mock.patch.object(proot_sessions, "discover_debian",
+                               return_value=discovery), \
+             mock.patch.object(proot_sessions, "_create_login_record",
+                               return_value=(record, "token")), \
+             mock.patch.object(proot_sessions, "_login_environment",
+                               return_value={}), \
+             mock.patch("pty.fork", return_value=(2468, 79)), \
+             mock.patch.object(proot_sessions, "_proc", return_value=identity), \
+             mock.patch.object(proot_sessions, "_update_session",
+                               return_value=record), \
+             mock.patch.object(proot_sessions, "_await_verified_login",
+                               return_value=True):
+            spawned = proot_sessions.spawn_login_interactive(
+                self.state, prefix=str(self.base), confirmed=True,
+                plan_id="plan-fixture")
+        self.assertEqual(spawned["master_fd"], 79)
+        self.assertEqual(spawned["child_pid"], 2468)
+        self.assertIs(spawned["record"], record)
+
     def test_v1_session_records_are_read_as_v2_without_claiming_unowned_process(self):
         proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"],
                                 start_new_session=True, close_fds=True)

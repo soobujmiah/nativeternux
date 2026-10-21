@@ -8,13 +8,13 @@ project:
   owner: "Sobuj Miah"
 
 product:
-  problem: "A phone should work as a capable mobile workstation by combining Termux-native tools with the owner's existing, independently managed Ternux Debian PRoot environment."
+  problem: "A phone should work as a capable mobile workstation with a self-sufficient Termux-native core and optional, independently managed integration with the owner's existing Ternux Debian PRoot environment."
   primary_users:
     - "The owner, using an Android phone as the primary workstation"
   scope:
     in:
       - "Native Termux CLI, desktop, and Android-facing workflows"
-      - "Ternuxx-owned integration with the existing Debian PRoot workload environment"
+      - "Optional Ternuxx integration with the existing Debian PRoot workload environment; Native core must work without PRoot"
       - "Narrow, reversible Debian PRoot configuration changes required for Native host handoff, after impact assessment and recovery planning"
       - "Safe native, PRoot, and hybrid session profiles with one desktop owner per display"
       - "Doctor, service/SSH management, recovery, and workload-scoped optimization"
@@ -31,7 +31,7 @@ product:
       - "Scanning shared storage or managing unselected personal files"
 
 architecture:
-  style: "Ternuxx-managed workstation: Native Termux host authority, preserved Debian PRoot workload environment, and explicit hybrid orchestration"
+  style: "Native Termux-first Ternuxx workstation with an optional preserved Debian PRoot workload adapter and explicit hybrid orchestration"
   language: "Bash for the initial Termux CLI; additional languages only when justified by a verified platform need"
   framework: "Termux packages, Termux:X11, and opt-in Termux/Android integrations"
   source_of_truth: "GitHub"

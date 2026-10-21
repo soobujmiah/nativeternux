@@ -15,6 +15,20 @@ import management_desktop_bridge as bridge
 
 
 class ManagementDesktopBridgeTests(unittest.TestCase):
+    def test_optional_terminal_broker_resource_inspects_shared_status(self) -> None:
+        catalog = {"ok": True, "data": {"resources": [
+            {"id": "proot.interactive-terminal-broker",
+             "supported_operations": ["terminal.broker.status"]},
+        ]}}
+        status = {"ok": True, "data": {"component": "terminal_broker",
+                                       "status": "not_running"}}
+        with mock.patch.object(bridge, "call", side_effect=lambda operation, args=None:
+                               catalog if operation == "management.catalog" else status) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(
+                    ["inspect", "proot.interactive-terminal-broker"]), 0)
+        self.assertIn(mock.call("terminal.broker.status"), dispatch.call_args_list)
+
     def setUp(self) -> None:
         self.env = mock.patch.dict(os.environ, {
             "PREFIX": "/data/data/com.termux/files/usr", "TERMUX_VERSION": "test-termux",

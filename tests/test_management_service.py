@@ -29,6 +29,20 @@ def request(operation: object, args: object = None, api_version: int = 1) -> dic
 
 
 class ManagementServiceTests(unittest.TestCase):
+    def test_terminal_broker_status_is_optional_and_never_probes_proot(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="management-terminal-status-") as temp:
+            home = Path(temp)
+            env = {**NATIVE_ENV, "HOME": str(home),
+                   "TERNUXX_STATE_DIR": str(home / ".local/share/ternuxx")}
+            with patch.object(management_service.proot_diagnostics, "inspect_installed",
+                              side_effect=AssertionError("terminal status must not probe PRoot")):
+                result = management_service.dispatch(
+                    request("terminal.broker.status"), env=env)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["data"]["component"], "terminal_broker")
+        self.assertEqual(result["data"]["status"], "not_running")
+        self.assertTrue(result["data"]["provider_optional"])
+
     def test_desktop_status_adapter_preserves_shared_cli_reconciliation_result(self) -> None:
         import json
         from types import SimpleNamespace
@@ -578,6 +592,21 @@ class ManagementServiceTests(unittest.TestCase):
         self.assertFalse(denied["ok"])
         self.assertEqual(denied["error"]["code"], "confirmation_required")
 
+
+    def test_proot_start_rejects_arbitrary_guest_command_fields(self) -> None:
+        base = {"profile": "debian-interactive", "confirmed": True,
+                "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300}
+        for field, value in (("command", "/bin/sh -c id"),
+                             ("argv", ["/bin/sh", "-c", "id"]),
+                             ("environment", {"LD_PRELOAD": "/tmp/host.so"}),
+                             ("rootfs", "/data/local/tmp/rootfs"),
+                             ("user", "root"),
+                             ("working_directory", "/tmp")):
+            with self.subTest(field=field):
+                args = {**base, field: value}
+                denied = management_service.dispatch(request("proot.start", args), env=NATIVE_ENV)
+                self.assertFalse(denied["ok"])
+                self.assertEqual(denied["error"]["code"], "invalid_arguments")
 
     def test_proot_session_health_is_shared_read_only_operation(self) -> None:
         import proot_sessions

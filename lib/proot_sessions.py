@@ -917,13 +917,15 @@ def _relay_interactive_pty(master: int, child_pid: int, *, input_fd: int = 0,
                 os.close(master)
 
 
-def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirmed: bool,
-                      plan_id: str) -> dict[str, object]:
-    """Run the supported interactive Debian login on an owned controlling PTY."""
+def spawn_login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirmed: bool,
+                           plan_id: str) -> dict[str, object]:
+    """Start the fixed interactive profile and transfer its verified PTY master to a broker.
+
+    The caller owns the returned master FD and must retain, relay, and close it.
+    No client TTY is required because this function does not perform a foreground relay.
+    """
     if confirmed is not True or not isinstance(plan_id, str):
         raise SessionError("PRoot start requires an exact preview plan and explicit confirmation")
-    if not os.isatty(0) or not os.isatty(1):
-        raise SessionError("debian-interactive requires an attached terminal; use the headless profile otherwise")
     preview = preview_start("debian-interactive", prefix=prefix)
     if plan_id != preview["plan_id"]:
         raise SessionError("PRoot start preview is stale or does not match the selected profile")
@@ -933,6 +935,7 @@ def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirm
     record, token = _create_login_record(state_dir, discovery)
     env = _login_environment(record["marker"], token)
     child_pid = None
+    master = None
     try:
         # Allocate a new controlling PTY so the guest login receives a real
         # foreground terminal with normal job-control semantics.
@@ -975,19 +978,13 @@ def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirm
             _append_transition(saved, "running", "login-pty-verified")
             saved["last_verified_at"] = _timestamp()
         record = _update_session(state_dir, record["session_id"], mark_running)
-        print("Ternuxx Debian session " + record["session_id"] + " is attached. Type exit to leave.", file=sys.stderr)
-        status = _relay_interactive_pty(master, child_pid)
-        remaining = _members(child_pid)
-        final_state = "stopped" if not remaining else "unknown"
-        source = "login-exited" if not remaining else "login-exited-processes-remain"
-        _update_session(state_dir, record["session_id"],
-                        lambda saved: ( _append_transition(saved, final_state, source),
-                                        saved.update({"last_verified_at": _timestamp(),
-                                                      "last_exit_code": status})))
-        return {"session_id": record["session_id"], "profile": "debian-interactive",
-                "state": final_state, "exit_code": status,
-                "remaining_session_processes": len(remaining)}
+        return {"record": record, "master_fd": master, "child_pid": child_pid}
     except Exception:
+        if master is not None:
+            try:
+                os.close(master)
+            except OSError:
+                pass
         if child_pid is not None:
             identity = _proc(child_pid)
             if (identity and record.get("process_start")
@@ -1013,6 +1010,57 @@ def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirm
             pass
         raise
 
+
+def login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirmed: bool,
+                      plan_id: str) -> dict[str, object]:
+    """Run the supported interactive Debian login on an owned controlling PTY."""
+    if not os.isatty(0) or not os.isatty(1):
+        raise SessionError("debian-interactive requires an attached terminal; use the headless profile otherwise")
+    spawned = spawn_login_interactive(state_dir, prefix=prefix, confirmed=confirmed,
+                                     plan_id=plan_id)
+    record = spawned["record"]
+    master = spawned["master_fd"]
+    child_pid = spawned["child_pid"]
+    try:
+        print("Ternuxx Debian session " + record["session_id"] + " is attached. Type exit to leave.", file=sys.stderr)
+        status = _relay_interactive_pty(master, child_pid)
+        remaining = _members(child_pid)
+        final_state = "stopped" if not remaining else "unknown"
+        source = "login-exited" if not remaining else "login-exited-processes-remain"
+        _update_session(state_dir, record["session_id"],
+                        lambda saved: (_append_transition(saved, final_state, source),
+                                       saved.update({"last_verified_at": _timestamp(),
+                                                     "last_exit_code": status})))
+        return {"session_id": record["session_id"], "profile": "debian-interactive",
+                "state": final_state, "exit_code": status,
+                "remaining_session_processes": len(remaining)}
+    except Exception:
+        try:
+            os.close(master)
+        except OSError:
+            pass
+        identity = _proc(child_pid)
+        if (identity and record.get("process_start")
+                and identity["start"] == record.get("process_start")
+                and identity["session"] == child_pid and identity["pgrp"] == child_pid
+                and _verified(record)):
+            try:
+                os.killpg(child_pid, signal.SIGTERM)
+            except OSError:
+                pass
+        try:
+            def record_relay_failure(saved):
+                observation = _reconcile_observation(saved)
+                final = ("stopped" if observation in {"process_absent", "pid_reused_original_exited", "original_process_exited"}
+                         else "unverified")
+                source = ("login-relay-failed-evidence:" + observation
+                          if final == "stopped" else _failure_evidence_source("login-relay-failed", saved))
+                _append_transition(saved, final, source)
+                saved["last_verified_at"] = _timestamp()
+            _update_session(state_dir, record["session_id"], record_relay_failure)
+        except (OSError, SessionError):
+            pass
+        raise
 
 def start_profile(state_dir: str | os.PathLike[str], *, prefix: str, profile: str,
                   confirmed: bool, plan_id: str, timeout_seconds: int = 300) -> dict[str, object]:

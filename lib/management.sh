@@ -145,6 +145,9 @@ nt_cmd_management() {
       [ "$#" -eq 0 ] || shift
       case "$area" in
         status) [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng proot status"; return 2; } ;;
+        terminal)
+          [ "$#" -eq 1 ] && [ "$1" = "status" ] || { nt_fail "Usage: tx mng proot terminal status"; return 2; }
+          operation="terminal.broker.status" ;;
         profiles)
           [ "$#" -eq 0 ] || action="$1"
           [ "$#" -eq 0 ] || shift
@@ -198,7 +201,7 @@ nt_cmd_management() {
             esac
           done
           if [ "$confirmed" -eq 1 ]; then operation="proot.stop"; else operation="proot.stop.preview"; fi ;;
-        *) nt_fail "Use tx mng proot {status|profiles|sessions|recover|reconcile|start|stop}."; return 2 ;;
+        *) nt_fail "Use tx mng proot {status|terminal status|profiles|sessions|recover|reconcile|start|stop}."; return 2 ;;
       esac
       nt_require_termux || return 1
       nt_require_command python3 || return 1

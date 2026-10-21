@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import stat
 import subprocess
+import tempfile
 from typing import Callable
 
 import boot_state_path
@@ -16,6 +17,7 @@ import runtime_diagnostics
 
 PREFIX = "/data/data/com.termux/files/usr"
 SCRIPT_NAME = "20-ternuxx-cron"
+KNOWN_LEGACY_SCRIPT_HASHES = {"49c9fbadeaeb9e2173270606a26f8ad2fa0b76d8891e22645209b39dd0537305"}
 _MAX_SCRIPT = 32768
 _MAX_LOG = 256 * 1024
 _SCRIPT = r'''#!/data/data/com.termux/files/usr/bin/python3
@@ -29,6 +31,7 @@ from pathlib import Path
 import stat
 import subprocess
 import sys
+import shutil
 
 PREFIX = "/data/data/com.termux/files/usr"
 HOME = os.environ.get("HOME", "")
@@ -66,12 +69,21 @@ try:
         raise SystemExit(2)
     fcntl.flock(lock_fd, fcntl.LOCK_EX)
     tx = Path(HOME) / "ternuxx" / "tx"
-    if not tx.is_file() or not os.access(tx, os.X_OK):
+    bash = Path(PREFIX) / "bin" / "bash"
+    if not bash.is_file():
+        # Allows isolated host fixtures; real Termux uses the fixed prefix path.
+        fallback = shutil.which("bash")
+        bash = Path(fallback) if fallback else bash
+    if (not tx.is_file() or not os.access(tx, os.X_OK)
+            or not bash.is_file() or not os.access(bash, os.X_OK)):
         result = {"outcome": "cli_unavailable", "started_by_script": False}
     else:
         try:
+            # The checkout entrypoint has a /usr/bin/env shebang, which is
+            # absent on Native Termux. Bash can interpret the shell script,
+            # but subprocess execve cannot apply Bash's interactive fallback.
             completed = subprocess.run(
-                [str(tx), "mng", "cron", "start", "--yes"],
+                [str(bash), str(tx), "mng", "cron", "start", "--yes"],
                 cwd=str(tx.parent), env=os.environ.copy(), stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=20,
                 check=False,
@@ -166,7 +178,86 @@ def _read_owned_script(path: Path) -> tuple[str, bytes | None]:
             os.close(fd)
     except OSError:
         return "unsafe", None
-    return ("match" if data == script_bytes() else "mismatch"), data
+    if data == script_bytes():
+        return "match", data
+    if hashlib.sha256(data).hexdigest() in KNOWN_LEGACY_SCRIPT_HASHES:
+        return "known-legacy", data
+    return "mismatch", data
+
+
+def _save_legacy_snapshot(home: str | os.PathLike[str], state_dir: str | os.PathLike[str],
+                          data: bytes) -> dict[str, str]:
+    home_path, state = boot_state_path.resolve_private_state(str(home), str(state_dir))
+    state_fd = boot_state_path.ensure_private_tree(home_path, state)
+    os.close(state_fd)
+    snapshots = state / "cron" / "boot" / "snapshots"
+    try:
+        snapshots.mkdir(mode=0o700)
+    except FileExistsError:
+        pass
+    info = snapshots.lstat()
+    if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o700):
+        raise BootIntegrationError("Cron boot snapshot directory is unsafe")
+    digest = hashlib.sha256(data).hexdigest()
+    snapshot = snapshots / f"{SCRIPT_NAME}-{digest}.bin"
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        fd = os.open(snapshot, flags, 0o600)
+    except FileExistsError:
+        existing = snapshot.lstat()
+        if (not stat.S_ISREG(existing.st_mode) or existing.st_uid != os.getuid()
+                or stat.S_IMODE(existing.st_mode) != 0o600
+                or hashlib.sha256(snapshot.read_bytes()).hexdigest() != digest):
+            raise BootIntegrationError("existing Cron boot snapshot failed integrity checks")
+    else:
+        try:
+            os.fchmod(fd, 0o600)
+            view = memoryview(data)
+            while view:
+                count = os.write(fd, view)
+                if count <= 0:
+                    raise OSError("short Cron boot snapshot write")
+                view = view[count:]
+            os.fsync(fd)
+        except Exception:
+            os.close(fd)
+            snapshot.unlink(missing_ok=True)
+            raise
+        else:
+            os.close(fd)
+        directory_fd = os.open(snapshots, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    return {"sha256": digest, "path": str(snapshot.relative_to(home_path))}
+
+
+def _replace_script_atomically(path: Path, data: bytes) -> None:
+    fd, temporary_name = tempfile.mkstemp(prefix=f".{SCRIPT_NAME}.", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        os.fchmod(fd, 0o700)
+        view = memoryview(data)
+        while view:
+            count = os.write(fd, view)
+            if count <= 0:
+                raise OSError("short Cron boot script write")
+            view = view[count:]
+        os.fsync(fd)
+        os.close(fd)
+        fd = -1
+        os.replace(temporary, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        if fd >= 0:
+            os.close(fd)
+        temporary.unlink(missing_ok=True)
 
 
 def _latest_run(state_dir: str | os.PathLike[str]) -> dict[str, object] | None:
@@ -239,6 +330,8 @@ def validate(*, home: str | os.PathLike[str], state_dir: str | os.PathLike[str],
         blockers.append("Ternuxx tx entrypoint is unavailable")
     if identity in {"unsafe", "mismatch"}:
         blockers.append("the dedicated target path is not a verified Ternuxx script")
+    if identity == "known-legacy":
+        blockers.append("the dedicated script is an older verified Ternuxx version and needs reconciliation")
     if identity == "missing":
         blockers.append("the dedicated script is not configured")
     if app != "installed":
@@ -265,18 +358,18 @@ def preview(action: str, *, home: str | os.PathLike[str],
         raise BootIntegrationError("unsupported boot integration action")
     boot_dir, path = _paths(home)
     identity, current = _read_owned_script(path)
-    if action == "enable" and identity not in {"missing", "match"}:
+    if action == "enable" and identity not in {"missing", "match", "known-legacy"}:
         raise BootIntegrationError("refusing to replace an unsafe or unrecognized startup file")
     if action == "disable" and identity not in {"missing", "match"}:
         raise BootIntegrationError("refusing to remove an unsafe or unrecognized startup file")
     app = boot_inspector(home=home).get("app", "unknown")
     plan = _plan(action, path, current)
-    changed = (action == "enable" and identity == "missing") or (action == "disable" and identity == "match")
+    changed = (action == "enable" and identity in {"missing", "known-legacy"}) or (action == "disable" and identity == "match")
     blockers = []
     if action == "enable" and app != "installed":
         blockers.append("Termux:Boot must be positively confirmed installed before enabling")
     return {"component": "termux_boot_cron_preview", "action": action,
-            "target": str(path), "boot_directory": str(boot_dir), "changes": ([{"operation": "create", "path": str(path), "mode": "0700", "sha256": plan["desired_sha256"]}] if changed and action == "enable" else [{"operation": "remove", "path": str(path), "sha256": plan["current_sha256"]}] if changed else []),
+            "target": str(path), "boot_directory": str(boot_dir), "changes": ([{"operation": "replace" if identity == "known-legacy" else "create", "path": str(path), "mode": "0700", "current_sha256": plan["current_sha256"], "sha256": plan["desired_sha256"]}] if changed and action == "enable" else [{"operation": "remove", "path": str(path), "sha256": plan["current_sha256"]}] if changed else []),
             "plan_id": plan["plan_id"], "script_identity": identity,
             "companion_app": "confirmed_installed" if app == "installed" else "confirmed_not_installed" if app == "not_installed" else "unknown",
             "requires_confirmation": changed, "changed": False, "ready": not blockers,
@@ -306,43 +399,48 @@ def _apply_unlocked(action: str, *, home: str | os.PathLike[str], state_dir: str
         boot_dir.mkdir(mode=0o700)
         created.append(boot_dir)
     identity, current = _read_owned_script(path)
+    rollback_snapshot = None
     if action == "enable":
         if identity == "match":
             return {**plan, "requires_confirmation": False, "changed": False, "already_configured": True}
-        if identity != "missing":
+        if identity == "known-legacy" and current is not None:
+            rollback_snapshot = _save_legacy_snapshot(home, state_dir, current)
+            _replace_script_atomically(path, script_bytes())
+        elif identity != "missing":
             raise BootIntegrationError("target changed after preview; refusing to overwrite")
-        data = script_bytes()
-        try:
-            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o700)
+        else:
+            data = script_bytes()
             try:
-                os.fchmod(fd, 0o700)
-                view = memoryview(data)
-                while view:
-                    written = os.write(fd, view)
-                    if written <= 0:
-                        raise OSError("short boot script write")
-                    view = view[written:]
-                os.fsync(fd)
-                created_identity = os.fstat(fd)
+                fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o700)
+                try:
+                    os.fchmod(fd, 0o700)
+                    view = memoryview(data)
+                    while view:
+                        written = os.write(fd, view)
+                        if written <= 0:
+                            raise OSError("short boot script write")
+                        view = view[written:]
+                    os.fsync(fd)
+                    created_identity = os.fstat(fd)
+                finally:
+                    os.close(fd)
+            except Exception:
+                try:
+                    current_meta = path.lstat()
+                    if ("created_identity" in locals()
+                            and (current_meta.st_dev, current_meta.st_ino) == (created_identity.st_dev, created_identity.st_ino)):
+                        path.unlink()
+                except OSError:
+                    pass
+                for directory in reversed(created):
+                    try: directory.rmdir()
+                    except OSError: pass
+                raise
+            parent_fd = os.open(boot_dir, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                os.fsync(parent_fd)
             finally:
-                os.close(fd)
-        except Exception:
-            try:
-                current = path.lstat()
-                if ("created_identity" in locals()
-                        and (current.st_dev, current.st_ino) == (created_identity.st_dev, created_identity.st_ino)):
-                    path.unlink()
-            except OSError:
-                pass
-            for directory in reversed(created):
-                try: directory.rmdir()
-                except OSError: pass
-            raise
-        parent_fd = os.open(boot_dir, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
-        try:
-            os.fsync(parent_fd)
-        finally:
-            os.close(parent_fd)
+                os.close(parent_fd)
     else:
         if identity == "missing":
             return {**plan, "requires_confirmation": False, "changed": False, "already_disabled": True}
@@ -356,6 +454,7 @@ def _apply_unlocked(action: str, *, home: str | os.PathLike[str], state_dir: str
             raise BootIntegrationError("target identity changed before removal; refusing to unlink")
         path.unlink()
     return {**plan, "requires_confirmation": False, "changed": True,
+            **({"rollback_snapshot": rollback_snapshot} if rollback_snapshot else {}),
             "actual_device_boot_delivery": "not_yet_verified",
             "safety": {"unrelated_boot_scripts_changed": False, "package_changed": False,
                        "scheduler_started": False}}

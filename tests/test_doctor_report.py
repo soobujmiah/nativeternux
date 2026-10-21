@@ -326,6 +326,21 @@ class DoctorReportTest(unittest.TestCase):
         self.assertIn("ownership unverified", finding["observed"])
         self.assertIn("does not prove Ternux ownership", finding["suggested_action"])
 
+    def test_doctor_continues_when_optional_proot_manager_is_missing(self):
+        doctor_report.FINDINGS.clear()
+        report = {
+            "component": "proot_distribution_inventory", "status": "unavailable",
+            "manager_available": False, "installed_distributions": [],
+            "ownership": "unverified", "guest_entered": False, "read_only": True,
+        }
+        with patch.object(doctor_report, "native_termux", return_value=True), \
+                patch.object(doctor_report.proot_diagnostics, "inspect_installed", return_value=report):
+            doctor_report.check_proot_inventory()
+        finding = next(f for f in doctor_report.FINDINGS if f["id"] == "NTX-PROOT-001")
+        self.assertEqual(finding["severity"], "info")
+        self.assertIn("command unavailable", finding["observed"])
+        self.assertFalse(report["guest_entered"])
+
     def test_process_inventory_separates_verified_owner_from_unverified_candidates(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-doctor-inventory-") as temporary:
             root = Path(temporary)

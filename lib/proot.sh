@@ -119,6 +119,41 @@ nt_cmd_proot() {
       }
       _nt_proot_verify "$distro" "$guest_user" "$user_source" "$display" "$backend"
       ;;
+    legacy-cli)
+      local scope="guest" action="" plan_id="" backup_id="" option
+      if [ "${1:-}" = "host" ]; then scope="host"; shift; fi
+      action="${1:-}"
+      [ "$#" -gt 0 ] || { nt_fail "Use tx proot legacy-cli [host] {preview|remove|rollback} [plan options]."; return 2; }
+      shift
+      case "$action" in preview|remove|rollback) ;; *) nt_fail "Use tx proot legacy-cli [host] {preview|remove|rollback}."; return 2 ;; esac
+      while [ "$#" -gt 0 ]; do
+        option="$1"; shift
+        case "$option" in
+          --plan-id) [ "$#" -gt 0 ] || { nt_fail "--plan-id needs a value."; return 2; }; plan_id="$1"; shift ;;
+          --backup-id) [ "$#" -gt 0 ] || { nt_fail "--backup-id needs a value."; return 2; }; backup_id="$1"; shift ;;
+          *) nt_fail "Unknown legacy CLI option: $option"; return 2 ;;
+        esac
+      done
+      nt_require_termux || return 1
+      nt_require_command python3 || return 1
+      local state_dir="${TERNUXX_STATE_DIR:-$HOME/.local/share/ternuxx}"
+      local tool_action="$action" tool="$_TN_LIB_DIR/../tools/retire_legacy_guest_cli.py"
+      local -a retirement_args=()
+      [ "$action" = "remove" ] && tool_action="apply"
+      if [ "$scope" = "host" ]; then
+        tool="$_TN_LIB_DIR/../tools/retire_legacy_host_cli.py"
+        retirement_args=("$tool_action" --prefix "$PREFIX" --state-dir "$state_dir" --json)
+      else
+        local rootfs="$PREFIX/var/lib/proot-distro/containers/debian/rootfs"
+        retirement_args=("$tool_action" --rootfs "$rootfs" --state-dir "$state_dir" --json)
+      fi
+      case "$action" in
+        preview) [ -z "$plan_id" ] && [ -z "$backup_id" ] || { nt_fail "Usage: tx proot legacy-cli [host] preview"; return 2; } ;;
+        remove) [ -n "$plan_id" ] && [ -z "$backup_id" ] || { nt_fail "Remove requires --plan-id from the exact preview."; return 2; }; retirement_args+=(--plan-id "$plan_id") ;;
+        rollback) [ -n "$backup_id" ] && [ -z "$plan_id" ] || { nt_fail "Rollback requires --backup-id from the retirement result."; return 2; }; retirement_args+=(--backup-id "$backup_id") ;;
+      esac
+      python3 "$tool" "${retirement_args[@]}"
+      ;;
     db) _nt_use launch; nt_cmd_db "$@" ;;
     gui)   _nt_proot_gui "$@" ;;
     setup)
@@ -158,6 +193,6 @@ nt_cmd_proot() {
       esac
       python3 "$_TN_LIB_DIR/proot_setup.py" "${setup_args[@]}"
       ;;
-    *) nt_fail "Use proot status|inspect|verify|db|gui|setup; use tx pgui for the full Debian desktop."; return 2 ;;
+    *) nt_fail "Use proot status|inspect|verify|legacy-cli [host]|db|gui|setup; use tx pgui for the full Debian desktop."; return 2 ;;
   esac
 }

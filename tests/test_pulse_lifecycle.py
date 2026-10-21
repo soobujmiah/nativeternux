@@ -31,6 +31,26 @@ class PulseLifecycleTests(unittest.TestCase):
         self.assertNotIn("auth-ip-acl=0.0.0.0", result)
         self.assertNotIn("auth-anonymous=1", result)
 
+    def test_managed_config_removes_unavailable_termux_modules_and_legacy_sink(self):
+        source = "\n".join((
+            ".ifexists module-console-kit.so",
+            "load-module module-console-kit",
+            ".endif",
+            ".ifexists module-systemd-login.so",
+            "load-module module-systemd-login",
+            ".endif",
+            "load-module module-sles-sink",
+            "load-module module-opensles-sink sink_name=Speaker",
+            "set-default-sink Speaker",
+        ))
+        result = pulse_lifecycle.managed_config(source, "/cookie")
+        self.assertIn("load-module module-sles-sink", result)
+        self.assertNotIn("load-module module-console-kit", result)
+        self.assertNotIn("load-module module-systemd-login", result)
+        self.assertNotIn("module-opensles-sink", result)
+        self.assertNotIn("set-default-sink Speaker", result)
+        self.assertIn("auth-anonymous=0 auth-cookie-enabled=1", result)
+
     def test_managed_config_adds_scoped_listener_when_absent(self):
         result = pulse_lifecycle.managed_config("load-module module-sles-sink\n", "/cookie")
         self.assertEqual(result.count("module-native-protocol-tcp"), 1)

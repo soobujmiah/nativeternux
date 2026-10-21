@@ -1,5 +1,31 @@
 # Native Termux reboot recovery guide
 
+# Current P3 reboot test — RB08 review, 2026-10-22
+
+RB08's owner-operated restart was observed: the boot identity changed, the
+matching Native observer record exists, the native service boot log reported
+ready, and postboot read-only checks verified the managed 8023 service and an
+authenticated loopback SSH client. The client ran inside the existing Debian
+guest, but the service, host keys, authorized-keys file, config, and boot path
+are owned by Native Termux. This did not make the service depend on PRoot.
+
+The RB08 checkpoint remains `boot_observed`, `NOT_READY`, and
+`automatic_resume=false`; its automated observer snapshot did not capture
+managed-service health. Independent manual checks are documented in the
+[P3 postboot exit audit](../evidence/2026-10-22-p3-rb08-postboot-exit-audit.md).
+After RB08, current recovery modules were installed to the canonical
+`$PREFIX/lib/ternuxx` path; the next boot is needed to observe that module
+version executing. A separate pre-canonical module directory
+was preserved. Do not invoke boot observers manually or resume tasks
+automatically.
+
+The generic Cron status field still says `actual_device_boot_delivery` is
+`not_yet_verified`; the timestamped Native boot and observer records are the
+direct delivery evidence for RB08. Android's system-wide background policy
+and listener-to-port ownership remain unknown.
+
+Historical preparation note: RB08 superseded RB07 for the restart and remains a private checkpoint. Its baseline is in [the RB08 checkpoint record](../evidence/2026-10-21-p3-pre-reboot-rb08-checkpoint.md). Do not reuse either checkpoint for another restart; prepare a fresh unique checkpoint if a future reboot test is needed. Do not invoke boot observers manually or resume tasks automatically.
+
 **RB03 status: reboot observed; automated verification partial. No further reboot is needed to complete RB03.**
 **Prepared test:** `TERN-20261017-RB03`
 **Checkpoint:** native private storage at `$HOME/.local/share/ternuxx/continuity/reboot-tests/TERN-20261017-RB03.json`
@@ -161,7 +187,7 @@ opening the app, but no physical reboot had yet been performed. RB03 was later
 run on 2026-10-18; its partial result is recorded at the top of this guide.
 
 
-## RB05/RB06 follow-up — readiness retry verification (2026-10-18)
+## Historical RB05/RB06 follow-up — readiness retry verification (2026-10-18; superseded for the next reboot by RB07)
 
 RB05 was prepared but superseded before reboot because its private baseline
 incorrectly recorded Termux:Boot startup policy as enabled; live diagnostics
@@ -194,3 +220,8 @@ owner status. Keep the checkpoint `NOT_READY` if any required check is missing
 or unknown. Never copy its nonce or boot IDs into Git, screenshots, logs, or
 chat. No agent-triggered reboot or service/desktop/boot-setting mutation is
 part of this test.
+
+
+## Current checkpoint - RB08 (2026-10-21)
+
+Owner is initiating the next Android restart through the normal UI. RB08 is the unique prepared checkpoint; RB07 remains preserved as the earlier observed test. Use the 8022 Native development channel after reconnecting, and follow the [RB08 pre-reboot record](../evidence/2026-10-21-p3-pre-reboot-rb08-checkpoint.md).

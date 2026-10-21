@@ -214,7 +214,11 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 self.assertEqual(dispatch.call_count, 4)
 
                 status, _headers, response = post("proot.start", "web-proot-session-01",
-                    "web-proot-session-key1", {"profile": "debian-login"})
+                    "web-proot-session-key1", {"profile": "debian-interactive",
+                                                "command": "/bin/sh -c id",
+                                                "argv": ["/bin/sh", "-c", "id"],
+                                                "rootfs": "/data/local/tmp/rootfs",
+                                                "user": "root"})
                 self.assertEqual(status, 403)
                 self.assertEqual(json.loads(response)["error"], "proot_profile_restricted")
                 self.assertEqual(dispatch.call_count, 4)

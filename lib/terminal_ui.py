@@ -109,7 +109,7 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
     sessions = data.get("sessions", []) if isinstance(data, dict) else []
     if not isinstance(sessions, list):
         return {"ok": False, "error": {"code": "invalid_session_inventory"}}
-    choice = _prompt(screen, "PRoot sessions: status, recovery, start-probe, stop (blank cancels)").lower()
+    choice = _prompt(screen, "PRoot sessions: status, recovery, start-probe, start-login, stop (blank cancels)").lower()
     if choice in {"status", "list"}:
         return listed
     if choice == "recovery":
@@ -130,6 +130,28 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
             return {"ok": False, "error": {"code": "cancelled"}}
         return _call("proot.start", {"profile": "isolated-probe", "confirmed": True,
                                       "plan_id": plan_id, "timeout_seconds": 300})
+    if choice == "start-login":
+        preview = _call("proot.start.preview", {"profile": "debian-interactive"})
+        if not preview.get("ok"):
+            return preview
+        plan = preview.get("data", {})
+        plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
+        if (not isinstance(plan, dict) or plan.get("profile") != "debian-interactive"
+                or plan.get("mode") != "foreground-tty"
+                or not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
+            return {"ok": False, "error": {"code": "invalid_session_preview"}}
+        _show_details(screen, preview)
+        if _prompt(screen, "Live login unqualified; start attached Debian? Type yes").lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        curses.def_prog_mode()
+        curses.endwin()
+        try:
+            return _call("proot.start", {"profile": "debian-interactive", "confirmed": True,
+                                          "plan_id": plan_id, "timeout_seconds": 1800})
+        finally:
+            curses.reset_prog_mode()
+            screen.clear()
+            screen.refresh()
     if choice == "stop":
         candidates = [item for item in sessions if isinstance(item, dict)
                       and item.get("ownership") == "ternuxx_verified"
@@ -261,7 +283,7 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     elif resource_id == "proot.debian.workloads":
         labels.append("launch named PRoot app")
         labels.append("preview and manage PRoot app shortcut")
-        labels.append("inspect or preview-manage PRoot sessions")
+        labels.append("inspect, start attached login, or manage bounded PRoot sessions")
     elif resource_id == "network.ssh.managed-8023":
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)")) if op in operations)

@@ -62,6 +62,7 @@ OPERATION_CAPABILITIES: dict[str, str] = {
     "proot.shortcuts.preview": "diagnostics.read",
     "proot.shortcuts.apply": "applications.shortcuts.manage",
     "proot.guest.verify": "guest.diagnostics.read",
+    "terminal.broker.status": "diagnostics.read",
     "remote.access.preview": "remote_policy.read",
     "ssh.service.start": "ssh.managed.lifecycle",
     "ssh.service.stop": "ssh.managed.lifecycle",

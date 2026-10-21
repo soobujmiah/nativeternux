@@ -1,6 +1,6 @@
 # Ternuxx roadmap
 
-This roadmap defines the product sequence, acceptance gates, and safety boundaries. Ternuxx is independent from `soobujmiah/ternux`; the existing Debian rootfs and legacy launcher state remain separately owned. Ternuxx may reuse that rootfs for an explicitly started, uniquely tracked process/session, but never adopts or cleans up legacy/unknown processes. I explain what I want from Ternuxx in [What I want Ternuxx to become](PRODUCT-VISION.md). The roadmap below turns that into work we can verify phase by phase. Native and hybrid capabilities are additive: all useful, working Ternux PRoot capabilities must remain available, with no regression or forced migration.
+This roadmap defines the product sequence, acceptance gates, and safety boundaries. Ternuxx is independent from `soobujmiah/ternux`; the existing Debian rootfs and legacy launcher state remain separately owned. Native Termux is sufficient for Ternuxx core: boot/recovery, SSH, CLI, management, state, and native workloads must work if PRoot is stopped, absent, or broken. PRoot is an optional workload provider; a failure there may affect only an operation explicitly routed to it. Ternuxx may reuse that rootfs only for an explicitly started, uniquely tracked process/session, but never adopts or cleans up legacy/unknown processes. I explain what I want from Ternuxx in [What I want Ternuxx to become](PRODUCT-VISION.md). The roadmap below turns that into work we can verify phase by phase. Native and hybrid capabilities are additive: all useful, working Ternux PRoot capabilities must remain available, with no regression or forced migration.
 
 ## Live phase status
 
@@ -10,8 +10,8 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 | P0 | Repository foundation and evidence baseline | completed | 2026-10-17 |
 | P1 | Requirements and CPU/GPU/NPU compatibility research | completed | 2026-10-17 |
 | P2 | Safe native desktop lifecycle | completed | 2026-10-18 |
-| P3 | Doctor, management, and recovery | in_progress | — |
-| P4 | Existing Ternux PRoot feature-parity provider | planned | — |
+| P3 | Doctor, management, and recovery | completed | 2026-10-21 |
+| P4 | Existing Ternux PRoot feature-parity provider | in_progress | — |
 | P5 | Distro and display compatibility profiles | planned | — |
 | P6 | CPU/GPU/NPU capability, optimization, and fallback | planned | — |
 | P7 | Native apps and curated software catalog | planned | — |
@@ -23,22 +23,22 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 ### Current serial work
 
 <!-- generated:active-work:start -->
-**Active phase:** P3 — Doctor, management, and recovery
+**Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Audit the remaining shared-action and ownership/recovery gaps, then exercise Web in the Android browser if available; keep interactive TTY parity and cold-boot acceptance explicit, and do not advance to P4 until all P3 gates pass.
+**Next action:** Wire a supervised broker to the fixed interactive PRoot PTY lifecycle, implement authenticated CLI/TUI/Web/GTK clients, then qualify on a disposable guest without altering the active rootfs.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
 
-Phases are executed in the order shown above. P0–P2 are complete; P3 is the only active phase. The P3 ownership and fail-closed contract gates later providers; actual Ternux PRoot parity belongs to P4, and hybrid workload routing belongs to P8. The P3 reboot gate qualifies native startup only; PRoot and hybrid cold-boot checks follow their provider phases.
+Phases are executed in the order shown above. P0–P3 are complete and P4 is active. The P3 ownership and fail-closed contract gates optional workload providers; actual Ternux PRoot parity belongs to P4, and hybrid workload routing belongs to P8. Native boot and core management are qualified independently of PRoot. PRoot and Hybrid cold-boot checks follow their optional provider phases.
 
 Phase state is recorded in [`project/phase-state.json`](../project/phase-state.json). After a gate is reviewed with evidence, use the phase workflow in [Phase documentation automation](#phase-by-phase-documentation-updates). Status rows above are generated; edit the roadmap gates below, not the generated table.
 
 ## Product outcomes
 
 1. Build the pocket workstation I describe in [my vision](PRODUCT-VISION.md), with CPU workflows, verified GPU/NPU paths, and workload optimization that stays within Android thermal limits.
-2. Make native Termux a first-class layer: run compatible tools directly in the Termux environment and investigate permitted Termux:API/Android integrations, without requiring a Linux guest for those tasks.
-3. Keep the existing Ternux Debian PRoot as a first-class Linux layer for its current desktop, configured graphics path, audio/display behavior, and demonstrated workloads. Ternuxx integration is opt-in and must not silently replace, trim, upgrade, or remove it.
+2. Make native Termux the self-sufficient core: run compatible tools directly in the Termux environment and investigate permitted Termux:API/Android integrations. These tasks must not require a Linux guest.
+3. Preserve the existing Ternux Debian PRoot as an optional Linux workload provider for its current desktop, configured graphics path, audio/display behavior, and demonstrated workloads. Ternuxx integration is opt-in and must not silently replace, trim, upgrade, or remove it; absence of the provider must not degrade Native Termux features.
 4. Combine both layers in Hybrid mode so users can use native/Android-facing workflows alongside the existing Linux and GPU-enabled PRoot workloads, with deliberate file and display/audio handoffs.
 5. Report native and PRoot graphics and compute capability separately, using evidence from the actual workload process and backend.
 6. Keep installation, storage estimates, compatibility/performance claims, and release status evidence-based. No accelerator or speedup is promised from hardware identification alone.
@@ -113,31 +113,31 @@ Phase state is recorded in [`project/phase-state.json`](../project/phase-state.j
 
 **Deliverables, in order:**
 1. Read-only Doctor, service/session inventory, stable finding IDs, ownership proofs, and JSON/human output. Unknown or ambiguous state stays unknown and blocks mutation.
-2. Define and fixture-verify the ownership contract for interactive PRoot TTY sessions: host PID/start identity, guest UID, working directory, argv/environment, attach/detach behavior, output, and exactly which process Ternuxx may signal. This phase establishes the contract; PRoot session implementation and live guest qualification remain in P4.
+2. Define and fixture-verify the ownership contract for interactive PRoot TTY sessions: host PID/start identity, guest UID, working directory, argv/environment, attach/detach behavior, output, and exactly which process Ternuxx may signal. The owner requires interactive terminals in CLI, TUI, Web, and GTK; P3 records the contract and verifies client security boundaries, while the broker and all-client terminal transports remain P4 implementation and live guest qualification work. On 2026-10-21, the owner explicitly chose to complete and confirm P3 before P4; this stages the implementation without withdrawing the four-client requirement (see [owner decision](evidence/2026-10-21-p3-before-p4-owner-decision.md)).
 3. Serialized, journaled operations with exact preview, explicit confirmation, bounded rollback, and recovery for Ternuxx-owned files/services/processes only. Existing Ternux processes and broad legacy cleanup remain outside Ternuxx ownership.
-4. Shared-management contract and a checked CLI/TUI/Web/GTK capability matrix for diagnostics, logs, monitoring, supported service/session controls, and recovery. Every supported user-facing action promised across clients is reachable through the shared service in CLI, TUI, Web, and GTK, or has a documented and owner-accepted client-specific limitation. Do not silently treat CLI-only behavior as complete shared management. A catalog listing alone does not count as an action.
+4. Shared-management contract and a checked CLI/TUI/Web/GTK capability matrix for diagnostics, logs, monitoring, supported service/session controls, and recovery. Every supported P3 management action promised across clients is reachable through the shared service in CLI, TUI, Web, and GTK, or has a documented owner-accepted limitation. The owner-required interactive terminal is a staged P4 capability under the recorded P3-first decision; it remains visibly unavailable in Web/GTK during P3, and P4 must deliver it to all four clients. Do not silently treat CLI-only behavior as complete shared management. A catalog listing alone does not count as an action.
 5. Reconcile installed boot/recovery helper copies with repository source through an exact diff, state-preserving preview, backup, explicit apply, and tested rollback. Preserve the running Native `:1`, SSH 8022, managed 8023, and current Debian guest.
 6. Define Native, existing-PRoot, Hybrid, and CLI-only boot profiles and their owner controls. In P3, only Native boot behavior may be qualified. PRoot launch/start remains gated by P4 and end-to-end Hybrid boot by P8; do not run legacy `x.sh` as a service command.
 7. Verify Android startup/background behavior and Termux:Boot delivery, including retry/manual-open behavior, only in a separately authorized device-boot window. A manually invoked boot script is not cold-boot evidence. Never close the active Codex/Termux session as part of ordinary P3 work.
 8. Run the P3 exit audit only after the prior items pass; report any owner-gated device check as open rather than inferring success.
 
-**Current evidence:** owner visual review of GTK/TUI/Web/PRoot Apps is accepted. Cron definition changes now use one exact preview/apply contract across CLI, TUI, Web, and GTK; live interactive behavior was not exercised during this increment. Installed `00-ternuxx-services` and `ternuxx-recovery` now match repository source after exact preview/apply with private rollback snapshots. Boot scripts were not run and cold-boot delivery remains unqualified. See [Cron client parity evidence](evidence/2026-10-21-cron-mutation-client-parity.md), [boot-helper reconciliation evidence](evidence/2026-10-21-boot-helper-reconciliation.md), and the [management client parity audit](evidence/2026-10-20-management-client-parity-audit.md).
+**Current evidence:** owner visual review of GTK/TUI/Web/PRoot Apps is accepted. Cron definition changes use one exact preview/apply contract across CLI, TUI, Web, and GTK; the four-client interactive terminal remains staged for P4 under the explicit owner phase-order decision. RB08 records a changed Android boot, matching Native boot observer, ready native service log, Termux:Boot Cron startup, and postboot read-only service plus authenticated 8023 client checks. The RB08 checkpoint remains `NOT_READY` with auto-resume disabled because its observer snapshot did not capture managed-service health; the separate manual checks are recorded in the [P3 postboot exit audit](evidence/2026-10-22-p3-rb08-postboot-exit-audit.md). Both installed boot shell helpers match source. Current recovery modules are staged at canonical `$PREFIX/lib/ternuxx`; their next cold-boot invocation remains unobserved. See [Cron client parity evidence](evidence/2026-10-21-cron-mutation-client-parity.md), [boot-helper reconciliation evidence](evidence/2026-10-21-boot-helper-reconciliation.md), and the [management client parity audit](evidence/2026-10-20-management-client-parity-audit.md).
 
 **Exit gate:**
 - Doctor is read-only and correct for missing, failed, unknown, stale, and conflicting states; ambiguous identities fail closed.
 - Interactive PRoot TTY ownership rules are explicit and fixture-verified before P4 begins guest operations. Mutations are serialized, previewed, confirmed, journaled, operation-specific, and recoverable without touching unrelated Ternux/Android state.
-- All supported user-facing management actions use one shared service contract across CLI, TUI, Web, and GTK, or have a documented, owner-accepted exception; the capability matrix and controls/help match reality.
+- All supported P3 management actions use one shared service contract across CLI, TUI, Web, and GTK, or have a documented, owner-accepted limitation; the capability matrix and controls/help match reality. The all-client interactive terminal remains required and is staged for P4 by the owner's recorded phase-order decision.
 - Installed boot/recovery entrypoints match source or have a documented, exact compatibility reason; their preview, apply, and rollback preserve user state.
 - Native cold-boot/Android background behavior is verified in an authorized window before P3 can pass. If the owner does not authorize that window, keep P3 active and record the gate as owner-blocked; do not treat it as passed. PRoot and Hybrid boot acceptance remains deferred to P4/P8.
 - Existing Native XFCE, SSH channels, Debian rootfs, and legacy launch workflows remain intact.
 
 See [Doctor, management, and recovery](OPERATIONS.md), [shared management plan](architecture/SHARED-MANAGEMENT-PLAN.md), and [capability matrix](architecture/CAPABILITY-MATRIX.md) for operation contracts and client boundaries.
 
-## P4 — Existing Ternux PRoot feature-parity provider
+## P4 — Optional existing Ternux PRoot workload provider
 
-**Depends on:** P3 accepted ownership, operation-journal, and recovery contracts. P4 is the first phase that may implement and manage selected workloads in the existing Ternux Debian guest.
+**Depends on:** P3 accepted ownership, operation-journal, and recovery contracts. P4 adds optional integration with selected workloads in the existing Ternux Debian guest. It does not add a PRoot dependency to Ternuxx core.
 
-**Goal:** adapt Ternuxx to the already-working Debian installation while preserving the rootfs, package set, user data, legacy `db`/`droot`, `x.sh`, `xgo`, and `killx` workflows. Ternuxx manages only processes it starts and can identify; it never substitutes Termux Bionic libraries for Debian glibc libraries.
+**Goal:** let users explicitly route selected workloads to the already-working Debian installation while preserving the active rootfs, package set, and user data. Owner clarified on 2026-10-22 that legacy launcher workflows are no longer required for P4 acceptance. Ternuxx manages only processes it starts and can identify; it never substitutes Termux Bionic libraries for Debian glibc libraries. All Native Termux core features continue to work without this provider.
 
 **Current evidence (not phase acceptance):** selected Debian apps and full XFCE have Ternuxx routes. Standalone `:0` requires Native XFCE `:1` stopped; nested full desktop uses Xephyr `:2` inside the active Native `:1`; individual PRoot app shortcuts route to `:1`. Direct Debian GLX on `:1` drew with Zink/Turnip. Nested `:2` only has a Zink/Turnip GLES context so far: DRI3 is unavailable and tested GLX draw produced zero frames. Fresh guest setup is fixture-tested, not replayed on a disposable guest. See [PRoot full GUI evidence](evidence/2026-10-20-proot-full-gui.md), [graphics recheck](evidence/2026-10-20-graphics-live-recheck.md), and [fresh reproducibility evidence](evidence/2026-10-20-proot-fresh-reproducibility.md).
 
@@ -155,7 +155,8 @@ See [Doctor, management, and recovery](OPERATIONS.md), [shared management plan](
 - Guest command arguments, environment, exit code, output, display/audio route, and ownership are verified.
 - Standalone, selected-app, and nested routes have separate results; GPU claims require a real draw in that route. Unsupported nested GLX/DRI3 remains labelled unavailable/partial.
 - Disposable guest package/config replay is reproducible from checked-in manifests without touching current Debian.
-- Preview, recovery, and rollback stay within the Ternuxx-owned exact target; existing `db`/`droot`, `x.sh`, `xgo`, and `killx` behavior is preserved.
+- Preview, recovery, and rollback stay within the Ternuxx-owned exact target; the active Debian rootfs, package set, and user data remain preserved; legacy launcher compatibility is not a P4 acceptance gate.
+- Missing, stopped, or broken PRoot affects only explicit PRoot-targeted operations; Native boot/recovery, SSH, CLI, management, state, and native workloads remain usable.
 
 ## P5 — Distro and display compatibility profiles
 

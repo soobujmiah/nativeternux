@@ -43,6 +43,7 @@ import cron_execution
 import cron_scheduler
 import cron_daemon
 import proot_sessions
+import terminal_broker
 import timezone_support
 
 
@@ -97,6 +98,7 @@ OPERATIONS = {
     "proot.shortcuts.preview": {"args": {"action", "app_id"}},
     "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
     "proot.guest.verify": {"args": {"distro", "user", "user_source", "display", "backend"}},
+    "terminal.broker.status": {"args": set()},
     "remote.access.preview": {"args": {"policy"}},
     "ssh.service.start": {"args": {"confirmed", "plan_id"}},
     "ssh.service.stop": {"args": {"confirmed", "plan_id"}},
@@ -382,6 +384,16 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = proot_diagnostics.inspect_installed()
             data["ternuxx_sessions"] = proot_sessions.list_sessions(
                 state_dir or os.path.join(home, ".local/share/ternuxx"))
+        elif operation == "terminal.broker.status":
+            try:
+                data = terminal_broker.UnixBrokerClient(
+                    state_dir or os.path.join(home, ".local/share/ternuxx")
+                ).request("broker.status")
+                data.setdefault("component", "terminal_broker")
+                data.setdefault("provider_optional", True)
+            except terminal_broker.BrokerError:
+                data = {"component": "terminal_broker", "status": "not_running",
+                        "provider_optional": True, "pty_relay": "unavailable"}
         elif operation == "proot.profiles.list":
             data = proot_sessions.profile_inventory(prefix=process_env["PREFIX"])
         elif operation == "proot.profiles.show":
@@ -1091,7 +1103,7 @@ def main(argv: list[str] | None = None) -> int:
                 else: print("Preview first, then apply with --yes --plan-id PLAN_ID.", file=sys.stderr)
                 return 1
             payload = {"plan_id": args.plan_id, "confirmed": True}
-    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "native.ssh.status", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
+    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "terminal.broker.status", "native.ssh.status", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
         payload = {}
         if args.operation == "continuity.status" and args.test_id:
             payload["test_id"] = args.test_id

@@ -2,9 +2,9 @@
 
 I want my phone to be a world-class mobile workstation I can carry in my pocket. I want to use its CPU, GPU, and NPU wherever the software actually supports them.
 
-I need both native Termux and my existing Ternux Debian PRoot setup. They do different jobs, and I want them to work together.
+Ternuxx's core must work entirely from native Termux. Boot and recovery, SSH, CLI, management, and native workloads must stay usable when PRoot is stopped, missing, or broken. My existing Ternux Debian PRoot is an optional integration for Linux workloads; it must never become a prerequisite for Ternuxx itself.
 
-Native Termux lets me run compatible tools directly and use Android or Termux features when they are supported. My PRoot setup gives me Debian, XFCE, Linux applications, and the GPU/workload setup I have already built. I want the whole workflow to connect: choose native, PRoot, or hybrid at boot; open compatible apps from either layer; pass selected files and commands between them; see where work ran; and manage its display, audio, performance, and recovery from one place. Phone-facing tasks can stay in Termux while Linux or proven GPU-heavy work runs in PRoot, with a clear handoff and without weakening either setup.
+Native Termux lets me run compatible tools directly and use Android or Termux features when supported. When I choose to use PRoot, it gives me Debian, XFCE, Linux applications, and the GPU/workload setup I have already built. Ternuxx can offer explicit, scoped handoffs to that optional provider, while its own boot, SSH, CLI, management, and native work continue independently. A PRoot failure must affect only an operation that I explicitly routed there.
 
 I do not want Ternuxx to replace, trim, or break my current Ternux setup. Ternux is already useful to me, and it should stay independent.
 

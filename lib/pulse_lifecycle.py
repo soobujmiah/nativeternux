@@ -23,6 +23,33 @@ PORT = 4713
 SCHEMA = 1
 START_TIMEOUT = 12.0
 _TCP_MODULE = re.compile(r"^\s*load-module\s+module-native-protocol-tcp(?:\s+.*)?$", re.I)
+_LOAD_MODULE = re.compile(r"^\s*load-module\s+([^\s]+)", re.I)
+_TERMUX_UNAVAILABLE_MODULES = {
+    "module-console-kit", "module-systemd-login", "module-opensles-sink",
+}
+
+
+def _termux_audio_profile(source: str) -> str:
+    """Drop desktop/system-bus modules and the obsolete OpenSL sink alias.
+
+    Termux provides module-sles-sink (OpenSL_ES_sink); it does not provide
+    module-opensles-sink or a system D-Bus service for ConsoleKit/systemd-login.
+    """
+    lines = source.splitlines()
+    has_legacy_opensles = any(
+        (match := _LOAD_MODULE.match(line))
+        and match.group(1).lower() == "module-opensles-sink"
+        for line in lines
+    )
+    kept = []
+    for line in lines:
+        match = _LOAD_MODULE.match(line)
+        if match and match.group(1).lower() in _TERMUX_UNAVAILABLE_MODULES:
+            continue
+        if has_legacy_opensles and line.strip().lower() == "set-default-sink speaker":
+            continue
+        kept.append(line)
+    return "\n".join(kept) + "\n"
 
 
 class PulseError(RuntimeError):
@@ -127,8 +154,8 @@ def _cookie(paths: dict[str, Path]) -> Path:
 
 
 def managed_config(source: str, cookie_path: str) -> str:
-    """Replace only the known loopback anonymous TCP module with cookie auth."""
-    lines = source.splitlines()
+    """Build the Native Termux profile and replace its known loopback listener."""
+    lines = _termux_audio_profile(source).splitlines()
     module_lines = [(index, line) for index, line in enumerate(lines)
                     if _TCP_MODULE.match(line)]
     secure = ("load-module module-native-protocol-tcp "
@@ -373,6 +400,11 @@ def start() -> dict[str, object]:
         env.pop("PULSE_SERVER", None)
         env.pop("PULSE_COOKIE", None)
         env.pop("PULSE_RUNTIME_PATH", None)
+        # The server is a headless Native Termux service; do not inherit an
+        # X11 or session-bus context that triggers desktop-only module autoload.
+        env.pop("DISPLAY", None)
+        env.pop("DBUS_SESSION_BUS_ADDRESS", None)
+        env.pop("DBUS_SYSTEM_BUS_ADDRESS", None)
         command = [str(paths["pulseaudio"]), "--daemonize=no", "--exit-idle-time=-1",
                    "-n", "--file", str(paths["config"])]
         try:

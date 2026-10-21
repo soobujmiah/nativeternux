@@ -9,6 +9,7 @@ from pathlib import Path
 import stat
 import subprocess
 import sys
+import shutil
 
 PREFIX = "/data/data/com.termux/files/usr"
 HOME = os.environ.get("HOME", "")
@@ -46,12 +47,21 @@ try:
         raise SystemExit(2)
     fcntl.flock(lock_fd, fcntl.LOCK_EX)
     tx = Path(HOME) / "ternuxx" / "tx"
-    if not tx.is_file() or not os.access(tx, os.X_OK):
+    bash = Path(PREFIX) / "bin" / "bash"
+    if not bash.is_file():
+        # Allows isolated host fixtures; real Termux uses the fixed prefix path.
+        fallback = shutil.which("bash")
+        bash = Path(fallback) if fallback else bash
+    if (not tx.is_file() or not os.access(tx, os.X_OK)
+            or not bash.is_file() or not os.access(bash, os.X_OK)):
         result = {"outcome": "cli_unavailable", "started_by_script": False}
     else:
         try:
+            # The checkout entrypoint has a /usr/bin/env shebang, which is
+            # absent on Native Termux. Bash can interpret the shell script,
+            # but subprocess execve cannot apply Bash's interactive fallback.
             completed = subprocess.run(
-                [str(tx), "mng", "cron", "start", "--yes"],
+                [str(bash), str(tx), "mng", "cron", "start", "--yes"],
                 cwd=str(tx.parent), env=os.environ.copy(), stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=20,
                 check=False,

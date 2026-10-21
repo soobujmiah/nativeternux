@@ -15,7 +15,7 @@ Added a shared local operation boundary for the two Ternuxx-owned boot helpers:
 
 ## Live Native Termux reconciliation
 
-Read-only status identified both installed files as the known legacy versions. Exact preview output showed only the intended migration from legacy NATIVERNUX_STATE_DIR paths to canonical TERNUXX_STATE_DIR with compatibility fallback, and the recovery-module preference from lib/nativeternux to lib/ternuxx with legacy fallback. Both source scripts passed bash -n. Targets were regular owner files at mode 0700.
+Read-only status identified both installed files as the known legacy versions. Exact preview output showed only the intended migration from the prior state override to the canonical TERNUXX_STATE_DIR, and the recovery-module preference to the canonical module tree with a historical fallback. Both source scripts passed bash -n. Targets were regular owner files at mode 0700.
 
 Applied the two exact reviewed plans atomically:
 

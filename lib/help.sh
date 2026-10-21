@@ -362,6 +362,12 @@ tx proot setup adopt-preview --user NAME
 tx proot setup adopt --user NAME --yes --plan-id PLAN_ID
 tx proot setup fresh-preview --user NAME
 tx proot setup fresh-install --user NAME --yes --plan-id PLAN_ID
+tx proot legacy-cli preview
+tx proot legacy-cli remove --plan-id PLAN_ID
+tx proot legacy-cli rollback --backup-id BACKUP_ID
+tx proot legacy-cli host preview
+tx proot legacy-cli host remove --plan-id PLAN_ID
+tx proot legacy-cli host rollback --backup-id BACKUP_ID
 
 --backend is the expected renderer class for this read-only probe; it does not switch drivers.
 
@@ -372,7 +378,7 @@ reinstall or rootfs replacement is part of this route. Status lists installed
 distributions. Verify enters Debian only to run a fixed Ternuxx read-only
 display/audio/renderer probe. The rootfs source resolves the unique ordinary
 non-root account from Debian passwd; unsafe paths or ambiguous accounts fail
-closed. The Ternuxx-owned setup profile and read-only adoption record are managed with
+closed. The old Debian guest and Native Ternux CLI command files were retired after exact hash-bound previews. Their private snapshots were later purged at the owner's request; rollback is no longer available for those retired files. No PRoot signal or rootfs replacement occurred. The Ternuxx replacement is `tx proot verify` and the shared guest diagnostics. A prior-name recovery compatibility path was retained at that checkpoint. The Ternuxx-owned setup profile and read-only adoption record are managed with
 tx proot setup. Adoption writes only a private Native Ternuxx state record; it
 does not change guest files, packages, services, or desktop lifecycle. Fresh provisioning creates the default `debian` alias only when it is absent and never
 changes the existing `debian` rootfs. Preview lists package groups, image tag,

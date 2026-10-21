@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  Ternuxx — Native Termux workstation CLI
+#  Ternuxx — Native Termux-first workstation CLI
 #
-#  Native Termux host manager for the coordinated Debian PRoot workstation.
-#  Host graphics, audio, and acceleration are handed to PRoot through
-#  explicit, verified environment and device boundaries.
+#  Native Termux is the self-sufficient core. Debian PRoot is an optional
+#  guest provider used only by explicitly selected guest operations.
 #
 #  Copyright (c) 2026 Sobuj Miah (@soobujmiah)
 #  License: not yet selected; see README.md.

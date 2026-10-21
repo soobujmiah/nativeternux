@@ -120,7 +120,7 @@ done
 [ "$ready" -eq 1 ] || { echo "Xephyr :2 did not become ready; see $state/xephyr.log" >&2; exit 1; }
 renderer="$(DISPLAY=:2 es2_info 2>/dev/null | sed -n 's/^GL_RENDERER: //p' | head -n 1 || true)"
 printf 'Nested Debian XFCE display :2 is ready; GLES context renderer (draw/presentation not verified): %s\n' "${renderer:-unreported}"
-DISPLAY=:2 dbus-launch --exit-with-session startxfce4 &
+DISPLAY=:2 dbus-launch --exit-with-session xfce4-session &
 xfce_pid=$!
 wait "$xfce_pid"
 GUEST

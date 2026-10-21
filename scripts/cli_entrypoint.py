@@ -109,7 +109,7 @@ def preview(*, prefix: str | os.PathLike[str]) -> dict[str, object]:
         "old": original.decode("utf-8", "replace").splitlines() if original is not None else [],
         "new": desired.decode("utf-8").splitlines(),
     }
-    record["impact"] = "Atomically replaces only PREFIX/bin/tx. Keeps the existing nativeternux executable and libraries untouched; rollback restores the exact prior entrypoint."
+    record["impact"] = "Atomically replaces only PREFIX/bin/tx; rollback restores the exact prior entrypoint."
     return record
 
 

@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 import errno
+import ipaddress
 import os
+import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -158,6 +161,94 @@ class SshDiagnosticsTests(unittest.TestCase):
         self.assertFalse(report["safety"]["credential_files_read"])
         self.assertEqual(len(calls), 5)
 
+    def test_netlink_sock_diag_decodes_tcp_listeners_and_complete_dump(self) -> None:
+        class FakeNetlinkSocket:
+            def __init__(self, family: int) -> None:
+                self.family = family
+                self.packet: bytes | None = None
+                self.closed = False
+
+            def settimeout(self, _timeout: float) -> None:
+                pass
+
+            def sendto(self, request: bytes, _address: tuple[int, int]) -> int:
+                length, message_type, flags, seq, _pid = struct.unpack_from("=IHHII", request)
+                self.assert_request(length, message_type, flags, request[16:])
+                self.sequence = seq
+                return len(request)
+
+            def assert_request(self, length: int, message_type: int, flags: int, body: bytes) -> None:
+                self_outer.assertEqual(length, 72)
+                self_outer.assertEqual(message_type, 20)
+                self_outer.assertEqual(flags, 0x301)
+                family, protocol, ext, pad, states = struct.unpack_from("=BBBBI", body)
+                self_outer.assertEqual(family, self.family)
+                self_outer.assertEqual(protocol, socket.IPPROTO_TCP)
+                self_outer.assertEqual((ext, pad), (0, 0))
+                self_outer.assertEqual(states, 1 << 10)
+                self_outer.assertEqual(len(body[8:]), 48)
+
+            def recvfrom(self, _size: int) -> tuple[bytes, tuple[int, int]]:
+                if self.packet is None:
+                    body = bytearray(72)
+                    body[0] = self.family
+                    body[1] = 10  # TCP_LISTEN
+                    struct.pack_into("!H", body, 4, 8023 if self.family == socket.AF_INET else 8022)
+                    address = ("127.0.0.1" if self.family == socket.AF_INET else "::1")
+                    packed = ipaddress.ip_address(address).packed
+                    body[8:8 + len(packed)] = packed
+                    struct.pack_into("=I", body, 68, 9876 if self.family == socket.AF_INET else 9877)
+                    diag = struct.pack("=IHHII", 88, 20, 2, self.sequence, 0) + body
+                    done = struct.pack("=IHHII", 16, 3, 2, self.sequence, 0)
+                    self.packet = diag + done
+                packet, self.packet = self.packet, b""
+                return packet, (0, 0)
+
+            def close(self) -> None:
+                self.closed = True
+
+        self_outer = self
+        channels: list[FakeNetlinkSocket] = []
+
+        def factory(_family: int, _kind: int, _protocol: int) -> FakeNetlinkSocket:
+            self.assertEqual(_family, socket.AF_NETLINK)
+            channel = FakeNetlinkSocket(socket.AF_INET if not channels else socket.AF_INET6)
+            channels.append(channel)
+            return channel
+
+        rows, status = ssh_diagnostics._netlink_tcp_listener_sockets(factory)
+        self.assertEqual(status, "complete")
+        self.assertEqual(rows, [
+            {"address": "127.0.0.1", "port": 8023, "inode": "9876"},
+            {"address": "::1", "port": 8022, "inode": "9877"},
+        ])
+        self.assertEqual(len(channels), 2)
+        self.assertTrue(all(channel.closed for channel in channels))
+
+    def test_netlink_sock_diag_permission_denial_stays_unknown(self) -> None:
+        class DeniedSocket:
+            def settimeout(self, _timeout: float) -> None:
+                pass
+
+            def sendto(self, _request: bytes, _address: tuple[int, int]) -> int:
+                raise PermissionError(errno.EPERM, "permission denied")
+
+            def close(self) -> None:
+                pass
+
+        rows, status = ssh_diagnostics._netlink_tcp_listener_sockets(
+            lambda *_args: DeniedSocket())
+        self.assertEqual(rows, [])
+        self.assertEqual(status, "permission_denied")
+
+    def test_netlink_listener_fallback_supersedes_partial_procfs_snapshot(self) -> None:
+        (self.proc / "net/tcp6").unlink()
+        fallback = [{"address": "127.0.0.1", "port": 8023, "inode": "444"}]
+        rows, status = ssh_diagnostics._read_tcp_listener_sockets(
+            self.proc, netlink_reader=lambda: (fallback, "complete"))
+        self.assertEqual(status, "complete")
+        self.assertEqual(rows, fallback)
+
     def test_runit_listener_correlation_requires_process_tree_and_socket_inode(self) -> None:
         run = self.proc / "10"
         child = self.proc / "11"
@@ -200,7 +291,9 @@ class SshDiagnosticsTests(unittest.TestCase):
             (directory / "cmdline").write_bytes(b"\0".join(item.encode() for item in argv) + b"\0")
 
         write_process(20, "runsv", 1, 200, ["runsv", "ternuxx-sshd"])
-        write_process(21, "bash", 20, 201, ["/data/data/com.termux/files/usr/bin/bash", "./run"])
+        bash_path = "/data/data/com.termux/files/usr/bin/bash"
+        write_process(21, "run", 20, 201, [bash_path, "./run"])
+        (self.proc / "21/exe").symlink_to(bash_path)
         config = self.home / ".config/ternuxx/sshd_recovery.conf"
         sshd_path = "/synthetic/sshd"
         write_process(22, "sshd", 21, 202, [sshd_path, "-D", "-e", "-f", str(config)])
@@ -208,6 +301,12 @@ class SshDiagnosticsTests(unittest.TestCase):
         result = ssh_diagnostics._managed_service_process_identity(
             self.proc, 21, service_dir, sshd_path, config)
         self.assertEqual(result, "verified")
+        (self.proc / "21/exe").unlink()
+        (self.proc / "21/exe").symlink_to("/synthetic/not-bash")
+        self.assertEqual(ssh_diagnostics._managed_service_process_identity(
+            self.proc, 21, service_dir, sshd_path, config), "not_verified")
+        (self.proc / "21/exe").unlink()
+        (self.proc / "21/exe").symlink_to(bash_path)
         (self.proc / "20/cwd").unlink()
         (self.proc / "20/cwd").symlink_to(self.prefix, target_is_directory=True)
         self.assertEqual(ssh_diagnostics._managed_service_process_identity(
@@ -257,7 +356,8 @@ class SshDiagnosticsTests(unittest.TestCase):
                 raise PermissionError(errno.EACCES, "permission denied")
             return original(path, *args, **kwargs)
         with patch.object(Path, "read_text", deny_network_tables):
-            sockets, status = ssh_diagnostics._read_tcp_listener_sockets(self.proc)
+            sockets, status = ssh_diagnostics._read_tcp_listener_sockets(
+                self.proc, netlink_reader=lambda: ([], "permission_denied"))
         self.assertEqual(sockets, [])
         self.assertEqual(status, "permission_denied")
 
@@ -265,6 +365,7 @@ class SshDiagnosticsTests(unittest.TestCase):
         report = ssh_diagnostics.inspect_native(
             prefix=self.prefix, home=self.home, proc_root=self.root / "missing-proc",
             which=lambda _command: None,
+            netlink_reader=lambda: ([], "unavailable"),
         )
         checks = report["checks"]
         self.assertFalse(checks["sshd_available"])

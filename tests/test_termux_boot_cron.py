@@ -6,6 +6,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
@@ -62,6 +63,33 @@ class TermuxBootCronTest(unittest.TestCase):
         repeated = termux_boot_cron.preview("enable", home=self.home, boot_inspector=self.app_installed)
         self.assertFalse(repeated["requires_confirmation"])
         self.assertFalse(repeated["changes"])
+
+    def test_known_legacy_script_replacement_requires_preview_and_keeps_private_snapshot(self):
+        import hashlib
+        self.boot.mkdir(parents=True)
+        target = self.boot / termux_boot_cron.SCRIPT_NAME
+        legacy = b"recognized previous Ternuxx entrypoint\\n"
+        target.write_bytes(legacy)
+        target.chmod(0o700)
+        digest = hashlib.sha256(legacy).hexdigest()
+        with patch.object(termux_boot_cron, "KNOWN_LEGACY_SCRIPT_HASHES", {digest}):
+            plan = termux_boot_cron.preview("enable", home=self.home, boot_inspector=self.app_installed)
+            self.assertEqual(plan["script_identity"], "known-legacy")
+            self.assertEqual(plan["changes"][0]["operation"], "replace")
+            self.assertTrue(plan["requires_confirmation"])
+            self.assertEqual(target.read_bytes(), legacy)
+            with self.assertRaisesRegex(termux_boot_cron.BootIntegrationError, "stale"):
+                termux_boot_cron.apply("enable", home=self.home, state_dir=self.state,
+                    confirmed=True, plan_id="wrong", boot_inspector=self.app_installed)
+            self.assertFalse((self.state / "cron/boot/snapshots").exists())
+            applied = termux_boot_cron.apply("enable", home=self.home, state_dir=self.state,
+                confirmed=True, plan_id=plan["plan_id"], boot_inspector=self.app_installed)
+            snapshot = self.home / applied["rollback_snapshot"]["path"]
+            self.assertEqual(snapshot.read_bytes(), legacy)
+            self.assertEqual(snapshot.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(applied["rollback_snapshot"]["sha256"], digest)
+        self.assertEqual(target.read_bytes(), termux_boot_cron.script_bytes())
+        self.assertEqual(target.stat().st_mode & 0o777, 0o700)
 
     def test_unknown_package_visibility_is_not_reported_absent(self):
         result = termux_boot_cron.validate(home=self.home, state_dir=self.state,
@@ -122,6 +150,11 @@ class TermuxBootCronTest(unittest.TestCase):
         self.assertNotIn('"proot"', text)
         self.assertNotIn('"desktop"', text)
 
+
+    def test_boot_script_uses_termux_bash_for_checkout_entrypoint(self):
+        source = (ROOT / "scripts/termux-boot" / termux_boot_cron.SCRIPT_NAME).read_text()
+        self.assertIn('bash = Path(PREFIX) / "bin" / "bash"', source)
+        self.assertIn('[str(bash), str(tx), "mng", "cron", "start", "--yes"]', source)
 
     def test_repository_boot_script_is_same_as_manager_template(self):
         source = ROOT / "scripts/termux-boot" / termux_boot_cron.SCRIPT_NAME
@@ -243,8 +276,7 @@ class BootStateContainmentTests(unittest.TestCase):
         shutil.copyfile(ROOT / "lib/boot_state_path.py",
                         self.home / "ternuxx/lib/boot_state_path.py")
         tx = self.home / "ternuxx" / "tx"
-        tx.write_text("#!" + sys.executable + "\nimport json\nprint(json.dumps({"
-            + "'ok': True, 'data': {'started': True, 'status': {'instance_id': 'fixture'}}}))\n")
+        tx.write_text("#!/bin/sh\nprintf '%s\\n' '{\"ok\":true,\"data\":{\"started\":true,\"status\":{\"instance_id\":\"fixture\"}}}'\n")
         tx.chmod(0o700)
         script = ROOT / "scripts/termux-boot" / termux_boot_cron.SCRIPT_NAME
         env = dict(os.environ)

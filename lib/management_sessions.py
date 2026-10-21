@@ -45,6 +45,7 @@ READ_ONLY_OPERATIONS = frozenset({
     "cron.jobs.show", "cron.jobs.validate", "cron.jobs.next_runs", "cron.executions.list", "cron.executions.show", "desktop.status", "desktop.monitor.status", "doctor.report",
     "ssh.inspect", "ssh.service.deploy.rollback.preview", "native.ssh.status", "proot.status", "proot.guest.verify",
     "proot.shortcuts.list", "proot.shortcuts.preview",
+    "terminal.broker.status",
     "remote.access.preview", "boot.status", "boot.profile.status", "boot.helpers.status",
     "boot.profile.preview", "boot.cron.status", "boot.cron.validate", "boot.cron.preview", "backup.list", "backup.inspect", "restore.preview",
     "recovery.status", "recovery.inspect", "recovery.rollback.preview",

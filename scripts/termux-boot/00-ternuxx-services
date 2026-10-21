@@ -6,11 +6,10 @@ umask 077
 PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
 HOME="${HOME:?Termux HOME is required}"
 TERMUX_VERSION="${TERMUX_VERSION:-unknown}"
-TERNUXX_STATE_DIR="${TERNUXX_STATE_DIR:-${NATIVERNUX_STATE_DIR:-$HOME/.local/share/ternuxx}}"
+TERNUXX_STATE_DIR="${TERNUXX_STATE_DIR:-$HOME/.local/share/ternuxx}"
 LOG_DIR="$TERNUXX_STATE_DIR/continuity/boot-logs"
 LOG_FILE="$LOG_DIR/ternuxx-services.log"
-NATIVERNUX_STATE_DIR="$TERNUXX_STATE_DIR"
-export PREFIX HOME TERMUX_VERSION TERNUXX_STATE_DIR NATIVERNUX_STATE_DIR
+export PREFIX HOME TERMUX_VERSION TERNUXX_STATE_DIR
 export PATH="$PREFIX/bin:$PATH"
 
 mkdir -p "$LOG_DIR" || exit 1
