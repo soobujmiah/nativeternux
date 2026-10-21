@@ -51,3 +51,9 @@
 ## Remaining qualification
 
 Remaining product gaps include SSH key recovery/enrollment, SSH-specific startup controls, client-parity work for controls not implemented in a given frontend, and workload-bound Wake Lock controls. The GTK app is now live-installed and visually reviewed; the focused interface changes and the rest of the current repository suite pass in Native Termux. Do not generalize this completed app deployment into proof that every roadmap feature or frontend action is implemented.
+
+## Follow-up — prevent catalog operation inventory duplication
+
+- Traced the remaining Web duplicate to catalog-load output: the UI displayed the full catalog in the human-readable result pane and again in the collapsed technical API response. This exposed supported_operations and planned_operations even though resource-specific action buttons already represented what the UI could do.
+- Catalog load now renders only a concise resource/category count in the result area and a short confirmation in the technical panel. The original catalog remains in memory for action gating and resource selection; API behavior and available controls are unchanged.
+- The Web server is on-demand and was not running during this edit (127.0.0.1:8765 refused the connection). The Native checkout is the server's source path, so the updated page will be served when tx web starts next.
