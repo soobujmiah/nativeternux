@@ -1,0 +1,7 @@
+event_id: commit-16a682074b58-2ae197d336d369ce
+repository: soobujmiah/ternuxx
+commit: 16a682074b582c736d8b86da1a3e6be99de045a0
+kind: commit
+occurred_at: '2026-10-21T22:09:05Z'
+status: completed
+summary: 'ui: simplify supported capability details'
