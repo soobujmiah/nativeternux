@@ -78,58 +78,51 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                                       "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300}),
         ])
 
-    def test_proot_interactive_login_preview_confirms_then_attaches_outside_curses(self) -> None:
+    def test_proot_interactive_login_uses_broker_and_restores_curses(self) -> None:
         inventory = {"ok": True, "data": {"sessions": []}}
         plan_id = "plan-" + "e" * 64
-        preview = {"ok": True, "data": {"profile": "debian-interactive",
-                    "mode": "foreground-tty", "impact": "Attached login", "plan_id": plan_id}}
-        applied = {"ok": True, "data": {"profile": "debian-interactive", "state": "stopped"}}
+        preview = {"ok": True, "plan": {"profile": "debian-interactive",
+                    "mode": "foreground-tty", "impact": "Fixed login", "plan_id": plan_id}}
+        lease = {"session_id": "proot-" + "c" * 32, "generation": 7,
+                 "attachment_id": "attach-" + "d" * 32}
+        applied = {"ok": True, "result": lease}
         events = []
         screen = mock.Mock()
-
-        def call(operation, args=None):
-            events.append(("call", operation))
-            if operation == "proot.sessions.list":
-                return inventory
-            if operation == "proot.start.preview":
-                return preview
-            if operation == "proot.start":
-                self.assertEqual(events[-2:], [("endwin", None), ("call", "proot.start")])
-                return applied
-            self.fail(f"unexpected operation: {operation}")
-
+        client = mock.Mock()
+        client.request.side_effect = lambda operation, **kwargs: (
+            events.append(("broker", operation)) or
+            (preview if operation == "terminal.start.preview" else applied))
         with mock.patch.object(terminal_ui, "_prompt", side_effect=["start-login", "yes"]), \
-             mock.patch.object(terminal_ui, "_call", side_effect=call), \
+             mock.patch.object(terminal_ui, "_call", return_value=inventory), \
+             mock.patch.object(terminal_ui.terminal_cli, "_client", return_value=client), \
+             mock.patch.object(terminal_ui.terminal_cli, "attach", side_effect=lambda *a, **k: events.append(("attach", a, k))), \
              mock.patch.object(terminal_ui, "_show_details") as details, \
              mock.patch.object(terminal_ui.curses, "def_prog_mode", side_effect=lambda: events.append(("def_prog_mode", None))), \
              mock.patch.object(terminal_ui.curses, "endwin", side_effect=lambda: events.append(("endwin", None))), \
              mock.patch.object(terminal_ui.curses, "reset_prog_mode", side_effect=lambda: events.append(("reset_prog_mode", None))):
             result = terminal_ui._manage_proot_sessions(screen)
-
-        self.assertIs(result, applied)
-        details.assert_called_once_with(screen, preview)
-        self.assertEqual(events, [
-            ("call", "proot.sessions.list"),
-            ("call", "proot.start.preview"),
-            ("def_prog_mode", None),
-            ("endwin", None),
-            ("call", "proot.start"),
-            ("reset_prog_mode", None),
-        ])
+        self.assertTrue(result["ok"])
+        details.assert_called_once_with(screen, {"ok": True, "data": preview["plan"]})
+        self.assertEqual([event[0] for event in events], ["broker", "def_prog_mode", "endwin", "broker", "attach", "reset_prog_mode"])
+        self.assertEqual(events[0], ("broker", "terminal.start.preview"))
+        self.assertEqual(events[3], ("broker", "terminal.start"))
+        self.assertEqual(events[4][2]["lease"], lease)
         self.assertEqual(screen.clear.call_count, 1)
         self.assertEqual(screen.refresh.call_count, 1)
 
-    def test_proot_interactive_login_refuses_invalid_preview_before_terminal_handoff(self) -> None:
+    def test_proot_interactive_login_refuses_invalid_broker_preview(self) -> None:
         inventory = {"ok": True, "data": {"sessions": []}}
-        preview = {"ok": True, "data": {"profile": "debian-interactive",
-                    "mode": "foreground-tty", "plan_id": "invalid"}}
+        client = mock.Mock()
+        client.request.return_value = {"ok": True, "plan": {"profile": "debian-interactive", "plan_id": "invalid"}}
         with mock.patch.object(terminal_ui, "_prompt", return_value="start-login"), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview]) as call, \
+             mock.patch.object(terminal_ui, "_call", return_value=inventory) as call, \
+             mock.patch.object(terminal_ui.terminal_cli, "_client", return_value=client), \
              mock.patch.object(terminal_ui.curses, "endwin") as endwin:
             result = terminal_ui._manage_proot_sessions(mock.Mock())
         self.assertEqual(result["error"]["code"], "invalid_session_preview")
         endwin.assert_not_called()
-        self.assertEqual(call.call_count, 2)
+        call.assert_called_once_with("proot.sessions.list")
+        client.request.assert_called_once_with("terminal.start.preview")
 
     def test_proot_session_stop_requires_verified_inventory_and_exact_plan(self) -> None:
         session_id = "proot-" + "b" * 32

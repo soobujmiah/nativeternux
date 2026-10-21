@@ -702,10 +702,14 @@ class TerminalPTYRuntime:
 
     def release_after_stop(self, session_id: str) -> None:
         with self._lock:
-            process = self._require_process(session_id)
+            process = self._process
+            if (process is None or process.closed
+                    or process.record.get("session_id") != session_id):
+                raise BrokerError("terminal PRoot session is not owned by this broker")
             self._close_process(process)
             self._process = None
             self._thread = None
+        self._detach_process(process)
 
     def status(self) -> str:
         with self._lock:

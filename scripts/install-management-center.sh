@@ -8,7 +8,7 @@ prefix="${PREFIX:-}"
 command -v clang >/dev/null && command -v pkg-config >/dev/null && command -v sha256sum >/dev/null || {
   printf 'Build requirements missing: clang, pkg-config, and sha256sum are required.\n' >&2; exit 2;
 }
-pkg-config --exists gtk4 || { printf 'GTK4 development metadata is unavailable.\n' >&2; exit 2; }
+pkg-config --exists gtk4 vte-2.91-gtk4 || { printf 'GTK4 and VTE4 development metadata are required.\n' >&2; exit 2; }
 install_dir="$prefix/libexec/ternuxx"
 bin_dir="$prefix/bin"
 target_binary="$install_dir/management-center"
@@ -38,7 +38,7 @@ if [ -e "$target_binary" ] || [ -e "$target_launcher" ] || [ -e "$identity" ]; t
   }
 fi
 clang -O2 -Wall -Wextra "$repo_dir/apps/management-center/management-center.c" \
-  -o "$tmp_binary" $(pkg-config --cflags --libs gtk4)
+  -o "$tmp_binary" $(pkg-config --cflags --libs gtk4 vte-2.91-gtk4)
 chmod 755 "$tmp_binary"
 cat > "$tmp_launcher" <<'LAUNCHER'
 #!/data/data/com.termux/files/usr/bin/bash

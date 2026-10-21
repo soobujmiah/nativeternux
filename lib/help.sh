@@ -21,10 +21,11 @@ Quick launch:
   tx start           Start the native Termux:X11/XFCE desktop
   tx tui             Interactive terminal management
   tx web             Open the shared Web UI in Android browser
+  tx terminal        Run or connect to the optional shared PRoot terminal broker
 
 Commands by task:
   Desktop:       start, stop, restart, status, gui, tui, web
-  Debian PRoot:  db, pgui, proot, app, audio, virgl
+  Debian PRoot:  db, pgui, proot, app, audio, virgl, terminal
   Graphics:      graphics, info, check, doctor
   Management:    mng (catalog, app shortcuts, Cron, timezone, graphics,
                  PRoot sessions, boot, GTK center, HTTP service)
@@ -72,6 +73,23 @@ PRoot Apps menu from installed guest applications. Use `tx help mng` and
 `tx help app` for detailed options.
 EOF
       ;;
+    terminal)
+      cat <<'EOF'
+tx terminal serve — Run the Native Termux terminal broker in the foreground
+tx terminal status — Read the optional broker status
+tx terminal start — Preview, confirm, and attach to the fixed Debian login
+tx terminal attach SESSION_ID — Attach to one Ternuxx-owned session
+tx terminal close SESSION_ID — Preview and confirm exact-session stop
+
+Start the broker in a Native Termux terminal before connecting clients. The
+broker accepts only the fixed debian-interactive profile, private Unix socket,
+same-UID peer, bounded terminal bytes, and exact preview-bound session actions.
+The attach key Ctrl-] detaches the client without closing the guest. Broker
+shutdown closes its PTY and records unknown state; it never signals the guest.
+PRoot remains optional and no current guest is adopted by this command.
+EOF
+      ;;
+
     db)
       cat <<'EOF'
 tx db [--user NAME|--root] [--distro NAME] [--display :N] [--backend zink|virgl] [-- COMMAND...]
@@ -234,6 +252,23 @@ endpoint. Ctrl-C in the launching terminal closes only the nested desktop.
 Individual Debian apps remain available through `tx mng app launch` shortcuts.
 EOF
       ;;
+    terminal)
+      cat <<'EOF'
+tx terminal serve — Run the Native Termux terminal broker in the foreground
+tx terminal status — Read the optional broker status
+tx terminal start — Preview, confirm, and attach to the fixed Debian login
+tx terminal attach SESSION_ID — Attach to one Ternuxx-owned session
+tx terminal close SESSION_ID — Preview and confirm exact-session stop
+
+Start the broker in a Native Termux terminal before connecting clients. The
+broker accepts only the fixed debian-interactive profile, private Unix socket,
+same-UID peer, bounded terminal bytes, and exact preview-bound session actions.
+The attach key Ctrl-] detaches the client without closing the guest. Broker
+shutdown closes its PTY and records unknown state; it never signals the guest.
+PRoot remains optional and no current guest is adopted by this command.
+EOF
+      ;;
+
     db)
       cat <<'EOF'
 tx db — Open a Debian PRoot shell (independent of any desktop)

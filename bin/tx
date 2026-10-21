@@ -107,6 +107,7 @@ _nt_dispatch() {
     virgl)                     lib_map="virgl" ;;
     graphics)                   lib_map="desktop" ;;
     db|gui)                    lib_map="launch" ;;
+    terminal)                  lib_map="terminal" ;;
     tui)                        lib_map="tui" ;;
     web)                        lib_map="management" ;;
     checkpoint)                lib_map="continuity" ;;

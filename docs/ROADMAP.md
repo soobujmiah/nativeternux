@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Wire a supervised broker to the fixed interactive PRoot PTY lifecycle, implement authenticated CLI/TUI/Web/GTK clients, then qualify on a disposable guest without altering the active rootfs.
+**Next action:** Add previewed persistent broker service wiring and authenticated Web terminal operations/renderer, then verify interactive attach end to end without touching the existing guest.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

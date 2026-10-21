@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native-first boundary and canonical Ternuxx identity audited; optional broker protocol bounded and tested, with production wiring and four client transports still open.
+Broker dispatcher, CLI/TUI/GTK terminal paths and GTK visual corrections are implemented; foreground no-guest status smoke check passed, while persistent service and Web terminal client remain open.
 
-**Next action:** Wire a supervised broker to the fixed interactive PRoot PTY lifecycle, implement authenticated CLI/TUI/Web/GTK clients, then qualify on a disposable guest without altering the active rootfs.
+**Next action:** Add previewed persistent broker service wiring and authenticated Web terminal operations/renderer, then verify interactive attach end to end without touching the existing guest.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

@@ -15,6 +15,8 @@ import management_service
 import management_sessions
 import management_presentation
 import proot_shortcuts
+import terminal_broker
+import terminal_cli
 
 
 BRANDING_TAGLINE = "Workstation in your pocket — by Sobuj Miah"
@@ -131,23 +133,34 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
         return _call("proot.start", {"profile": "isolated-probe", "confirmed": True,
                                       "plan_id": plan_id, "timeout_seconds": 300})
     if choice == "start-login":
-        preview = _call("proot.start.preview", {"profile": "debian-interactive"})
-        if not preview.get("ok"):
-            return preview
-        plan = preview.get("data", {})
+        client = terminal_cli._client()
+        try:
+            response = terminal_cli._ok(client.request("terminal.start.preview"))
+        except (OSError, terminal_broker.BrokerError):
+            return {"ok": False, "error": {"code": "terminal_broker_unavailable"}}
+        plan = response.get("plan", {})
         plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
         if (not isinstance(plan, dict) or plan.get("profile") != "debian-interactive"
                 or plan.get("mode") != "foreground-tty"
                 or not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
             return {"ok": False, "error": {"code": "invalid_session_preview"}}
-        _show_details(screen, preview)
+        _show_details(screen, {"ok": True, "data": plan})
         if _prompt(screen, "Live login unqualified; start attached Debian? Type yes").lower() != "yes":
             return {"ok": False, "error": {"code": "cancelled"}}
         curses.def_prog_mode()
         curses.endwin()
         try:
-            return _call("proot.start", {"profile": "debian-interactive", "confirmed": True,
-                                          "plan_id": plan_id, "timeout_seconds": 1800})
+            started = terminal_cli._ok(client.request("terminal.start", args={
+                "confirmed": True, "plan_id": plan_id}))
+            lease = started.get("result")
+            if not isinstance(lease, dict):
+                return {"ok": False, "error": {"code": "invalid_terminal_start"}}
+            terminal_cli.attach(lease["session_id"], client=client, lease=lease)
+            return {"ok": True, "data": {"session_id": lease["session_id"],
+                                          "state": "detached_or_closed"}}
+        except (OSError, terminal_broker.BrokerError) as exc:
+            return {"ok": False, "error": {"code": "terminal_attach_failed",
+                                              "detail": str(exc)}}
         finally:
             curses.reset_prog_mode()
             screen.clear()

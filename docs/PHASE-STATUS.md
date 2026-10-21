@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Native-first boundary and canonical Ternuxx identity audited; optional broker protocol bounded and tested, with production wiring and four client transports still open.
+Broker dispatcher, CLI/TUI/GTK terminal paths and GTK visual corrections are implemented; foreground no-guest status smoke check passed, while persistent service and Web terminal client remain open.
 
-**Next action:** Wire a supervised broker to the fixed interactive PRoot PTY lifecycle, implement authenticated CLI/TUI/Web/GTK clients, then qualify on a disposable guest without altering the active rootfs.
+**Next action:** Add previewed persistent broker service wiring and authenticated Web terminal operations/renderer, then verify interactive attach end to end without touching the existing guest.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -86,6 +86,7 @@ Evidence:
 - [docs/evidence/2026-10-22-p0-p4-phase-audit.md](evidence/2026-10-22-p0-p4-phase-audit.md)
 - [docs/evidence/2026-10-22-p4-legacy-cli-and-runtime-recheck.md](evidence/2026-10-22-p4-legacy-cli-and-runtime-recheck.md)
 - [docs/evidence/2026-10-22-canonical-name-and-broker-audit.md](evidence/2026-10-22-canonical-name-and-broker-audit.md)
+- [docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md](evidence/2026-10-22-p4-terminal-client-and-gui-review.md)
 
 ## P5 — Distro and display compatibility profiles
 
