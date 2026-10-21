@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Preview-first Native Runit broker wiring is installed and source-matched; authenticated Web terminal transport/renderer is implemented and focused tests pass. Broker is live without a guest; Web server/browser attach and a managed interactive guest remain unqualified.
+Preview-first Native broker service and CLI/TUI/Web/GTK terminal paths are implemented; authenticated Web was visually reviewed and exposed a responsive layout fix, but post-fix visual login and disposable managed guest attach remain unqualified.
 
-**Next action:** Visually review the Web terminal in a browser, then verify a full managed interactive attach using a disposable Ternuxx test guest; keep the existing tx db guest untouched.
+**Next action:** Repeat authenticated Firefox visual review of the patched Web UI, then verify full managed interactive attach across CLI, TUI, Web, and GTK using a disposable Ternuxx guest; keep the existing tx db guest untouched.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)

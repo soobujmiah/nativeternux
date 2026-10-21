@@ -313,12 +313,11 @@ fallback. Press Ctrl-C to stop. The Web client uses the shared management API
 with scoped reads, confirmed native desktop lifecycle, graphics verification and
 Native backend selection, monitoring-policy configuration, managed SSH 8023
 preview/confirmation, named PRoot app launch, single shortcut changes, and Cron
-status/job-list/history reads, PRoot session/recovery reads, and preview-confirmed
-fixed 300-second isolated probes with exact verified-owned stop. It does not expose
-every local CLI operation; interactive PRoot login, recovery reconciliation, boot
-changes, backup/restore, timezone mutation, Cron job mutation, and other recovery
-writes remain unavailable in the Web client. Resource details list shared
-supported and planned operations separately.
+status/job-list/history, PRoot session/recovery reads, preview-confirmed isolated
+probes, and the shared broker-backed Debian terminal. Terminal start and close
+require a fresh exact plan; attach uses a short-lived, single-use channel. Boot
+changes, backup/restore, timezone mutation, Cron job mutation, and recovery
+reconciliation remain CLI-only.
 EOF
       ;;
     tui)

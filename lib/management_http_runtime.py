@@ -96,7 +96,7 @@ def copy_bootstrap_secret(secret: str, *, executable: str = "termux-clipboard-se
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tx mng http serve",
-        description="Run the loopback management API; Web mode supports scoped desktop, managed SSH 8023, monitoring, graphics selection, named PRoot launch, and previewed shortcut management.",
+        description="Run the loopback management API; Web mode supports scoped management actions and the broker-backed Debian terminal.",
     )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--web", action="store_true", help="open the local browser UI")

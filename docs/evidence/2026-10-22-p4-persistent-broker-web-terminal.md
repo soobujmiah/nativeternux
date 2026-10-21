@@ -1,5 +1,7 @@
 # P4 persistent broker and Web terminal follow-up - 2026-10-22
 
+Phase: `P4`
+
 ## Scope and preservation
 
 This increment was implemented in the Native Termux checkout at `$HOME/ternuxx` through SSH port 8022 and is paired with the canonical repository worktree. P4 remains in progress. The owner-provisioned `tx db` guest was not entered, started, stopped, or changed; no Debian rootfs files were inspected or written. The running Ternuxx Management Center process was left running. The existing Native broker service is the only persistent service changed in this increment.
@@ -16,7 +18,7 @@ Added a lazy terminal dialog to the existing Management Web UI using locally ven
 
 A runtime import guard originally blocked the Web server after terminal scopes were introduced. It now explicitly accounts for the terminal preview, channel, attach, input, resize, output, detach, and close operations while retaining the existing narrow mutation allowlist. `python3 lib/management_http_runtime.py --help` now imports and renders successfully.
 
-## Verification
+## Evidence
 
 - Focused Native Termux tests: `tests.test_terminal_service_deployment`, `tests.test_management_http_runtime`, `tests.test_management_http_adapter`, and `tests.test_management_http_server` — 39/39 passed.
 - Python bytecode compilation passed for the changed runtime, adapter, server, service, broker, deployment, and CLI modules.
@@ -28,4 +30,4 @@ A runtime import guard originally blocked the Web server after terminal scopes w
 
 ## Remaining work and limits
 
-The Web HTTP listener was not started in this check, so browser rendering and live Web attach were not exercised. No browser or screenshot capture was available in this shell, so the Web terminal was not visually reviewed. The GTK Management Center visual review is recorded in [the earlier P4 GUI evidence](2026-10-22-p4-terminal-client-and-gui-review.md); its installed artifact identity currently matches the Native C source and desktop entry is present. A live managed interactive guest login was intentionally not started to preserve the existing guest and rootfs. P4 remains open until an owner-approved disposable/managed test guest can complete the interactive attach flow and the Web screen receives visual review. No P4 completion gate was claimed.\n
+Follow-up visual review: Native Firefox ESR was launched through the named PRoot app action on X11 `:1`, and the authenticated management page rendered. The authenticated 752x1124 capture exposed category labels overflowing into the resource pane; `lib/management_web_ui.html` now wraps category labels and uses a zero-minimum content column at the two-column breakpoint. The first authentication succeeded. A later reload rejected the one-time credential, so the post-fix authenticated visual result remains unverified. This does not verify a managed guest attach. The review is documented in `docs/architecture/INTERACTIVE-PROOT-TERMINALS.md`. The GTK Management Center visual review is recorded in [the earlier P4 GUI evidence](2026-10-22-p4-terminal-client-and-gui-review.md); its installed artifact identity matches the Native C source and desktop entry is present. A live managed interactive guest login was intentionally not started to preserve the existing guest and rootfs. P4 remains open until an owner-approved disposable/managed test guest can complete the interactive attach flow and the Web screen receives visual review. No P4 completion gate was claimed.\n
