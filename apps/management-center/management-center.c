@@ -237,32 +237,30 @@ static const gchar *status_label(const gchar *status) {
 }
 static void show_resource(Center *c, Resource *r) {
     if (!r) return;
-    const gchar *gui_actions = "Inspect shared service operations; no guided mutation is available in this window.";
+    const gchar *gui_actions = "Status and details only.";
     if (g_strcmp0(r->id, "native.desktop.session") == 0)
-        gui_actions = "Inspect status; start or stop the Native desktop with confirmation.";
+        gui_actions = "Check status · Start or stop desktop";
     else if (g_strcmp0(r->id, "graphics.native") == 0)
-        gui_actions = "Check status; verify OpenGL, GLES or Vulkan; select the Native backend for future starts.";
+        gui_actions = "Check status · Verify OpenGL, GLES, Vulkan · Select backend";
     else if (g_strcmp0(r->id, "graphics.debian") == 0)
-        gui_actions = "Check status; verify OpenGL, GLES or Vulkan (read-only guest inspection).";
+        gui_actions = "Check status · Verify OpenGL, GLES, Vulkan";
     else if (g_strcmp0(r->id, "network.ssh.managed-8023") == 0)
-        gui_actions = "Inspect status; preview and confirm start or stop of managed SSH on 127.0.0.1:8023. A login key is a client identity; keep its private half on the client and add only its public half to Termux. Keep password login enabled until a replacement key passes a real login test. Managed SSH currently starts through the installed Ternuxx boot service; separate SSH boot policy and credential controls are not available here yet.";
+        gui_actions = "Check status · Start or stop managed SSH (8023)";
     else if (g_strcmp0(r->id, "native.gui.activity-monitor") == 0)
-        gui_actions = "Inspect and save the Activity/focus monitoring policy.";
+        gui_actions = "Review or update monitoring settings";
     else if (g_strcmp0(r->id, "recovery.native-state") == 0)
-        gui_actions = "Inspect recorded operation history.";
+        gui_actions = "View operation history";
     else if (g_strcmp0(r->id, "automation.cron-registry") == 0)
-        gui_actions = "Inspect scheduler status, list saved Cron jobs, preview and confirm typed job changes, and read bounded execution history.";
+        gui_actions = "Manage scheduler and jobs · View run history";
     else if (g_strcmp0(r->id, "native.timezone") == 0)
-        gui_actions = "Inspect available timezone data and save the Ternuxx timezone preference.";
+        gui_actions = "View or change Ternuxx timezone";
     else if (g_strcmp0(r->id, "proot.debian.workloads") == 0)
-        gui_actions = "List PRoot app shortcuts, launch a named app, and preview/confirm add/remove for one Ternuxx-owned Native menu shortcut.";
+        gui_actions = "Launch apps · Manage shortcuts · Inspect sessions";
     gchar *availability = g_strdup(r->availability && *r->availability ? r->availability : "unknown");
     g_strdelimit(availability, "-_", ' ');
     availability[0] = g_ascii_toupper(availability[0]);
-    gchar *summary = g_strdup_printf("%s\n\nStatus: %s\nLive state: queried from the shared service\nAvailability: %s\n\n%s\n\nSupported controls:\n%s\n\nActions available in this GTK app:\n%s\n\nA supported operation may still need another client or permission not granted to this app.",
-        r->name, status_label(r->status), availability, r->description,
-        r->operations && *r->operations ? r->operations : "None",
-        gui_actions);
+    gchar *summary = g_strdup_printf("%s\n\nCapability: %s\nAvailability: %s\n\n%s\n\nIn this app\n%s",
+        r->name, status_label(r->status), availability, r->description, gui_actions);
     set_text(c, summary); g_free(summary); g_free(availability);
     g_free(c->selected_resource_id); c->selected_resource_id = g_strdup(r->id);
     gboolean graphics = g_str_has_prefix(r->id, "graphics.");

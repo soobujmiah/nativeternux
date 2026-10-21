@@ -30,6 +30,13 @@ def native_env(home: str) -> dict[str, str]:
 
 
 class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
+    def test_web_resource_detail_uses_actions_instead_of_duplicate_capability_lists(self) -> None:
+        ui = (ROOT / "lib" / "management_web_ui.html").read_text()
+        self.assertIn('id="resource-actions"', ui)
+        self.assertNotIn('Supported capabilities (', ui)
+        self.assertNotIn('Planned capabilities (', ui)
+        self.assertIn("Technical API response", ui)
+
     def test_bootstrap_secret_clipboard_copy_is_stdin_only_and_silent(self) -> None:
         completed = type("Completed", (), {"returncode": 0})()
         with patch.object(management_http_runtime.shutil, "which", return_value="/usr/bin/termux-clipboard-set"), \

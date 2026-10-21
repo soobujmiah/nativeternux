@@ -40,6 +40,14 @@
 - Installed `$PREFIX/share/applications/ternuxx-management-center.desktop`; `desktop-file-validate` passes after choosing one primary `Settings` category. The Ternuxx Management Center window was launched on the already-running Native X11 `:1` session and its window title/geometry were observed. A scoped screenshot review confirmed numbered navigation, human-readable status, and visible action controls. That review exposed one raw unavailable-status error; it was converted to readable text, focused tests rerun, and a second screenshot confirmed the raw code was gone. Temporary screenshots were removed from the device.
 - No PRoot filesystem, process lifecycle, SSH authentication/service, boot, or Wake Lock state was changed.
 
+## Follow-up — concise GTK capability details
+
+- Removed the duplicated raw supported-operation list, redundant live-state sentence, and repeated capability caveat from the GTK detail pane. It now shows capability level, availability, short description, and only the actions exposed by the GTK app; generic entries say “Status and details only.”
+- Shortened each action summary and confirmed the updated GTK binary rebuilt/installed through the ownership-checked installer. Native X11 `:1` relaunched it successfully. A second scoped screenshot confirmed the unsupported-status case now uses a human-readable message and does not expose an operation code.
+- GTK syntax compilation and installed artifact identity verification passed. The app remains open on the existing X11 session.
+- Applied the same cleanup to Web: removed expanded supported/planned operation inventories, left actual context-valid controls as buttons, and collapsed SSH recovery help. Raw diagnostics remain under the optional collapsed “Technical API response.”
+- Web-focused static/runtime test passed, inline JavaScript passed `node --check`, and the active loopback Web server returned HTTP 200 with the updated action container and without supported/planned capability inventories.
+
 ## Remaining qualification
 
 Remaining product gaps include SSH key recovery/enrollment, SSH-specific startup controls, client-parity work for controls not implemented in a given frontend, and workload-bound Wake Lock controls. The GTK app is now live-installed and visually reviewed; the focused interface changes and the rest of the current repository suite pass in Native Termux. Do not generalize this completed app deployment into proof that every roadmap feature or frontend action is implemented.
