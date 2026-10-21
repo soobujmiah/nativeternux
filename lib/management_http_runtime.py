@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import signal
 import shutil
 import subprocess
 import sys
 import threading
+import tempfile
+import time
 from collections.abc import Mapping
 
 import management_http_adapter
@@ -170,29 +174,146 @@ def choose_browser(requested: str, *, native: tuple[str, str] | None,
     return selected if selected in {value for value, _label in choices} else None
 
 
+def browser_x11_environment(env: Mapping[str, str]) -> dict[str, str]:
+    result_env = dict(env)
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    tx = os.path.join(root, "tx")
+    try:
+        result = subprocess.run(
+            [tx, "status", "--json"], env=result_env,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, check=False, timeout=5, close_fds=True)
+        state = json.loads(result.stdout) if result.returncode == 0 else {}
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return result_env
+    display = state.get("display")
+    if (state.get("status") == "running" and state.get("x11") == "live"
+            and isinstance(display, str) and re.fullmatch(r":[0-9]{1,2}", display)):
+        result_env["DISPLAY"] = display
+    return result_env
+
+
+def visible_browser_windows(*, env: Mapping[str, str], marker: str = "Firefox") -> list[str]:
+    xdotool = shutil.which("xdotool")
+    if not xdotool:
+        return []
+    try:
+        result = subprocess.run(
+            [xdotool, "search", "--onlyvisible", "--name", marker],
+            env=dict(env), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, check=False, timeout=3, close_fds=True)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    windows = []
+    for window_id in result.stdout.strip().splitlines():
+        if not window_id.isdigit():
+            continue
+        try:
+            title = subprocess.run([xdotool, "getwindowname", window_id],
+                                   env=dict(env), stdout=subprocess.PIPE,
+                                   stderr=subprocess.DEVNULL, text=True,
+                                   check=False, timeout=2, close_fds=True).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if ("Ternuxx Management Center" in title and marker in title
+                and "Close " + marker not in title):
+            windows.append(window_id)
+    return windows
+
+
+def fill_browser_secret(secret: str, *, env: Mapping[str, str],
+                        exclude_windows: set[str] | None = None,
+                        window_marker: str = "Firefox",
+                        timeout_seconds: float = 20.0) -> bool:
+    """Type the one-time code into the new local Web window over stdin only."""
+    xdotool = shutil.which("xdotool")
+    if not xdotool or not isinstance(secret, str) or not secret:
+        return False
+    excluded = exclude_windows or set()
+    deadline = time.monotonic() + timeout_seconds
+    window_id = ""
+    while time.monotonic() < deadline:
+        windows = [item for item in visible_browser_windows(
+            env=env, marker=window_marker) if item not in excluded]
+        if windows:
+            window_id = windows[-1]
+            break
+        time.sleep(0.25)
+    if not window_id:
+        return False
+    try:
+        activated = subprocess.run(
+            [xdotool, "windowactivate", "--sync", window_id],
+            env=dict(env), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            check=False, timeout=3, close_fds=True)
+        if activated.returncode != 0:
+            return False
+        typed = subprocess.run(
+            [xdotool, "type", "--clearmodifiers", "--window", window_id, "--file", "-"],
+            env=dict(env), input=secret, text=True, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, check=False, timeout=5, close_fds=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return typed.returncode == 0
+
+
 def open_browser(browser: str, url: str, *, env: Mapping[str, str],
-                 native: tuple[str, str] | None = None) -> bool:
+                 secret: str, native: tuple[str, str] | None = None) -> tuple[bool, bool]:
+    """Open a selected browser and safely fill its local bootstrap form when X11-backed."""
+    profile_host = ""
+    browser_env = browser_x11_environment(env)
+    excluded_windows: set[str] = set()
     try:
         if browser == "native" and native:
             command = [native[0], url]
         elif browser == "proot":
             root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            command = [os.path.join(env.get("PREFIX", EXPECTED_PREFIX), "bin", "bash"),
-                       os.path.join(root, "scripts", "proot-x11-app.sh"),
-                       "--", "firefox-esr", url]
+            tmp_root = env.get("TMPDIR") or os.path.join(
+                env.get("PREFIX", EXPECTED_PREFIX), "tmp")
+            os.makedirs(tmp_root, mode=0o700, exist_ok=True)
+            profile_host = tempfile.mkdtemp(prefix="ternuxx-web-firefox-", dir=tmp_root)
+            os.chmod(profile_host, 0o700)
+            profile_guest = "/tmp/" + os.path.basename(profile_host)
+            helper = os.path.join(root, "scripts", "proot-x11-app.sh")
+            bash = os.path.join(env.get("PREFIX", EXPECTED_PREFIX), "bin", "bash")
+            excluded_windows = set(visible_browser_windows(
+                env=browser_env, marker="Firefox"))
+            runner = ("import shutil,subprocess,sys\n"
+                      "profile=sys.argv[1]\n"
+                      "try:\n"
+                      " result=subprocess.run(sys.argv[2:],check=False)\n"
+                      " raise SystemExit(result.returncode)\n"
+                      "finally:\n"
+                      " shutil.rmtree(profile,ignore_errors=True)\n")
+            command = [sys.executable, "-c", runner, profile_host, bash, helper,
+                       "--", "firefox-esr", "-no-remote", "-profile",
+                       profile_guest, url]
         elif browser == "android":
             opener = shutil.which("termux-open-url")
             if not opener:
-                return False
+                return False, False
             command = [opener, url]
         else:
-            return False
-        subprocess.Popen(command, env=dict(env), stdin=subprocess.DEVNULL,
+            return False, False
+        subprocess.Popen(command, env=browser_env, stdin=subprocess.DEVNULL,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                          close_fds=True, start_new_session=True)
     except OSError:
-        return False
-    return True
+        if profile_host:
+            shutil.rmtree(profile_host, ignore_errors=True)
+        return False, False
+    if browser == "android":
+        return True, False
+    marker = "Firefox"
+    if browser == "native" and native:
+        label = native[1].lower()
+        marker = ("Chromium" if "chromium" in label else
+                  "Chrome" if "chrome" in label else
+                  "Brave" if "brave" in label else "Firefox")
+    return True, fill_browser_secret(secret, env=browser_env,
+                                    exclude_windows=excluded_windows,
+                                    window_marker=marker)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -258,31 +379,45 @@ def main(argv: list[str] | None = None) -> int:
         service_name = "Web UI" if args.web else "management API"
         print("Ternuxx " + service_name + " is listening on http://127.0.0.1:" + str(server.port),
               file=sys.stderr)
+        clipboard_copied = False
         if args.web:
-            if not copy_bootstrap_secret(secret):
-                if not args.show_secret_on_clipboard_failure:
-                    print("Clipboard copy failed; server stopped without revealing the secret. "
-                          "Retry with --show-secret-on-clipboard-failure for an explicit terminal fallback.",
-                          file=sys.stderr)
-                    return 1
-                print("Clipboard copy failed. Explicit terminal fallback; keep this output private.", file=sys.stderr)
-                print("One-time bootstrap secret: " + secret, file=sys.stderr)
+            clipboard_copied = copy_bootstrap_secret(secret)
+            if clipboard_copied:
+                print("One-time bootstrap code copied to the Termux clipboard.", file=sys.stderr)
+            elif selected_browser == "android" and not args.show_secret_on_clipboard_failure:
+                print("Clipboard copy failed; server stopped without revealing the code. "
+                      "Retry with --show-secret-on-clipboard-failure for an explicit terminal fallback.",
+                      file=sys.stderr)
+                return 1
             else:
-                print("One-time bootstrap secret copied to the Termux clipboard.", file=sys.stderr)
+                print("Clipboard copy was not confirmed; trying the selected local browser handoff.",
+                      file=sys.stderr)
         else:
             print("One-time bootstrap secret (not saved; keep private): " + secret, file=sys.stderr)
         runtime_label = "Management Web UI" if args.web else "Read-only management API"
         print(runtime_label + ". Press Ctrl-C to stop.", file=sys.stderr)
         if args.web:
             url = "http://127.0.0.1:" + str(server.port) + "/"
-            if open_browser(selected_browser, url, env=os.environ,
-                            native=native_browser):
+            opened, autofilled = open_browser(selected_browser, url, env=os.environ,
+                                                secret=secret, native=native_browser)
+            if not opened:
+                print("Could not launch the selected browser. Open this URL manually: " + url,
+                      file=sys.stderr)
+            else:
                 labels = {"android": "Android default browser", "native": "Native Termux browser",
                           "proot": "Debian PRoot Firefox ESR"}
                 print("Opened " + labels[selected_browser] + " at " + url, file=sys.stderr)
-            else:
-                print("Could not launch the selected browser. Open this URL manually: " + url,
-                      file=sys.stderr)
+                if autofilled:
+                    print("One-time code entered in the local browser form; press Connect.",
+                          file=sys.stderr)
+                elif selected_browser != "android":
+                    print("Browser code handoff was not confirmed. "
+                          "Use --show-secret-on-clipboard-failure for an explicit terminal fallback.",
+                          file=sys.stderr)
+                    if args.show_secret_on_clipboard_failure:
+                        print("One-time bootstrap code: " + secret, file=sys.stderr)
+                elif not clipboard_copied and args.show_secret_on_clipboard_failure:
+                    print("One-time bootstrap code: " + secret, file=sys.stderr)
         stopped.wait()
     finally:
         for signum, handler in previous_handlers.items():

@@ -310,7 +310,8 @@ Starts a loopback-only service, copies the one-time secret to the Termux clipboa
 and offers Android, installed Native Termux, installed Debian PRoot, or auto-select.
 Clipboard failure stops safely without revealing
 the secret; use --show-secret-on-clipboard-failure for an explicit terminal
-fallback. Choose with --browser android|native|proot|auto to skip the prompt.
+fallback if clipboard or browser handoff fails. Native/PRoot X11 browsers receive the code in the login field; Android uses clipboard paste.
+Choose with --browser android|native|proot|auto to skip the prompt.
 Auto-select prefers an installed Native browser, then Debian PRoot Firefox ESR,
 then Android's default browser. Press Ctrl-C to stop. The Web client uses
 the shared management API
