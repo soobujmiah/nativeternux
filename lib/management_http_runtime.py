@@ -16,6 +16,7 @@ import management_service
 import management_sessions
 import management_request_store
 import management_authorization
+import proot_diagnostics
 
 
 DEFAULT_PORT = 8765
@@ -93,6 +94,107 @@ def copy_bootstrap_secret(secret: str, *, executable: str = "termux-clipboard-se
     return result.returncode == 0
 
 
+
+NATIVE_BROWSER_CANDIDATES = (
+    ("firefox", "Firefox"), ("firefox-esr", "Firefox ESR"),
+    ("chromium", "Chromium"), ("chromium-browser", "Chromium"),
+    ("brave", "Brave"), ("brave-browser", "Brave"),
+    ("google-chrome", "Google Chrome"),
+)
+PROOT_BROWSER = ("firefox-esr", "Firefox ESR")
+
+
+def detect_native_browser() -> tuple[str, str] | None:
+    for executable, label in NATIVE_BROWSER_CANDIDATES:
+        path = shutil.which(executable)
+        if path:
+            return path, label
+    return None
+
+
+def detect_proot_browser(env: Mapping[str, str]) -> tuple[str, str] | None:
+    proot_distro = shutil.which("proot-distro")
+    if not proot_distro:
+        return None
+    try:
+        guest_user = proot_diagnostics.resolve_proot_guest_user(
+            distro="debian", prefix=env.get("PREFIX", EXPECTED_PREFIX))
+        result = subprocess.run(
+            [proot_distro, "login", "debian", "--user", guest_user,
+             "--", "sh", "-c", "command -v firefox-esr"],
+            env=dict(env), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, check=False, timeout=15, close_fds=True)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+    paths = result.stdout.strip().splitlines()
+    if result.returncode != 0 or not paths or not paths[0].startswith("/"):
+        return None
+    return PROOT_BROWSER
+
+
+def choose_browser(requested: str, *, native: tuple[str, str] | None,
+                   proot: tuple[str, str] | None, stdin: object = sys.stdin,
+                   stderr: object = sys.stderr) -> str | None:
+    automatic = "native" if native else "proot" if proot else "android"
+    if requested == "auto":
+        return automatic
+    if requested == "native":
+        return "native" if native else None
+    if requested == "proot":
+        return "proot" if proot else None
+    if requested == "android":
+        return "android"
+    choices = [("android", "Android default browser")]
+    if native:
+        choices.append(("native", "Native Termux · " + native[1]))
+    if proot:
+        choices.append(("proot", "Debian PRoot · " + proot[1]))
+    choices.append(("auto", "Auto-select installed browser (recommended)"))
+    print("\nChoose a browser for Ternuxx Web:", file=stderr)
+    for index, (_value, label) in enumerate(choices, 1):
+        print(f"  {index}. {label}" + (" [default]" if _value == "auto" else ""), file=stderr)
+    if not getattr(stdin, "isatty", lambda: False)():
+        print("Using auto-select because stdin is not interactive.", file=stderr)
+        return automatic
+    try:
+        answer = input("Browser [auto]: ").strip().lower()
+    except (EOFError, OSError):
+        return automatic
+    if not answer:
+        return automatic
+    if answer.isdigit() and 1 <= int(answer) <= len(choices):
+        return choices[int(answer) - 1][0]
+    aliases = {value: value for value, _label in choices}
+    aliases.update({"a": "android", "n": "native", "p": "proot"})
+    selected = aliases.get(answer)
+    return selected if selected in {value for value, _label in choices} else None
+
+
+def open_browser(browser: str, url: str, *, env: Mapping[str, str],
+                 native: tuple[str, str] | None = None) -> bool:
+    try:
+        if browser == "native" and native:
+            command = [native[0], url]
+        elif browser == "proot":
+            root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            command = [os.path.join(env.get("PREFIX", EXPECTED_PREFIX), "bin", "bash"),
+                       os.path.join(root, "scripts", "proot-x11-app.sh"),
+                       "--", "firefox-esr", url]
+        elif browser == "android":
+            opener = shutil.which("termux-open-url")
+            if not opener:
+                return False
+            command = [opener, url]
+        else:
+            return False
+        subprocess.Popen(command, env=dict(env), stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         close_fds=True, start_new_session=True)
+    except OSError:
+        return False
+    return True
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tx mng http serve",
@@ -100,6 +202,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--web", action="store_true", help="open the local browser UI")
+    parser.add_argument("--browser", choices=("choose", "android", "native", "proot", "auto"),
+                        default="choose", help="choose Android, installed Native/PRoot browser, or auto-select")
     parser.add_argument("--show-secret-on-clipboard-failure", action="store_true",
                         help="explicitly display the secret if clipboard copying fails")
     return parser
@@ -115,7 +219,21 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 2
 
+    selected_browser = None
+    native_browser = None
     if args.web:
+        if args.browser in {"choose", "native", "auto"}:
+            native_browser = detect_native_browser()
+        proot_browser = None
+        if args.browser in {"choose", "proot"} or (
+                args.browser == "auto" and native_browser is None):
+            proot_browser = detect_proot_browser(os.environ)
+        selected_browser = choose_browser(args.browser, native=native_browser,
+                                          proot=proot_browser)
+        if selected_browser is None:
+            print("That browser is not installed or could not be detected; choose an available browser.",
+                  file=sys.stderr)
+            return 2
         os.environ["TERNUXX_WEB_MODE"] = "1"
     secret = management_sessions.new_bootstrap_secret()
     try:
@@ -157,13 +275,14 @@ def main(argv: list[str] | None = None) -> int:
         print(runtime_label + ". Press Ctrl-C to stop.", file=sys.stderr)
         if args.web:
             url = "http://127.0.0.1:" + str(server.port) + "/"
-            try:
-                subprocess.Popen(["termux-open-url", url], stdin=subprocess.DEVNULL,
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                 close_fds=True)
-                print("Opened browser at " + url, file=sys.stderr)
-            except OSError:
-                print("Open this URL in the Android browser: " + url, file=sys.stderr)
+            if open_browser(selected_browser, url, env=os.environ,
+                            native=native_browser):
+                labels = {"android": "Android default browser", "native": "Native Termux browser",
+                          "proot": "Debian PRoot Firefox ESR"}
+                print("Opened " + labels[selected_browser] + " at " + url, file=sys.stderr)
+            else:
+                print("Could not launch the selected browser. Open this URL manually: " + url,
+                      file=sys.stderr)
         stopped.wait()
     finally:
         for signum, handler in previous_handlers.items():

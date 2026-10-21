@@ -20,7 +20,7 @@ Quick launch:
   tx gui             Open the Native Termux GTK management center
   tx start           Start the native Termux:X11/XFCE desktop
   tx tui             Interactive terminal management
-  tx web             Open the shared Web UI in Android browser
+  tx web             Open the shared Web UI in a selected browser
   tx terminal        Run or connect to the optional shared PRoot terminal broker
 
 Commands by task:
@@ -307,9 +307,13 @@ EOF
 tx web — Open the shared local management Web UI
 
 Starts a loopback-only service, copies the one-time secret to the Termux clipboard,
-and opens the Android browser. Clipboard failure stops safely without revealing
+and offers Android, installed Native Termux, installed Debian PRoot, or auto-select.
+Clipboard failure stops safely without revealing
 the secret; use --show-secret-on-clipboard-failure for an explicit terminal
-fallback. Press Ctrl-C to stop. The Web client uses the shared management API
+fallback. Choose with --browser android|native|proot|auto to skip the prompt.
+Auto-select prefers an installed Native browser, then Debian PRoot Firefox ESR,
+then Android's default browser. Press Ctrl-C to stop. The Web client uses
+the shared management API
 with scoped reads, confirmed native desktop lifecycle, graphics verification and
 Native backend selection, monitoring-policy configuration, managed SSH 8023
 preview/confirmation, named PRoot app launch, single shortcut changes, and Cron

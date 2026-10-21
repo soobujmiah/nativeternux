@@ -416,10 +416,11 @@ nt_cmd_management() {
       esac
       ;;
     web)
-      local port=8765 show_secret_fallback=0
+      local port=8765 show_secret_fallback=0 browser=choose
       while [ "$#" -gt 0 ]; do
         case "$1" in
           --port) [ "$#" -ge 2 ] || { nt_fail "--port requires a value."; return 2; }; port="$2"; shift 2 ;;
+          --browser) [ "$#" -ge 2 ] || { nt_fail "--browser requires choose, android, native, proot, or auto."; return 2; }; browser="$2"; shift 2 ;;
           --show-secret-on-clipboard-failure) show_secret_fallback=1; shift ;;
           --help|-h) nt_help web; return 0 ;;
           *) nt_fail "Unknown Web UI option: $1"; return 2 ;;
@@ -427,7 +428,7 @@ nt_cmd_management() {
       done
       nt_require_termux || return 1
       nt_require_command python3 || return 1
-      local -a web_args=(--port "$port" --web)
+      local -a web_args=(--port "$port" --web --browser "$browser")
       [ "$show_secret_fallback" -eq 0 ] || web_args+=(--show-secret-on-clipboard-failure)
       python3 "$_TN_LIB_DIR/management_http_runtime.py" "${web_args[@]}"
       ;;
