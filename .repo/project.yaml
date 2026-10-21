@@ -1,13 +1,13 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-21T20:52:02Z'
+generated_at: '2026-10-21T21:22:12Z'
 generated_by: tools/repo_knowledge collect
-version: 64d3546
+version: ed735c0
 head:
-  commit: 64d354676d14a069cde4875b451a0ef487ae59a3
+  commit: ed735c06262f80a7a29908592eaab2304ad88d3c
   branch: main
-  committed_at: '2026-10-21T20:50:32Z'
+  committed_at: '2026-10-21T21:22:01Z'
 phases:
   source: not_configured
   completed: []
@@ -26,16 +26,12 @@ build:
   run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39673812607
 test:
   status: passed
-  run_id: '39673812607'
-  commit: 64d354676d14a069cde4875b451a0ef487ae59a3
+  run_id: native-8022-20261022-terminal-review
+  commit: ed735c06262f80a7a29908592eaab2304ad88d3c
   run_attempt: '1'
-  at: '2026-10-21T20:52:02Z'
+  at: '2026-10-21T21:22:12Z'
   timestamp_source: observed
-  workflow_name: Repository Knowledge Sync
-  event_type: push
-  actor: soobujmiah
-  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/39673812607
-  summary: null
+  summary: Native Termux suite 687/687; focused TUI 31/31
 last_successful_build: null
 last_failed_build:
   commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
@@ -43,5 +39,5 @@ last_failed_build:
   run_id: '39159994935'
 sync:
   status: ok
-  last_synced_at: '2026-10-21T20:52:02Z'
-  source: ci
+  last_synced_at: '2026-10-21T21:22:12Z'
+  source: local
