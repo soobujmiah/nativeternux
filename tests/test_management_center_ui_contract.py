@@ -15,6 +15,10 @@ class ManagementCenterReplayGuestUiTests(unittest.TestCase):
         self.assertIn("gtk_label_set_max_width_chars(GTK_LABEL(explanation),46);", SOURCE)
         self.assertIn("gtk_window_set_default_size(GTK_WINDOW(window),420,300);", SOURCE)
 
+    def test_stale_inspection_cannot_overwrite_the_new_selection(self):
+        self.assertIn('g_strcmp0(request->action, "inspect") == 0', SOURCE)
+        self.assertIn('g_strcmp0(request->resource_id, c->selected_resource_id) != 0', SOURCE)
+
     def test_single_replay_action_keeps_a_visible_action_pane(self):
         self.assertIn('gtk_widget_set_visible(c->proot_guest_button, proot_apps || replay_guests);', SOURCE)
         self.assertIn('gtk_widget_set_visible(c->replay_guest_actions, proot_apps || replay_guests);', SOURCE)

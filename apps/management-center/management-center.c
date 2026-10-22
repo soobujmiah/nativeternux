@@ -234,6 +234,14 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
     gchar *stdout_text = NULL, *stderr_text = NULL;
     gboolean ok = g_subprocess_communicate_utf8_finish(G_SUBPROCESS(source), result,
         &stdout_text, &stderr_text, &error);
+    if (g_strcmp0(request->action, "inspect") == 0
+            && g_strcmp0(request->resource_id, c->selected_resource_id) != 0) {
+        g_clear_error(&error);
+        g_free(stdout_text); g_free(stderr_text);
+        g_free(request->action); g_free(request->resource_id);
+        g_free(request->detail_id); g_free(request->plan_id); g_free(request);
+        return;
+    }
     if (!ok) {
         gtk_label_set_text(GTK_LABEL(c->notice), error ? error->message : "Request failed");
         g_clear_error(&error);

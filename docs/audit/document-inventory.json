@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 409,
+  "document_count": 410,
   "read_count": 94,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "a06cd6c46cddad307fa7ca7958f7ab02f9853f5711720d035ff494f28762dd39",
+      "sha256": "93b9db6d6acf90bad2aa1f12217286373c5454f8403ad48c1e7d0a12e841565e",
       "lines": 53,
       "read_status": "pending",
       "read_sha256": null
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "9e9600a398caff63395f354cfcaf027dbb72b991f6254d4806a97156e81f841a",
+      "sha256": "e670590dc77042abb09742db62176acd55b0c7639ff5441a392cf697e426a5fc",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "4e19df68a6374d3fc4b0bd87758ef6002366b587a4d5eb66b7ac07421169e1ee",
-      "lines": 167,
+      "sha256": "bbb1ae848900ddb2369ae1fd87489d1c032f5dc03c838915c51a1ac28399cbce",
+      "lines": 168,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -515,8 +515,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "be9ed03900588ca322e444ecd02363521c47e21567ce7ca6744a00c78ede5da1",
-      "lines": 90,
+      "sha256": "f5dd9de26760aac5f5c30d54fcb373809c4dbf5438bea49644dacf0385bab4ff",
+      "lines": 91,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2249,6 +2249,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-22-gtk-selection-response-review.md",
+      "kind": "narrative",
+      "sha256": "a9b5bfd176335893a5b7bc1fb0f3fc7a48f3bb450ef0e3d85f53f66213191674",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-22-gtk-terminal-picker-review.md",
       "kind": "narrative",
       "sha256": "9daf2021c1046309e965a13ba5056e51572a0c71ca2eb06bcd344f2de64a7eaa",
@@ -2907,8 +2915,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "79c427dd5a6b53344d76297d704643b8263affbf456798d96c2658552b135295",
-      "lines": 182,
+      "sha256": "303956b4e6c7ed01e8fe6d07815c0a730b5020c8173ac3c93f6cca5bb156a395",
+      "lines": 183,
       "read_status": "pending",
       "read_sha256": null
     },
