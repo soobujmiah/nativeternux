@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 419,
-  "read_count": 97,
+  "document_count": 421,
+  "read_count": 99,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "4d70759f2ee8361c5c713faf4425716b76c66587b40bde8a89ee43a8d8e6e084",
+      "sha256": "6d42c2bbde5492c05390badaa836b048758d4f656a8b6b409bffce08e9b3f3ed",
       "lines": 55,
       "read_status": "read",
-      "read_sha256": "4d70759f2ee8361c5c713faf4425716b76c66587b40bde8a89ee43a8d8e6e084"
+      "read_sha256": "6d42c2bbde5492c05390badaa836b048758d4f656a8b6b409bffce08e9b3f3ed"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "9c8e3a85c2e032b7a90d1af5c570be1f7c1dd7ff2209e3eae426c541f06c6b7a",
+      "sha256": "b3d0d9d0a2a34d488336f9ba110ac5d59134c81543f8a650dcd12cefcfe3fc43",
       "lines": 82,
       "read_status": "read",
-      "read_sha256": "9c8e3a85c2e032b7a90d1af5c570be1f7c1dd7ff2209e3eae426c541f06c6b7a"
+      "read_sha256": "b3d0d9d0a2a34d488336f9ba110ac5d59134c81543f8a650dcd12cefcfe3fc43"
     },
     {
       "path": "SECURITY.md",
@@ -163,10 +163,10 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "aa383ded7a8050de5c8405e08f8a1fb1e79d5bfe50532b1380841b0c186859f1",
-      "lines": 176,
+      "sha256": "c8d64191fe273d0dd60a28a7d3e9e59d0b970d3aab6981c3eeabd8be7bda8e1d",
+      "lines": 177,
       "read_status": "read",
-      "read_sha256": "aa383ded7a8050de5c8405e08f8a1fb1e79d5bfe50532b1380841b0c186859f1"
+      "read_sha256": "c8d64191fe273d0dd60a28a7d3e9e59d0b970d3aab6981c3eeabd8be7bda8e1d"
     },
     {
       "path": "docs/PRODUCT-VISION.md",
@@ -211,10 +211,10 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "e317b544d8a8b8f7a473ef8fb8de45c4ca7e36c4706aadd17c7a16f5aaca45e9",
+      "sha256": "04cc8dbbfbf88ebe5200679567ee23e8e61a034f7476f2e76dc100d176081b9b",
       "lines": 311,
       "read_status": "read",
-      "read_sha256": "e317b544d8a8b8f7a473ef8fb8de45c4ca7e36c4706aadd17c7a16f5aaca45e9"
+      "read_sha256": "04cc8dbbfbf88ebe5200679567ee23e8e61a034f7476f2e76dc100d176081b9b"
     },
     {
       "path": "docs/SOFTWARE-CATALOG.md",
@@ -243,10 +243,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "c9273f1480147e44ddc7fef2b7c51238f0570b84f9816ef32bb9d66b256337f4",
+      "sha256": "0dcec3c0035925c00ec27d30e1c18a1b15d4a2b2d869718204e76a243c089061",
       "lines": 25,
       "read_status": "read",
-      "read_sha256": "c9273f1480147e44ddc7fef2b7c51238f0570b84f9816ef32bb9d66b256337f4"
+      "read_sha256": "0dcec3c0035925c00ec27d30e1c18a1b15d4a2b2d869718204e76a243c089061"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -515,10 +515,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "66afd29ab1e9addfe52f92a350aeec913175865d1b7ef9a80379a339eb39a45b",
-      "lines": 95,
+      "sha256": "b4e8fe48b907321ad67e95111022a848b4b9e3f06823a17ff8eec64528ea46d0",
+      "lines": 96,
       "read_status": "read",
-      "read_sha256": "66afd29ab1e9addfe52f92a350aeec913175865d1b7ef9a80379a339eb39a45b"
+      "read_sha256": "b4e8fe48b907321ad67e95111022a848b4b9e3f06823a17ff8eec64528ea46d0"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2385,12 +2385,28 @@
       "read_sha256": "093f868666ca0e94e506a512b07674f3a245c62ff9079fa8b88b9aa5d436669f"
     },
     {
+      "path": "docs/evidence/2026-10-22-native-optional-proot-failure-injection-live.json",
+      "kind": "structured",
+      "sha256": "de83370ba1e9cf2190b43fbd49b11ed7da36fdfb59419960c62e716eb42c7748",
+      "lines": 184,
+      "read_status": "read",
+      "read_sha256": "de83370ba1e9cf2190b43fbd49b11ed7da36fdfb59419960c62e716eb42c7748"
+    },
+    {
       "path": "docs/evidence/2026-10-22-native-optional-proot-failure-injection.md",
       "kind": "narrative",
       "sha256": "f045b1fdc3257a06ad47904c38d48dfab92682805ad010db3e93b2570db9d6d7",
       "lines": 56,
       "read_status": "read",
       "read_sha256": "f045b1fdc3257a06ad47904c38d48dfab92682805ad010db3e93b2570db9d6d7"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-native-provider-failure-isolation.md",
+      "kind": "narrative",
+      "sha256": "5a57f5ddb0446581b3adb740668fd5db447042ad851ad0e529f69962999a521d",
+      "lines": 31,
+      "read_status": "read",
+      "read_sha256": "5a57f5ddb0446581b3adb740668fd5db447042ad851ad0e529f69962999a521d"
     },
     {
       "path": "docs/evidence/2026-10-22-native-selected-deployment-parity.json",
@@ -2443,10 +2459,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-next-gate-reconciliation.md",
       "kind": "narrative",
-      "sha256": "c97edca24f1e16185e3d403a1aba37cc06f88522c123c2131d8ed10fb16b3a2d",
-      "lines": 26,
+      "sha256": "fc95196d28f740b1301a493bc62894c158a52b3abc57cee1bd82e436104ec92c",
+      "lines": 28,
       "read_status": "read",
-      "read_sha256": "c97edca24f1e16185e3d403a1aba37cc06f88522c123c2131d8ed10fb16b3a2d"
+      "read_sha256": "fc95196d28f740b1301a493bc62894c158a52b3abc57cee1bd82e436104ec92c"
     },
     {
       "path": "docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md",
@@ -2987,8 +3003,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "40eb3e6db3be17d7ee8582c0577cb405403acbe70365314a01a9c3cab5e72d5a",
-      "lines": 191,
+      "sha256": "6ca7a3477729e4ae725575a2b81ddb482c891709a42d68c524ca1c09f90aa5c1",
+      "lines": 192,
       "read_status": "pending",
       "read_sha256": null
     },

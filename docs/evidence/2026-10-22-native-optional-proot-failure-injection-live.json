@@ -1,0 +1,184 @@
+{
+  "scenarios": {
+    "debian_guest_login_broken": {
+      "core_probes": {
+        "boot_helper_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "cli_help": {
+          "exit_code": 0,
+          "passed": true
+        },
+        "doctor": {
+          "exit_code": 1,
+          "ok": null,
+          "overall": "warning",
+          "passed": true,
+          "proot_finding": {
+            "observed": "proot-distro installed distributions: debian; guest/session ownership unverified",
+            "severity": "info"
+          },
+          "read_only": true
+        },
+        "management_catalog": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "native_graphics_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "recovery_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "ssh_diagnostics": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        }
+      },
+      "guest_entry_note": "The verifier reports an attempted entry; the injected manager refused login before real PRoot ran.",
+      "guest_mutation_command_run": false,
+      "guest_process_started": false,
+      "guest_verify": {
+        "blockers": [
+          "guest X11 connection is not verified",
+          "guest PulseAudio connection is not verified",
+          "GLX renderer unavailable; GLES context does not verify a draw",
+          "guest probe returned no recognized output"
+        ],
+        "exit_code": 0,
+        "guest_entered_reported_by_operation": true,
+        "guest_write_command_invoked": false,
+        "packages_changed": false,
+        "passed": true,
+        "status": "unknown"
+      },
+      "injected_manager_calls": [
+        "list",
+        "list",
+        "login"
+      ],
+      "passed": true,
+      "proot_launcher_tripwire_called": false
+    },
+    "debian_guest_missing": {
+      "core_probes": {
+        "boot_helper_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "cli_help": {
+          "exit_code": 0,
+          "passed": true
+        },
+        "doctor": {
+          "exit_code": 1,
+          "ok": null,
+          "overall": "warning",
+          "passed": true,
+          "proot_finding": {
+            "observed": "proot-distro available; no installed distributions detected",
+            "severity": "info"
+          },
+          "read_only": true
+        },
+        "management_catalog": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "native_graphics_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "recovery_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "ssh_diagnostics": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        }
+      },
+      "guest_entry_note": "The guest inventory excluded Debian, so login was never requested.",
+      "guest_mutation_command_run": false,
+      "guest_process_started": false,
+      "guest_verify": {
+        "blockers": [
+          "debian is not listed as an installed PRoot distribution"
+        ],
+        "exit_code": 0,
+        "guest_entered_reported_by_operation": false,
+        "guest_write_command_invoked": false,
+        "packages_changed": false,
+        "passed": true,
+        "status": "not_installed"
+      },
+      "injected_manager_calls": [
+        "list",
+        "list"
+      ],
+      "passed": true,
+      "proot_launcher_tripwire_called": false
+    },
+    "manager_command_fails": {
+      "core_probes": {
+        "boot_helper_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "cli_help": {
+          "exit_code": 0,
+          "passed": true
+        },
+        "doctor": {
+          "exit_code": 1,
+          "ok": null,
+          "overall": "warning",
+          "passed": true,
+          "proot_finding": {
+            "observed": "proot-distro inventory query failed or was unrecognized; provider inventory unknown",
+            "severity": "info"
+          },
+          "read_only": true
+        },
+        "management_catalog": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "native_graphics_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "recovery_status": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        },
+        "ssh_diagnostics": {
+          "exit_code": 0,
+          "ok": true,
+          "passed": true
+        }
+      },
+      "guest_mutation_command_run": false,
+      "passed": true,
+      "proot_launcher_tripwire_called": false,
+      "shim_invoked": true
+    }
+  }
+}

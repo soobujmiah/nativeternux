@@ -333,6 +333,46 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertNotIn("native_ternux_status", report)
         self.assertNotIn("companion_version", report)
 
+    def test_guest_verification_reports_missing_distribution_without_guest_login(self):
+        calls = []
+        def runner(args, **kwargs):
+            calls.append((args, kwargs))
+            return SimpleNamespace(returncode=0, stdout=(
+                "Installed containers:\nLog in with: proot-distro login <name>\n"))
+        with mock.patch.object(proot_diagnostics, "_native_pulse_cookie_path", return_value=None):
+            report = proot_diagnostics.verify_proot_guest(
+                distro="debian", user="sbj", display=":1", backend="zink",
+                which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
+                runner=runner)
+        self.assertEqual(report["status"], "not_installed")
+        self.assertFalse(report["guest_entered"])
+        self.assertFalse(report["safety"]["guest_write_command_invoked"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][0], ["/prefix/bin/proot-distro", "list"])
+
+    def test_failed_guest_login_stays_unknown_and_discloses_possible_profile_write(self):
+        calls = []
+        outputs = [
+            SimpleNamespace(returncode=0, stdout=(
+                "Installed containers:\n * Debian\nLog in with: proot-distro login <name>\n")),
+            SimpleNamespace(returncode=127, stdout=""),
+        ]
+        def runner(args, **kwargs):
+            calls.append((args, kwargs))
+            return outputs.pop(0)
+        with mock.patch.object(proot_diagnostics, "_native_pulse_cookie_path", return_value=None):
+            report = proot_diagnostics.verify_proot_guest(
+                distro="debian", user="sbj", display=":1", backend="zink",
+                which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
+                runner=runner)
+        self.assertEqual(report["status"], "unknown")
+        self.assertTrue(report["guest_entered"])
+        self.assertTrue(report["safety"]["launcher_profile_write_possible"])
+        self.assertFalse(report["safety"]["guest_write_command_invoked"])
+        self.assertFalse(report["safety"]["packages_changed"])
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[1][0][0:3], ["/prefix/bin/proot-distro", "login", "--isolated"])
+
     def test_guest_verify_fails_closed_for_unsafe_or_unsupported_inputs(self):
         calls = []
         for values in (

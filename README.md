@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Fresh replay setup and rollback, Zink/Turnip, VirGL drawing, GUI terminal handoff, visible Web acceptance, and a bounded Native core sweep with failing optional PRoot are evidenced. Web now has one preview-confirmed non-signaling dead-session recovery action through the shared service; broader client parity, missing/broken guest isolation, safe VirGL cleanup, and the full audit remain open.
+Fresh replay and graphics evidence, cross-client terminal handoff, and three isolated Native optional-PRoot failure modes are recorded. Web has one preview-confirmed non-signaling recovery action; broader client parity, safe VirGL cleanup, actual broken-rootfs qualification, and the full repository audit remain open.
 
-**Next action:** Continue Web mutation/client parity and safe exact VirGL client visibility; extend Native failure injection to an isolated missing/broken guest scenario, then finish the source/installed/runtime audit and P4 acceptance.
+**Next action:** Continue Web mutation/client parity and safe VirGL socket-client visibility; then finish source/installed/runtime reconciliation and requirement-by-requirement repository audit, preserving actual guest/rootfs and cold-boot checks as unverified until separately qualified.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
