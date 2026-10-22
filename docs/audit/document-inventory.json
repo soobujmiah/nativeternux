@@ -2459,10 +2459,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-replay-download-timeout.md",
       "kind": "narrative",
-      "sha256": "ad2ced328c200b4b8663dfdc0fd79ed839931312e5d6e5846a025a6c6e03795e",
-      "lines": 87,
+      "sha256": "dfae16d8fa6a8ad30ad607135b1c63d5e25a0a7649a1d0db350eece53b15905f",
+      "lines": 106,
       "read_status": "read",
-      "read_sha256": "ad2ced328c200b4b8663dfdc0fd79ed839931312e5d6e5846a025a6c6e03795e"
+      "read_sha256": "dfae16d8fa6a8ad30ad607135b1c63d5e25a0a7649a1d0db350eece53b15905f"
     },
     {
       "path": "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",

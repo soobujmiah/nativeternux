@@ -85,3 +85,22 @@ range samples more slowly than the configured endpoint in this session.
   mutation/client parity, Native-independence injection and full
   source/installed audit remain open. The first failed attempt's exact APT
   `select (38)` trigger remains unresolved.
+
+### Installed entrypoint parity recheck
+
+On the installed Native command path, `/data/data/com.termux/files/usr/bin/tx`
+was verified to dispatch to `~/ternuxx/tx` (or the explicit
+`TERNUXX_CHECKOUT`). Running the installed `tx proot verify` command against
+the receipt-owned replay alias returned `complete` again: Native display `:1`,
+PulseAudio reachable, Zink/Turnip, and 507 verified GLX frames. This confirms
+the tested implementation is the Native-installed entrypoints active checkout.
+
+
+### Installed entrypoint parity recheck
+
+On the installed Native command path, `/data/data/com.termux/files/usr/bin/tx`
+was verified to dispatch to `~/ternuxx/tx` (or the explicit
+`TERNUXX_CHECKOUT`). Running the installed `tx proot verify` command against
+the receipt-owned replay alias returned `complete` again: Native display `:1`,
+PulseAudio reachable, Zink/Turnip, and 507 verified GLX frames. This confirms
+the tested implementation is the Native-installed entrypoint's active checkout.
