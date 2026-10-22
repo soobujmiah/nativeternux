@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import hashlib
+import base64
+import fcntl
 import json
 import os
 import re
@@ -9,6 +11,8 @@ from pathlib import Path
 import subprocess
 import shlex
 import tempfile
+import stat
+import uuid
 from typing import Any
 
 
@@ -546,10 +550,271 @@ def preview_desktop_application_sync(*, home: str, prefix: str, repo_root: str,
     }
 
 
+
+
+_SYNC_ROLLBACK_MAX_BYTES = 8 * 1024 * 1024
+_SYNC_ROLLBACK_MAX_ENTRIES = 512
+
+
+def _sync_state_root(home: str, state_dir: str | None, *, create: bool) -> Path:
+    home_path = Path(home).expanduser().resolve()
+    raw = Path(state_dir).expanduser() if state_dir else home_path / ".local/share/ternuxx"
+    if not raw.is_absolute():
+        raw = home_path / raw
+    root = Path(os.path.abspath(raw))
+    try:
+        relative = root.relative_to(home_path)
+    except ValueError as exc:
+        raise ShortcutError("shortcut rollback state must remain inside HOME") from exc
+    if not relative.parts:
+        raise ShortcutError("shortcut rollback state cannot be HOME")
+    cursor = home_path
+    for part in relative.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise ShortcutError("shortcut rollback state contains a symbolic link")
+        if cursor.exists():
+            info = cursor.lstat()
+            if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()
+                    or stat.S_IMODE(info.st_mode) & 0o077):
+                raise ShortcutError("shortcut rollback state directory is not private and owned")
+    if create:
+        root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        os.chmod(root, 0o700)
+    state = root / "shortcut-sync"
+    if create:
+        state.mkdir(mode=0o700, exist_ok=True)
+        os.chmod(state, 0o700)
+    if state.exists():
+        info = state.lstat()
+        if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()
+                or stat.S_IMODE(info.st_mode) != 0o700):
+            raise ShortcutError("shortcut sync journal is not private and owned")
+    elif create:
+        raise ShortcutError("shortcut sync journal could not be created")
+    return state
+
+
+def _sync_record_path(state: Path, rollback_id: str) -> Path:
+    if not isinstance(rollback_id, str) or not re.fullmatch(r"[0-9a-f]{32}", rollback_id):
+        raise ShortcutError("invalid shortcut rollback ID")
+    return state / (rollback_id + ".json")
+
+
+def _sync_private_write(path: Path, value: dict[str, Any]) -> None:
+    fd, name = tempfile.mkstemp(prefix=".shortcut-sync-", dir=path.parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(value, stream, sort_keys=True, separators=(",", ":"))
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+        dfd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+    finally:
+        try:
+            os.unlink(name)
+        except FileNotFoundError:
+            pass
+
+
+def _sync_private_read(path: Path) -> dict[str, Any]:
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    with os.fdopen(fd, "r", encoding="utf-8") as stream:
+        info = os.fstat(stream.fileno())
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid()
+                or stat.S_IMODE(info.st_mode) != 0o600 or info.st_size > _SYNC_ROLLBACK_MAX_BYTES * 2):
+            raise ShortcutError("shortcut rollback record is unsafe")
+        value = json.load(stream)
+    if not isinstance(value, dict):
+        raise ShortcutError("shortcut rollback record is invalid")
+    return value
+
+
+def _sync_record_changes(record: dict[str, Any], rollback_id: str) -> list[dict[str, Any]]:
+    keys = {"schema_version", "rollback_id", "status", "action", "plan_id", "created_at", "changes"}
+    if (set(record) != keys or record.get("schema_version") != 1
+            or record.get("rollback_id") != rollback_id
+            or record.get("status") not in {"prepared", "applied", "rolled_back", "failed", "needs_recovery"}
+            or record.get("action") != "bulk_sync" or not isinstance(record.get("plan_id"), str)
+            or not isinstance(record.get("created_at"), str) or not isinstance(record.get("changes"), list)
+            or len(record["changes"]) > _SYNC_ROLLBACK_MAX_ENTRIES):
+        raise ShortcutError("shortcut rollback record fields are invalid")
+    total = 0
+    fields = {"path", "before_present", "before_b64", "before_sha256", "before_mode", "after_sha256"}
+    for item in record["changes"]:
+        if not isinstance(item, dict) or set(item) != fields:
+            raise ShortcutError("shortcut rollback entry is malformed")
+        rel = Path(item["path"]) if isinstance(item["path"], str) else Path("/")
+        if (rel.is_absolute() or not rel.parts or any(part in {"", ".", ".."} for part in rel.parts)
+                or not (rel.name.startswith("ternuxx-proot-app-") and rel.name.endswith(".desktop")
+                        or rel.name in {"xfce-applications.menu", "ternuxx-proot-apps.directory"})):
+            raise ShortcutError("shortcut rollback target is outside the managed launcher set")
+        if type(item["before_present"]) is not bool or type(item["before_mode"]) is not int:
+            raise ShortcutError("shortcut rollback file metadata is invalid")
+        if not 0 <= item["before_mode"] <= 0o777 or (not item["before_present"] and item["before_mode"] != 0):
+            raise ShortcutError("shortcut rollback file mode is invalid")
+        if item["before_sha256"] != "absent" and not re.fullmatch(r"[0-9a-f]{64}", item["before_sha256"]):
+            raise ShortcutError("shortcut rollback before-hash is malformed")
+        try:
+            data = base64.b64decode(item["before_b64"], validate=True)
+        except (ValueError, TypeError) as exc:
+            raise ShortcutError("shortcut rollback snapshot is malformed") from exc
+        total += len(data)
+        digest = hashlib.sha256(data).hexdigest()
+        expected = digest if item["before_present"] else "absent"
+        if item["before_sha256"] != expected or (not item["before_present"] and data):
+            raise ShortcutError("shortcut rollback snapshot checksum mismatch")
+        if item["after_sha256"] != "absent" and not re.fullmatch(r"[0-9a-f]{64}", item["after_sha256"]):
+            raise ShortcutError("shortcut rollback after-hash is malformed")
+    if total > _SYNC_ROLLBACK_MAX_BYTES:
+        raise ShortcutError("shortcut rollback snapshot exceeds the size limit")
+    return record["changes"]
+
+
+def _sync_target(home_path: Path, relative: str) -> Path:
+    rel = Path(relative)
+    if rel.is_absolute() or not rel.parts or any(part in {"", ".", ".."} for part in rel.parts):
+        raise ShortcutError("shortcut rollback path is invalid")
+    target = home_path / rel
+    if not target.is_relative_to(home_path):
+        raise ShortcutError("shortcut rollback path escaped HOME")
+    cursor = home_path
+    for part in rel.parts[:-1]:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise ShortcutError("shortcut rollback parent contains a symbolic link")
+        if cursor.exists():
+            info = cursor.lstat()
+            if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+                raise ShortcutError("shortcut rollback parent is not an owned directory")
+    if target.is_symlink():
+        raise ShortcutError("shortcut rollback target is a symbolic link")
+    return target
+
+
+def _sync_lock(state: Path) -> int:
+    lock_path = state / ".lock"
+    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    info = os.fstat(fd)
+    if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o600):
+        os.close(fd)
+        raise ShortcutError("shortcut sync lock is unsafe")
+    fcntl.flock(fd, fcntl.LOCK_EX)
+    return fd
+
+
+def list_desktop_application_sync_rollbacks(*, home: str,
+                                            state_dir: str | None = None) -> dict[str, Any]:
+    state = _sync_state_root(home, state_dir, create=False)
+    if not state.exists():
+        return {"resource_id": "proot.x11.shortcut-sync-rollbacks", "rollbacks": [], "read_only": True}
+    rows = []
+    for path in sorted(state.glob("*.json")):
+        if not re.fullmatch(r"[0-9a-f]{32}\.json", path.name):
+            continue
+        rollback_id = path.stem
+        try:
+            record = _sync_private_read(path)
+            changes = _sync_record_changes(record, rollback_id)
+            rows.append({"rollback_id": rollback_id, "status": record["status"],
+                         "created_at": record["created_at"], "entry_count": len(changes),
+                         "integrity": "valid"})
+        except (OSError, ValueError, ShortcutError):
+            rows.append({"rollback_id": rollback_id, "integrity": "invalid"})
+    return {"resource_id": "proot.x11.shortcut-sync-rollbacks", "rollbacks": rows, "read_only": True}
+
+
+def preview_desktop_application_sync_rollback(rollback_id: str, *, home: str,
+                                               state_dir: str | None = None) -> dict[str, Any]:
+    state = _sync_state_root(home, state_dir, create=False)
+    record = _sync_private_read(_sync_record_path(state, rollback_id))
+    changes = _sync_record_changes(record, rollback_id)
+    if record["status"] != "applied":
+        raise ShortcutError("only an applied shortcut sync can be restored")
+    home_path = Path(home).expanduser().resolve()
+    entries = []
+    for item in changes:
+        target = _sync_target(home_path, item["path"])
+        current = _file_bytes(target)
+        current_hash = hashlib.sha256(current).hexdigest() if current is not None else "absent"
+        if current_hash != item["after_sha256"]:
+            raise ShortcutError("shortcut changed after sync; refusing to overwrite it")
+        before = base64.b64decode(item["before_b64"], validate=True)
+        entries.append({"path": item["path"],
+                        "action": "restore" if item["before_present"] else "remove",
+                        "current": current_hash,
+                        "restore": hashlib.sha256(before).hexdigest() if item["before_present"] else "absent"})
+    core = {"rollback_id": rollback_id, "changes": entries}
+    plan_id = hashlib.sha256(json.dumps(core, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
+    return {"resource_id": "proot.x11.shortcut-sync.rollback", "rollback_id": rollback_id,
+            "status": "preview", "changes": entries, "plan_id": plan_id,
+            "requires_confirmation": bool(entries), "read_only": True}
+
+
+def apply_desktop_application_sync_rollback(rollback_id: str, *, home: str, state_dir: str | None = None,
+                                            confirmed: bool, plan_id: str | None) -> dict[str, Any]:
+    state = _sync_state_root(home, state_dir, create=False)
+    fd = _sync_lock(state)
+    try:
+        preview = preview_desktop_application_sync_rollback(rollback_id, home=home, state_dir=state_dir)
+        if not confirmed or not isinstance(plan_id, str):
+            return {**preview, "status": "confirmation_required"}
+        if plan_id != preview["plan_id"]:
+            raise ShortcutError("shortcut rollback target changed or plan ID does not match")
+        record_path = _sync_record_path(state, rollback_id)
+        record = _sync_private_read(record_path)
+        changes = _sync_record_changes(record, rollback_id)
+        home_path = Path(home).expanduser().resolve()
+        snapshots = []
+        for item in changes:
+            target = _sync_target(home_path, item["path"])
+            current = _file_bytes(target)
+            snapshots.append((target, current, target.stat().st_mode & 0o777 if current is not None else None))
+        try:
+            for item in changes:
+                target = _sync_target(home_path, item["path"])
+                before = base64.b64decode(item["before_b64"], validate=True)
+                if item["before_present"]:
+                    _atomic_write(target, before)
+                    os.chmod(target, item["before_mode"])
+                else:
+                    target.unlink(missing_ok=True)
+            record["status"] = "rolled_back"
+            _sync_private_write(record_path, record)
+        except Exception:
+            rollback_errors = []
+            for target, current, mode in reversed(snapshots):
+                try:
+                    if current is None:
+                        target.unlink(missing_ok=True)
+                    else:
+                        _atomic_write(target, current)
+                        if mode is not None:
+                            os.chmod(target, mode)
+                except OSError:
+                    rollback_errors.append(str(target))
+            if rollback_errors:
+                record["status"] = "needs_recovery"
+                _sync_private_write(record_path, record)
+                raise ShortcutError("shortcut rollback failed and needs recovery")
+            raise
+        return {**preview, "status": "complete", "changed": True, "read_only": False}
+    finally:
+        os.close(fd)
+
+
 def apply_desktop_application_sync(*, home: str, prefix: str, repo_root: str,
                                    confirmed: bool, plan_id: str | None,
                                    xdg_data_home: str | None = None,
-                                   xdg_config_home: str | None = None) -> dict[str, Any]:
+                                   xdg_config_home: str | None = None,
+                                   state_dir: str | None = None) -> dict[str, Any]:
     preview = preview_desktop_application_sync(
         home=home, prefix=prefix, repo_root=repo_root,
         xdg_data_home=xdg_data_home, xdg_config_home=xdg_config_home,
@@ -561,37 +826,78 @@ def apply_desktop_application_sync(*, home: str, prefix: str, repo_root: str,
     if plan_id != preview["plan_id"]:
         raise ShortcutError("shortcut sync state changed or plan ID does not match the current preview")
 
-    home_path = Path(home).expanduser().resolve()
-    snapshots = []
-    for change in preview["changes"]:
-        target = home_path / change["path"]
-        snapshots.append((target, _file_bytes(target), target.stat().st_mode & 0o777
-                          if target.exists() and not target.is_symlink() else None))
+    state = _sync_state_root(home, state_dir, create=True)
+    lock_fd = _sync_lock(state)
     try:
-        result = _sync_desktop_applications_mutate(
+        current = preview_desktop_application_sync(
             home=home, prefix=prefix, repo_root=repo_root,
             xdg_data_home=xdg_data_home, xdg_config_home=xdg_config_home,
         )
-    except Exception:
-        rollback_errors = []
-        for target, before, mode in reversed(snapshots):
-            try:
-                if before is None:
-                    target.unlink(missing_ok=True)
-                else:
-                    _atomic_write(target, before)
-                    if mode is not None:
-                        os.chmod(target, mode)
-            except OSError as exc:
-                rollback_errors.append(str(target))
-        if rollback_errors:
-            raise ShortcutError("shortcut sync failed and rollback needs recovery for: "
-                                + ", ".join(rollback_errors))
-        raise
-    return {**preview, "status": "complete", "changed": True,
-            "written": result.get("written", []), "removed": result.get("removed", []),
-            "conflicts": result.get("conflicts", []), "menu": result.get("menu"),
-            "read_only": False}
+        if current["plan_id"] != plan_id:
+            raise ShortcutError("shortcut sync state changed or plan ID does not match the current preview")
+        _stage, pairs = _sync_stage(
+            home=home, prefix=prefix, repo_root=repo_root,
+            xdg_data_home=xdg_data_home, xdg_config_home=xdg_config_home,
+        )
+        changes = []
+        total = 0
+        for item in pairs:
+            before, after = item["before_bytes"], item["after_bytes"]
+            total += len(before or b"")
+            changes.append({
+                "path": item["path"], "before_present": before is not None,
+                "before_b64": base64.b64encode(before or b"").decode("ascii"),
+                "before_sha256": hashlib.sha256(before).hexdigest() if before is not None else "absent",
+                "before_mode": item["before_mode"] if before is not None else 0,
+                "after_sha256": hashlib.sha256(after).hexdigest() if after is not None else "absent",
+            })
+        if len(changes) > _SYNC_ROLLBACK_MAX_ENTRIES or total > _SYNC_ROLLBACK_MAX_BYTES:
+            raise ShortcutError("shortcut sync exceeds the durable rollback limits")
+        rollback_id = uuid.uuid4().hex
+        from datetime import datetime, timezone
+        record = {"schema_version": 1, "rollback_id": rollback_id, "status": "prepared",
+                  "action": "bulk_sync", "plan_id": plan_id,
+                  "created_at": datetime.now(timezone.utc).isoformat(), "changes": changes}
+        record_path = _sync_record_path(state, rollback_id)
+        _sync_record_changes(record, rollback_id)
+        _sync_private_write(record_path, record)
+        try:
+            result = _sync_desktop_applications_mutate(
+                home=home, prefix=prefix, repo_root=repo_root,
+                xdg_data_home=xdg_data_home, xdg_config_home=xdg_config_home,
+            )
+            for item in changes:
+                target = _sync_target(Path(home).expanduser().resolve(), item["path"])
+                current_bytes = _file_bytes(target)
+                current_hash = hashlib.sha256(current_bytes).hexdigest() if current_bytes is not None else "absent"
+                if current_hash != item["after_sha256"]:
+                    raise ShortcutError("shortcut sync result differs from the journaled plan")
+            record["status"] = "applied"
+            _sync_private_write(record_path, record)
+        except Exception:
+            restore_errors = []
+            for item in reversed(changes):
+                try:
+                    target = _sync_target(Path(home).expanduser().resolve(), item["path"])
+                    before = base64.b64decode(item["before_b64"], validate=True)
+                    if item["before_present"]:
+                        _atomic_write(target, before)
+                        os.chmod(target, item["before_mode"])
+                    else:
+                        target.unlink(missing_ok=True)
+                except OSError as exc:
+                    restore_errors.append(str(exc))
+            record["status"] = "needs_recovery" if restore_errors else "failed"
+            _sync_private_write(record_path, record)
+            if restore_errors:
+                raise ShortcutError("shortcut sync failed and durable rollback needs recovery")
+            raise
+        return {**preview, "status": "complete", "changed": True, "rollback_id": rollback_id,
+                "written": result.get("written", []), "removed": result.get("removed", []),
+                "conflicts": result.get("conflicts", []), "menu": result.get("menu"),
+                "read_only": False}
+    finally:
+        os.close(lock_fd)
 
 def launch_desktop_application(desktop_id: str, *, prefix: str, repo_root: str,
                                env: dict[str, str], display: str | None = None) -> dict[str, Any]:

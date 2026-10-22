@@ -68,9 +68,10 @@ Safety:
   an exact preview plan ID. Recovery apply operations require their preview ID.
   Remote access defaults to disabled and never enables public ingress.
 
-`app` launches a Debian app entry; `mng papps sync` refreshes the Native XFCE
-PRoot Apps menu from installed guest applications. Use `tx help mng` and
-`tx help app` for detailed options.
+`app` launches a Debian app entry; `mng papps sync` previews and refreshes the
+Native XFCE PRoot Apps menu. `mng papps rollback list` shows saved sync points;
+`mng papps rollback apply ROLLBACK_ID` previews and confirms a restore.
+Use `tx help mng` and `tx help app` for detailed options.
 EOF
       ;;
     terminal)

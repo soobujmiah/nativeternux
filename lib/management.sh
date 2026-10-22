@@ -32,6 +32,27 @@ nt_cmd_management() {
       local action="${1:-}"
       [ "$#" -gt 0 ] && shift
       case "$action" in
+        rollback)
+          local mode="list"
+          if [ "$#" -gt 0 ]; then mode="$1"; shift; fi
+          nt_require_termux || return 1
+          nt_require_command python3 || return 1
+          if [ "$mode" = list ]; then
+            [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng papps rollback list"; return 2; }
+            python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.rollback.list --json
+            return $?
+          fi
+          [ "$mode" = apply ] && [ "$#" -eq 1 ] || { nt_fail "Usage: tx mng papps rollback list | apply ROLLBACK_ID"; return 2; }
+          local rollback_id="$1" rollback_preview rollback_plan answer
+          rollback_preview="$(python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.rollback.preview --rollback-id "$rollback_id" --json)" || return $?
+          printf '%s\n' "$rollback_preview" | python3 -c 'import json,sys; d=json.load(sys.stdin).get("data",{}); print("Restore previous PRoot app menu state:"); [print(" -",x.get("action"),x.get("path")) for x in d.get("changes",[])]'
+          rollback_plan="$(printf '%s' "$rollback_preview" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("data",{}).get("plan_id",""))')" || return 1
+          [ -n "$rollback_plan" ] || { nt_fail "Rollback preview did not return a plan."; return 1; }
+          [ -t 0 ] || { nt_fail "Rollback apply needs an interactive confirmation."; return 2; }
+          read -r -p "Restore this prior state? [y/N] " answer
+          case "$answer" in y|Y|yes|YES) ;; *) printf '%s\n' "No changes made."; return 0 ;; esac
+          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.rollback.apply --rollback-id "$rollback_id" --yes --plan-id "$rollback_plan" --json
+          ;;
         sync)
           local confirmed=0
           if [ "$#" -gt 0 ] && [ "$1" = "--yes" ]; then confirmed=1; shift; fi
@@ -53,7 +74,7 @@ nt_cmd_management() {
           python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.apply --yes --plan-id "$plan_id" --json
           ;;
         ""|--help|-h) nt_help management ;;
-        *) nt_fail "Usage: tx mng papps sync"; return 2 ;;
+        *) nt_fail "Usage: tx mng papps sync | rollback {list|apply ROLLBACK_ID}"; return 2 ;;
       esac
       ;;
     app)

@@ -285,6 +285,22 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertEqual(applied["status"], "complete")
         self.assertTrue((data / "applications/ternuxx-proot-app-org.example.Editor.desktop").is_file())
         self.assertTrue((config / "menus/xfce-applications.menu").is_file())
+        self.assertRegex(applied["rollback_id"], r"^[0-9a-f]{32}$")
+        rollback_list = proot_shortcuts.list_desktop_application_sync_rollbacks(
+            home=str(self.home), state_dir=str(self.home / ".local/share/ternuxx"))
+        self.assertEqual(rollback_list["rollbacks"][0]["status"], "applied")
+        rollback_preview = proot_shortcuts.preview_desktop_application_sync_rollback(
+            applied["rollback_id"], home=str(self.home), state_dir=str(self.home / ".local/share/ternuxx"))
+        self.assertTrue(rollback_preview["requires_confirmation"])
+        rolled_back = proot_shortcuts.apply_desktop_application_sync_rollback(
+            applied["rollback_id"], home=str(self.home), state_dir=str(self.home / ".local/share/ternuxx"),
+            confirmed=True, plan_id=rollback_preview["plan_id"])
+        self.assertEqual(rolled_back["status"], "complete")
+        self.assertFalse((data / "applications/ternuxx-proot-app-org.example.Editor.desktop").exists())
+        self.assertFalse((config / "menus/xfce-applications.menu").exists())
+        self.assertEqual(proot_shortcuts.list_desktop_application_sync_rollbacks(
+            home=str(self.home), state_dir=str(self.home / ".local/share/ternuxx"))["rollbacks"][0]["status"],
+            "rolled_back")
 
     def test_bulk_sync_restores_prior_files_when_apply_fails_midway(self) -> None:
         prefix = Path(self.temp.name) / "termux"

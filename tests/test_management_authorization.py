@@ -28,10 +28,15 @@ class ManagementAuthorizationTests(unittest.TestCase):
         self.assertEqual(management_authorization.required_capability("proot.shortcuts.apply"), "applications.shortcuts.manage")
         self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.preview"), "diagnostics.read")
         self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.apply"), "applications.shortcuts.manage")
+        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.rollback.list"), "diagnostics.read")
+        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.rollback.preview"), "diagnostics.read")
+        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.rollback.apply"), "applications.shortcuts.manage")
         self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["diagnostics.read"]))
         self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["applications.manage"]))
         self.assertTrue(management_authorization.authorize("proot.shortcuts.apply", ["applications.shortcuts.manage"]))
         self.assertFalse(management_authorization.authorize("proot.shortcuts.sync.apply", ["applications.manage"]))
+        self.assertFalse(management_authorization.authorize("proot.shortcuts.sync.rollback.apply", ["diagnostics.read"]))
+        self.assertTrue(management_authorization.authorize("proot.shortcuts.sync.rollback.apply", ["applications.shortcuts.manage"]))
 
     def test_proot_health_uses_read_scope_and_is_not_mutating(self) -> None:
         import management_sessions

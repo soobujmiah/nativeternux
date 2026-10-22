@@ -114,6 +114,9 @@ OPERATIONS = {
     "proot.app.launch": {"args": {"app_id", "desktop_id", "display"}},
     "proot.shortcuts.sync.preview": {"args": set()},
     "proot.shortcuts.sync.apply": {"args": {"confirmed", "plan_id"}},
+    "proot.shortcuts.sync.rollback.list": {"args": set()},
+    "proot.shortcuts.sync.rollback.preview": {"args": {"rollback_id"}},
+    "proot.shortcuts.sync.rollback.apply": {"args": {"rollback_id", "confirmed", "plan_id"}},
     "proot.shortcuts.list": {"args": set()},
     "proot.shortcuts.preview": {"args": {"action", "app_id"}},
     "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
@@ -583,8 +586,27 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 if type(confirmed) is not bool or (plan_id is not None and not isinstance(plan_id, str)):
                     return _error(request_id, "invalid_arguments", "sync apply requires confirmation and an exact plan ID")
                 data = proot_shortcuts.apply_desktop_application_sync(
-                    **sync_args, confirmed=confirmed, plan_id=plan_id,
+                    **sync_args,
+                    state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"),
+                    confirmed=confirmed, plan_id=plan_id,
                 )
+        elif operation == "proot.shortcuts.sync.rollback.list":
+            data = proot_shortcuts.list_desktop_application_sync_rollbacks(
+                home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"))
+        elif operation == "proot.shortcuts.sync.rollback.preview":
+            rollback_id = args.get("rollback_id")
+            if not isinstance(rollback_id, str):
+                return _error(request_id, "invalid_arguments", "shortcut rollback ID is required")
+            data = proot_shortcuts.preview_desktop_application_sync_rollback(
+                rollback_id, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"))
+        elif operation == "proot.shortcuts.sync.rollback.apply":
+            rollback_id = args.get("rollback_id")
+            confirmed, plan_id = args.get("confirmed", False), args.get("plan_id")
+            if not isinstance(rollback_id, str) or confirmed is not True or not isinstance(plan_id, str):
+                return _error(request_id, "confirmation_required", "shortcut rollback requires its exact preview plan and confirmation")
+            data = proot_shortcuts.apply_desktop_application_sync_rollback(
+                rollback_id, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"),
+                confirmed=True, plan_id=plan_id)
         elif operation == "proot.shortcuts.list":
             data = proot_shortcuts.list_shortcuts(
                 home=home, prefix=process_env["PREFIX"],
@@ -960,6 +982,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--alias")
     parser.add_argument("--backup-id")
     parser.add_argument("--operation-id")
+    parser.add_argument("--rollback-id")
     parser.add_argument("--job-id")
     parser.add_argument("--mutation-action", choices=("create", "update", "remove"))
     parser.add_argument("--execution-id")
@@ -1588,6 +1611,29 @@ def main(argv: list[str] | None = None) -> int:
                 else: print(response["error"]["message"], file=sys.stderr)
                 return 1
             payload = {"confirmed": True, "plan_id": args.plan_id}
+    elif args.operation in {"proot.shortcuts.sync.rollback.list", "proot.shortcuts.sync.rollback.preview",
+                             "proot.shortcuts.sync.rollback.apply"}:
+        if args.operation.endswith(".list"):
+            if args.rollback_id or args.yes or args.plan_id:
+                response = _error(request_id, "invalid_arguments", "rollback list takes no arguments")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print(response["error"]["message"], file=sys.stderr)
+                return 1
+            payload = {}
+        elif args.operation.endswith(".preview"):
+            if not args.rollback_id or args.yes or args.plan_id:
+                response = _error(request_id, "invalid_arguments", "rollback preview requires --rollback-id only")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print(response["error"]["message"], file=sys.stderr)
+                return 1
+            payload = {"rollback_id": args.rollback_id}
+        else:
+            if not args.rollback_id or not args.yes or not args.plan_id:
+                response = _error(request_id, "invalid_arguments", "rollback apply requires --rollback-id, --yes, and --plan-id")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print(response["error"]["message"], file=sys.stderr)
+                return 1
+            payload = {"rollback_id": args.rollback_id, "confirmed": True, "plan_id": args.plan_id}
     elif args.operation == "proot.shortcuts.list":
         if args.shortcut_action or args.app_id or args.desktop_id or args.yes or args.plan_id:
             response = _error(request_id, "invalid_arguments", "shortcut list takes no arguments")
