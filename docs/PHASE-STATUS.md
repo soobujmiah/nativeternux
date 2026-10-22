@@ -56,7 +56,7 @@ Evidence:
 
 **Status:** in_progress
 
-Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented; same-session handoff, exact replay-guest retire/restore and visible Web/GTK interaction checks pass. Full P4 acceptance remains open for clean replay reproducibility/rollback, broader provider and route configuration, graphics workload evidence, Web mutation/client parity, Native independence failure injection, and the full source/installed audit.
+Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented; same-session handoff, exact replay-guest retire/restore and visible Web/GTK interaction checks pass. A full Doctor report now stays read-only and healthy when optional PRoot inventory raises FileNotFoundError. Full P4 acceptance remains open for clean replay reproducibility/rollback, broader provider and route configuration, graphics workload evidence, Web mutation/client parity, wider Native independence failure injection, and the full source/installed audit.
 
 **Next action:** Finish the pinned isolated replay setup and verify exact package/config receipt plus protected-rootfs preservation; then perform exact retire/restore and close remaining provider/configuration, route, client-parity, Native-independence, and full-audit gates.
 
@@ -111,6 +111,7 @@ Evidence:
 - [docs/evidence/2026-10-22-gtk-replay-guest-apply.md](evidence/2026-10-22-gtk-replay-guest-apply.md)
 - [docs/evidence/2026-10-22-web-ui-visible-acceptance.json](evidence/2026-10-22-web-ui-visible-acceptance.json)
 - [docs/evidence/2026-10-22-p4-next-gate-reconciliation.md](evidence/2026-10-22-p4-next-gate-reconciliation.md)
+- [docs/evidence/2026-10-22-native-optional-proot-failure-injection.md](evidence/2026-10-22-native-optional-proot-failure-injection.md)
 
 ## P5 — Distro and display compatibility profiles
 

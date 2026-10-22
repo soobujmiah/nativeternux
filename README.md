@@ -16,7 +16,7 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented; same-session handoff, exact replay-guest retire/restore and visible Web/GTK interaction checks pass. Full P4 acceptance remains open for clean replay reproducibility/rollback, broader provider and route configuration, graphics workload evidence, Web mutation/client parity, Native independence failure injection, and the full source/installed audit.
+Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented; same-session handoff, exact replay-guest retire/restore and visible Web/GTK interaction checks pass. A full Doctor report now stays read-only and healthy when optional PRoot inventory raises FileNotFoundError. Full P4 acceptance remains open for clean replay reproducibility/rollback, broader provider and route configuration, graphics workload evidence, Web mutation/client parity, wider Native independence failure injection, and the full source/installed audit.
 
 **Next action:** Finish the pinned isolated replay setup and verify exact package/config receipt plus protected-rootfs preservation; then perform exact retire/restore and close remaining provider/configuration, route, client-parity, Native-independence, and full-audit gates.
 

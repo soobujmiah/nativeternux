@@ -146,7 +146,7 @@ class DoctorReportTest(unittest.TestCase):
                 patch.object(doctor_report.proot_diagnostics, "inspect_installed", return_value={
                     "status": "installed", "installed_distributions": ["debian"],
                     "ownership": "unverified", "guest_entered": False, "read_only": True,
-                }),
+                }) as proot_inventory,
                 patch.object(doctor_report.shutil, "disk_usage", return_value=SimpleNamespace(free=4 * 1024**3)),
                 patch.object(doctor_report, "pulse_server_status", return_value=("ready", "protocol connected")), \
                 patch.object(doctor_report, "check_session") as check_session, \
@@ -156,6 +156,8 @@ class DoctorReportTest(unittest.TestCase):
                 first_ids = [finding["id"] for finding in first["findings"]]
                 second = doctor_report.build_report(False, state)
                 second_ids = [finding["id"] for finding in second["findings"]]
+                proot_inventory.side_effect = FileNotFoundError("optional manager absent")
+                without_proot = doctor_report.build_report(False, state)
 
             self.assertEqual(first_ids, second_ids)
             self.assertEqual(len(first_ids), len(set(first_ids)))
@@ -164,6 +166,11 @@ class DoctorReportTest(unittest.TestCase):
             self.assertTrue(first["read_only"])
             self.assertEqual(first["schema_version"], 1)
             self.assertEqual(first["overall"], "pass")
+            self.assertTrue(without_proot["read_only"])
+            self.assertEqual(without_proot["overall"], "pass")
+            proot_finding = next(f for f in without_proot["findings"] if f["id"] == "NTX-PROOT-001")
+            self.assertEqual(proot_finding["severity"], "info")
+            self.assertIn("provider inventory unknown", proot_finding["observed"])
             cpu = next(f for f in first["findings"] if f["id"] == "NTX-CPU-001")
             self.assertEqual(cpu["scope"], "native-compute")
             self.assertIn("CPU is the native execution baseline", cpu["observed"])
@@ -189,7 +196,7 @@ class DoctorReportTest(unittest.TestCase):
             self.assertIn("0x0029", adb_server["observed"])
             self.assertIn("does not start ADB", adb_server["suggested_action"])
             self.assertEqual(sum(first["summary"].values()), len(first["findings"]))
-            self.assertEqual(check_session.call_count, 2)
+            self.assertEqual(check_session.call_count, 3)
             encoded = json.dumps(first)
             self.assertEqual(json.loads(encoded)["command"], "doctor")
 
