@@ -1,0 +1,7 @@
+event_id: commit-9b7443126d03-c2c39b81cbc8d808
+repository: soobujmiah/ternuxx
+commit: 9b7443126d03e88f028213e8da52ddeeb1293e66
+kind: commit
+occurred_at: '2026-10-22T06:17:50Z'
+status: completed
+summary: 'fix(runtime): qualify fresh CLI replay and isolate guest probe effects'
