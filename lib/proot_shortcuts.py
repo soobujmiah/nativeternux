@@ -218,33 +218,104 @@ def _desktop_group(path: Path) -> dict[str, str]:
         return {}
 
 
-def discover_desktop_apps(*, prefix: str) -> list[dict[str, str]]:
-    """Read visible application entries from the selected Debian rootfs."""
-    app_dir = _guest_app_dir(prefix)
-    found: list[dict[str, str]] = []
+def _guest_executable_available(prefix: str, command: str) -> bool:
+    if not isinstance(command, str) or not command or "\x00" in command:
+        return False
+    rootfs = (Path(prefix) / "var/lib/proot-distro/containers/debian/rootfs").resolve()
+    if command.startswith("/"):
+        candidates = [rootfs / command.lstrip("/")]
+    elif "/" in command:
+        return False
+    else:
+        candidates = [rootfs / directory.lstrip("/") / command for directory in
+                      ("/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin",
+                       "/usr/sbin", "/sbin", "/usr/games")]
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve(strict=True)
+            resolved.relative_to(rootfs)
+            info = resolved.stat()
+        except (OSError, RuntimeError, ValueError):
+            continue
+        if stat.S_ISREG(info.st_mode) and info.st_mode & 0o111:
+            return True
+    return False
+
+
+def inspect_desktop_apps(*, prefix: str) -> dict[str, Any]:
+    # Read safe desktop metadata and report visible unsupported entries.
+    try:
+        app_dir = _guest_app_dir(prefix)
+    except ShortcutError as exc:
+        return {"status": "unavailable", "items": [],
+                "diagnostics": [{"status": "unavailable", "reason": str(exc)}],
+                "read_only": True}
+    items: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, str]] = []
     for path in sorted(app_dir.glob("*.desktop")):
-        if path.is_symlink() or not path.is_file() or not _DESKTOP_ID.fullmatch(path.name):
+        desktop_id = path.name
+        if path.is_symlink() or not path.is_file() or not _DESKTOP_ID.fullmatch(desktop_id):
+            diagnostics.append({"desktop_id": desktop_id, "status": "unsupported",
+                                "reason": "Desktop entry is not a regular safe file."})
             continue
         entry = _desktop_group(path)
-        truth = lambda key: entry.get(key, "false").strip().lower() == "true"
-        if (entry.get("Type") != "Application" or not entry.get("Name")
-                or not entry.get("Exec") or truth("NoDisplay") or truth("Hidden")
-                or truth("Terminal") or path.name == "xfce4-session-logout.desktop"):
-            continue
-        only = {item for item in entry.get("OnlyShowIn", "").split(";") if item}
-        excluded = {item for item in entry.get("NotShowIn", "").split(";") if item}
-        if (only and "XFCE" not in only) or "XFCE" in excluded:
+        localized_names = {
+            key[5:-1]: value for key, value in entry.items()
+            if key.startswith("Name[") and key.endswith("]") and key[5:-1]
+        }
+        name = entry.get("Name") or next(iter(localized_names.values()), desktop_id)
+        hidden = entry.get("Hidden", "false").strip().lower() == "true"
+        no_display = entry.get("NoDisplay", "false").strip().lower() == "true"
+        if hidden or no_display:
+            diagnostics.append({"desktop_id": desktop_id, "name": name,
+                                "status": "hidden",
+                                "reason": "Desktop entry is intentionally hidden from application menus."})
             continue
         try:
-            _desktop_app_argv(path.name, prefix=prefix)
-        except ShortcutError:
+            argv, parsed = _desktop_app_argv(desktop_id, prefix=prefix)
+        except ShortcutError as exc:
+            diagnostics.append({"desktop_id": desktop_id, "name": name,
+                                "status": "unsupported", "reason": str(exc)})
+            continue
+        try_exec = parsed.get("TryExec", "").strip()
+        executable = try_exec or argv[0]
+        available = _guest_executable_available(prefix, executable)
+        categories = [value for value in parsed.get("Categories", "").split(";") if value]
+        item = {
+            "desktop_id": desktop_id,
+            "name": name,
+            "localized_names": localized_names,
+            "comment": parsed.get("Comment", ""),
+            "localized_comments": {
+                key[8:-1]: value for key, value in parsed.items()
+                if key.startswith("Comment[") and key.endswith("]") and key[8:-1]
+            },
+            "icon": parsed.get("Icon", "applications-other"),
+            "categories": categories,
+            "try_exec": try_exec,
+            "executable_available": available,
+            "working_directory": parsed.get("Path", ""),
+            "terminal_required": parsed.get("Terminal", "false").strip().lower() == "true",
+            "status": "available" if available else "unavailable",
+            "diagnostic": "" if available else "The desktop command or TryExec target is not an executable in the Debian rootfs.",
+            "read_only": True,
+        }
+        items.append(item)
+    return {"status": "available", "items": items, "diagnostics": diagnostics, "read_only": True}
+
+
+def discover_desktop_apps(*, prefix: str) -> list[dict[str, str]]:
+    # Return only visible supported entries safe for generated shortcuts.
+    inventory = inspect_desktop_apps(prefix=prefix)
+    found: list[dict[str, str]] = []
+    for item in inventory["items"]:
+        if item["status"] != "available":
             continue
         found.append({
-            "desktop_id": path.name, "name": entry["Name"],
-            "comment": entry.get("Comment", ""), "icon": entry.get("Icon", "applications-other"),
+            "desktop_id": item["desktop_id"], "name": item["name"],
+            "comment": item["comment"], "icon": item["icon"],
         })
     return found
-
 
 def _desktop_app_argv(desktop_id: str, *, prefix: str) -> tuple[list[str], dict[str, str]]:
     if not _DESKTOP_ID.fullmatch(desktop_id):
@@ -936,7 +1007,29 @@ def list_shortcuts(*, home: str, prefix: str, xdg_data_home: str | None = None,
             "shortcut_owner": "native_termux", "shortcut_state": state,
             "application_availability": "unknown", "read_only": True,
         })
-    return {"resource_id": "proot.x11.shortcuts", "items": items, "read_only": True}
+    dynamic = inspect_desktop_apps(prefix=prefix)
+    if dynamic["status"] == "available":
+        cli = str(Path(prefix) / "bin" / "tx")
+        if not (Path(cli).is_file() and os.access(cli, os.X_OK)):
+            cli = str(Path(repo_root) / "tx")
+        for item in dynamic["items"]:
+            target = app_dir / ("ternuxx-proot-app-" + item["desktop_id"])
+            try:
+                raw = _file_bytes(target)
+            except ShortcutError:
+                item["shortcut_state"] = "conflict"
+                item["shortcut_diagnostic"] = "A symbolic link or non-file occupies this shortcut name."
+                continue
+            expected = _dynamic_entry(item["desktop_id"], item, cli=cli)
+            owned = (raw is not None
+                     and b"X-Ternuxx-Generated=proot-app-v2" in raw
+                     and f"X-Ternuxx-Desktop-ID={item['desktop_id']}".encode() in raw)
+            item["shortcut_state"] = ("absent" if raw is None else
+                                      "installed" if raw == expected else
+                                      "modified" if owned else "conflict")
+            item["shortcut_owner"] = "ternuxx" if owned else ("none" if raw is None else "unknown")
+    return {"resource_id": "proot.x11.shortcuts", "items": items,
+            "desktop_applications": dynamic, "read_only": True}
 
 
 def preview(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,

@@ -91,45 +91,73 @@ def _choose(screen: "curses._CursesWindow", title: str, options: list[tuple[str,
 
 
 def _launch_proot_app(screen: "curses._CursesWindow") -> dict[str, object] | None:
-    """Guide a named app launch through the shared provider-aware operation."""
-    app_id = _prompt(screen, "App name (" + ", ".join(proot_shortcuts.CATALOG) + ")")
-    if not app_id:
-        return None
-    if app_id not in proot_shortcuts.CATALOG:
-        return {"ok": False, "error": {"code": "unknown_proot_app"}}
+    inventory = _call("proot.shortcuts.list")
+    if not inventory.get("ok"):
+        return inventory
+    data = inventory.get("data", {})
+    static_items = data.get("items", []) if isinstance(data, dict) else []
+    desktop_catalog = data.get("desktop_applications", {}) if isinstance(data, dict) else {}
+    dynamic_items = desktop_catalog.get("items", []) if isinstance(desktop_catalog, dict) else []
+    options: list[tuple[str, str]] = []
+    names: dict[str, str] = {}
+    for item in static_items:
+        if not isinstance(item, dict) or item.get("id") not in proot_shortcuts.CATALOG:
+            continue
+        app_id = item["id"]
+        names["app:" + app_id] = str(item.get("name") or proot_shortcuts.CATALOG[app_id]["name"])
+        options.append(("app:" + app_id, names["app:" + app_id] + " · shortcut " + str(item.get("shortcut_state", "unknown"))))
+    for item in dynamic_items:
+        if not isinstance(item, dict) or item.get("status") != "available":
+            continue
+        desktop_id = item.get("desktop_id")
+        if not isinstance(desktop_id, str):
+            continue
+        key = "desktop:" + desktop_id
+        names[key] = str(item.get("name") or desktop_id)
+        options.append((key, names[key] + " · Debian app · shortcut " + str(item.get("shortcut_state", "unknown"))))
+    selected = _choose(screen, "Choose a PRoot app", options)
+    if not selected or selected not in names:
+        return {"ok": False, "error": {"code": "cancelled" if not selected else "unknown_proot_app"}}
     display = _prompt(screen, "Native Ternuxx X11 display (blank=verified session default)")
     if display and not re.fullmatch(r":[0-9]{1,2}", display):
         return {"ok": False, "error": {"code": "invalid_display"}}
-    name = proot_shortcuts.CATALOG[app_id]["name"]
+    name = names[selected]
     target = "Native Ternuxx display" + (f" {display}" if display else "")
     if _prompt(screen, f"Launch {name} through PRoot in {target}? type yes").lower() != "yes":
         return {"ok": False, "error": {"code": "cancelled"}}
-    args: dict[str, object] = {"app_id": app_id}
+    args: dict[str, object] = {"app_id": selected[4:]} if selected.startswith("app:") else {
+        "desktop_id": selected[8:]}
     if display:
         args["display"] = display
     return _call("proot.app.launch", args)
 
 
 def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
-    """Preview an exact catalog shortcut change, then apply only that plan."""
-    action = _prompt(screen, "Shortcut action: add or remove").lower()
+    inventory = _call("proot.shortcuts.list")
+    if not inventory.get("ok"):
+        return inventory
+    data = inventory.get("data", {})
+    items = data.get("items", []) if isinstance(data, dict) else []
+    options = [(item["id"], f"{item.get('name', item['id'])} · {item.get('shortcut_state', 'unknown')}")
+               for item in items if isinstance(item, dict) and item.get("id") in proot_shortcuts.CATALOG]
+    action = _choose(screen, "Shortcut action", [("add", "Add shortcut"), ("remove", "Remove owned shortcut")])
     if action not in {"add", "remove"}:
-        return {"ok": False, "error": {"code": "invalid_shortcut_action"}}
-    app_id = _prompt(screen, "PRoot app ID (" + ", ".join(proot_shortcuts.CATALOG) + ")")
+        return {"ok": False, "error": {"code": "cancelled"}}
+    app_id = _choose(screen, "Choose a named PRoot app shortcut", options)
     if app_id not in proot_shortcuts.CATALOG:
-        return {"ok": False, "error": {"code": "unknown_proot_app"}}
+        return {"ok": False, "error": {"code": "cancelled" if not app_id else "unknown_proot_app"}}
     preview = _call("proot.shortcuts.preview", {"action": action, "app_id": app_id})
     if not preview.get("ok"):
         return preview
-    data = preview.get("data", {})
-    if not isinstance(data, dict):
+    plan = preview.get("data", {})
+    if not isinstance(plan, dict):
         return {"ok": False, "error": {"code": "invalid_shortcut_preview"}}
-    if not data.get("changed"):
+    if not plan.get("changed"):
         return preview
-    plan_id = data.get("plan_id")
+    plan_id = plan.get("plan_id")
     if not isinstance(plan_id, str):
         return {"ok": False, "error": {"code": "invalid_shortcut_preview"}}
-    affected = data.get("affected_resources") or []
+    affected = plan.get("affected_resources") or []
     target = affected[0].get("path", "the selected launcher") if affected and isinstance(affected[0], dict) else "the selected launcher"
     before = affected[0].get("before", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
     after = affected[0].get("after", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
@@ -140,6 +168,26 @@ def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
         "action": action, "app_id": app_id, "confirmed": True, "plan_id": plan_id,
     })
 
+
+def _manage_proot_shortcut_sync(screen: "curses._CursesWindow") -> dict[str, object]:
+    preview = _call("proot.shortcuts.sync.preview")
+    if not preview.get("ok"):
+        return preview
+    plan = preview.get("data", {})
+    if not isinstance(plan, dict):
+        return {"ok": False, "error": {"code": "invalid_shortcut_sync_preview"}}
+    if not plan.get("changed"):
+        return preview
+    plan_id = plan.get("plan_id")
+    if not isinstance(plan_id, str):
+        return {"ok": False, "error": {"code": "invalid_shortcut_sync_preview"}}
+    changes = plan.get("changes", [])
+    summary = "; ".join(f"{item.get('action')} {item.get('path')}"
+                        for item in changes if isinstance(item, dict))
+    confirm = _prompt(screen, f"Sync discovered PRoot apps ({plan.get('discovered', 0)} apps): {summary}. Type yes")
+    if confirm.lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("proot.shortcuts.sync.apply", {"confirmed": True, "plan_id": plan_id})
 
 def _manage_proot_shortcut_rollback(screen: "curses._CursesWindow") -> dict[str, object]:
     """Select a saved bulk sync, review its exact paths, then confirm restore."""
@@ -1205,11 +1253,13 @@ def _run(screen: "curses._CursesWindow") -> int:
                 report = _manage_replay_guest(screen)
             elif resource["id"] == "proot.debian.workloads":
                 choice = _choose(screen, "PRoot workloads", [("launch", "Launch named app"),
-                    ("shortcut", "Add or remove app shortcut"), ("rollback", "Review and restore saved shortcut sync"),
+                    ("shortcut", "Add or remove named shortcut"), ("sync", "Sync discovered Debian apps"),
+                    ("rollback", "Review and restore saved shortcut sync"),
                     ("sessions", "Inspect or manage sessions"),
                     ("guest", "Retire or restore a Ternuxx replay guest")]).lower()
                 report = (_launch_proot_app(screen) if choice == "launch" else
                           _manage_proot_shortcut(screen) if choice == "shortcut" else
+                          _manage_proot_shortcut_sync(screen) if choice == "sync" else
                           _manage_proot_shortcut_rollback(screen) if choice == "rollback" else
                           _manage_proot_sessions(screen) if choice == "sessions" else
                           _manage_replay_guest(screen) if choice == "guest" else

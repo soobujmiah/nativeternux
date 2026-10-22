@@ -38,6 +38,12 @@ class ManagementCenterReplayGuestUiTests(unittest.TestCase):
         self.assertIn('"Ternuxx GTK handoff test" : "Ternuxx Management Center"', SOURCE)
         self.assertIn('(test_attach || review_instance) ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS', SOURCE)
 
+    def test_proot_app_launcher_uses_friendly_selection_not_raw_ids(self):
+        self.assertIn('gtk_drop_down_new_from_strings(proot_shortcut_labels)', SOURCE)
+        self.assertIn('g_object_get_data(G_OBJECT(window), "proot-app-select")', SOURCE)
+        self.assertNotIn('"App ID, for example files"', SOURCE)
+        self.assertIn('run_bridge(c, "proot-app-launch", proot_shortcut_ids[index]', SOURCE)
+
     def test_proot_shortcut_manager_uses_friendly_catalog_selections(self):
         self.assertIn('gtk_drop_down_new_from_strings(proot_shortcut_labels)', SOURCE)
         self.assertIn('gtk_drop_down_new_from_strings(actions)', SOURCE)

@@ -29,6 +29,14 @@ class ProotShortcutTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
+    def make_guest_executable(self, prefix, guest_path="/usr/bin/editor"):
+        rootfs = Path(prefix) / "var/lib/proot-distro/containers/debian/rootfs"
+        executable = rootfs / guest_path.lstrip("/")
+        executable.parent.mkdir(parents=True, exist_ok=True)
+        executable.write_text("#!/bin/sh\nexit 0\n")
+        executable.chmod(0o755)
+        return executable
+
     def preview(self, action="add", app_id="terminal"):
         return proot_shortcuts.preview(
             action, app_id, home=str(self.home), prefix="/termux",
@@ -284,6 +292,7 @@ class ProotShortcutTests(unittest.TestCase):
         root = prefix / "var/lib/proot-distro/containers/debian/rootfs"
         apps = root / "usr/share/applications"
         apps.mkdir(parents=True)
+        self.make_guest_executable(prefix)
         (apps / "org.example.Editor.desktop").write_text(
             "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor %f\nIcon=editor\n")
         (apps / "hidden.desktop").write_text(
@@ -323,6 +332,7 @@ class ProotShortcutTests(unittest.TestCase):
         prefix = Path(self.temp.name) / "termux"
         apps = prefix / "var/lib/proot-distro/containers/debian/rootfs/usr/share/applications"
         apps.mkdir(parents=True)
+        self.make_guest_executable(prefix)
         (apps / "org.example.Editor.desktop").write_text(
             "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor %f\n")
         data = self.home / "xfce-data"
@@ -392,6 +402,7 @@ class ProotShortcutTests(unittest.TestCase):
         prefix = Path(self.temp.name) / "termux"
         apps = prefix / "var/lib/proot-distro/containers/debian/rootfs/usr/share/applications"
         apps.mkdir(parents=True)
+        self.make_guest_executable(prefix)
         (apps / "org.example.Editor.desktop").write_text(
             "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor\n")
         data = self.home / "xfce-data"
@@ -405,6 +416,68 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertIn("ternuxx-proot-app-org.example.Editor.desktop", plan["conflicts"])
         self.assertNotIn(str(target.relative_to(self.home)), {change["path"] for change in plan["changes"]})
         self.assertEqual(target.read_bytes(), original)
+
+    def test_desktop_app_catalog_reports_localization_executable_and_shortcut_ownership(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        rootfs = prefix / "var/lib/proot-distro/containers/debian/rootfs"
+        apps = rootfs / "usr/share/applications"
+        apps.mkdir(parents=True)
+        self.make_guest_executable(prefix)
+        entry = apps / "org.example.Editor.desktop"
+        entry.write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nName[bn]=সম্পাদক\n"
+            "Comment=Edit documents\nCategories=Utility;TextEditor;\n"
+            "Exec=/usr/bin/editor %f\nTryExec=editor\nIcon=editor-icon\n")
+        data = self.home / "xfce-data"
+        inventory = proot_shortcuts.inspect_desktop_apps(prefix=str(prefix))
+        item = inventory["items"][0]
+        self.assertEqual(inventory["status"], "available")
+        self.assertEqual(item["desktop_id"], "org.example.Editor.desktop")
+        self.assertEqual(item["localized_names"]["bn"], "সম্পাদক")
+        self.assertEqual(item["categories"], ["Utility", "TextEditor"])
+        self.assertTrue(item["executable_available"])
+        self.assertEqual(proot_shortcuts.discover_desktop_apps(prefix=str(prefix))[0]["desktop_id"],
+                         "org.example.Editor.desktop")
+
+        listed = proot_shortcuts.list_shortcuts(
+            home=str(self.home), prefix=str(prefix), repo_root=str(self.repo),
+            xdg_data_home=str(data))
+        dynamic = listed["desktop_applications"]["items"][0]
+        self.assertEqual(dynamic["shortcut_state"], "absent")
+        launcher = data / "applications/ternuxx-proot-app-org.example.Editor.desktop"
+        launcher.parent.mkdir(parents=True)
+        launcher.write_bytes(proot_shortcuts._dynamic_entry(
+            dynamic["desktop_id"], dynamic, cli=str(self.repo / "tx")))
+        installed = proot_shortcuts.list_shortcuts(
+            home=str(self.home), prefix=str(prefix), repo_root=str(self.repo),
+            xdg_data_home=str(data))["desktop_applications"]["items"][0]
+        self.assertEqual(installed["shortcut_state"], "installed")
+        launcher.write_text(launcher.read_text() + "# local edit\n")
+        modified = proot_shortcuts.list_shortcuts(
+            home=str(self.home), prefix=str(prefix), repo_root=str(self.repo),
+            xdg_data_home=str(data))["desktop_applications"]["items"][0]
+        self.assertEqual(modified["shortcut_state"], "modified")
+
+    def test_discovery_explains_unavailable_and_unsafe_desktop_entries(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        apps = prefix / "var/lib/proot-distro/containers/debian/rootfs/usr/share/applications"
+        apps.mkdir(parents=True)
+        (apps / "missing.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Missing\n"
+            "Exec=/usr/bin/missing\nTryExec=missing\n")
+        (apps / "unsafe.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Unsafe\nExec=sh -c false\n")
+        (apps / "hidden.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Hidden\nExec=missing\nHidden=true\n")
+        inventory = proot_shortcuts.inspect_desktop_apps(prefix=str(prefix))
+        states = {item["desktop_id"]: item["status"] for item in inventory["items"]}
+        self.assertEqual(states["missing.desktop"], "unavailable")
+        self.assertIn("missing.desktop", {item["desktop_id"] for item in inventory["items"]})
+        diagnostics = {item["desktop_id"]: item for item in inventory["diagnostics"]}
+        self.assertEqual(diagnostics["unsafe.desktop"]["status"], "unsupported")
+        self.assertIn("interpreter", diagnostics["unsafe.desktop"]["reason"])
+        self.assertEqual(diagnostics["hidden.desktop"]["status"], "hidden")
+        self.assertEqual(proot_shortcuts.discover_desktop_apps(prefix=str(prefix)), [])
 
     def test_dynamic_launch_reads_desktop_exec_without_shell(self) -> None:
         prefix = Path(self.temp.name) / "termux"

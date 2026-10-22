@@ -431,6 +431,8 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('run("proot.shortcuts.preview",{action,app_id:select.value})', page)
         self.assertIn('run("proot.shortcuts.apply",{action,app_id:select.value,confirmed:true,plan_id:data.plan_id})', page)
         self.assertIn('run("proot.shortcuts.list")', page)
+        self.assertIn("desktop_applications?.items", page)
+        self.assertIn("option.dataset.desktopId=item.desktop_id", page)
         self.assertIn('run("proot.shortcuts.sync.preview")', page)
         self.assertIn('run("proot.shortcuts.sync.apply",{confirmed:true,plan_id:data.plan_id})', page)
         self.assertIn('Load shortcut sync history', page)
@@ -439,12 +441,12 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('operation==="proot.shortcuts.sync.rollback.apply"', page)
         self.assertIn("Unowned conflicts will be preserved.", page)
         self.assertIn('operation==="proot.shortcuts.sync.apply"', page)
-        self.assertIn('run("proot.app.launch",chosen?{app_id:select.value,display:chosen}:{app_id:select.value})', page)
+        self.assertIn('const target=desktopId?{desktop_id:desktopId}:{app_id:select.value};if(chosen)target.display=chosen;run("proot.app.launch",target)', page)
         self.assertIn("Remove owned shortcut", page)
         self.assertIn("proot.shortcuts.apply", page)
         self.assertIn("Use an X11 display like :1", page)
         self.assertIn("Launch named PRoot app", page)
-        self.assertIn("availability unverified", page)
+        self.assertIn("Discover Debian applications", page)
 
     def test_web_console_has_bounded_mobile_layout_and_touch_navigation_rules(self) -> None:
         page = (ROOT / "lib" / "management_web_ui.html").read_text()

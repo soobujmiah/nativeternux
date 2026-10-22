@@ -111,16 +111,36 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertEqual(terminal_ui.BRANDING_TAGLINE, "Workstation in your pocket — by Sobuj Miah")
         self.assertEqual(terminal_ui.BRANDING_URL, "soobujmiah.github.io")
 
-    def test_guided_proot_launch_uses_only_native_ternuxx_display(self) -> None:
-        prompts = ["files", "", "yes"]
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=prompts) as prompt, \
-             mock.patch.object(terminal_ui, "_call", return_value={"ok": True}) as call:
+    def test_guided_proot_launch_uses_friendly_shared_inventory(self):
+        inventory = {"ok": True, "data": {
+            "items": [{"id": "files", "name": "PRoot Files", "shortcut_state": "installed"}],
+            "desktop_applications": {"items": [{"desktop_id": "org.example.Editor.desktop",
+                "name": "Editor", "status": "available", "shortcut_state": "absent"}]}}}
+        applied = {"ok": True}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=["", "yes"]) as prompt,              mock.patch.object(terminal_ui, "_choose", return_value="app:files") as choose,              mock.patch.object(terminal_ui, "_call", side_effect=[inventory, applied]) as call:
             result = terminal_ui._launch_proot_app(mock.Mock())
-        self.assertEqual(result, {"ok": True})
-        self.assertEqual(call.call_args.args, ("proot.app.launch", {"app_id": "files"}))
+        self.assertEqual(result, applied)
+        self.assertEqual(call.call_args_list, [
+            mock.call("proot.shortcuts.list"),
+            mock.call("proot.app.launch", {"app_id": "files"}),
+        ])
+        self.assertEqual(choose.call_args.args[2], [
+            ("app:files", "PRoot Files · shortcut installed"),
+            ("desktop:org.example.Editor.desktop", "Editor · Debian app · shortcut absent"),
+        ])
         labels = [item.args[1] for item in prompt.call_args_list]
-        self.assertIn("Native Ternuxx X11 display", labels[1])
-        self.assertNotIn("ternux or ternuxx", " ".join(labels).lower())
+        self.assertIn("Native Ternuxx X11 display", labels[0])
+        self.assertNotIn("app ID", " ".join(labels).lower())
+
+    def test_guided_proot_launch_dispatches_selected_debian_desktop_id(self):
+        inventory = {"ok": True, "data": {"items": [], "desktop_applications": {"items": [
+            {"desktop_id": "org.example.Editor.desktop", "name": "Editor",
+             "status": "available", "shortcut_state": "absent"}]}}}
+        with mock.patch.object(terminal_ui, "_prompt", side_effect=[":1", "yes"]),              mock.patch.object(terminal_ui, "_choose", return_value="desktop:org.example.Editor.desktop"),              mock.patch.object(terminal_ui, "_call", side_effect=[inventory, {"ok": True}]) as call:
+            result = terminal_ui._launch_proot_app(mock.Mock())
+        self.assertTrue(result["ok"])
+        self.assertEqual(call.call_args_list[-1], mock.call("proot.app.launch", {
+            "desktop_id": "org.example.Editor.desktop", "display": ":1"}))
 
     def test_proot_shortcut_change_previews_and_applies_the_exact_confirmed_plan(self) -> None:
         plan = {"plan_id": "a" * 24, "changed": True, "affected_resources": [
@@ -128,8 +148,11 @@ class TerminalUISharedServiceTests(unittest.TestCase):
              "before": "absent", "after": "present"}]}
         preview = {"ok": True, "data": plan}
         applied = {"ok": True, "data": {"status": "complete"}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["add", "files", "yes"]), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[preview, applied]) as call:
+        inventory = {"ok": True, "data": {"items": [{"id": "files", "name": "PRoot Files",
+                                                        "shortcut_state": "absent"}]}}
+        with mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
+             mock.patch.object(terminal_ui, "_choose", side_effect=["add", "files"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
             result = terminal_ui._manage_proot_shortcut(mock.Mock())
         self.assertIs(result, applied)
         call.assert_has_calls([
@@ -172,11 +195,15 @@ class TerminalUISharedServiceTests(unittest.TestCase):
 
     def test_proot_shortcut_cancel_does_not_apply(self) -> None:
         preview = {"ok": True, "data": {"changed": True, "plan_id": "b" * 24}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["remove", "files", "no"]), \
-             mock.patch.object(terminal_ui, "_call", return_value=preview) as call:
+        inventory = {"ok": True, "data": {"items": [{"id": "files", "name": "PRoot Files",
+                                                        "shortcut_state": "installed"}]}}
+        with mock.patch.object(terminal_ui, "_prompt", return_value="no"), \
+             mock.patch.object(terminal_ui, "_choose", side_effect=["remove", "files"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview]) as call:
             result = terminal_ui._manage_proot_shortcut(mock.Mock())
         self.assertEqual(result["error"]["code"], "cancelled")
-        call.assert_called_once_with("proot.shortcuts.preview", {"action": "remove", "app_id": "files"})
+        self.assertEqual(call.call_args_list[-1], mock.call("proot.shortcuts.preview", {
+            "action": "remove", "app_id": "files"}))
 
     def test_proot_session_start_is_fixed_previewed_and_confirmed(self) -> None:
         inventory = {"ok": True, "data": {"sessions": []}}
@@ -461,12 +488,26 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                              "externally_managed_resource")
         prompt.assert_not_called(); dispatch.assert_not_called()
 
-    def test_proot_launch_is_provider_aware_and_rejects_unknown_app(self) -> None:
-        with mock.patch.object(terminal_ui, "_prompt", return_value="arbitrary-shell"), \
-             mock.patch.object(terminal_ui, "_call") as dispatch:
+    def test_proot_launch_rejects_a_stale_or_unknown_selection(self) -> None:
+        inventory = {"ok": True, "data": {"items": [], "desktop_applications": {"items": []}}}
+        with mock.patch.object(terminal_ui, "_call", return_value=inventory) as dispatch, \
+             mock.patch.object(terminal_ui, "_choose", return_value="app:arbitrary-shell"):
             result = terminal_ui._launch_proot_app(object())
         self.assertEqual(result["error"]["code"], "unknown_proot_app")
-        dispatch.assert_not_called()
+        dispatch.assert_called_once_with("proot.shortcuts.list")
+
+    def test_proot_shortcut_sync_previews_then_applies_exact_plan(self) -> None:
+        preview = {"ok": True, "data": {"changed": True, "discovered": 2,
+            "plan_id": "c" * 24, "changes": [{"action": "create", "path": "xfce/data/editor.desktop"}]}}
+        applied = {"ok": True, "data": {"status": "complete"}}
+        with mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[preview, applied]) as dispatch:
+            result = terminal_ui._manage_proot_shortcut_sync(mock.Mock())
+        self.assertIs(result, applied)
+        self.assertEqual(dispatch.call_args_list, [
+            mock.call("proot.shortcuts.sync.preview"),
+            mock.call("proot.shortcuts.sync.apply", {"confirmed": True, "plan_id": "c" * 24}),
+        ])
 
     def test_compact_screen_contains_category_resources_and_keyboard_help(self) -> None:
         class FakeScreen:

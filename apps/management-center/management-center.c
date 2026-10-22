@@ -1297,18 +1297,28 @@ static void show_cron_log(GtkButton *button, gpointer data) {
 static void show_cron_history(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "cron-history", NULL, NULL, NULL, NULL, NULL);
 }
+static const gchar *const proot_shortcut_ids[] = {
+    "terminal", "files", "firefox", "blender", "pavucontrol", "system-config-printer",
+    "thunar-bulk-rename", "thunar-settings", "thunar-volman-settings", "vlc", "xarchiver",
+    "xfce4-appfinder", "xfce4-terminal-settings", "shortcut-manager", NULL
+};
+static const gchar *const proot_shortcut_labels[] = {
+    "PRoot Terminal", "PRoot Files", "PRoot Firefox", "Blender (PRoot)",
+    "Volume Control (PRoot)", "Print Settings (PRoot)", "Bulk Rename (PRoot)",
+    "Thunar Preferences (PRoot)", "Removable Drives and Media (PRoot)",
+    "VLC media player (PRoot)", "Xarchiver (PRoot)", "Application Finder (PRoot)",
+    "Xfce Terminal Settings (PRoot)", "Manage PRoot Shortcuts", NULL
+};
 static void proot_app_launch_clicked(GtkButton *button, gpointer data) {
     (void)button; GtkWidget *window = data;
     Center *c = g_object_get_data(G_OBJECT(window), "proot-center");
-    GtkWidget *entry = g_object_get_data(G_OBJECT(window), "proot-entry");
-    const gchar *app_id = gtk_editable_get_text(GTK_EDITABLE(entry));
-    const gchar *known[] = {"terminal", "files", "firefox", "blender", "pavucontrol", "system-config-printer",
-        "thunar-bulk-rename", "thunar-settings", "thunar-volman-settings", "vlc", "xarchiver",
-        "xfce4-appfinder", "xfce4-terminal-settings", "shortcut-manager", NULL};
-    gboolean allowed = FALSE;
-    for (guint i = 0; known[i]; i++) if (g_strcmp0(app_id, known[i]) == 0) allowed = TRUE;
-    if (!allowed) gtk_label_set_text(GTK_LABEL(c->notice), "Choose a listed PRoot app ID.");
-    else run_bridge(c, "proot-app-launch", app_id, NULL, NULL, NULL, NULL);
+    GtkWidget *selector = g_object_get_data(G_OBJECT(window), "proot-app-select");
+    guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(selector));
+    if (index >= G_N_ELEMENTS(proot_shortcut_ids) - 1) {
+        gtk_label_set_text(GTK_LABEL(c->notice), "Choose a listed PRoot app.");
+        return;
+    }
+    run_bridge(c, "proot-app-launch", proot_shortcut_ids[index], NULL, NULL, NULL, NULL);
     gtk_window_destroy(GTK_WINDOW(window));
 }
 static void proot_app_cancel_clicked(GtkButton *button, gpointer data) {
@@ -1325,28 +1335,20 @@ static void launch_proot_app(GtkButton *button, gpointer data) {
     gtk_widget_set_margin_start(box, 16); gtk_widget_set_margin_end(box, 16);
     gtk_window_set_child(GTK_WINDOW(window), box);
     gtk_box_append(GTK_BOX(box), gtk_label_new("Launches the selected Debian PRoot app in the current Native Ternuxx display. Guest app availability is not pre-verified. It uses the existing guest and does not install software or change its configuration."));
-    gtk_box_append(GTK_BOX(box), gtk_label_new("IDs: terminal, files, firefox, blender, pavucontrol, system-config-printer, thunar-bulk-rename, thunar-settings, thunar-volman-settings, vlc, xarchiver, xfce4-appfinder, xfce4-terminal-settings, shortcut-manager"));
-    GtkWidget *entry = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(entry), "App ID, for example files"); gtk_box_append(GTK_BOX(box), entry);
+    GtkWidget *selector = gtk_drop_down_new_from_strings(proot_shortcut_labels);
+    gtk_widget_set_hexpand(selector, TRUE);
+    gtk_box_append(GTK_BOX(box), selector);
     GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    GtkWidget *cancel = gtk_button_new_with_label("Cancel"); GtkWidget *launch = gtk_button_new_with_label("Launch app");
-    gtk_box_append(GTK_BOX(buttons), cancel); gtk_box_append(GTK_BOX(buttons), launch); gtk_box_append(GTK_BOX(box), buttons);
-    g_object_set_data(G_OBJECT(window), "proot-center", c); g_object_set_data(G_OBJECT(window), "proot-entry", entry);
+    GtkWidget *cancel = gtk_button_new_with_label("Cancel");
+    GtkWidget *launch = gtk_button_new_with_label("Launch app");
+    gtk_box_append(GTK_BOX(buttons), cancel); gtk_box_append(GTK_BOX(buttons), launch);
+    gtk_box_append(GTK_BOX(box), buttons);
+    g_object_set_data(G_OBJECT(window), "proot-center", c);
+    g_object_set_data(G_OBJECT(window), "proot-app-select", selector);
     g_signal_connect(cancel, "clicked", G_CALLBACK(proot_app_cancel_clicked), window);
     g_signal_connect(launch, "clicked", G_CALLBACK(proot_app_launch_clicked), window);
     gtk_window_present(GTK_WINDOW(window));
 }
-static const gchar *const proot_shortcut_ids[] = {
-    "terminal", "files", "firefox", "blender", "pavucontrol", "system-config-printer",
-    "thunar-bulk-rename", "thunar-settings", "thunar-volman-settings", "vlc", "xarchiver",
-    "xfce4-appfinder", "xfce4-terminal-settings", "shortcut-manager", NULL
-};
-static const gchar *const proot_shortcut_labels[] = {
-    "PRoot Terminal", "PRoot Files", "PRoot Firefox", "Blender (PRoot)",
-    "Volume Control (PRoot)", "Print Settings (PRoot)", "Bulk Rename (PRoot)",
-    "Thunar Preferences (PRoot)", "Removable Drives and Media (PRoot)",
-    "VLC media player (PRoot)", "Xarchiver (PRoot)", "Application Finder (PRoot)",
-    "Xfce Terminal Settings (PRoot)", "Manage PRoot Shortcuts", NULL
-};
 static void proot_shortcut_preview_clicked(GtkButton *button, gpointer data) {
     (void)button; GtkWidget *window = data;
     Center *c = g_object_get_data(G_OBJECT(window), "shortcut-center");
