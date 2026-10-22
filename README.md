@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Fresh replay and graphics evidence, cross-client terminal handoff, and three isolated Native optional-PRoot failure modes are recorded. Web has one preview-confirmed non-signaling recovery action; broader client parity, safe VirGL cleanup, actual broken-rootfs qualification, and the full repository audit remain open.
+Selected Debian app, replay/graphics, cross-client terminal, and Native failure-isolation evidence is recorded. Bulk shortcut sync now has preview-confirmed CLI/Web and exact-plan Native startup paths; durable undo, GTK/TUI sync, safe VirGL cleanup, broken-rootfs/cold-boot qualification, and the full audit remain open.
 
-**Next action:** Continue Web mutation/client parity and safe VirGL socket-client visibility; then finish source/installed/runtime reconciliation and requirement-by-requirement repository audit, preserving actual guest/rootfs and cold-boot checks as unverified until separately qualified.
+**Next action:** Add durable shortcut rollback and action coverage in GTK/TUI; then continue safe VirGL client visibility, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and the requirement-by-requirement audit.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

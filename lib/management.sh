@@ -33,10 +33,24 @@ nt_cmd_management() {
       [ "$#" -gt 0 ] && shift
       case "$action" in
         sync)
-          [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng papps sync"; return 2; }
+          local confirmed=0
+          if [ "$#" -gt 0 ] && [ "$1" = "--yes" ]; then confirmed=1; shift; fi
+          [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng papps sync [--yes]"; return 2; }
           nt_require_termux || return 1
           nt_require_command python3 || return 1
-          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync --json
+          local preview plan_id changed
+          preview="$(python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.preview --json)" || return $?
+          printf '%s\n' "$preview" | python3 -c 'import json,sys; d=json.load(sys.stdin).get("data",{}); print("Found",d.get("discovered",0),"Debian applications."); [print(" -",x.get("action"),x.get("path")) for x in d.get("changes",[])]; [print("Preserved conflict:",x) for x in d.get("conflicts",[])]'
+          plan_id="$(printf '%s' "$preview" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("data",{}).get("plan_id",""))')" || return 1
+          changed="$(printf '%s' "$preview" | python3 -c 'import json,sys; print("yes" if json.load(sys.stdin).get("data",{}).get("changed") else "no")')" || return 1
+          [ "$changed" = yes ] || { printf '%s\n' "PRoot Apps menu is already in sync."; return 0; }
+          if [ "$confirmed" -ne 1 ]; then
+            [ -t 0 ] || { nt_fail "Non-interactive sync needs explicit --yes after reviewing this preview."; return 2; }
+            local answer
+            read -r -p "Apply these shortcut changes? [y/N] " answer
+            case "$answer" in y|Y|yes|YES) ;; *) printf '%s\n' "No changes made."; return 0 ;; esac
+          fi
+          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.apply --yes --plan-id "$plan_id" --json
           ;;
         ""|--help|-h) nt_help management ;;
         *) nt_fail "Usage: tx mng papps sync"; return 2 ;;

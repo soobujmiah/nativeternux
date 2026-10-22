@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "browser": "153.5.0",
+  "mode": "visible",
+  "requested_viewport": {
+    "width": 752,
+    "height": 1000
+  },
+  "observed_viewport": {
+    "width": 742,
+    "height": 881,
+    "overflow": false
+  },
+  "proot_shortcut_sync_control": {
+    "visible": true,
+    "label": "Preview all Debian app shortcuts"
+  },
+  "operations": [
+    "management.catalog",
+    "proot.sessions.list",
+    "proot.sessions.list"
+  ],
+  "target_alias": "ternuxx-replay-p4",
+  "browser_guest_login_performed": true,
+  "guest_profile_injection_possible": true,
+  "managed_terminal_session_started": false,
+  "shortcut_sync_applied": false,
+  "screenshot": "web-proot-shortcut-sync-control.png",
+  "screenshot_sha256": "19e02ce42f96e57580741fa2a9f2da7d5a7921b6983a672578797f600a050580",
+  "checks": [
+    "unauthenticated-hidden-state",
+    "bootstrap-cleared",
+    "catalog-order",
+    "resource-search",
+    "ssh-password-disabled-recovery-hint",
+    "horizontal-overflow",
+    "stable-actions",
+    "late-response-resource-binding",
+    "8022-inspection-only",
+    "wakelock-status-control",
+    "proot-shortcut-sync-control",
+    "proot-recovery-reconcile-control",
+    "terminal-renderer-no-guest-start"
+  ]
+}

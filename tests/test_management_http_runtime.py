@@ -372,11 +372,18 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 self.assertEqual(json.loads(response)["operation"], "proot.shortcuts.apply")
                 self.assertEqual(dispatch.call_count, 8)
 
-                status, _headers, response = post("proot.shortcuts.sync", "web-shortcut-sync-001",
+                status, _headers, response = post("proot.shortcuts.sync.preview", "web-shortcut-sync-001",
                     "web-shortcut-sync-key1", {})
-                self.assertEqual(status, 403)
-                self.assertEqual(json.loads(response)["error"], "permission_denied")
-                self.assertEqual(dispatch.call_count, 8)
+                self.assertEqual(status, 200, response)
+                self.assertEqual(dispatch.call_args.args[0]["operation"], "proot.shortcuts.sync.preview")
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-sync-apply-1",
+                    "ok": True, "operation": "proot.shortcuts.sync.apply", "data": {"status": "complete"}}
+                status, _headers, response = post("proot.shortcuts.sync.apply", "web-shortcut-sync-apply-1",
+                    "web-shortcut-sync-apply-key1", {"confirmed": True, "plan_id": "b" * 24})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "proot.shortcuts.sync.apply")
+                self.assertEqual(dispatch.call_count, 10)
 
                 dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
                     "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
@@ -424,6 +431,10 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('run("proot.shortcuts.preview",{action,app_id:select.value})', page)
         self.assertIn('run("proot.shortcuts.apply",{action,app_id:select.value,confirmed:true,plan_id:data.plan_id})', page)
         self.assertIn('run("proot.shortcuts.list")', page)
+        self.assertIn('run("proot.shortcuts.sync.preview")', page)
+        self.assertIn('run("proot.shortcuts.sync.apply",{confirmed:true,plan_id:data.plan_id})', page)
+        self.assertIn("Unowned conflicts will be preserved.", page)
+        self.assertIn('operation==="proot.shortcuts.sync.apply"', page)
         self.assertIn('run("proot.app.launch",chosen?{app_id:select.value,display:chosen}:{app_id:select.value})', page)
         self.assertIn("Remove owned shortcut", page)
         self.assertIn("proot.shortcuts.apply", page)

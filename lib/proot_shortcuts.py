@@ -333,7 +333,7 @@ def _atomic_write(path: Path, data: bytes) -> None:
             pass
 
 
-def sync_desktop_applications(*, home: str, prefix: str, repo_root: str,
+def _sync_desktop_applications_mutate(*, home: str, prefix: str, repo_root: str,
                                xdg_data_home: str | None = None,
                                xdg_config_home: str | None = None) -> dict[str, Any]:
     home_path, app_dir = _paths(home, xdg_data_home)
@@ -417,6 +417,181 @@ def sync_desktop_applications(*, home: str, prefix: str, repo_root: str,
             "removed": removed, "conflicts": conflicts, "menu": menu_status,
             "desktop_ids": [item["desktop_id"] for item in items], "read_only": False}
 
+
+
+def _sync_roots(home: str, xdg_data_home: str | None,
+                xdg_config_home: str | None) -> tuple[Path, Path, Path]:
+    home_path, app_dir = _paths(home, xdg_data_home)
+    config_home = Path(xdg_config_home).expanduser() if xdg_config_home else home_path / ".config"
+    if not config_home.is_absolute():
+        config_home = home_path / config_home
+    config_home = config_home.resolve()
+    try:
+        config_home.relative_to(home_path)
+    except ValueError as exc:
+        raise ShortcutError("XDG config directory must remain inside the native home directory") from exc
+    return home_path, app_dir, config_home
+
+
+def _sync_stage(*, home: str, prefix: str, repo_root: str,
+                xdg_data_home: str | None, xdg_config_home: str | None
+                ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Run the existing sync against a private copy and return an exact file plan."""
+    import shutil
+    actual_home, actual_apps, actual_config = _sync_roots(home, xdg_data_home, xdg_config_home)
+    actual_menu = actual_config / "menus" / "xfce-applications.menu"
+    actual_directory = actual_apps.parent / "desktop-directories" / "ternuxx-proot-apps.directory"
+
+    def mapped(stage_home: Path, actual: Path) -> Path:
+        try:
+            relative = actual.relative_to(actual_home)
+        except ValueError as exc:
+            raise ShortcutError("shortcut sync target escaped the native home directory") from exc
+        return stage_home / relative
+
+    with tempfile.TemporaryDirectory(prefix=".ternuxx-shortcut-preview-", dir=actual_home) as temp:
+        stage_home = Path(temp) / "home"
+        stage_home.mkdir(mode=0o700)
+        stage_apps = mapped(stage_home, actual_apps)
+        stage_config = mapped(stage_home, actual_config)
+        stage_menu = mapped(stage_home, actual_menu)
+        stage_directory = mapped(stage_home, actual_directory)
+
+        def copy_target(source: Path, destination: Path) -> None:
+            if source.is_symlink():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                os.symlink(os.readlink(source), destination)
+            elif source.exists():
+                if not source.is_file():
+                    raise ShortcutError("shortcut sync target is not a regular file")
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, destination)
+
+        if actual_apps.exists():
+            if actual_apps.is_symlink() or not actual_apps.is_dir():
+                raise ShortcutError("applications menu directory is not a regular directory")
+            for source in actual_apps.glob("ternuxx-proot-app-*.desktop"):
+                copy_target(source, stage_apps / source.name)
+        copy_target(actual_menu, stage_menu)
+        copy_target(actual_directory, stage_directory)
+
+        stage_result = _sync_desktop_applications_mutate(
+            home=str(stage_home), prefix=prefix, repo_root=repo_root,
+            xdg_data_home=str(mapped(stage_home, actual_apps.parent)),
+            xdg_config_home=str(mapped(stage_home, actual_config)),
+        )
+
+        staged_files: set[Path] = set()
+        if stage_apps.exists():
+            staged_files.update(stage_apps.glob("ternuxx-proot-app-*.desktop"))
+        for candidate in (stage_menu, stage_directory):
+            if candidate.exists() or candidate.is_symlink():
+                staged_files.add(candidate)
+        actual_files: set[Path] = set()
+        if actual_apps.exists():
+            actual_files.update(actual_apps.glob("ternuxx-proot-app-*.desktop"))
+        for candidate in (actual_menu, actual_directory):
+            if candidate.exists() or candidate.is_symlink():
+                actual_files.add(candidate)
+
+        pairs: list[dict[str, Any]] = []
+        for staged in staged_files | {mapped(stage_home, path) for path in actual_files}:
+            actual = actual_home / staged.relative_to(stage_home)
+            before = _file_bytes(actual)
+            after = _file_bytes(staged)
+            if before == after:
+                continue
+            pairs.append({
+                "path": str(actual.relative_to(actual_home)),
+                "before_bytes": before,
+                "after_bytes": after,
+                "before_mode": (actual.stat().st_mode & 0o777) if before is not None else None,
+            })
+        pairs.sort(key=lambda item: item["path"])
+        return stage_result, pairs
+
+
+def preview_desktop_application_sync(*, home: str, prefix: str, repo_root: str,
+                                     xdg_data_home: str | None = None,
+                                     xdg_config_home: str | None = None) -> dict[str, Any]:
+    stage, pairs = _sync_stage(
+        home=home, prefix=prefix, repo_root=repo_root,
+        xdg_data_home=xdg_data_home, xdg_config_home=xdg_config_home,
+    )
+    changes = []
+    for item in pairs:
+        before, after = item["before_bytes"], item["after_bytes"]
+        changes.append({
+            "path": item["path"],
+            "action": "remove" if after is None else ("create" if before is None else "update"),
+            "before": hashlib.sha256(before).hexdigest() if before is not None else "absent",
+            "after": hashlib.sha256(after).hexdigest() if after is not None else "absent",
+        })
+    plan = {"provider": "native_termux", "guest_provider": "proot_debian", "changes": changes}
+    canonical = json.dumps(plan, sort_keys=True, separators=(",", ":")).encode()
+    plan_id = hashlib.sha256(canonical).hexdigest()[:24]
+    return {
+        "resource_id": "proot.x11.shortcut-sync",
+        "provider": "proot_debian",
+        "storage_provider": "native_termux",
+        "status": "preview",
+        "discovered": stage.get("discovered", 0),
+        "desktop_ids": stage.get("desktop_ids", []),
+        "conflicts": stage.get("conflicts", []),
+        "changes": changes,
+        "changed": bool(changes),
+        "requires_confirmation": bool(changes),
+        "plan_id": plan_id,
+        "read_only": True,
+    }
+
+
+def apply_desktop_application_sync(*, home: str, prefix: str, repo_root: str,
+                                   confirmed: bool, plan_id: str | None,
+                                   xdg_data_home: str | None = None,
+                                   xdg_config_home: str | None = None) -> dict[str, Any]:
+    preview = preview_desktop_application_sync(
+        home=home, prefix=prefix, repo_root=repo_root,
+        xdg_data_home=xdg_data_home, xdg_config_home=xdg_config_home,
+    )
+    if not preview["changed"]:
+        return {**preview, "status": "already_in_requested_state"}
+    if not confirmed or not isinstance(plan_id, str):
+        return {**preview, "status": "confirmation_required"}
+    if plan_id != preview["plan_id"]:
+        raise ShortcutError("shortcut sync state changed or plan ID does not match the current preview")
+
+    home_path = Path(home).expanduser().resolve()
+    snapshots = []
+    for change in preview["changes"]:
+        target = home_path / change["path"]
+        snapshots.append((target, _file_bytes(target), target.stat().st_mode & 0o777
+                          if target.exists() and not target.is_symlink() else None))
+    try:
+        result = _sync_desktop_applications_mutate(
+            home=home, prefix=prefix, repo_root=repo_root,
+            xdg_data_home=xdg_data_home, xdg_config_home=xdg_config_home,
+        )
+    except Exception:
+        rollback_errors = []
+        for target, before, mode in reversed(snapshots):
+            try:
+                if before is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    _atomic_write(target, before)
+                    if mode is not None:
+                        os.chmod(target, mode)
+            except OSError as exc:
+                rollback_errors.append(str(target))
+        if rollback_errors:
+            raise ShortcutError("shortcut sync failed and rollback needs recovery for: "
+                                + ", ".join(rollback_errors))
+        raise
+    return {**preview, "status": "complete", "changed": True,
+            "written": result.get("written", []), "removed": result.get("removed", []),
+            "conflicts": result.get("conflicts", []), "menu": result.get("menu"),
+            "read_only": False}
 
 def launch_desktop_application(desktop_id: str, *, prefix: str, repo_root: str,
                                env: dict[str, str], display: str | None = None) -> dict[str, Any]:

@@ -191,22 +191,30 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertEqual(launch.call_args.args[0], "thunar.desktop")
 
-    def test_shortcut_sync_is_a_typed_shared_operation(self) -> None:
+    def test_shortcut_sync_preview_and_apply_are_typed_shared_operations(self) -> None:
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
                "HOME": str(self.home), "PATH": "/bin",
                "TERNUXX_STATE_DIR": str(self.home / ".local/share/ternuxx")}
-        request = {"api_version": 1, "request_id": "request-proot-sync-01",
-                   "operation": "proot.shortcuts.sync", "args": {}}
-        with patch.object(proot_shortcuts, "sync_desktop_applications",
-                          return_value={"status": "complete", "discovered": 1}) as sync:
-            result = management_service.dispatch(request, env=env)
+        preview_request = {"api_version": 1, "request_id": "request-proot-sync-preview-01",
+                           "operation": "proot.shortcuts.sync.preview", "args": {}}
+        with patch.object(proot_shortcuts, "preview_desktop_application_sync",
+                          return_value={"status": "preview", "changed": True}) as preview:
+            result = management_service.dispatch(preview_request, env=env)
         self.assertTrue(result["ok"])
-        self.assertEqual(result["data"]["discovered"], 1)
-        self.assertEqual(sync.call_args.kwargs["home"], str(self.home))
-        self.assertEqual(sync.call_args.kwargs["xdg_data_home"],
+        self.assertEqual(result["data"]["status"], "preview")
+        self.assertEqual(preview.call_args.kwargs["home"], str(self.home))
+        self.assertEqual(preview.call_args.kwargs["xdg_data_home"],
                          str(self.home / ".local/share/ternuxx/xfce/data"))
-        self.assertEqual(sync.call_args.kwargs["xdg_config_home"],
-                         str(self.home / ".local/share/ternuxx/xfce/config"))
+
+        apply_request = {"api_version": 1, "request_id": "request-proot-sync-apply-01",
+                         "operation": "proot.shortcuts.sync.apply",
+                         "args": {"confirmed": True, "plan_id": "a" * 24}}
+        with patch.object(proot_shortcuts, "apply_desktop_application_sync",
+                          return_value={"status": "complete"}) as apply:
+            result = management_service.dispatch(apply_request, env=env)
+        self.assertTrue(result["ok"])
+        self.assertEqual(apply.call_args.kwargs["plan_id"], "a" * 24)
+        self.assertTrue(apply.call_args.kwargs["confirmed"])
 
     def test_management_launch_rejects_legacy_ternux_session_owner(self) -> None:
         env = {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr",
@@ -239,7 +247,7 @@ class ProotShortcutTests(unittest.TestCase):
             "[Desktop Entry]\nType=Application\nName=Hidden\nExec=hidden\nNoDisplay=true\n")
         config = self.home / "xfce-config"
         data = self.home / "xfce-data"
-        result = proot_shortcuts.sync_desktop_applications(
+        result = proot_shortcuts._sync_desktop_applications_mutate(
             home=str(self.home), prefix=str(prefix), repo_root=str(self.repo),
             xdg_data_home=str(data), xdg_config_home=str(config),
         )
@@ -251,6 +259,77 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertIn("PRoot Apps", (config / "menus/xfce-applications.menu").read_text())
         self.assertIn("MergeFile type=\"parent\"", (config / "menus/xfce-applications.menu").read_text())
         self.assertTrue((data / "desktop-directories/ternuxx-proot-apps.directory").is_file())
+
+    def test_bulk_sync_preview_requires_confirmation_and_applies_exact_plan(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        apps = prefix / "var/lib/proot-distro/containers/debian/rootfs/usr/share/applications"
+        apps.mkdir(parents=True)
+        (apps / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor %f\n")
+        data = self.home / "xfce-data"
+        config = self.home / "xfce-config"
+        kwargs = {"home": str(self.home), "prefix": str(prefix), "repo_root": str(self.repo),
+                  "xdg_data_home": str(data), "xdg_config_home": str(config)}
+        plan = proot_shortcuts.preview_desktop_application_sync(**kwargs)
+        self.assertTrue(plan["read_only"])
+        self.assertTrue(plan["requires_confirmation"])
+        self.assertEqual(plan["changes"][0]["action"], "create")
+        self.assertFalse((data / "applications").exists())
+        self.assertEqual(proot_shortcuts.apply_desktop_application_sync(
+            **kwargs, confirmed=False, plan_id=None)["status"], "confirmation_required")
+        with self.assertRaisesRegex(proot_shortcuts.ShortcutError, "state changed"):
+            proot_shortcuts.apply_desktop_application_sync(
+                **kwargs, confirmed=True, plan_id="0" * 24)
+        applied = proot_shortcuts.apply_desktop_application_sync(
+            **kwargs, confirmed=True, plan_id=plan["plan_id"])
+        self.assertEqual(applied["status"], "complete")
+        self.assertTrue((data / "applications/ternuxx-proot-app-org.example.Editor.desktop").is_file())
+        self.assertTrue((config / "menus/xfce-applications.menu").is_file())
+
+    def test_bulk_sync_restores_prior_files_when_apply_fails_midway(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        apps = prefix / "var/lib/proot-distro/containers/debian/rootfs/usr/share/applications"
+        apps.mkdir(parents=True)
+        (apps / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\\nType=Application\\nName=Editor\\nExec=/usr/bin/editor\\n")
+        data = self.home / "xfce-data"
+        config = self.home / "xfce-config"
+        kwargs = {"home": str(self.home), "prefix": str(prefix), "repo_root": str(self.repo),
+                  "xdg_data_home": str(data), "xdg_config_home": str(config)}
+        plan = proot_shortcuts.preview_desktop_application_sync(**kwargs)
+        menu = config / "menus/xfce-applications.menu"
+        original_write = proot_shortcuts._atomic_write
+
+        def fail_menu(path, payload):
+            if Path(path) == menu:
+                raise OSError("injected menu write failure")
+            return original_write(path, payload)
+
+        with patch.object(proot_shortcuts, "_atomic_write", side_effect=fail_menu):
+            with self.assertRaisesRegex(OSError, "injected menu write failure"):
+                proot_shortcuts.apply_desktop_application_sync(
+                    **kwargs, confirmed=True, plan_id=plan["plan_id"])
+        launcher = data / "applications/ternuxx-proot-app-org.example.Editor.desktop"
+        self.assertFalse(launcher.exists())
+        self.assertFalse(menu.exists())
+
+    def test_bulk_sync_preview_preserves_unmanaged_conflicts(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        apps = prefix / "var/lib/proot-distro/containers/debian/rootfs/usr/share/applications"
+        apps.mkdir(parents=True)
+        (apps / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor\n")
+        data = self.home / "xfce-data"
+        target = data / "applications/ternuxx-proot-app-org.example.Editor.desktop"
+        target.parent.mkdir(parents=True)
+        original = b"[Desktop Entry]\nName=Owner launcher\n"
+        target.write_bytes(original)
+        plan = proot_shortcuts.preview_desktop_application_sync(
+            home=str(self.home), prefix=str(prefix), repo_root=str(self.repo),
+            xdg_data_home=str(data), xdg_config_home=str(self.home / "xfce-config"))
+        self.assertIn("ternuxx-proot-app-org.example.Editor.desktop", plan["conflicts"])
+        self.assertNotIn(str(target.relative_to(self.home)), {change["path"] for change in plan["changes"]})
+        self.assertEqual(target.read_bytes(), original)
 
     def test_dynamic_launch_reads_desktop_exec_without_shell(self) -> None:
         prefix = Path(self.temp.name) / "termux"

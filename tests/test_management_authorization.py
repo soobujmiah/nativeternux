@@ -26,11 +26,12 @@ class ManagementAuthorizationTests(unittest.TestCase):
         self.assertEqual(management_authorization.required_capability("proot.shortcuts.preview"), "diagnostics.read")
         self.assertEqual(management_authorization.required_capability("proot.app.launch"), "applications.launch")
         self.assertEqual(management_authorization.required_capability("proot.shortcuts.apply"), "applications.shortcuts.manage")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync"), "applications.manage")
+        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.preview"), "diagnostics.read")
+        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.apply"), "applications.shortcuts.manage")
         self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["diagnostics.read"]))
         self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["applications.manage"]))
         self.assertTrue(management_authorization.authorize("proot.shortcuts.apply", ["applications.shortcuts.manage"]))
-        self.assertFalse(management_authorization.authorize("proot.shortcuts.sync", ["applications.shortcuts.manage"]))
+        self.assertFalse(management_authorization.authorize("proot.shortcuts.sync.apply", ["applications.manage"]))
 
     def test_proot_health_uses_read_scope_and_is_not_mutating(self) -> None:
         import management_sessions

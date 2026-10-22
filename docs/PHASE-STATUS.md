@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Fresh replay and graphics evidence, cross-client terminal handoff, and three isolated Native optional-PRoot failure modes are recorded. Web has one preview-confirmed non-signaling recovery action; broader client parity, safe VirGL cleanup, actual broken-rootfs qualification, and the full repository audit remain open.
+Selected Debian app, replay/graphics, cross-client terminal, and Native failure-isolation evidence is recorded. Bulk shortcut sync now has preview-confirmed CLI/Web and exact-plan Native startup paths; durable undo, GTK/TUI sync, safe VirGL cleanup, broken-rootfs/cold-boot qualification, and the full audit remain open.
 
-**Next action:** Continue Web mutation/client parity and safe VirGL socket-client visibility; then finish source/installed/runtime reconciliation and requirement-by-requirement repository audit, preserving actual guest/rootfs and cold-boot checks as unverified until separately qualified.
+**Next action:** Add durable shortcut rollback and action coverage in GTK/TUI; then continue safe VirGL client visibility, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and the requirement-by-requirement audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -116,6 +116,7 @@ Evidence:
 - [docs/evidence/2026-10-22-p4-virgl-route-recheck.md](evidence/2026-10-22-p4-virgl-route-recheck.md)
 - [docs/evidence/2026-10-22-web-proot-recovery-reconcile.md](evidence/2026-10-22-web-proot-recovery-reconcile.md)
 - [docs/evidence/2026-10-22-native-provider-failure-isolation.md](evidence/2026-10-22-native-provider-failure-isolation.md)
+- [docs/evidence/2026-10-22-p4-previewed-shortcut-sync.md](evidence/2026-10-22-p4-previewed-shortcut-sync.md)
 
 ## P5 — Distro and display compatibility profiles
 

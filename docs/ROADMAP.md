@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Continue Web mutation/client parity and safe VirGL socket-client visibility; then finish source/installed/runtime reconciliation and requirement-by-requirement repository audit, preserving actual guest/rootfs and cold-boot checks as unverified until separately qualified.
+**Next action:** Add durable shortcut rollback and action coverage in GTK/TUI; then continue safe VirGL client visibility, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and the requirement-by-requirement audit.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
