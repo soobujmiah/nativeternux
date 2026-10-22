@@ -1,0 +1,7 @@
+event_id: commit-90264d29e94c-eb108307283a4892
+repository: soobujmiah/ternuxx
+commit: 90264d29e94cbfac417ba7d84121066f61e71d1b
+kind: commit
+occurred_at: '2026-10-22T06:37:01Z'
+status: completed
+summary: 'feat(tui): qualify managed terminal lifecycle on separate guest'
