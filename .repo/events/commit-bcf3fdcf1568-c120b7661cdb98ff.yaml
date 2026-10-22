@@ -1,0 +1,7 @@
+event_id: commit-bcf3fdcf1568-c120b7661cdb98ff
+repository: soobujmiah/ternuxx
+commit: bcf3fdcf1568ce9cb2aa8a28f82366f4f83da3e5
+kind: commit
+occurred_at: '2026-10-22T07:11:43Z'
+status: completed
+summary: 'feat(gtk): add verified Debian terminal picker'
