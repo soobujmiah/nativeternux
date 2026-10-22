@@ -36,7 +36,7 @@ Run these commands in Native Termux from the checkout:
 ./tx web
 ```
 
-`./tx mng center` opens the Native GTK management app when the desktop and GTK dependencies are installed. `./tx db` opens the existing Debian PRoot shell. `./tx pgui` opens the existing Debian XFCE desktop: standalone on `:0` when Native GUI is stopped, or nested through Xephyr on `:2` inside Native `:1`. Installed Debian GUI apps are auto-listed in a separate Native XFCE **PRoot Apps** menu. Refresh after changing guest apps with `./tx mng papps sync`; launch by menu or `./tx mng app launch --desktop-id APP.desktop`. The four management clients use the shared service, though feature coverage still differs by client.
+`./tx mng center` opens the Native GTK management app when the desktop and GTK dependencies are installed. `./tx db` opens the existing Debian PRoot shell through Ternuxx’s first-party, managed command. It is distinct from a bare `db` alias that may still be defined in the user’s shell configuration; use `tx db` for validated display/audio/environment handoff. `./tx pgui` opens the existing Debian XFCE desktop: standalone on `:0` when Native GUI is stopped, or nested through Xephyr on `:2` inside Native `:1`. Installed Debian GUI apps are auto-listed in a separate Native XFCE **PRoot Apps** menu. Refresh after changing guest apps with `./tx mng papps sync`; launch by menu or `./tx mng app launch --desktop-id APP.desktop`. The four management clients use the shared service, though feature coverage still differs by client.
 
 ## Runtime boundaries
 

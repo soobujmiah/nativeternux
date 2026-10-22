@@ -95,6 +95,10 @@ EOF
       cat <<'EOF'
 tx db [--user NAME|--root] [--distro NAME] [--display :N] [--backend zink|virgl] [-- COMMAND...]
 
+`tx db` is Ternuxx’s first-party command, distinct from a bare `db` shell alias.
+A bare `db` or `droot` alias may call `proot-distro` directly and bypass Ternuxx’s
+validated display/audio/environment handoff. Use `tx db` for the managed path.
+
 Runs from Native Termux. Debian Zink/Turnip is the default and remains unchanged.
 Use --backend virgl to ensure Ternuxx's Native virgl_test_server_android is ready,
 then pass only the VirGL client environment and display/audio handoff to Debian.
@@ -280,6 +284,10 @@ tx db — Open a Debian PRoot shell (independent of any desktop)
   tx db --user NAME      # as an explicit guest user
   tx db -- CMD [ARG ...] # run one command instead of a shell
   tx db --distro NAME    # another installed proot-distro guest
+
+`tx db` is Ternuxx’s first-party command, not the bare `db` shell alias. A bare
+`db` or `droot` alias may call `proot-distro` directly and bypass Ternuxx’s
+validated display/audio/environment handoff. Use `tx db` for the managed path.
 
 Run from native Termux. Ternuxx ensures its Native PulseAudio endpoint and
 passes the loopback server and private cookie path to Debian. Audio failure is

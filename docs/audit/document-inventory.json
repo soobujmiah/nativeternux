@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 394,
-  "read_count": 83,
+  "document_count": 396,
+  "read_count": 92,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -27,18 +27,18 @@
     {
       "path": "AI_ASSISTANT.md",
       "kind": "narrative",
-      "sha256": "c483d5020116bf828e834110fd7ad2710e32ca5b301aa553058b7bbc9d837f91",
+      "sha256": "2b6a31fde6f7ebcecebfd05eb6a5a8dfc588220ea28a9e734396328d5d70288c",
       "lines": 66,
       "read_status": "read",
-      "read_sha256": "c483d5020116bf828e834110fd7ad2710e32ca5b301aa553058b7bbc9d837f91"
+      "read_sha256": "2b6a31fde6f7ebcecebfd05eb6a5a8dfc588220ea28a9e734396328d5d70288c"
     },
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "febdaf3874017ab84466bf3f0001f210d118b984ae3396da9ac83a41a3133f47",
-      "lines": 45,
+      "sha256": "17b058a487ef3541c1ae1c97d1296f2bc9c053d607d44118ccc29e0077e223bc",
+      "lines": 47,
       "read_status": "read",
-      "read_sha256": "febdaf3874017ab84466bf3f0001f210d118b984ae3396da9ac83a41a3133f47"
+      "read_sha256": "17b058a487ef3541c1ae1c97d1296f2bc9c053d607d44118ccc29e0077e223bc"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "0c070f187cb81774f4f34e3568c30e22a048b065b102f2da817a8fd97ecdce8d",
+      "sha256": "8d7c1efc87af321b6295ed995c276adf25928b1799339e0cc07e6b1e523446f6",
       "lines": 82,
       "read_status": "read",
-      "read_sha256": "0c070f187cb81774f4f34e3568c30e22a048b065b102f2da817a8fd97ecdce8d"
+      "read_sha256": "8d7c1efc87af321b6295ed995c276adf25928b1799339e0cc07e6b1e523446f6"
     },
     {
       "path": "SECURITY.md",
@@ -115,26 +115,26 @@
     {
       "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
       "kind": "narrative",
-      "sha256": "292d4dd2049c52684c82fcad7e8ce681b1748638f4974c274bf02f42f41feb5e",
+      "sha256": "e9729568130f4c05e3ae9446c381a487a29a5458601e629cf182d1c7e57274d8",
       "lines": 35,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "e9729568130f4c05e3ae9446c381a487a29a5458601e629cf182d1c7e57274d8"
     },
     {
       "path": "docs/HYBRID-INTEGRATION.md",
       "kind": "narrative",
-      "sha256": "b2e4bffecae694466170b3c0fb0d405009c84961e003fe5870390449b00cbe54",
+      "sha256": "a0381c1aafe20f78c513b43ba674d6a497712917fa7cc691048b10cfc80934e3",
       "lines": 101,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "a0381c1aafe20f78c513b43ba674d6a497712917fa7cc691048b10cfc80934e3"
     },
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "9aa366bb2abf4f3e02b9ed1650d17b0655112686c8a0b187a92c202633efce26",
+      "sha256": "5e3b27d1588cff08f52e12f073825988e4debd6830bd66008637cced9e6e02bc",
       "lines": 70,
       "read_status": "read",
-      "read_sha256": "9aa366bb2abf4f3e02b9ed1650d17b0655112686c8a0b187a92c202633efce26"
+      "read_sha256": "5e3b27d1588cff08f52e12f073825988e4debd6830bd66008637cced9e6e02bc"
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
@@ -147,10 +147,10 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "4b2e38ef03434528367882c6a9ad402d41be234a8b1f21a6c13d5c9cfc2b2dad",
+      "sha256": "0b3c806c9b1cd1473a257cbdc225561e077274db8a15e9a3349db10d3754c363",
       "lines": 189,
       "read_status": "read",
-      "read_sha256": "4b2e38ef03434528367882c6a9ad402d41be234a8b1f21a6c13d5c9cfc2b2dad"
+      "read_sha256": "0b3c806c9b1cd1473a257cbdc225561e077274db8a15e9a3349db10d3754c363"
     },
     {
       "path": "docs/OPTIMIZATION.md",
@@ -195,10 +195,10 @@
     {
       "path": "docs/PROOT-SHARED-X11.md",
       "kind": "narrative",
-      "sha256": "c36e30dcf9d3999141c94763553016fa50e3db00ac3c5c728d6592a0776fe717",
+      "sha256": "0c1932a9cad9c9f8c3bd89737119b40ceedcb4e6e984808c62b963130378b54b",
       "lines": 108,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "0c1932a9cad9c9f8c3bd89737119b40ceedcb4e6e984808c62b963130378b54b"
     },
     {
       "path": "docs/RESEARCH.md",
@@ -339,10 +339,10 @@
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",
       "kind": "narrative",
-      "sha256": "3a6d8fad1c458a27ef3646202a7daf4346836246266117c5e7bde490ab0bef71",
+      "sha256": "bcef700219032cb5200850c6c881f646336e9c8c3563985d89097922a417f6e7",
       "lines": 252,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "bcef700219032cb5200850c6c881f646336e9c8c3563985d89097922a417f6e7"
     },
     {
       "path": "docs/architecture/decisions/ADR-0001-native-proot-providers.md",
@@ -395,10 +395,10 @@
     {
       "path": "docs/architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md",
       "kind": "narrative",
-      "sha256": "9217e37efdc380b919f10dc16c9a64e31a1a121404e4958459acad8654f14c2e",
-      "lines": 96,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "1d14970c29f736a8aa56d68ecfed115ff7a4b914867156fbaf41f03ba8fb622b",
+      "lines": 97,
+      "read_status": "read",
+      "read_sha256": "1d14970c29f736a8aa56d68ecfed115ff7a4b914867156fbaf41f03ba8fb622b"
     },
     {
       "path": "docs/architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md",
@@ -419,10 +419,10 @@
     {
       "path": "docs/architecture/decisions/ADR-0010-native-termux-autonomy.md",
       "kind": "narrative",
-      "sha256": "60dd079997b0e75e59a1ec10e44774a1d2e657a95a6309036d5339806b3b2458",
+      "sha256": "a340476408f4eab09467945327753052dd0059627f0d6361003693b5ec5276cc",
       "lines": 55,
       "read_status": "read",
-      "read_sha256": "60dd079997b0e75e59a1ec10e44774a1d2e657a95a6309036d5339806b3b2458"
+      "read_sha256": "a340476408f4eab09467945327753052dd0059627f0d6361003693b5ec5276cc"
     },
     {
       "path": "docs/architecture/decisions/ADR-0011-unified-ssh-lifecycle.md",
@@ -459,10 +459,18 @@
     {
       "path": "docs/architecture/decisions/ADR-0015-ternuxx-owned-existing-proot.md",
       "kind": "narrative",
-      "sha256": "bc72c28ee2ca29c3619ccf45ee5371bc0eeacd2486a3eca93b40cddd5a806193",
-      "lines": 34,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "b20566ad43d6c0dd026ed9bf9fa3e40aebf00e642bcddad122eeacccd4f53975",
+      "lines": 35,
+      "read_status": "read",
+      "read_sha256": "b20566ad43d6c0dd026ed9bf9fa3e40aebf00e642bcddad122eeacccd4f53975"
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0016-tx-db-and-legacy-entrypoints.md",
+      "kind": "narrative",
+      "sha256": "9df2fa7190de7b23b32b4c5a309d7b9eb2b1ea9fa87837faea3991bfe1198006",
+      "lines": 39,
+      "read_status": "read",
+      "read_sha256": "9df2fa7190de7b23b32b4c5a309d7b9eb2b1ea9fa87837faea3991bfe1198006"
     },
     {
       "path": "docs/architecture/history/2026-10-22-capability-matrix.md",
@@ -507,10 +515,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "d1bf4a9847ce0f3918d5f14650305a8d07656bd01a59bb5291ff0988982d62da",
-      "lines": 85,
+      "sha256": "446299ce02dabafe67911e8c48b99465d7b839739e7af8098461243887dbffc0",
+      "lines": 86,
       "read_status": "read",
-      "read_sha256": "d1bf4a9847ce0f3918d5f14650305a8d07656bd01a59bb5291ff0988982d62da"
+      "read_sha256": "446299ce02dabafe67911e8c48b99465d7b839739e7af8098461243887dbffc0"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2241,6 +2249,14 @@
       "read_sha256": "5bc22126f3d9dc4cf3961b09215da3621081543a7e2b49b6880d6948efb9daf8"
     },
     {
+      "path": "docs/evidence/2026-10-22-legacy-entrypoint-inventory.md",
+      "kind": "narrative",
+      "sha256": "7ab45e9d694396bbf9e7e3694c4d3bd778078ce7cc408e1c216db587b78ff8f9",
+      "lines": 19,
+      "read_status": "read",
+      "read_sha256": "7ab45e9d694396bbf9e7e3694c4d3bd778078ce7cc408e1c216db587b78ff8f9"
+    },
+    {
       "path": "docs/evidence/2026-10-22-management-center-visual-review.md",
       "kind": "narrative",
       "sha256": "abb3f7b3d4788d3d9457e3d7c85fb85c49f31a54ee847d6aa69fbd9705af4858",
@@ -2611,10 +2627,10 @@
     {
       "path": "docs/readiness/DECISIONS-AND-PLAN.md",
       "kind": "narrative",
-      "sha256": "63ad7378d2ce7a61d47c65b436c4f82acd582f280bd38eadd14aa5e4068a794a",
+      "sha256": "3a5b582a088386985ed5c763a0b2a0d356cd04c09a17b43c5c39b7679c60d592",
       "lines": 60,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "3a5b582a088386985ed5c763a0b2a0d356cd04c09a17b43c5c39b7679c60d592"
     },
     {
       "path": "docs/readiness/LEGAL-IP.md",

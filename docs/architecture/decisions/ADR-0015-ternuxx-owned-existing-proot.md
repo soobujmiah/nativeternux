@@ -2,6 +2,7 @@
 
 - **Date:** 2026-10-20
 - **Status:** accepted by owner; implementation in progress
+- **Alias-preservation clauses:** superseded by [ADR-0016](ADR-0016-tx-db-and-legacy-entrypoints.md); existing-rootfs preservation and scoped adaptation remain active
 - **Type:** provider-integration and install-reproducibility
 
 ## Decision
@@ -17,7 +18,7 @@ The baseline setup contract is in config/proot/debian-trixie.json. It records De
 - Keep Native Termux as the single owner of Termux:X11, PulseAudio, and PRoot launch environment.
 - Do not modify Debian startup files or package-managed Mesa files as a shortcut. Ternuxx-owned overlays use exact, recorded paths and validated rollback.
 - Use the Debian/glibc Turnip artifact only inside Debian. Never put Native/Bionic libraries in the guest.
-- Preserve existing user data, account, packages, and owner workflows (db, droot, x.sh, xgo, killx) while migrating their management boundary.
+- Preserve existing user data, account, and packages while adapting the management boundary. Legacy entrypoints are audited and retired only when an exact owner-scoped plan proves the replacement; the alias-preservation portion of this earlier requirement is superseded by ADR-0016.
 - Ternuxx does not invoke legacy broad cleanup, desktop restart, or service lifecycle commands from the Ternux CLI.
 - New rootfs, guest packages, graphics files, and legacy CLI removal each require a scoped preview and explicit apply. Package plans include the guest APT dependency closure.
 

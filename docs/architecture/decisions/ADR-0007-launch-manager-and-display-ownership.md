@@ -1,7 +1,8 @@
 # ADR-0007: Launch Manager owns named profiles, not existing Ternux sessions
 
 - **Date:** 2026-10-17
-- **Status:** proposed — owner review required
+- **Status:** proposed — owner review required; alias compatibility clauses superseded by [ADR-0016](ADR-0016-tx-db-and-legacy-entrypoints.md)
+- **Current host behavior:** see [2026-10-22 live inventory](../../evidence/2026-10-22-legacy-entrypoint-inventory.md); historical broad-cleanup claims do not describe the current `~/x.sh` wrapper
 - **Type:** lifecycle-and-display-architecture
 
 ## Context

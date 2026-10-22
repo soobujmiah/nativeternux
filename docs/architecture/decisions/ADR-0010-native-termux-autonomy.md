@@ -1,6 +1,6 @@
 # ADR-0010: Native Termux autonomy and bounded PRoot integration
 
-- **Status:** Accepted owner requirement; current implementation/qualification tracked by the capability matrix and phase evidence
+- **Status:** Accepted owner requirement; legacy-alias preservation clauses superseded by [ADR-0016](ADR-0016-tx-db-and-legacy-entrypoints.md); current implementation/qualification tracked by the capability matrix and phase evidence
 - **Date:** 2026-10-17
 - **Decision owner:** Project owner
 
