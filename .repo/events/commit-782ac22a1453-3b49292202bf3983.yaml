@@ -1,0 +1,7 @@
+event_id: commit-782ac22a1453-3b49292202bf3983
+repository: soobujmiah/ternuxx
+commit: 782ac22a1453e5b02e7e8d3cb46170501e49d3c2
+kind: commit
+occurred_at: '2026-10-22T19:29:26Z'
+status: completed
+summary: 'fix(virgl): report client visibility safely'
