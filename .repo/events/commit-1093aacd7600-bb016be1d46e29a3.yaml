@@ -1,0 +1,7 @@
+event_id: commit-1093aacd7600-bb016be1d46e29a3
+repository: soobujmiah/ternuxx
+commit: 1093aacd76004efe0e654793102fa831634528b9
+kind: commit
+occurred_at: '2026-10-22T05:53:14Z'
+status: completed
+summary: 'fix(terminal): authorize exact attachments before closing'
