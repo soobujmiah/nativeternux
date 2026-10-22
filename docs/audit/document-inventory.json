@@ -2227,10 +2227,10 @@
     {
       "path": "docs/evidence/2026-10-22-gtk-terminal-picker-review.md",
       "kind": "narrative",
-      "sha256": "0eb5bfdbac6f97d3b3e0091cf34e3dbbbee6b97c4d9c070e8d46ece8ee3ab326",
+      "sha256": "01425b97a29ef2f211aa244a1a2c0d4b87e3b2b6e3c6888351107556a755f55c",
       "lines": 13,
       "read_status": "read",
-      "read_sha256": "0eb5bfdbac6f97d3b3e0091cf34e3dbbbee6b97c4d9c070e8d46ece8ee3ab326"
+      "read_sha256": "01425b97a29ef2f211aa244a1a2c0d4b87e3b2b6e3c6888351107556a755f55c"
     },
     {
       "path": "docs/evidence/2026-10-22-guarded-fresh-replay.md",
@@ -2355,10 +2355,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",
       "kind": "narrative",
-      "sha256": "32be157d721dbbc01a6dfebb7b0d4dfe0e1c8c7f3b83f76c25bff74520df1f94",
+      "sha256": "5b00ce59126b8e1c969c3c790c5bbb30ba98161babce33ee4d815ca13f08e34a",
       "lines": 45,
       "read_status": "read",
-      "read_sha256": "32be157d721dbbc01a6dfebb7b0d4dfe0e1c8c7f3b83f76c25bff74520df1f94"
+      "read_sha256": "5b00ce59126b8e1c969c3c790c5bbb30ba98161babce33ee4d815ca13f08e34a"
     },
     {
       "path": "docs/evidence/2026-10-22-probe-http-live.json",

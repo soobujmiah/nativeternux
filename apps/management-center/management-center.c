@@ -8,6 +8,7 @@ typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *n
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; gchar *proot_pending_action, *proot_pending_session_id, *proot_pending_plan_id; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; guint category_count; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
+typedef struct { Center *center; gchar **argv; gchar *working_directory; } TerminalSpawn;
 static Center *app_center;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5);
@@ -23,16 +24,34 @@ static void show_cron_log(GtkButton *button, gpointer data);
 static void show_desktop_log(GtkButton *button, gpointer data);
 static gchar *python_path(void);
 
+static void terminal_child_exited(VteTerminal *terminal, gint status, gpointer data) {
+    (void)terminal;
+    GtkWidget *window=data;
+    Center *c=g_object_get_data(G_OBJECT(window),"terminal-center");
+    if (c && c->notice) {
+        gchar *message=g_strdup_printf("Debian terminal closed (exit status %d).",status);
+        gtk_label_set_text(GTK_LABEL(c->notice),message);
+        g_free(message);
+    }
+    gtk_window_destroy(GTK_WINDOW(window));
+}
+
 static void terminal_spawn_done(VteTerminal *terminal, GPid pid, GError *error, gpointer data) {
-    Center *c = data;
-    if (error) {
-        gchar *message = g_strdup_printf("Could not open the terminal client: %s\n", error->message);
-        vte_terminal_feed_child(terminal, message, -1); g_free(message);
+    (void)pid;
+    TerminalSpawn *spawn = data;
+    Center *c = spawn->center;
+    if (error || !terminal) {
+        if (terminal && error) {
+            gchar *message = g_strdup_printf("Could not open the terminal client: %s\n", error->message);
+            vte_terminal_feed_child(terminal, message, -1); g_free(message);
+        }
         gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client could not open; inspect its window.");
     } else {
-        vte_terminal_watch_child(terminal, pid);
         gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client opened; closing its window detaches.");
     }
+    g_strfreev(spawn->argv);
+    g_free(spawn->working_directory);
+    g_free(spawn);
 }
 
 static void spawn_interactive_terminal(Center *c, const gchar *session_id) {
@@ -47,6 +66,7 @@ static void spawn_interactive_terminal(Center *c, const gchar *session_id) {
     GtkWidget *window=gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(window),"Ternuxx Debian terminal");
     gtk_window_set_transient_for(GTK_WINDOW(window),GTK_WINDOW(c->window));
+    g_object_set_data(G_OBJECT(window),"terminal-center",c);
     gtk_window_set_default_size(GTK_WINDOW(window),680,720);
     GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,6);
     GtkWidget *hint=gtk_label_new(session_id
@@ -54,17 +74,21 @@ static void spawn_interactive_terminal(Center *c, const gchar *session_id) {
         : "Review the exact Debian login preview before confirming. Close this window or press Ctrl-] to detach.");
     gtk_label_set_wrap(GTK_LABEL(hint),TRUE); gtk_box_append(GTK_BOX(box),hint);
     VteTerminal *terminal=VTE_TERMINAL(vte_terminal_new());
+    g_signal_connect_object(terminal,"child-exited",G_CALLBACK(terminal_child_exited),window,0);
     vte_terminal_set_scrollback_lines(terminal,2000);
     GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),GTK_WIDGET(terminal));
     gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(box),scroll);
     gtk_window_set_child(GTK_WINDOW(window),box);
-    gchar *python=python_path();
-    gchar *script=g_build_filename(root,"lib","terminal_cli.py",NULL);
-    gchar *workdir=g_strdup(root);
-    gchar *argv[]={python,script,session_id ? "attach" : "start",(gchar *)session_id,NULL};
-    vte_terminal_spawn_async(terminal,VTE_PTY_DEFAULT,workdir,argv,NULL,G_SPAWN_DEFAULT,
-                             NULL,NULL,NULL,10000,NULL,terminal_spawn_done,c);
-    g_free(python); g_free(script); g_free(workdir);
+    TerminalSpawn *spawn=g_new0(TerminalSpawn,1);
+    spawn->center=c;
+    spawn->working_directory=g_strdup(root);
+    spawn->argv=g_new0(gchar *,5);
+    spawn->argv[0]=python_path();
+    spawn->argv[1]=g_build_filename(root,"lib","terminal_cli.py",NULL);
+    spawn->argv[2]=g_strdup(session_id ? "attach" : "start");
+    spawn->argv[3]=session_id ? g_strdup(session_id) : NULL;
+    vte_terminal_spawn_async(terminal,VTE_PTY_DEFAULT,spawn->working_directory,spawn->argv,NULL,G_SPAWN_DEFAULT,
+                             NULL,NULL,NULL,10000,NULL,terminal_spawn_done,spawn);
     gtk_window_present(GTK_WINDOW(window));
 }
 

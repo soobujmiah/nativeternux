@@ -32,7 +32,7 @@ Focused TUI tests passed 31/31. The full Native Termux repository suite passed 6
 
 - Broker is a manually launched foreground service; no Runit-managed persistent deployment exists yet.
 - Web transport still rejects interactive PRoot login and has no browser terminal renderer or terminal operation scopes.
-- Four-client interactive terminal parity is incomplete; CLI/TUI/GTK source is present, but only the no-guest broker status path was exercised live.
+- Four-client interactive terminal parity remains incomplete. CLI, TUI, Web, and GTK have separate documented live or focused evidence; this GTK follow-up exercised start, attach, resize, detach, and confirmed stop in the isolated replay guest.
 - The current tx db source does not register its login in the Ternuxx PRoot session registry. The owner confirmed provenance, but machine-level identity/ownership remains unverified. The live process and rootfs were not changed.
 - A live terminal login was intentionally not started because it would create a new guest session. P4 remains in progress.
 
@@ -42,4 +42,4 @@ The existing PRoot process/rootfs, existing db launcher behavior, SSH 8022/8023 
 
 ## GTK chooser follow-up — 2026-10-22
 
-The installed Native GTK binary now includes an asynchronous, verified running-session chooser for starting or attaching the shared terminal CLI in VTE. Interactive terminal SIGHUP stop previews are accepted and disclosed by the GTK bridge. Focused app-window visual review and bridge tests passed; full GTK start/attach/stop interaction remains unqualified because the X11 input coordinates were inconsistent. See [GTK terminal picker review](2026-10-22-gtk-terminal-picker-review.md).
+The installed Native GTK binary now includes an asynchronous, verified running-session chooser for starting or attaching the shared terminal CLI in VTE. Interactive terminal SIGHUP stop previews are accepted and disclosed by the GTK bridge. The live GTK follow-up exercised start, attach, resize, detach, and stop confirmation in the isolated replay guest; child exit closes the VTE window. Raw JSON in the stop-result detail view remains a UI issue. See [GTK terminal picker review](2026-10-22-gtk-terminal-picker-review.md).
