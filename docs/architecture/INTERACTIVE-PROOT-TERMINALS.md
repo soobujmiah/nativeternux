@@ -1,6 +1,6 @@
 # Shared interactive PRoot terminals
 
-**Status:** P4 implementation in progress. The Native broker service and CLI/TUI/Web/GTK client paths are implemented. Web uses a locally vendored xterm.js renderer. The installed Management Web UI has now been visually reviewed in Firefox ESR running in the existing Debian PRoot on Native X11 `:1`. A responsive category-navigation defect found in that review is fixed in source. A separate fresh guest now has production broker plus actual CLI, TUI and Web I/O/resize/detach/reattach/close evidence; GTK and cross-client lifecycle acceptance remain open; the owner-provisioned `tx db` process remains untouched and is not a Ternuxx-owned test session.
+**Status:** P4 implementation in progress. The Native broker service and CLI/TUI/Web/GTK client paths are implemented. Web uses a locally vendored xterm.js renderer. The installed Management Web UI has now been visually reviewed in Firefox ESR running in the existing Debian PRoot on Native X11 `:1`. A responsive category-navigation defect found in that review is fixed in source. A separate fresh guest has production broker and actual CLI, TUI, Web, GTK/VTE, and sequential cross-client I/O/resize/detach/close evidence; the owner-provisioned `tx db` process remains untouched and is not a Ternuxx-owned test session.
 
 **Owner requirement:** interactive terminal support is required in CLI, TUI, Web, and GTK. Web and GTK use the shared typed broker operations; they may not expose a host shell, arbitrary argv/command, or bypass Android app isolation. See the [P3-first owner decision](../evidence/2026-10-21-p3-before-p4-owner-decision.md).
 
@@ -39,10 +39,10 @@ Run this from the Native source checkout only after the new guest setup finishes
 
 ## Remaining P4 acceptance
 
-1. Retain the [completed separate setup and broker/client evidence](../evidence/2026-10-22-fresh-setup-and-probe-safety.md); exact replay-guest retirement/rollback, broader config replay and graphics workload acceptance remain open.
-2. Retain completed CLI, TUI, Web and GTK/VTE lifecycle evidence; verify cross-client continuity and record any remaining interactive gaps.
-3. Recheck cross-client state, attachment ownership and close behavior under failure/concurrency. Opening the terminal dialog is not an I/O pass. [Web replay](../evidence/2026-10-22-web-terminal-replay.md) covers actual Firefox I/O and viewport-to-guest resize.
-4. Keep P4 in progress until the full phase criteria pass; update evidence and the roadmap from observed results.
+1. Retain the [completed separate setup and broker/client evidence](../evidence/2026-10-22-fresh-setup-and-probe-safety.md); exact replay-guest retirement/restore is verified, while broader config replay and graphics workload acceptance remain open.
+2. Retain completed CLI, TUI, Web and GTK/VTE lifecycle and sequential cross-client handoff evidence. [Cross-client evidence](../evidence/2026-10-22-cross-client-terminal-handoff.md) records exact start, I/O, resize, detach and close.
+3. Recheck attachment ownership and close behavior under failure/concurrency. Opening the terminal dialog is not an I/O pass. [Web replay](../evidence/2026-10-22-web-terminal-replay.md) covers actual Firefox I/O and viewport-to-guest resize.
+4. Keep P4 in progress until the remaining provider/configuration, browser-rendered Web review, reproducibility and preservation criteria pass; update evidence and roadmap from observed results.
 
 ## Legacy Ternux CLI retirement
 

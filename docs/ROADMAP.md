@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Complete remaining P4 provider/configuration acceptance without touching the owner's active PRoot; exercise GTK guest lifecycle apply, browser-rendered controls, and remaining reproducibility gates.
+**Next action:** Review browser-rendered Web controls on the isolated replay guest, finish remaining provider/configuration acceptance and clean replay rollback/reproducibility gates, then continue the full audit without touching the owner's active PRoot.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

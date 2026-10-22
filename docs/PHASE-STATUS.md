@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Exact replay-guest retire/restore shares typed Native operations across CLI, authenticated Web, TUI and GTK. Live replay guest identity/default Debian preservation is verified. One same-session CLI → authenticated Web API → TUI → installed GTK/VTE I/O/resize/detach/close run now passes. GTK apply, browser-rendered controls and remaining P4 provider/configuration gates remain open.
+Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented. Same-session four-client terminal handoff and receipt-verified replay-guest retire/restore through CLI, authenticated Web API, and installed GTK are verified. Browser-rendered Web controls and the remaining provider/configuration and reproducibility gates remain open.
 
-**Next action:** Complete remaining P4 provider/configuration acceptance without touching the owner's active PRoot; exercise GTK guest lifecycle apply, browser-rendered controls, and remaining reproducibility gates.
+**Next action:** Review browser-rendered Web controls on the isolated replay guest, finish remaining provider/configuration acceptance and clean replay rollback/reproducibility gates, then continue the full audit without touching the owner's active PRoot.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -108,6 +108,7 @@ Evidence:
 - [docs/evidence/2026-10-22-gtk-replay-guest-dialog-review.md](evidence/2026-10-22-gtk-replay-guest-dialog-review.md)
 - [docs/evidence/2026-10-22-gtk-selection-response-review.md](evidence/2026-10-22-gtk-selection-response-review.md)
 - [docs/evidence/2026-10-22-gtk-vte-same-session.md](evidence/2026-10-22-gtk-vte-same-session.md)
+- [docs/evidence/2026-10-22-gtk-replay-guest-apply.md](evidence/2026-10-22-gtk-replay-guest-apply.md)
 
 ## P5 — Distro and display compatibility profiles
 

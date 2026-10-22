@@ -1,7 +1,7 @@
 # GTK replay-guest dialog review — 2026-10-22
 
 Phase: P4
-Gate: PASS for resource discovery, readable preview, confirmation content, and safe cancellation; GTK apply remains UNVERIFIED.
+Gate: PASS for resource discovery, readable preview, visible confirmation, cancellation, and apply/restore on the installed GTK client.
 
 ## Live Native review
 
@@ -18,4 +18,8 @@ The confirmation-only screenshot is [2026-10-22-gtk-replay-guest-confirmation.pn
 
 ## Scope
 
-This covers the installed GTK dialog's live discovery, preview, visible confirmation, and cancel path. It does not prove GTK apply/restore, restore backup selection UX, browser-rendered Web controls, or GTK/VTE terminal handoff. The real authenticated loopback HTTP API already passed the full retire/restore cycle separately. Existing Debian and the owner's active PRoot session were not changed.
+At the time of this initial review, GTK apply/restore and restore backup selection were unverified. The later GTK apply/restore run is recorded in [follow-up evidence](2026-10-22-gtk-replay-guest-apply.md). Browser-rendered Web controls remain open. GTK/VTE terminal handoff is separately recorded in [same-session evidence](2026-10-22-gtk-vte-same-session.md). Existing Debian and the owner's active PRoot session were not changed.
+
+## Follow-up — live apply and restore
+
+GTK4's standard alert surface rendered blank during the apply review on this device. Replaced only this replay-guest confirmation with an inline target/effect panel, defaulting keyboard activation to no mutation. The installed action now visibly shows the exact alias, no-delete guarantee, and explicit Cancel / Retire or Restore choices. Live GTK retirement and restoration both passed on the receipt-verified test alias; exact inodes were preserved. See [apply/restore evidence](2026-10-22-gtk-replay-guest-apply.md).
