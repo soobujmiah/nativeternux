@@ -243,10 +243,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "9ea89584a40948a062e3c4e9da6c4e3e121f9258e4f4257d69b1f584480e82df",
+      "sha256": "310bdc19c768a7ffd02d3495304cdc2df159f705e0f728df3064f60a1ab9df54",
       "lines": 25,
       "read_status": "read",
-      "read_sha256": "9ea89584a40948a062e3c4e9da6c4e3e121f9258e4f4257d69b1f584480e82df"
+      "read_sha256": "310bdc19c768a7ffd02d3495304cdc2df159f705e0f728df3064f60a1ab9df54"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -515,10 +515,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "d44fb38cff2e7e527d463d53feb1a5e779b566a7eb94991adb8abf3758a7e42d",
+      "sha256": "56ca05496bb317b93892dfb0ec479812a03e11ef931845f64934396b3c99ba2d",
       "lines": 86,
       "read_status": "read",
-      "read_sha256": "d44fb38cff2e7e527d463d53feb1a5e779b566a7eb94991adb8abf3758a7e42d"
+      "read_sha256": "56ca05496bb317b93892dfb0ec479812a03e11ef931845f64934396b3c99ba2d"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
