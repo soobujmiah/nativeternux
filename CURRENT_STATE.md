@@ -45,3 +45,9 @@ The full owner objective remains active in [the repository audit worklist](docs/
 - Recheck P1–P3 acceptance scope, correct stale claims, and continue the remaining roadmap in order.
 
 Graphics, inference, and NPU qualification remain separate; see [testing](docs/testing/README.md). License/provenance remain public-release gates.
+
+
+The running Native GTK management center was visually inspected on display `:1` at 720×980. Services/SSH and Wake Lock screens rendered without triggering a mutation; long sidebar labels wrap, Wake Lock remains inspection-only, and secondary SSH controls are not visible in the first view. See [the focused GTK review](docs/evidence/2026-10-22-native-gtk-visual-review.md).
+
+
+The running Native GTK management center was visually inspected on display `:1` at 720×980. Services/SSH and Wake Lock screens rendered without triggering a mutation; long sidebar labels wrap, Wake Lock remains inspection-only, and secondary SSH controls are not visible in the first view. See [the focused GTK review](docs/evidence/2026-10-22-native-gtk-visual-review.md).

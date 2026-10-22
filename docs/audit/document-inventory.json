@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 401,
+  "document_count": 402,
   "read_count": 89,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,8 +35,8 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "983b940a9e4d27c5c91b8a01f28b84a5617d7dd662842aec2fec045b42b9bae7",
-      "lines": 47,
+      "sha256": "a38e3ee2aa4c62baae8b51543ee77b87efb2bf520039b84ba3155cbf43249166",
+      "lines": 53,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -515,8 +515,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "bcddde0cbda31ea85d774b6bbdc9fef079d50b98cb10b00ef0ce1db365326ca8",
-      "lines": 86,
+      "sha256": "67600b313725854cd4dc6f3a24c6bfd6ff3987e5891af90e42e90b39a4b7783a",
+      "lines": 88,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2319,6 +2319,14 @@
       "lines": 106,
       "read_status": "read",
       "read_sha256": "68d32ce6609078f0e76090f8bdf4a7746ba03fe7f8ec0e0deb92a8e5ef4a6eaa"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-native-gtk-visual-review.md",
+      "kind": "narrative",
+      "sha256": "7be8204b053e881222ff52502d4b0f3fe82929a1e544d1e39de14bb28e75bba2",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-22-native-installed-parity-1007.json",
