@@ -17,7 +17,7 @@ This is a source/evidence overview, not proof that every action is live-qualifie
 | GUI monitoring | Shared policy status/configuration; Native preview-first service install; idle live worker and private interval replay verified | Web/TUI/GTK registration controls; Android Activity/focus and later cold boot qualification |
 | Timezone | CLI/TUI/GTK scheduling preference; Web status/zone reads | No Android system-time mutation; no Web timezone write scope |
 | Logs/recovery | Fixed bounded logs/history in clients; broader CLI recovery | Full recovery-write parity; no arbitrary paths/Android-wide logs |
-| Optional PRoot | Inventory/probes, named apps/shortcuts, fixed broker and four transport paths; visible Firefox management acceptance and replay-guest retire/restore flows verified | Probe preview/rollback, broader guest configuration replay, graphics workload qualification, and full supported-route acceptance |
+| Optional PRoot | Receipt-owned Debian Trixie replay setup, exact retirement/restore, direct Zink/Turnip, and receipt-bound VirGL GLX draw verified on Native :1 through installed tx; replay graphics env stays process-scoped | VirGL server stop remains fail-closed because Android cannot map socket clients; nested Xephyr :2 GLX remains failed; Web mutation/client parity, wider Native-independence injection, broader guest configuration replay, and full audit remain open |
 | Software/AI | Package preview/apply foundation, catalog proposals and graphics diagnostics | Full software lifecycle, Wine qualification, inference/model/NPU integration |
 
 Availability badges describe feature coverage; live service state is checked separately. Planned functions must not be simulated by active buttons.

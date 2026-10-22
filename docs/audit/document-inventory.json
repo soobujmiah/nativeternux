@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 416,
-  "read_count": 90,
+  "document_count": 417,
+  "read_count": 88,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "a603cb990a4899bc7b5c80d1143205b8d96ff53c22e4d1250a0ed46e4e7764a7",
+      "sha256": "fd389ab342f37fc443318b755011cf829b5f9081b1f8428e160c992094c3baec",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "3851cc89f06a3bde283893db52444939f7877bb3dae0b771bbd95160f7741bbc",
-      "lines": 174,
+      "sha256": "534cc5857a87043e8f75b7aeba6f42cf0ca56a925be7fdb3f53bebed04ea1538",
+      "lines": 175,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -179,10 +179,10 @@
     {
       "path": "docs/PROOT-GPU.md",
       "kind": "narrative",
-      "sha256": "634bf625ccfe65967e39190fe5ca8661e568f3bf8518e7e5655f8aa519d832a6",
-      "lines": 50,
-      "read_status": "read",
-      "read_sha256": "634bf625ccfe65967e39190fe5ca8661e568f3bf8518e7e5655f8aa519d832a6"
+      "sha256": "47747d7d090d73f4bfd1c31ab18b5d3230f18a4a4a251ddca2817ff76e34c197",
+      "lines": 52,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/PROOT-GUI-DISPLAY0.md",
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "4d3787e6c5c3fcaddb15bba1a152806dbca980b8077a97b995f3f27fd6f0c0a5",
+      "sha256": "29e71ab7ba5a337c299825e580aaeeefadbb8b8af1477b8b42262860bba7ca6c",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -243,7 +243,7 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "29e99c032d13ccedaafc6989aa6a19044b199dccaaeba6b0406e161fd233fba6",
+      "sha256": "de9e9c87db67bfe0ead5f7ea5aa66b0b9d6c78eea29d1b1e87829de67eb22ba8",
       "lines": 25,
       "read_status": "pending",
       "read_sha256": null
@@ -2443,10 +2443,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-next-gate-reconciliation.md",
       "kind": "narrative",
-      "sha256": "56b9a5e355d0b2fc2eb0ac9a929c7fb712aee6f9e7fe1ebc7875820812c240bb",
-      "lines": 24,
-      "read_status": "read",
-      "read_sha256": "56b9a5e355d0b2fc2eb0ac9a929c7fb712aee6f9e7fe1ebc7875820812c240bb"
+      "sha256": "a357d7bae287fca2ad00fbaf15af65c11db7bc4c38b22c615ef6e1280d2f04a0",
+      "lines": 26,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md",
@@ -2471,6 +2471,14 @@
       "lines": 45,
       "read_status": "read",
       "read_sha256": "5b00ce59126b8e1c969c3c790c5bbb30ba98161babce33ee4d815ca13f08e34a"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-p4-virgl-route-recheck.md",
+      "kind": "narrative",
+      "sha256": "970d3eab69087e19cc31b2562d90a23170e63e25f81524cf6b16d616b295354d",
+      "lines": 82,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-22-probe-http-live.json",
@@ -2963,8 +2971,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "9c7236cc472f0a291f3ba18ae6fdea9b1fcbb2a7af8fec27fce9fae7c8c5a18a",
-      "lines": 189,
+      "sha256": "4b5d53f10630962998d91b4a2b7773c945ee223ee6b3ac9374d69431adeffdde",
+      "lines": 190,
       "read_status": "pending",
       "read_sha256": null
     },

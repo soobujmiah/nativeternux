@@ -15,6 +15,13 @@ _nt_launch_guest_shell() {
     "$distro" "$user" 2>/dev/null
 }
 
+_nt_launch_verify_replay_alias() {
+  local distro="$1"
+  PYTHONPATH="$_TN_LIB_DIR" python3 -c \
+    'import os,sys,proot_diagnostics; proot_diagnostics.verify_managed_replay_alias(sys.argv[1], os.environ["PREFIX"])' \
+    "$distro" 2>/dev/null
+}
+
 _nt_guest_pulse_cookie() {
   PYTHONPATH="$_TN_LIB_DIR" python3 -c \
     'import proot_diagnostics; p=proot_diagnostics._native_pulse_cookie_path(); print(p or "")' \
@@ -88,20 +95,29 @@ nt_cmd_db() {
   [[ -z "$guest_user" || "$guest_user" =~ ^[a-z_][a-z0-9_-]*$ ]] || { nt_fail "Invalid guest user name."; return 2; }
   [[ "$display" =~ ^:[0-9]{1,2}$ ]] || { nt_fail "Display must be a local X11 display such as :1."; return 2; }
   [[ "$backend" = zink || "$backend" = virgl ]] || { nt_fail "Backend must be zink or virgl."; return 2; }
-  if [ "$backend" = virgl ] && [ "$distro" != debian ]; then
-    nt_fail "The managed VirGL handoff is currently supported only for the existing Debian guest."
-    return 2
+  local native_debian=0 native_replay=0 shell_user="" guest_shell="" shell_command="" assignment
+  local virgl_guest_socket="/tmp/.ternuxx-virgl/virgl-${display#:}.sock"
+  local -a session_env=()
+  if [ "$distro" != debian ]; then
+    _nt_launch_verify_replay_alias "$distro" || {
+      nt_fail "The selected replay guest lacks an exact valid Ternuxx install receipt."
+      return 1
+    }
+    native_replay=1
   fi
   nt_require_command proot-distro || { nt_fail "Run this from native Termux; proot-distro is not available here."; return 1; }
-  local args=(login "$distro" --shared-tmp)
+  local -a args=()
+  if [ "$native_replay" -eq 1 ]; then
+    args=(login --isolated --shared-tmp "$distro")
+  else
+    args=(login "$distro" --shared-tmp)
+  fi
   local -a proot_env=(env -u ANDROID_ART_ROOT -u ANDROID_DATA -u ANDROID_I18N_ROOT
     -u ANDROID_ROOT -u ANDROID_RUNTIME_ROOT -u ANDROID_TZDATA_ROOT
     -u BOOTCLASSPATH -u DEX2OATBOOTCLASSPATH -u EXTERNAL_STORAGE
     -u GALLIUM_DRIVER -u MESA_LOADER_DRIVER_OVERRIDE -u TU_DEBUG
-    -u MESA_VK_WSI_DEBUG -u MESA_SHADER_CACHE_DISABLE -u VTEST_SOCKET_NAME)
-  local native_debian=0 shell_user="" guest_shell="" shell_command="" assignment
-  local virgl_guest_socket="/tmp/.ternuxx-virgl/virgl-${display#:}.sock"
-  local -a session_env=()
+    -u MESA_VK_WSI_DEBUG -u MESA_SHADER_CACHE_DISABLE -u VTEST_SOCKET_NAME
+    -u LIBGL_ALWAYS_SOFTWARE)
   if [ "$as_root" -eq 0 ]; then
     if [ -z "$guest_user" ]; then
       guest_user="$(_nt_launch_guest_user "$distro")" || guest_user=""
@@ -115,7 +131,7 @@ nt_cmd_db() {
   else
     shell_user="root"
   fi
-  if [ "$distro" = debian ] && [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] && [ -n "${TERMUX_VERSION:-}" ]; then
+  if { [ "$distro" = debian ] || [ "$native_replay" -eq 1 ]; } && [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] && [ -n "${TERMUX_VERSION:-}" ]; then
     native_debian=1
     if [ $# -eq 0 ]; then
       guest_shell="$(_nt_launch_guest_shell "$distro" "$shell_user")" || guest_shell=""
@@ -128,19 +144,22 @@ nt_cmd_db() {
       nt_require_termux || return 1
       _nt_virgl_ensure "$display" || return 1
       session_env+=(-u MESA_LOADER_DRIVER_OVERRIDE -u TU_DEBUG -u MESA_VK_WSI_DEBUG
-        "GALLIUM_DRIVER=virpipe" "VTEST_SOCKET_NAME=$virgl_guest_socket")
+        "LIBGL_ALWAYS_SOFTWARE=true" "GALLIUM_DRIVER=virpipe"
+        "VTEST_SOCKET_NAME=$virgl_guest_socket")
     else
       session_env+=("GALLIUM_DRIVER=zink" "MESA_LOADER_DRIVER_OVERRIDE=zink"
         "TU_DEBUG=sysmem,noconform" "MESA_VK_WSI_DEBUG=sw")
     fi
     session_env+=("DISPLAY=$display" "PULSE_SERVER=tcp:127.0.0.1:4713"
       "MESA_SHADER_CACHE_DISABLE=true")
-    # proot-distro persists --env in the shared guest profile. Keep this
-    # baseline identical across backends; apply selection to each process.
-    args+=(--env DISPLAY=:1 --env PULSE_SERVER=tcp:127.0.0.1:4713
-      --env GALLIUM_DRIVER=zink --env MESA_LOADER_DRIVER_OVERRIDE=zink
-      --env TU_DEBUG=sysmem,noconform --env MESA_VK_WSI_DEBUG=sw
-      --env MESA_SHADER_CACHE_DISABLE=true)
+    # Keep the established Debian profile baseline unchanged. Replay aliases
+    # are isolated qualification guests: never persist env into their profile.
+    if [ "$native_replay" -eq 0 ]; then
+      args+=(--env DISPLAY=:1 --env PULSE_SERVER=tcp:127.0.0.1:4713
+        --env GALLIUM_DRIVER=zink --env MESA_LOADER_DRIVER_OVERRIDE=zink
+        --env TU_DEBUG=sysmem,noconform --env MESA_VK_WSI_DEBUG=sw
+        --env MESA_SHADER_CACHE_DISABLE=true)
+    fi
     _nt_use audio || return 1
     nt_audio_ensure || true
     local pulse_cookie
@@ -152,8 +171,10 @@ nt_cmd_db() {
     else
       nt_warn "Native PulseAudio cookie is unavailable; guest audio may not connect."
     fi
-    if [ -c /dev/kgsl-3d0 ]; then args+=(--bind /dev/kgsl-3d0:/dev/kgsl); fi
-    if [ -d /dev/dri ]; then args+=(--bind /dev/dri); fi
+    if [ "$backend" = zink ] || [ "$native_replay" -eq 0 ]; then
+      if [ -c /dev/kgsl-3d0 ]; then args+=(--bind /dev/kgsl-3d0:/dev/kgsl); fi
+      if [ -d /dev/dri ]; then args+=(--bind /dev/dri); fi
+    fi
   elif [ "$backend" = virgl ]; then
     nt_fail "VirGL handoff requires the Native Termux host; it cannot be configured from PRoot."
     return 1

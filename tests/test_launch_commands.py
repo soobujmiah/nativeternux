@@ -83,6 +83,7 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertIn("MESA_LOADER_DRIVER_OVERRIDE=zink", persisted)
         self.assertNotIn("GALLIUM_DRIVER=virpipe", persisted)
         self.assertFalse(any(arg.startswith("VTEST_SOCKET_NAME=") for arg in persisted))
+        self.assertIn("LIBGL_ALWAYS_SOFTWARE=true", virgl_args[separator + 4])
         self.assertIn("GALLIUM_DRIVER=virpipe", virgl_args[separator + 4])
         self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", virgl_args[separator + 4])
         self.assertEqual(ensure.read_text().strip(), ":1")
@@ -135,6 +136,57 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertEqual(command_args[command_separator + 1], "/usr/bin/env")
         self.assertIn("GALLIUM_DRIVER=virpipe", command_args[command_separator + 1:])
         self.assertEqual(command_args[-2:], ["glxinfo", "-B"])
+
+    def test_receipt_verified_replay_backend_is_per_process_and_fails_closed(self) -> None:
+        capture = self.root / "replay-proot-args"
+        ensure = self.root / "replay-virgl-ensure"
+        script = "\n".join([
+            '_TN_LIB_DIR="$LIB_DIR"',
+            'source "$LIB_DIR/launch.sh"',
+            'nt_fail() { echo "$*" >&2; }',
+            'nt_warn() { echo "$*" >&2; }',
+            'nt_require_command() { command -v "$1" >/dev/null; }',
+            'nt_require_termux() { return 0; }',
+            'nt_audio_ensure() { return 0; }',
+            'nt_use() { return 0; }',
+            '_nt_use() { return 0; }',
+            '_nt_guest_pulse_cookie() { return 0; }',
+            '_nt_launch_verify_replay_alias() { [ "$1" = ternuxx-replay-fixture ]; }',
+            '_nt_launch_guest_shell() { printf /bin/bash; }',
+            '_nt_virgl_ensure() { printf "%s\n" "$1" > "$VIRGL_ENSURE_CAPTURE"; }',
+            'nt_cmd_db --user dev --distro ternuxx-replay-fixture --backend virgl --display :2',
+        ])
+        env = {**self.env, "PREFIX": "/data/data/com.termux/files/usr",
+               "TERMUX_VERSION": "fixture", "LIB_DIR": str(ROOT / "lib"),
+               "PROOT_ARGS_CAPTURE": str(capture), "VIRGL_ENSURE_CAPTURE": str(ensure)}
+        stub = self.bin / "proot-distro"
+        stub.write_text("#!/bin/sh\nprintf \"%s\\n\" \"$@\" > \"$PROOT_ARGS_CAPTURE\"\n")
+        stub.chmod(0o755)
+        result = subprocess.run([shutil.which("bash"), "-c", script], capture_output=True,
+                                text=True, env=env, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        args = capture.read_text().splitlines()
+        separator = args.index("--")
+        self.assertEqual(args[:separator], ["login", "--isolated", "--shared-tmp",
+                                            "ternuxx-replay-fixture", "--user", "dev"])
+        self.assertNotIn("--env", args[:separator])
+        child = args[separator + 1:]
+        self.assertEqual(child[:3], ["/bin/bash", "-l", "-c"])
+        self.assertIn("exec /usr/bin/env", child[3])
+        self.assertIn("LIBGL_ALWAYS_SOFTWARE=true", child[3])
+        self.assertIn("GALLIUM_DRIVER=virpipe", child[3])
+        self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-2.sock", child[3])
+        self.assertEqual(ensure.read_text().strip(), ":2")
+
+        denied_capture = self.root / "denied-proot-args"
+        denied_env = {**env, "PROOT_ARGS_CAPTURE": str(denied_capture)}
+        denied_script = script.replace(
+            "_nt_launch_verify_replay_alias() { [ \"$1\" = ternuxx-replay-fixture ]; }",
+            "_nt_launch_verify_replay_alias() { return 1; }")
+        denied = subprocess.run([shutil.which("bash"), "-c", denied_script],
+                                capture_output=True, text=True, env=denied_env, timeout=10)
+        self.assertNotEqual(denied.returncode, 0)
+        self.assertFalse(denied_capture.exists())
 
     def test_native_android_runtime_variables_do_not_leak_to_guest_profile(self) -> None:
         capture = self.root / "proot-env"

@@ -360,8 +360,9 @@ def _guest_command(manager: str, user: str, display: str, backend: str,
                      "--env", "GALLIUM_DRIVER=zink", "--env", "TU_DEBUG=sysmem,noconform",
                      "--env", "MESA_VK_WSI_DEBUG=sw", "--env", "MESA_SHADER_CACHE_DISABLE=true"])
     else:
-        args.extend(["--env", "GALLIUM_DRIVER=virpipe",
-                     "--env", "MESA_GL_VERSION_OVERRIDE=4.3COMPAT",
+        args.extend(["--env", "LIBGL_ALWAYS_SOFTWARE=true",
+                     "--env", "GALLIUM_DRIVER=virpipe",
+                     "--env", f"VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-{display[1:]}.sock",
                      "--env", "MESA_SHADER_CACHE_DISABLE=true"])
     args.extend(["--", "/bin/sh", "-c", command])
     return args
@@ -374,7 +375,7 @@ if command -v xdpyinfo >/dev/null 2>&1 && xdpyinfo -display "${DISPLAY:-}" >/dev
   x11=reachable
 fi
 renderer=
-if command -v glxinfo >/dev/null 2>&1; then
+if [ "${GALLIUM_DRIVER:-}" != virpipe ] && command -v glxinfo >/dev/null 2>&1; then
   glx_output=$(glxinfo -B 2>/dev/null || true)
   renderer=$(printf '%s\n' "$glx_output" | sed -n 's/^OpenGL renderer string: //p' | head -n 1)
   [ -n "$renderer" ] && x11=reachable
@@ -404,6 +405,10 @@ if command -v glxgears >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; th
   fi
 fi
 printf 'GLX draw: %s\nGLX draw frames: %s\nGLX draw renderer: %s\n' "$glx_draw" "$glx_draw_frames" "${glx_draw_renderer:-unavailable}"
+if [ -z "$renderer" ] && [ -n "$glx_draw_renderer" ]; then
+  renderer="$glx_draw_renderer"
+  printf 'Renderer: %s\n' "$renderer"
+fi
 gles_renderer=
 gles_version=
 if command -v es2_info >/dev/null 2>&1; then
@@ -424,29 +429,35 @@ fi
 """
 
 
+def verify_managed_replay_alias(distro: str, prefix: str = "/data/data/com.termux/files/usr") -> dict[str, object]:
+    """Verify an exact replay receipt and current rootfs identity before routing."""
+    if not isinstance(distro, str) or not re.fullmatch(
+            r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", distro):
+        raise ValueError("the managed guest operation supports only an exact Ternuxx replay alias")
+    state_dir = os.environ.get(
+        "TERNUXX_STATE_DIR", str(Path.home() / ".local/share/ternuxx"))
+    try:
+        state = proot_fresh_setup._state_root(str(Path.home()), state_dir, create=False)
+        receipt = proot_fresh_setup._read_private(state / f"fresh-provider-{distro}.json")
+        identity = receipt.get("rootfs_identity")
+        if (receipt.get("schema_version") != 1 or receipt.get("alias") != distro
+                or receipt.get("requested_packages_verified_installed") is not True
+                or receipt.get("package_versions_recorded") is not True
+                or not isinstance(receipt.get("plan_id"), str)):
+            raise ValueError("replay install receipt is incomplete")
+        proot_fresh_setup._verify_owned_target(prefix, distro, identity)
+        return {"alias": distro, "plan_id": receipt["plan_id"], "rootfs_identity": identity}
+    except (OSError, ValueError, KeyError) as exc:
+        raise ValueError("replay guest lacks an exact, valid Ternuxx install receipt") from exc
+
+
 def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
                        prefix: str = "/data/data/com.termux/files/usr",
                        which: Callable[[str], str | None] = shutil.which,
                        runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> dict[str, object]:
     """Run a bounded probe against Debian or a receipt-verified Ternuxx replay guest."""
     if distro != "debian":
-        if not isinstance(distro, str) or not re.fullmatch(
-                r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", distro):
-            raise ValueError("the managed guest probe supports Debian or an exact Ternuxx replay alias")
-        state_dir = os.environ.get(
-            "TERNUXX_STATE_DIR", str(Path.home() / ".local/share/ternuxx"))
-        try:
-            state = proot_fresh_setup._state_root(str(Path.home()), state_dir, create=False)
-            receipt = proot_fresh_setup._read_private(state / f"fresh-provider-{distro}.json")
-            identity = receipt.get("rootfs_identity")
-            if (receipt.get("schema_version") != 1 or receipt.get("alias") != distro
-                    or receipt.get("requested_packages_verified_installed") is not True
-                    or receipt.get("package_versions_recorded") is not True
-                    or not isinstance(receipt.get("plan_id"), str)):
-                raise ValueError("replay install receipt is incomplete")
-            proot_fresh_setup._verify_owned_target(prefix, distro, identity)
-        except (OSError, ValueError, KeyError) as exc:
-            raise ValueError("replay guest lacks an exact, valid Ternuxx install receipt") from exc
+        verify_managed_replay_alias(distro, prefix)
     if not isinstance(user, str) or not _GUEST_USER.fullmatch(user) or user == "root":
         raise ValueError("guest user must be a non-root Debian username")
     if not isinstance(display, str) or not _DISPLAY.fullmatch(display):

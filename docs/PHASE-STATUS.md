@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-A clean preview-bound Debian Trixie replay alias installed all 1,024 resolved packages from the pinned snapshot, recorded package versions, passed apt/dpkg/locale/user checks, verified live Zink/Turnip GLX at 396 frames on Native :1, and passed exact retire/restore with rootfs identity preserved. The initial select (38) APT failure did not reproduce and its trigger remains unresolved. P4 remains open for broader provider/route configuration, Web mutation/client parity, wider Native-independence failure injection and full source/installed audit.
+Fresh Debian Trixie replay, package receipt, protected-default-rootfs checks, exact retire/restore, direct Zink/Turnip and receipt-bound VirGL GLX draws now pass through installed tx. Exact VirGL stop still fails closed because Android socket-client ownership is unavailable; Web mutation/client parity, wider Native-independence injection and full audit remain open.
 
-**Next action:** Continue P4 with provider and route configuration acceptance, Web mutation/client parity, wider Native-independence failure injection, and the full source/installed audit; preserve the now-qualified replay receipt and investigate any recurrence of APT select (38).
+**Next action:** Resolve safe exact VirGL socket-client visibility/cleanup while preserving the running managed server; then close Web mutation/client parity, Native-independence injection and the full source/installed/runtime audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -113,6 +113,7 @@ Evidence:
 - [docs/evidence/2026-10-22-p4-next-gate-reconciliation.md](evidence/2026-10-22-p4-next-gate-reconciliation.md)
 - [docs/evidence/2026-10-22-native-optional-proot-failure-injection.md](evidence/2026-10-22-native-optional-proot-failure-injection.md)
 - [docs/evidence/2026-10-22-p4-replay-download-timeout.md](evidence/2026-10-22-p4-replay-download-timeout.md)
+- [docs/evidence/2026-10-22-p4-virgl-route-recheck.md](evidence/2026-10-22-p4-virgl-route-recheck.md)
 
 ## P5 — Distro and display compatibility profiles
 

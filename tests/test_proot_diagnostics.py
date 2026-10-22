@@ -402,6 +402,9 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertIn("--shared-tmp", virgl)
         self.assertNotIn("--shared-home", virgl)
         self.assertNotIn("/data/data/com.termux", virgl)
+        self.assertIn("LIBGL_ALWAYS_SOFTWARE=true", virgl)
+        self.assertIn("GALLIUM_DRIVER=virpipe", virgl)
+        self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", virgl)
 
     def test_native_pulseaudio_endpoint_is_read_only_and_typed(self):
         calls = []

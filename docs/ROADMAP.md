@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Continue P4 with provider and route configuration acceptance, Web mutation/client parity, wider Native-independence failure injection, and the full source/installed audit; preserve the now-qualified replay receipt and investigate any recurrence of APT select (38).
+**Next action:** Resolve safe exact VirGL socket-client visibility/cleanup while preserving the running managed server; then close Web mutation/client parity, Native-independence injection and the full source/installed/runtime audit.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
