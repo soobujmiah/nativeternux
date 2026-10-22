@@ -1,0 +1,7 @@
+event_id: commit-38ab67a4b01e-bc5eeb59de0b1de9
+repository: soobujmiah/ternuxx
+commit: 38ab67a4b01e967e021e538cf6c8e9b8aae2d697
+kind: commit
+occurred_at: '2026-10-22T05:48:50Z'
+status: completed
+summary: 'docs(audit): map P1-P3 gates and verify Native package continuity'
