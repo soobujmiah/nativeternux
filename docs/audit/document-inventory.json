@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 406,
-  "read_count": 94,
+  "read_count": 95,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "234ca75702e75c5c8d5ec743b6ef630429f1e681ad520a6b10d423aa8866eb2b",
+      "sha256": "2ef575e29358338e36a05d35373d3c648e47930729eaa55116115885f7be8f25",
       "lines": 53,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "2ef575e29358338e36a05d35373d3c648e47930729eaa55116115885f7be8f25"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
