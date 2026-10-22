@@ -5,12 +5,12 @@ This is a source/evidence overview, not proof that every action is live-qualifie
 | Area | Implemented reach | Remaining work |
 |---|---|---|
 | Shared service | Typed operations, catalog, capability/session checks, plans and recovery primitives | Registry entries alone do not prove client controls, deployment or live qualification |
-| CLI | Broadest grouped management commands and specialized modules | Complete command/operation inventory and supported setup replay |
-| TUI | Catalog/search/status, guided session picker and real terminal start/I/O/resize/detach/reattach/close on a separate guest | Full action parity and cross-client continuity |
-| Web | Authenticated local console; scoped desktop/graphics/monitoring/8023/apps/shortcuts/Cron actions; history/logs and actual separate-guest terminal lifecycle | Credentials, per-service boot/Wake Lock policy, broader configuration/scheduler/recovery writes |
-| GTK | Native GTK4/VTE resource console, typed bridge, app entry and supported dialogs | Source/bridge/binary identity verified after rebuild; GTK start/attach/resize/detach/close passed on the separate guest; cross-client continuity and broader action parity remain open |
+| CLI | Broadest grouped management commands and specialized modules; SSH authorized-key fingerprint inventory | Complete command/operation inventory and supported setup replay |
+| TUI | Catalog/search/status, guided session picker, read-only SSH key fingerprints, and real terminal start/I/O/resize/detach/reattach/close on a separate guest | Full action parity and cross-client continuity |
+| Web | Authenticated local console; scoped desktop/graphics/monitoring/8023 lifecycle and read-only authorized-key fingerprints/apps/shortcuts/Cron actions; history/logs and actual separate-guest terminal lifecycle | Credential mutation/recovery, per-service boot/Wake Lock policy, broader configuration/scheduler/recovery writes |
+| GTK | Native GTK4/VTE resource console, typed bridge, app entry, read-only SSH key fingerprints and supported dialogs | Source/bridge/binary identity verified after rebuild; GTK start/attach/resize/detach/close passed on the separate guest; cross-client continuity and broader action parity remain open |
 | Navigation/actions | Shared category order; numbered lists; Web details scroll independently from actions; real mobile quick controls | Further GTK/TUI interaction refinement |
-| Managed SSH 8023 | Native diagnostics, preview-confirmed start/stop/restart/deployment in shared CLI/TUI/Web/GTK contracts | Key generation/enrollment/removal, password/recovery, and per-SSH boot policy across clients |
+| Managed SSH 8023 | Native diagnostics, read-only authorized-key fingerprints, and preview-confirmed start/stop/restart/deployment in shared CLI/TUI/Web/GTK contracts | Key generation/enrollment/removal, password/recovery, and per-SSH boot/Wake Lock policy across clients |
 | Development SSH 8022 | Externally managed inspection | No product lifecycle/auth mutation; preserve this channel |
 | Boot/Wake Lock | Native helpers/profiles, owner-scoped leases, diagnostics, selected CLI/TUI controls | Uniform service policies/client controls and next-boot observation of current recovery modules |
 | Cron | Persistent definitions, previewed mutations/history across clients; CLI/TUI scheduler controls | Web/GTK scheduler lifecycle, retry/cancellation/non-skip delivery and production recovery |

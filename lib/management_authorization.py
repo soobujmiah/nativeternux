@@ -42,6 +42,7 @@ OPERATION_CAPABILITIES: dict[str, str] = {
     "desktop.restart": "desktop.manage",
     "doctor.report": "diagnostics.read",
     "ssh.inspect": "diagnostics.read",
+    "ssh.keys.list": "ssh.credentials.read",
     "native.ssh.status": "diagnostics.read",
     "proot.status": "diagnostics.read",
     "proot.sessions.list": "diagnostics.read",

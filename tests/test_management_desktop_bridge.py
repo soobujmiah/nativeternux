@@ -39,6 +39,14 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.env.stop()
 
+    def test_ssh_key_inventory_uses_the_shared_read_operation(self) -> None:
+        report = {"ok": True, "data": {"status": "available", "key_count": 1,
+                  "keys": [{"key_type": "ssh-ed25519", "fingerprint": "SHA256:abc", "label": "laptop"}]}}
+        with mock.patch.object(bridge, "call", return_value=report) as dispatch, \
+             redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["ssh-keys-list"]), 0)
+        dispatch.assert_called_once_with("ssh.keys.list")
+
     def test_catalog_bridge_emits_catalog_categories_and_resources(self) -> None:
         output = StringIO()
         with redirect_stdout(output):

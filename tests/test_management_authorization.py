@@ -43,6 +43,14 @@ class ManagementAuthorizationTests(unittest.TestCase):
             self.assertIsNone(management_authorization.required_capability(operation))
             self.assertFalse(management_authorization.authorize(operation, {"diagnostics.read"}))
 
+    def test_ssh_key_inventory_has_separate_read_scope(self) -> None:
+        self.assertEqual(management_authorization.required_capability("ssh.keys.list"), "ssh.credentials.read")
+        self.assertFalse(management_authorization.authorize("ssh.keys.list", {"diagnostics.read"}))
+        self.assertTrue(management_authorization.authorize("ssh.keys.list", {"ssh.credentials.read"}))
+        import management_sessions
+        self.assertIn("ssh.keys.list", management_sessions.READ_ONLY_OPERATIONS)
+        self.assertNotIn("ssh.keys.list", management_sessions.MUTATING_OPERATIONS)
+
     def test_grants_are_exact_and_do_not_escalate(self) -> None:
         self.assertTrue(management_authorization.authorize("ssh.inspect", {"diagnostics.read"}))
         self.assertFalse(management_authorization.authorize("ssh.service.stop", {"diagnostics.read"}))

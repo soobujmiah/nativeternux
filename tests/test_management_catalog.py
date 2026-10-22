@@ -44,6 +44,9 @@ class ManagementCatalogTests(unittest.TestCase):
         self.assertEqual(by_id["network.ssh.manual-8022"]["status"], "external")
         self.assertEqual(by_id["network.ssh.manual-8022"]["supported_operations"], ["ssh.inspect"])
         self.assertEqual(by_id["network.ssh.managed-8023"]["configuration"]["defaults"]["port"], 8023)
+        self.assertIn("ssh.keys.list", by_id["network.ssh.managed-8023"]["supported_operations"])
+        self.assertEqual(by_id["network.ssh.managed-8023"]["operation_capabilities"]["ssh.keys.list"], "ssh.credentials.read")
+        self.assertIn("shared Termux account", by_id["network.ssh.managed-8023"]["description"])
         audio = by_id["native.audio.pulseaudio"]
         self.assertEqual(audio["status"], "partial")
         self.assertEqual(audio["ownership"]["authority"], "ternuxx-native-pulse-lifecycle")
@@ -70,7 +73,7 @@ class ManagementCatalogTests(unittest.TestCase):
         operations = set(management_service.OPERATIONS)
         service = management_catalog.build_catalog(operations, category="services")
         self.assertEqual({item["category_id"] for item in service["resources"]}, {"services"})
-        filtered = management_catalog.build_catalog(operations, query="8022")
+        filtered = management_catalog.build_catalog(operations, query="manual")
         self.assertEqual([item["id"] for item in filtered["resources"]], ["network.ssh.manual-8022"])
         planned = management_catalog.build_catalog(operations, status="planned")
         self.assertTrue(planned["resources"])

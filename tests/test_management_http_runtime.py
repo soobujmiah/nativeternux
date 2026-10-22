@@ -223,6 +223,12 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
             connection.close()
             self.assertTrue(server.close(grace_seconds=3))
 
+    def test_web_ssh_key_inventory_control_uses_its_separate_capability(self) -> None:
+        ui = (ROOT / "lib" / "management_web_ui.html").read_text()
+        self.assertIn("ssh.credentials.read", ui)
+        self.assertIn("View shared SSH key fingerprints", ui)
+        self.assertIn('b.onclick=()=>run("ssh.keys.list")', ui)
+
     def test_web_mode_exposes_scoped_desktop_monitoring_and_managed_ssh_8023_mutations(self) -> None:
         env = dict(self.env, TERNUXX_WEB_MODE="1")
         Path(env["TERNUXX_STATE_DIR"]).mkdir(parents=True, mode=0o700)

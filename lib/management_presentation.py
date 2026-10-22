@@ -31,7 +31,9 @@ FIELD_LABELS: Final[dict[str, str]] = {
     "key_fingerprint": "Key fingerprint", "fingerprint": "Fingerprint",
     "listener": "Listener", "service": "Service", "operation": "Operation",
     "category": "Category", "name": "Name", "description": "Description",
-    "count": "Count", "unresolved_count": "Items needing attention",
+    "count": "Count", "key_count": "Authorized keys", "invalid_entries": "Invalid entries",
+    "key_type": "Key type", "label": "Key label", "permissions": "File permissions",
+    "unresolved_count": "Items needing attention",
     "read_only": "Read-only check", "reason": "Reason", "error": "Problem",
     'boot_id_relation': 'Boot ID check',
     'configured_profile': 'Selected startup profile',
@@ -118,6 +120,7 @@ STATUS_TONES: Final[dict[str, str]] = {
 }
 
 OPERATION_LABELS: Final[dict[str, str]] = {
+    "ssh.keys.list": "Authorized SSH key fingerprints",
     "management.catalog": "Browse resources",
     "desktop.status": "Desktop status",
     "desktop.monitor.status": "Activity monitoring policy",

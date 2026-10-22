@@ -64,6 +64,10 @@ def main(argv: list[str]) -> int:
                 "id", "category_id", "name", "status", "availability", "description"))
                   + "\t" + clean(", ".join(operation_names)))
         return 0
+    if action == "ssh-keys-list" and len(argv) == 1:
+        result = call("ssh.keys.list")
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "inspect" and len(argv) == 2:
         rid = argv[1]
         operation_args: dict[str, object] = {}

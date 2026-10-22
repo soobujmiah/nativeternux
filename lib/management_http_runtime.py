@@ -39,7 +39,7 @@ _MUTATING_CAPABILITIES = {
 WEB_READ_CAPABILITIES = frozenset({
     "diagnostics.read", "remote_policy.read", "continuity.read",
 })
-WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage", "applications.launch", "applications.shortcuts.manage", "cron.manage", "proot.session.manage"})
+WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "ssh.credentials.read", "graphics.manage", "applications.launch", "applications.shortcuts.manage", "cron.manage", "proot.session.manage"})
 _WEB_MUTATING_OPERATIONS = {
     operation for operation in management_sessions.MUTATING_OPERATIONS
     if management_authorization.required_capability(operation) in WEB_CAPABILITIES

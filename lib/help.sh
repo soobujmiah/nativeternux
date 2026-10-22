@@ -374,9 +374,10 @@ EOF
       ;;
     ssh)
       cat <<'EOF'
-tx ssh inspect/start/stop/restart - Native SSH diagnostics and fixed Runit service control
+tx ssh inspect/keys-list/start/stop/restart - Native SSH diagnostics and fixed Runit service control
 
   tx ssh inspect
+  tx ssh keys-list                    # shared Termux account key fingerprints and labels
   tx proot status # Inventory installed guests without entering them
   tx ssh start                         # read-only preview
   tx ssh start --yes --plan-id <id>    # apply exact preview
@@ -389,8 +390,9 @@ Reports whether OpenSSH/configuration is present, whether sshd accepts the
 current config, allowlisted effective authentication/bind policy, observed
 TCP listeners and whether procfs permitted reading them, process presence,
 Termux:Boot directory presence, and whether a runit command is available. It
-does not read key or password files, display raw config, or test authenticated
-connectivity. Start/stop preview and apply control only the fixed Ternuxx
+inspect does not read key or password files, display raw config, or test authenticated
+connectivity. keys-list reads only the fixed native authorized_keys file and returns key
+type, fingerprint, and sanitized comment; it never returns key bytes. Start/stop preview and apply control only the fixed Ternuxx
 Runit unit after exact service-definition identity verification. Apply requires
 --yes and its preview plan ID, journals before sv up/down, and verifies the
 resulting Runit state. Stop can disconnect clients using the managed SSH port.

@@ -29,6 +29,21 @@ def request(operation: object, args: object = None, api_version: int = 1) -> dic
 
 
 class ManagementServiceTests(unittest.TestCase):
+    def test_ssh_key_inventory_is_a_separate_read_only_shared_operation(self) -> None:
+        import tempfile
+        with tempfile.TemporaryDirectory(prefix="ssh-keys-read-") as temp:
+            home = Path(temp)
+            (home / ".ssh").mkdir(mode=0o700)
+            expected = {"status": "missing", "keys": [], "key_count": 0}
+            with patch.object(management_service.ssh_key_inventory, "list_managed_authorized_keys",
+                              return_value=expected) as inventory:
+                result = management_service.dispatch(
+                    request("ssh.keys.list"), env={**NATIVE_ENV, "HOME": str(home)})
+            inventory.assert_called_once_with(home=str(home))
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["data"]["status"], "missing")
+        self.assertEqual(result["data"]["keys"], [])
+
     def test_terminal_broker_status_is_optional_and_never_probes_proot(self) -> None:
         with tempfile.TemporaryDirectory(prefix="management-terminal-status-") as temp:
             home = Path(temp)

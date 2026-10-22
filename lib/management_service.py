@@ -25,6 +25,7 @@ import operation_journal
 import reboot_recovery
 import runtime_diagnostics
 import ssh_diagnostics
+import ssh_key_inventory
 import runit_service
 import runit_deployment
 import operation_recovery
@@ -79,6 +80,7 @@ OPERATIONS = {
     "desktop.restart": {"args": {"display"}},
     "doctor.report": {"args": {"graphics"}},
     "ssh.inspect": {"args": set()},
+    "ssh.keys.list": {"args": set()},
     "proot.status": {"args": set()},
     "proot.profiles.list": {"args": set()},
     "proot.profiles.show": {"args": {"profile"}},
@@ -388,6 +390,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = doctor_report.build_report(graphics, __import__("pathlib").Path(state_dir or home))
         elif operation == "remote.access.preview":
             data = remote_access_policy.preview(args["policy"]) if "policy" in args else remote_access_policy.preview()
+        elif operation == "ssh.keys.list":
+            data = ssh_key_inventory.list_managed_authorized_keys(home=home)
         elif operation in {"ssh.inspect", "native.ssh.status"}:
             data = ssh_diagnostics.inspect_native(prefix=process_env["PREFIX"], home=home)
         elif operation == "proot.status":
@@ -1125,7 +1129,7 @@ def main(argv: list[str] | None = None) -> int:
                 else: print("Preview first, then apply with --yes --plan-id PLAN_ID.", file=sys.stderr)
                 return 1
             payload = {"plan_id": args.plan_id, "confirmed": True}
-    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "terminal.broker.status", "native.ssh.status", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
+    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "terminal.broker.status", "native.ssh.status", "ssh.keys.list", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
         payload = {}
         if args.operation == "continuity.status" and args.test_id:
             payload["test_id"] = args.test_id
@@ -1407,7 +1411,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             payload = {"action": args.shortcut_action, "app_id": args.app_id,
                        "confirmed": True, "plan_id": args.plan_id}
-    elif args.operation == "ssh.inspect":
+    elif args.operation in {"ssh.inspect", "ssh.keys.list"}:
         payload = {}
     elif args.operation == "continuity.prepare":
         payload = {"test_id": args.test_id or "manual-checkpoint", "repository": args.repository, "commit": args.commit,

@@ -283,9 +283,13 @@ def _desktop_action(screen: "curses._CursesWindow", resource: dict[str, Any]) ->
 def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
     if resource.get("id") != "network.ssh.managed-8023":
         return {"ok": False, "error": {"code": "externally_managed_resource"}}
-    action = _choose(screen, "Managed SSH · port 8023", [(name, f"{name.title()} SSH service")
-                      for name in ("start", "stop", "restart")
-                      if f"ssh.service.{name}" in resource.get("supported_operations", [])])
+    choices = [(name, f"{name.title()} SSH service") for name in ("start", "stop", "restart")
+               if f"ssh.service.{name}" in resource.get("supported_operations", [])]
+    if "ssh.keys.list" in resource.get("supported_operations", []):
+        choices.append(("keys", "View shared SSH key fingerprints"))
+    action = _choose(screen, "Managed SSH · port 8023", choices)
+    if action == "keys":
+        return _call("ssh.keys.list")
     operation = {"start": "ssh.service.start", "stop": "ssh.service.stop", "restart": "ssh.service.restart"}.get(action)
     if not operation or operation not in resource.get("supported_operations", []):
         return {"ok": False, "error": {"code": "action_unavailable"}}

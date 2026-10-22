@@ -395,6 +395,15 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             mock.call("ssh.service.restart", {"confirmed": True, "plan_id": "a" * 64}),
         ])
 
+    def test_managed_ssh_key_inventory_is_read_only(self) -> None:
+        resource = next(item for item in management_service.management_catalog.RESOURCES
+                        if item["id"] == "network.ssh.managed-8023")
+        expected = {"ok": True, "data": {"key_count": 0}}
+        with mock.patch.object(terminal_ui, "_choose", return_value="keys"), \
+             mock.patch.object(terminal_ui, "_call", return_value=expected) as call:
+            self.assertIs(terminal_ui._managed_ssh_action(object(), resource), expected)
+        call.assert_called_once_with("ssh.keys.list")
+
     def test_managed_ssh_cancel_does_not_apply_and_manual_8022_stays_read_only(self) -> None:
         managed = next(item for item in management_service.management_catalog.RESOURCES
                        if item["id"] == "network.ssh.managed-8023")
