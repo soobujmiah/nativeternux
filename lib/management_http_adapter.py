@@ -316,16 +316,26 @@ class ManagementHTTPAdapter:
                     lease = {}
             if not grant:
                 return self._response(403, {"ok": False, "error": "terminal_channel_rejected"})
-            return self._response(200, {"ok": True, "request_id": request_id, "data": lease})
+            if type(lease.get("generation")) is not int or not 0 < lease["generation"] < 2**63:
+                return self._response(502, {"ok": False, "error": "invalid_terminal_generation"})
+            # JavaScript numbers cannot preserve a random 63-bit broker generation.
+            # Keep the broker value integral; encode only the HTTP wire value.
+            browser_lease = {**lease, "generation": str(lease["generation"])}
+            return self._response(200, {"ok": True, "request_id": request_id, "data": browser_lease})
 
         if not isinstance(session_id, str):
             return self._response(400, {"ok": False, "error": "terminal_session_required"})
+        if (not isinstance(generation, str)
+                or not re.fullmatch(r"[1-9][0-9]{0,18}", generation)
+                or int(generation) >= 2**63):
+            return self._response(400, {"ok": False, "error": "invalid_terminal_generation"})
+        broker_generation = int(generation)
         key = (session_ref, session_id)
         with self._terminal_lock:
             channel = self._terminal_attachments.get(key)
             lease = dict(channel["lease"]) if channel else {}
             if (not channel or channel["origin"] != origin
-                    or lease.get("generation") != generation
+                    or lease.get("generation") != broker_generation
                     or lease.get("attachment_id") != attachment_id):
                 channel = None
             else:
@@ -335,7 +345,7 @@ class ManagementHTTPAdapter:
         if operation not in {"terminal.input", "terminal.resize", "terminal.output",
                              "terminal.detach", "terminal.close.preview", "terminal.close"}:
             return self._response(400, {"ok": False, "error": "invalid_terminal_operation"})
-        result = client.request(operation, session_id=session_id, generation=generation,
+        result = client.request(operation, session_id=session_id, generation=broker_generation,
                                 attachment_id=attachment_id, args=args)
         if operation == "terminal.detach" and result.get("ok") is True:
             with self._terminal_lock:

@@ -74,7 +74,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
  const $=s=>document.querySelector(s), out=$("#response"), notice=$("#notice-app"), labels={healthy:"Healthy",running:"Running",ready:"Ready",starting:"Starting",stopping:"Stopping",stopped:"Stopped",failed:"Failed",stale:"Stale",unknown:"Unknown",unsafe:"Unsafe",implemented:"Available",partial:"Some actions available",available:"Available",external:"Externally managed",unverified:"Unverified",unavailable:"Unavailable",planned:"Planned"};
  const safe=v=>typeof v==="string"?v:"Unknown", statusLabel=v=>labels[v]||safe(v).replaceAll("_"," ");
  function humanValue(v){if(typeof v==="boolean")return v?"On":"Off";if(v===null||v===undefined)return "Not reported";if(typeof v!=="string")return String(v);if(v.includes("/"))return v;const words={"running_idle":"Ready; monitoring is off","configuration-managed":"Policy managed by Ternuxx","not-queried":"Not checked yet","query-required":"Check live status","not-probed":"Not checked yet","not-implemented":"Not available yet","not-applicable":"Not applicable","not-configured":"Not configured","ternuxx_verified":"Verified as managed by Ternuxx","configuration-managed-scheduler-not-installed":"Policy saved; background checker is not installed","scheduler-not-installed":"Background checker is not installed","source-scheduler-not-installed":"Background checker is not installed","disabled-by-default":"Off by default","native-termux":"Native Termux","debian-proot":"Debian PRoot","android-host-via-termux":"Android host through Termux","loopback":"This device only (127.0.0.1)"};return words[v]||statusLabel(v).replaceAll("-"," ")}
- function humanReport(value){const lines=[],hidden=/password|private[_ ]?key|secret|token|request[_ ]?id|plan[_ ]?id|^id$/i;function walk(x,label="",depth=0){if(x&&typeof x==="object"){if(Array.isArray(x)){if(!x.length&&label)lines.push("  ".repeat(depth)+label+": None");x.forEach((item,i)=>{if(item&&typeof item==="object"){lines.push("  ".repeat(depth)+(i+1)+".");walk(item,"",depth+1)}else lines.push("  ".repeat(depth)+(i+1)+". "+humanValue(item))});return}for(const [key,item] of Object.entries(x)){if(hidden.test(key))continue;if(key==="ok"){lines.push("  ".repeat(depth)+"Result: "+(item?"Complete":"Failed"));continue}const fieldNames={status:"Status",state:"State",current:"Current state",readiness:"Readiness",availability:"Availability",ownership:"Ownership",authority:"Managed by",provider:"Provider",environment:"Environment",enabled:"Enabled",running:"Running",interval_seconds:"Check interval (seconds)",boot_status:"Boot status",focus_check:"Check Activity focus",activity_launch:"Request Activity launch when missing",wakelock:"Wake Lock",message:"Details",impact:"Change impact",port:"Port",bind_address:"Bind address",auth_methods:"Login methods",password_authentication:"Password login",public_key_authentication:"Key login",managed_script_identity:"Managed script check",listener:"Listener",service:"Service",profile:"Startup profile",ready:"Ready for startup",blockers:"What must be fixed",actions:"Startup actions",id:"Reference",code:"Reference"};const title=fieldNames[key]||key.replaceAll("_"," ").replaceAll("."," ").replace(/\b\w/g,c=>c.toUpperCase());walk(item,title,depth+(label?1:0))}return}lines.push("  ".repeat(depth)+(label?label+": ":"")+humanValue(x))}walk(value);return lines.join("\n")||"No readable details were returned."}
+ function humanReport(value){const lines=[],hidden=/password|private[_ ]?key|secret|token|request[_ ]?id|plan[_ ]?id|^id$/i;function walk(x,label="",depth=0){if(x&&typeof x==="object"){if(Array.isArray(x)){if(!x.length&&label)lines.push("  ".repeat(depth)+label+": None");x.forEach((item,i)=>{if(item&&typeof item==="object"){lines.push("  ".repeat(depth)+(i+1)+".");walk(item,"",depth+1)}else lines.push("  ".repeat(depth)+(i+1)+". "+humanValue(item))});return}for(const [key,item] of Object.entries(x)){if((depth===0&&(key==="api_version"||key==="operation"))||hidden.test(key))continue;if(key==="ok"){lines.push("  ".repeat(depth)+"Result: "+(item?"Complete":"Failed"));continue}const fieldNames={status:"Status",state:"State",current:"Current state",readiness:"Readiness",availability:"Availability",ownership:"Ownership",authority:"Managed by",provider:"Provider",environment:"Environment",enabled:"Enabled",running:"Running",interval_seconds:"Check interval (seconds)",boot_status:"Boot status",focus_check:"Check Activity focus",activity_launch:"Request Activity launch when missing",wakelock:"Wake Lock",message:"Details",impact:"Change impact",port:"Port",bind_address:"Bind address",auth_methods:"Login methods",password_authentication:"Password login",public_key_authentication:"Key login",managed_script_identity:"Managed script check",listener:"Listener",service:"Service",profile:"Startup profile",ready:"Ready for startup",blockers:"What must be fixed",actions:"Startup actions",id:"Reference",code:"Reference"};const title=fieldNames[key]||key.replaceAll("_"," ").replaceAll("."," ").replace(/\b\w/g,c=>c.toUpperCase());walk(item,title,depth+(label?1:0))}return}lines.push("  ".repeat(depth)+(label?label+": ":"")+humanValue(x))}walk(value);return lines.join("\n")||"No readable details were returned."}
  function reqid(){return crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)}
  async function post(path,body,headers={}){const response=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json",...headers},body:JSON.stringify(body)});let data;try{data=await response.json()}catch{throw Error("Invalid server response")};if(!response.ok)throw Error(data.error||"Request failed");return data}
  function headers(){return {Authorization:"Bearer "+session.bearer_token,"X-Ternuxx-CSRF":session.csrf_token}}
@@ -240,7 +240,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   webFit.fit();webTerminal.reset();
   await terminalCall("terminal.resize",{session_id:lease.session_id,generation:lease.generation,attachment_id:lease.attachment_id,args:{columns:webTerminal.cols,rows:webTerminal.rows}});
   $("#terminal-stop-session").disabled=false;
-  terminalNote("Connected to verified Ternuxx session "+sessionId+". Press Ctrl-] to detach.");
+  terminalNote("Connected to managed Debian terminal "+sessionId.slice(-8)+". Press Ctrl-] to detach.");
   webTerminal.focus();pollWebTerminal();
  }
  async function refreshWebTerminalSessions(){
@@ -248,7 +248,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   const select=$("#terminal-session");select.replaceChildren(new Option("Choose a managed session",""));
   for(const item of result.data?.sessions||[]){
    if(item.profile!=="debian-interactive"||item.state!=="running"||item.ownership!=="ternuxx_verified")continue;
-   select.append(new Option(item.session_id+" · "+statusLabel(item.state),item.session_id));
+   select.append(new Option("Debian "+item.session_id.slice(-8)+" · "+statusLabel(item.state),item.session_id));
   }
   terminalNote(select.options.length>1?"Verified managed sessions are ready to attach.":"No verified Ternuxx interactive session is available. You can start one with a fresh preview.");
  }
@@ -260,12 +260,12 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
  async function startWebTerminal(){
   try{
    terminalNote("Creating an exact Debian login preview…");const response=await terminalCall("terminal.start.preview");const plan=response.plan;
-   if(!plan||typeof plan.plan_id!=="string"){terminalNote("The broker returned no valid start plan.");return}
+   if(!plan||typeof plan.plan_id!=="string"||plan.profile!=="debian-interactive"||typeof plan.alias!=="string"||typeof plan.rootfs!=="string"){terminalNote("The broker returned no valid start plan.");return}
    const impact=String(plan.impact||"Starts one fixed-profile Debian interactive session.");
-   if(!window.confirm("Review the exact Ternuxx Debian terminal plan.\n\nProfile: debian-interactive\nTarget: the existing Debian rootfs\nImpact: "+impact+"\n\nNo terminal starts unless you confirm."))return;
+   if(!window.confirm("Review the exact Ternuxx Debian terminal plan.\n\nProfile: Interactive Debian\nGuest: "+plan.alias+"\nRootfs: "+plan.rootfs+"\nImpact: "+impact+"\n\nNo terminal starts unless you confirm."))return;
    terminalNote("Starting the confirmed Debian session…");
    const started=await terminalCall("terminal.start",{args:{confirmed:true,plan_id:plan.plan_id}});
-   $("#terminal-session").append(new Option(started.session_id+" · Running",started.session_id));$("#terminal-session").value=started.session_id;
+   $("#terminal-session").append(new Option("Debian "+started.session_id.slice(-8)+" · Running",started.session_id));$("#terminal-session").value=started.session_id;
    await attachWebTerminal(started.session_id,started.channel_ticket);
   }catch(error){terminalNote(error.message)}
  }
@@ -274,7 +274,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   try{
    const preview=await terminalCall("terminal.close.preview",{session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id});
    const plan=preview.plan;if(!plan||typeof plan.plan_id!=="string"){terminalNote("No verified stop plan was returned.");return}
-   if(!window.confirm("Stop this exact Ternuxx-managed Debian session?\n\n"+String(plan.impact||plan.session_id||webLease.session_id)))return;
+   if(!plan||plan.ownership!=="ternuxx_verified"||plan.signal!=="SIGHUP"||typeof plan.scope!=="string"){terminalNote("No verified terminal close plan was returned.");return}
+   if(!window.confirm("Close this exact Ternuxx-managed Debian session?\n\nSession: "+String(plan.session_id||webLease.session_id)+"\nSignal: "+plan.signal+"\nScope: "+humanValue(plan.scope)+"\nImpact: "+String(plan.impact||"Hang up this owned terminal.")+"\n\nThe session closes only after confirmation."))return;
    const result=await terminalCall("terminal.close",{session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id,args:{confirmed:true,plan_id:plan.plan_id}});
    if(result.result?.state==="stopped"){webLease=null;stopWebTerminalPolling();terminalNote("Managed Debian session stopped.")}
   }catch(error){terminalNote(error.message)}

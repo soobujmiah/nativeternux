@@ -12,7 +12,7 @@ Status: IN_PROGRESS. This tracks the complete owner request, not just the first 
 | P1–P3 completion is accurate | Every exit criterion mapped to dated evidence and current regression/preservation scope | All twelve roadmap exit criteria mapped in [phase revalidation](PHASE-REVALIDATION.md); underlying artifact/source revalidation remains open. New 77-package installed-state comparison passed; no physical reboot/no-PRoot test inferred. |
 | Native installed/runtime matches repository | Installer/module/service/menu/source identity inventory and exact comparisons | All source Runit/boot definitions, tx shim, GTK source/bridge/binary and currently installed canonical recovery modules verified; profiles/config/package/driver and fresh setup inventory pending |
 | Fully reproducible supported workstation | Fresh isolated setup from checked-in manifests; exact package/driver/config provenance; rollback and preservation proof | Separate guest installed; 54 requested packages, account/locale and pinned driver verified, with selected-file/root identity preservation. Full config replay, rollback and experimental Native reproduction remain open |
-| All-client interactive terminals | Disposable guest start/attach/I/O/resize/detach/exact close through four clients | Production broker plus actual CLI and TUI lifecycles passed on the new guest. Web/GTK and cross-client acceptance remain open |
+| All-client interactive terminals | Disposable guest start/attach/I/O/resize/detach/exact close through four clients | Production broker plus actual CLI, TUI and Web lifecycles passed on the new guest. GTK and cross-client acceptance remain open |
 | Current docs without conflicting duplicate status | One source for phase, CI, coverage and handoff; historical evidence dated; links checked | Root handoff/architecture/testing/manifest reconciled; remaining docs/ADRs/structured matrices pending |
 | Stable tested and synchronized implementation | Relevant Native tests/browser/GUI evidence, installed parity, reviewed commit and push/CI | First remediation verified; whole objective not complete |
 
@@ -34,7 +34,7 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A08 | SKB pointer said private while actual GitHub metadata is public | Corrected after authenticated metadata read; private runtime payloads remain excluded |
 | A09 | Full all-document/source review and installed inventory not yet proven | Open; use inventory and explicit evidence per item |
 | A10 | SSH key/enrollment/removal, password/recovery, per-service boot/Wake Lock policy incomplete | Open; implement shared contract before client controls |
-| A11 | Fresh installer had no separate target beside the existing Debian alias | Explicit guarded replay aliases implemented; live separate setup and broker/CLI lifecycle passed within recorded preservation scope. Removal/rollback and Web/GTK/cross-client terminal acceptance remain open |
+| A11 | Fresh installer had no separate target beside the existing Debian alias | Explicit guarded replay aliases implemented; live separate setup and broker/CLI lifecycle passed within recorded preservation scope. Removal/rollback and GTK/cross-client terminal acceptance remain open |
 | A12 | Experimental Native driver setup and customized guest config not fully reproducible | Open; inventory provenance and build a checked-in replay path |
 | A13 | X11 secret entry depends on identifying/focusing a browser window | Open audit of exact target/focus/fallback behavior, especially existing Native browser windows |
 | A14 | Historical ADR/architecture implementation paragraphs and structured feature matrices can read as current | SSH/continuity architecture corrected; old narratives preserved losslessly as history. Remaining full ADR/matrix review open |
@@ -66,14 +66,15 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A30 | Interactive close ignored separate job-control groups; timed-out `stopping` records were unreadable and successful stop omitted its state | Reproduced live. Private-session job groups now receive identity-checked graceful hangup; timeout records remain readable, stop responses are explicit and already-completed PTY cleanup is accepted. New guest/actual CLI close replay passed |
 | A31 | Browser availability detection logged into the working guest and could rewrite its generated profile before browser choice | Reproduced in a no-subprocess fixture. Detection now checks the validated rooted executable and accepts only in-root links; live detection preserved the working profile |
 | A32 | Debian graphics status ran a guest graphics workload through a read capability | Reproduced with a no-login fixture. Status now returns installed inventory; explicit control-scoped verification performs guest probes |
-| A33 | TUI menus hid actions below short screens and lacked a managed reattach picker; stop preview rendered `SIGHUP` as `Sighup` | Scrollable numbered menu, verified-session picker and readable exact stop preview implemented; actual Native TUI terminal lifecycle passed on separate guest. Web/GTK and broader action parity remain open; see [TUI evidence](../evidence/2026-10-22-tui-terminal-replay.md) |
+| A33 | TUI menus hid actions below short screens and lacked a managed reattach picker; stop preview rendered `SIGHUP` as `Sighup` | Scrollable numbered menu, verified-session picker and readable exact stop preview implemented; actual Native TUI terminal lifecycle passed on separate guest. GTK and broader action parity remain open; see [TUI evidence](../evidence/2026-10-22-tui-terminal-replay.md) |
+| A34 | Web terminal attach succeeded but resize failed because JavaScript rounded the broker's 63-bit generation | HTTP wire generation is a canonical decimal string, parsed back to the exact broker integer; real Firefox lifecycle including guest resize passed. Web prompts and session names now expose readable exact target/scope. See [Web evidence](../evidence/2026-10-22-web-terminal-replay.md) |
 
 ## Continuation order
 
 1. Finish reviewing/pushing this Native UI/runtime remediation and capture CI.
 2. Complete remaining installed/service/boot/profile parity inventory and P1–P3 requirement evidence matrix.
 3. Implement the shared SSH credential/recovery and service policy gaps with preservation/preview/rollback tests; connect all clients.
-4. Complete separate-guest Web/GTK and cross-client terminal replay, rollback and provider routes without touching Codex's working guest.
+4. Complete separate-guest GTK and cross-client terminal replay, rollback and provider routes without touching Codex's working guest.
 5. Continue the full source and all-document review, updating reviewed hashes after fixes; audit the remaining roadmap, software/graphics/inference and release/reproducibility gates.
 6. Run final requirement-by-requirement completion audit. Keep the overarching goal active until every explicit requirement is proven.
 

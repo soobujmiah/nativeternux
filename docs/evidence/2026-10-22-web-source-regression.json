@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "runtime": "Native Termux through SSH 8022",
+  "command": "bash scripts/repo_test.sh",
+  "passed": 750,
+  "run": 750,
+  "seconds": 110.682,
+  "source_sha256": {
+    "lib/management_http_adapter.py": "c9446439655ca4ca897975eeb7f57be327ee4a34327d7f1e9143042417dc36e4",
+    "lib/management_web_ui.html": "5746bf3928a9b277e7ada594ffdcc8145aea09efbbb9c7160241a00bc956de7b",
+    "tests/test_management_http_adapter.py": "d9e2f4d7e7137174039cdf31e2139fbf22e82c1e56f1bce2ba7ec05ac0000657",
+    "tools/check_web_terminal.py": "0c19de7b937110fac83be7a53f2be240ec445278bf92fe18518ff696781502fb"
+  }
+}

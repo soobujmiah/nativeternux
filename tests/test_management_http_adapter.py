@@ -56,6 +56,46 @@ def bootstrap(adapter, capabilities):
 
 
 class ManagementHTTPAdapterTests(unittest.TestCase):
+    def test_web_terminal_preserves_63_bit_generation_through_json(self):
+        generation=(1 << 62) + 12345
+        session_id="proot-" + "a"*32
+        lease={"session_id":session_id,"profile":"debian-interactive",
+               "state":"running","generation":generation,"attachment_id":"attachment-test"}
+        adapter=make_adapter()
+        client=Mock()
+        client.request.side_effect=lambda operation, **kwargs: (
+            {"ok":True,"result":lease} if operation=="terminal.start"
+            else {"ok":True,"columns":100,"rows":30})
+        def dispatch(operation, **values):
+            payload={"operation":operation,"request_id":"request-1234",
+                     "session_id":values.get("session_id"),"generation":values.get("generation"),
+                     "attachment_id":values.get("attachment_id"),
+                     "channel_ticket":values.get("channel_ticket"),"args":values.get("args",{})}
+            status,_headers,raw=adapter._terminal_dispatch({"origin":ORIGIN},payload,"web-session")
+            return status,json.loads(raw)
+        with patch.object(management_http_adapter.terminal_broker,"UnixBrokerClient",return_value=client):
+            status,started=dispatch("terminal.start",args={"confirmed":True,"plan_id":"plan-"+"b"*64})
+            self.assertEqual(status,200)
+            status,attached=dispatch("terminal.attach",session_id=session_id,
+                                     channel_ticket=started["data"]["channel_ticket"])
+            self.assertEqual(status,200)
+            self.assertEqual(attached["data"]["generation"],str(generation))
+            self.assertIsInstance(attached["data"]["generation"],str)
+            status,resized=dispatch("terminal.resize",session_id=session_id,
+                                    generation=attached["data"]["generation"],
+                                    attachment_id=lease["attachment_id"],
+                                    args={"columns":100,"rows":30})
+            self.assertEqual(status,200)
+            self.assertTrue(resized["ok"])
+            self.assertEqual(client.request.call_args.kwargs["generation"],generation)
+            for bad in (generation, str(generation+1), "0"+str(generation), str(1 << 63)):
+                with self.subTest(bad=bad):
+                    status,rejected=dispatch("terminal.resize",session_id=session_id,
+                                             generation=bad,attachment_id=lease["attachment_id"],
+                                             args={"columns":100,"rows":30})
+                    self.assertIn(status,{400,403})
+                    self.assertFalse(rejected["ok"])
+
     def test_health_is_minimal_and_responses_have_security_headers_without_cors(self) -> None:
         adapter = make_adapter()
         status, headers, body = adapter.handle(
@@ -344,16 +384,17 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
                                   channel_ticket=ticket)
             self.assertEqual(status, 200)
             self.assertEqual(json.loads(raw)["data"]["attachment_id"], lease["attachment_id"])
+            self.assertEqual(json.loads(raw)["data"]["generation"], "17")
             status, _h, raw = call("terminal.attach", "terminal-replay-1",
                                   channel_ticket=ticket)
             self.assertEqual(status, 403)
             self.assertEqual(json.loads(raw)["error"], "terminal_channel_rejected")
             status, _h, raw = call("terminal.output", "terminal-output-1",
-                                  args={"after_sequence": 0}, generation=17,
+                                  args={"after_sequence": 0}, generation="17",
                                   attachment_id=lease["attachment_id"])
             self.assertEqual(status, 200)
             status, _h, raw = call("terminal.detach", "terminal-detach-1",
-                                  generation=17, attachment_id=lease["attachment_id"])
+                                  generation="17", attachment_id=lease["attachment_id"])
             self.assertEqual(status, 200)
             self.assertEqual(broker.request.call_args_list[0].args, ("terminal.attach",))
             self.assertEqual(broker.request.call_args_list[1].args, ("terminal.output",))

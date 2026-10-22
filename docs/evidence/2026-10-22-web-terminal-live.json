@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "runtime": "Native Termux through SSH 8022",
+  "browser_guest_alias": "ternuxx-replay-p4",
+  "managed_guest_alias": "ternuxx-replay-p4",
+  "web_preview_confirmed_start": true,
+  "terminal_io": true,
+  "guest_observed_resize": true,
+  "detach_reattach": true,
+  "preview_confirmed_close": true,
+  "exact_owned_session_stopped": true,
+  "working_root_identity_and_profile_preserved": true,
+  "visual_pixel_or_performance_qualification": false
+}

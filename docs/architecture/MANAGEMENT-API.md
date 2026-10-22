@@ -27,6 +27,10 @@ Typed requests to `/api/v1/operations` use `api_version`, `request_id`, `operati
 
 The ordinary API permits its read capabilities and disables mutations. Authenticated Web mode separately grants scoped desktop/monitoring, managed SSH 8023 lifecycle, graphics, named apps/shortcuts, Cron definition changes and fixed PRoot/terminal actions. It does not grant arbitrary SSH configuration, 8022 lifecycle, broad shortcut sync, boot/recovery writes or scheduler/timezone writes. Use the runtime allowlists rather than a copied operation count.
 
+## Web terminal generation wire contract
+
+The authenticated `/api/v1/terminal` route keeps its broker attachment generation as an integer inside Native code. Its Web JSON lease encodes that random 63-bit generation as a canonical decimal string. Every follow-up Web terminal request must return that string unchanged. The adapter validates its bounded decimal syntax, converts it to the exact integer and compares it with the owned attachment before contacting the broker. Numeric JSON generations are rejected because JavaScript cannot represent every 63-bit value exactly. Session, attachment, origin, capability, CSRF and one-time channel-ticket checks still apply. [Live browser result](../evidence/2026-10-22-web-terminal-replay.md).
+
 ## Graphics and guest probe execution
 
 `graphics.provider.status` for Debian performs installed-distribution inventory without entering the guest. It reports verification as not run. An explicit verification action is required for display/audio/renderer observations.

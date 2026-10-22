@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Separate pinned guest setup, production broker, actual CLI and TUI lifecycle passed with scoped preservation; Web/GTK and remaining P4 acceptance stay open.
+Separate pinned guest setup and production broker plus actual CLI, TUI and Web terminal lifecycles passed with scoped preservation; GTK and remaining P4 acceptance stay open.
 
-**Next action:** Qualify Web and GTK terminal lifecycle and cross-client continuity on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit.
+**Next action:** Qualify GTK/VTE terminal lifecycle and cross-client continuity on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -94,6 +94,7 @@ Evidence:
 - [docs/evidence/2026-10-22-guarded-fresh-replay.md](evidence/2026-10-22-guarded-fresh-replay.md)
 - [docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md](evidence/2026-10-22-fresh-setup-and-probe-safety.md)
 - [docs/evidence/2026-10-22-tui-terminal-replay.md](evidence/2026-10-22-tui-terminal-replay.md)
+- [docs/evidence/2026-10-22-web-terminal-replay.md](evidence/2026-10-22-web-terminal-replay.md)
 
 ## P5 — Distro and display compatibility profiles
 
