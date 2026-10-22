@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "target_alias": "ternuxx-replay-p4",
+  "runtime": "Native Termux through SSH 8022",
+  "full_tui_navigation": true,
+  "preview_confirmed_start": true,
+  "terminal_io": true,
+  "guest_observed_resize": true,
+  "detach_reattach": true,
+  "preview_confirmed_close": true,
+  "curses_navigation_restored": true,
+  "tui_clean_exit": true,
+  "working_root_identity_and_profile_preserved": true,
+  "visual_pixel_or_performance_qualification": false
+}

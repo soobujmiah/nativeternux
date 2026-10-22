@@ -14,6 +14,11 @@ import terminal_ui
 
 
 class TerminalUISharedServiceTests(unittest.TestCase):
+    def test_stop_preview_preserves_signal_name_for_people(self):
+        report=management_presentation.format_report({"ok":True,"data":{
+            "signal":"SIGHUP","impact":"Hang up one owned terminal."}})
+        self.assertIn("Signal: SIGHUP",report)
+
     def test_choose_supports_arrow_and_number_selection(self) -> None:
         class MenuScreen:
             def __init__(self, keys): self.keys = iter(keys)
@@ -26,6 +31,73 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                          "Choose", [("a", "Alpha"), ("b", "Beta")]), "b")
         self.assertEqual(terminal_ui._choose(MenuScreen([ord("1")]),
                          "Choose", [("a", "Alpha"), ("b", "Beta")]), "a")
+
+    def test_choose_scrolls_to_actions_below_small_screen_and_wraps(self):
+        class Screen:
+            def __init__(self, keys): self.keys=iter(keys)
+            def erase(self): pass
+            def getmaxyx(self): return (5, 60)
+            def addnstr(self, *args): pass
+            def refresh(self): pass
+            def getch(self): return next(self.keys)
+        options=[(str(i), "Action " + str(i)) for i in range(12)]
+        self.assertEqual(terminal_ui._choose(Screen([terminal_ui.curses.KEY_DOWN]*11+[10]), "Choose", options), "11")
+        self.assertEqual(terminal_ui._choose(Screen([terminal_ui.curses.KEY_UP,10]), "Choose", options), "11")
+        self.assertEqual(terminal_ui._choose(Screen([ord("9")]), "Choose", options), "8")
+
+    def test_existing_broker_terminal_can_be_selected_and_reattached(self):
+        session_id="proot-" + "a"*32
+        inventory={"ok":True,"data":{"sessions":[{"session_id":session_id,
+            "profile":"debian-interactive","state":"running","ownership":"ternuxx_verified"}]}}
+        client=mock.Mock()
+        client.request.return_value={"ok":True,"pty_relay":"running"}
+        with mock.patch.object(terminal_ui,"_prompt",return_value="attach"), \
+             mock.patch.object(terminal_ui,"_choose",side_effect=["attach",session_id]), \
+             mock.patch.object(terminal_ui,"_call",return_value=inventory), \
+             mock.patch.object(terminal_ui.terminal_cli,"_client",return_value=client), \
+             mock.patch.object(terminal_ui.terminal_cli,"attach") as attach, \
+             mock.patch.object(terminal_ui.curses,"def_prog_mode"), \
+             mock.patch.object(terminal_ui.curses,"endwin"), \
+             mock.patch.object(terminal_ui.curses,"reset_prog_mode") as restore:
+            result=terminal_ui._manage_proot_sessions(mock.Mock())
+        self.assertTrue(result["ok"])
+        attach.assert_called_once_with(session_id,client=client,lease=None)
+        restore.assert_called_once()
+
+    def test_attach_refuses_unverified_session_without_contacting_broker(self):
+        inventory={"ok":True,"data":{"sessions":[{"session_id":"proot-"+"b"*32,
+            "profile":"debian-interactive","state":"unverified","ownership":"unverified"}]}}
+        with mock.patch.object(terminal_ui,"_choose",return_value="attach"), \
+             mock.patch.object(terminal_ui,"_call",return_value=inventory), \
+             mock.patch.object(terminal_ui.terminal_cli,"_client") as client:
+            result=terminal_ui._manage_proot_sessions(mock.Mock())
+        self.assertEqual(result["error"]["code"],"no_verified_terminal_session")
+        client.assert_not_called()
+
+    def test_attach_refuses_disconnected_broker_and_cancelled_selection(self):
+        sid="proot-"+"c"*32
+        inventory={"ok":True,"data":{"sessions":[{"session_id":sid,
+            "profile":"debian-interactive","state":"running","ownership":"ternuxx_verified"}]}}
+        for relay in ("not_connected","running"):
+            client=mock.Mock();client.request.return_value={"ok":True,"pty_relay":relay}
+            with self.subTest(relay=relay), \
+                 mock.patch.object(terminal_ui,"_choose",side_effect=["attach",""]), \
+                 mock.patch.object(terminal_ui,"_call",return_value=inventory), \
+                 mock.patch.object(terminal_ui.terminal_cli,"_client",return_value=client), \
+                 mock.patch.object(terminal_ui.curses,"endwin") as endwin:
+                result=terminal_ui._manage_proot_sessions(mock.Mock())
+            self.assertEqual(result["error"]["code"],"cancelled" if relay=="running" else "terminal_not_attachable")
+            endwin.assert_not_called()
+
+    def test_terminal_relay_error_always_restores_curses(self):
+        screen=mock.Mock()
+        with mock.patch.object(terminal_ui.terminal_cli,"attach",side_effect=OSError("fixture relay failure")), \
+             mock.patch.object(terminal_ui.curses,"def_prog_mode"), \
+             mock.patch.object(terminal_ui.curses,"endwin"), \
+             mock.patch.object(terminal_ui.curses,"reset_prog_mode") as restore:
+            result=terminal_ui._attached_terminal(screen,mock.Mock(),session_id="proot-"+"d"*32)
+        self.assertEqual(result["error"]["code"],"terminal_attach_failed")
+        restore.assert_called_once();screen.clear.assert_called_once();screen.refresh.assert_called_once()
 
     def test_optional_terminal_broker_resource_uses_read_only_shared_status(self):
         resource = {
@@ -80,7 +152,8 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         preview = {"ok": True, "data": {"profile": "isolated-probe", "impact": "Fixed probe",
                                              "plan_id": "plan-" + "a" * 64}}
         applied = {"ok": True, "data": {"profile": "isolated-probe", "state": "running"}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["start-probe", "yes"]), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="start-probe"), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
              mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
             result = terminal_ui._manage_proot_sessions(mock.Mock())
         self.assertIs(result, applied)
@@ -105,7 +178,8 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         client.request.side_effect = lambda operation, **kwargs: (
             events.append(("broker", operation)) or
             (preview if operation == "terminal.start.preview" else applied))
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["start-login", "yes"]), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="start-login"), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
              mock.patch.object(terminal_ui, "_call", return_value=inventory), \
              mock.patch.object(terminal_ui.terminal_cli, "_client", return_value=client), \
              mock.patch.object(terminal_ui.terminal_cli, "attach", side_effect=lambda *a, **k: events.append(("attach", a, k))), \
@@ -127,7 +201,7 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         inventory = {"ok": True, "data": {"sessions": []}}
         client = mock.Mock()
         client.request.return_value = {"ok": True, "plan": {"profile": "debian-interactive", "plan_id": "invalid"}}
-        with mock.patch.object(terminal_ui, "_prompt", return_value="start-login"), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="start-login"), \
              mock.patch.object(terminal_ui, "_call", return_value=inventory) as call, \
              mock.patch.object(terminal_ui.terminal_cli, "_client", return_value=client), \
              mock.patch.object(terminal_ui.curses, "endwin") as endwin:
@@ -144,7 +218,9 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         preview = {"ok": True, "data": {"ownership": "ternuxx_verified", "confirmation_required": True,
                                              "plan_id": "plan-" + "c" * 64}}
         applied = {"ok": True, "data": {"stopped": True}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["stop", session_id, "yes"]), \
+        with mock.patch.object(terminal_ui, "_choose", side_effect=["stop", session_id]), \
+             mock.patch.object(terminal_ui, "_show_details"), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
              mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
             result = terminal_ui._manage_proot_sessions(mock.Mock())
         self.assertIs(result, applied)
@@ -158,7 +234,7 @@ class TerminalUISharedServiceTests(unittest.TestCase):
     def test_proot_session_stop_never_targets_unverified_inventory(self) -> None:
         inventory = {"ok": True, "data": {"sessions": [{"session_id": "proot-" + "d" * 32,
                      "profile": "debian-interactive", "state": "unverified", "ownership": "unverified"}]}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["stop"]), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="stop"), \
              mock.patch.object(terminal_ui, "_call", return_value=inventory) as call:
             result = terminal_ui._manage_proot_sessions(mock.Mock())
         self.assertEqual(result["error"]["code"], "no_verified_live_session")

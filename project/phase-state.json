@@ -56,7 +56,7 @@
       "title": "Existing Ternux PRoot feature-parity provider",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Separate pinned guest setup and broker/actual CLI lifecycle passed with scoped preservation. Probe execution and interactive close defects fixed; full audit and remaining client acceptance stay open.",
+      "summary": "Separate pinned guest setup, production broker, actual CLI and TUI lifecycle passed with scoped preservation; Web/GTK and remaining P4 acceptance stay open.",
       "evidence": [
         "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
         "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
@@ -89,9 +89,10 @@
         "docs/evidence/2026-10-22-monitor-service-registration.md",
         "docs/evidence/2026-10-22-native-entrypoint-and-contract-audit.md",
         "docs/evidence/2026-10-22-guarded-fresh-replay.md",
-        "docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md"
+        "docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md",
+        "docs/evidence/2026-10-22-tui-terminal-replay.md"
       ],
-      "next_action": "Qualify TUI, Web and GTK terminal lifecycle on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit."
+      "next_action": "Qualify Web and GTK terminal lifecycle and cross-client continuity on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit."
     },
     {
       "id": "P5",

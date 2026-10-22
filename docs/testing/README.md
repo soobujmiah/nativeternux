@@ -40,7 +40,17 @@ See [registration and evidence](../evidence/2026-10-22-monitor-service-registrat
 
 The [separate guest setup and broker/CLI replay](../evidence/2026-10-22-fresh-setup-and-probe-safety.md) completed with scoped preservation checks. Follow [the isolated broker procedure](../architecture/INTERACTIVE-PROOT-TERMINALS.md#separate-guest-qualification) after fresh setup succeeds. In a second Native terminal, use that same private state namespace with `./tx terminal start`; review the selected replay alias/rootfs before confirming. Exercise I/O and terminal resizing, use Ctrl+] to detach, then `./tx terminal attach SESSION_ID` and `./tx terminal close SESSION_ID` with the same namespace. Close must show the exact session and profile-specific signal/scope before confirmation.
 
-This is an opt-in device replay, not part of the ordinary unit suite. Terminal content stays out of evidence/logs. Preserve failed state for diagnosis; never force-signal or adopt the working guest. Actual CLI and broker lifecycle passed; TUI/Web/GTK interaction and cross-client acceptance remain open.
+This is an opt-in device replay, not part of the ordinary unit suite. Terminal content stays out of evidence/logs. Preserve failed state for diagnosis; never force-signal or adopt the working guest. Actual CLI, broker and TUI lifecycles passed on the separate guest; Web/GTK and cross-client acceptance remain open.
+
+The opt-in real TUI replay uses the same separately owned guest. From Native Termux, install the pinned checker-only dependencies into a private Python environment and run:
+
+```sh
+python3 -m venv "$HOME/.cache/ternuxx-ui-check-venv"
+"$HOME/.cache/ternuxx-ui-check-venv/bin/python3" -m pip install -r tools/requirements-tui-replay.txt
+"$HOME/.cache/ternuxx-ui-check-venv/bin/python3" tools/check_tui_terminal.py --alias ternuxx-replay-p4
+```
+
+The checker requires the completed fresh-setup receipt and exact rootfs identity, uses a private broker/state, and removes them after a passing run. On failure it retains private state and prints exact PIDs for ownership-checked recovery. [Native TUI result](../evidence/2026-10-22-tui-terminal-replay.md). This optional dependency is not needed by the product.
 
 Guest graphics status and browser availability detection do not enter the guest. Explicit verification can invoke PRoot-Distro's generated-profile writer; HTTP requires `graphics.manage` and CSRF, and read-only API access rejects it. See [the current API contract](../architecture/MANAGEMENT-API.md) and [probe metadata/authorization checks](../evidence/2026-10-22-probe-http-live.json). Full exact probe plans/rollback remain under audit.
 

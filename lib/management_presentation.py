@@ -181,6 +181,8 @@ def human_value(value: object) -> str:
     if value is None:
         return "Not reported"
     if isinstance(value, str):
+        if value in {"SIGHUP", "SIGTERM", "SIGINT", "SIGKILL"}:
+            return value
         if "/" in value:
             return value  # Paths and URLs are identifiers, not state tokens.
         if value in VALUE_LABELS:

@@ -55,30 +55,35 @@ def _choose(screen: "curses._CursesWindow", title: str, options: list[tuple[str,
     """Compact keyboard menu: arrows or number, Enter selects, Esc cancels."""
     if not options:
         return ""
-    index = 0
+    index = offset = 0
     while True:
         screen.erase()
         height, width = screen.getmaxyx()
-        screen.addnstr(0, 0, title, max(0, width - 1))
-        for row, (value, label) in enumerate(options[:max(0, height - 3)], 2):
-            marker = ">" if row - 2 == index else " "
-            line = f"{marker} {row - 1}. {label}"
-            screen.addnstr(row, 0, line, max(0, width - 1))
-        screen.addnstr(height - 1, 0, "↑/↓ move · 1–9 select · Enter choose · Esc cancel", max(0, width - 1))
+        if height < 4 or width < 4:
+            return ""
+        visible = min(len(options), height - 3)
+        offset = min(offset, max(0, len(options) - visible))
+        if index < offset:
+            offset = index
+        elif index >= offset + visible:
+            offset = index - visible + 1
+        screen.addnstr(0, 0, title, width - 1)
+        for row, item_index in enumerate(range(offset, offset + visible), 2):
+            _value, label = options[item_index]
+            marker = ">" if item_index == index else " "
+            screen.addnstr(row, 0, f"{marker} {item_index + 1}. {label}", width - 1)
+        screen.addnstr(height - 1, 0, "↑/↓ move · 1–9 shortcut · Enter choose · Esc cancel", width - 1)
         screen.refresh()
         key = screen.getch()
-        visible = min(len(options), max(0, height - 3))
-        if visible == 0:
-            return ""
         if key in (27, ord("q"), ord("Q")):
             return ""
         if key in (curses.KEY_UP, ord("k")):
-            index = (index - 1) % max(1, visible)
+            index = (index - 1) % len(options)
         elif key in (curses.KEY_DOWN, ord("j")):
-            index = (index + 1) % max(1, visible)
+            index = (index + 1) % len(options)
         elif key in (curses.KEY_ENTER, 10, 13):
             return options[index][0]
-        elif ord("1") <= key <= ord("9") and key - ord("1") < visible:
+        elif ord("1") <= key <= ord("9") and key - ord("1") < len(options):
             return options[key - ord("1")][0]
 
 
@@ -133,6 +138,43 @@ def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
     })
 
 
+def _select_session(screen, title, sessions):
+    options = []
+    for item in sessions:
+        session_id = item.get("session_id")
+        if not isinstance(session_id, str) or not re.fullmatch(r"proot-[0-9a-f]{32}", session_id):
+            continue
+        name = "Interactive Debian" if item.get("profile") == "debian-interactive" else "Diagnostic probe"
+        state = str(item.get("state", "unknown")).replace("_", " ")
+        options.append((session_id, f"{name} · {state} · {session_id[-8:]}"))
+    return _choose(screen, title, options)
+
+
+def _attached_terminal(screen, client, *, session_id=None, plan_id=None):
+    """Restore curses after the shared terminal relay, including failures."""
+    curses.def_prog_mode()
+    curses.endwin()
+    try:
+        lease = None
+        if plan_id is not None:
+            started = terminal_cli._ok(client.request("terminal.start", args={
+                "confirmed": True, "plan_id": plan_id}))
+            lease = started.get("result")
+            if not isinstance(lease, dict):
+                return {"ok": False, "error": {"code": "invalid_terminal_start"}}
+            session_id = lease.get("session_id")
+        if not isinstance(session_id, str) or not re.fullmatch(r"proot-[0-9a-f]{32}", session_id):
+            return {"ok": False, "error": {"code": "invalid_terminal_session"}}
+        terminal_cli.attach(session_id, client=client, lease=lease)
+        return {"ok": True, "data": {"session_id": session_id, "state": "detached_or_closed"}}
+    except (OSError, terminal_broker.BrokerError) as exc:
+        return {"ok": False, "error": {"code": "terminal_attach_failed", "detail": str(exc)}}
+    finally:
+        curses.reset_prog_mode()
+        screen.clear()
+        screen.refresh()
+
+
 def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
     """Manage fixed Ternuxx PRoot sessions through the shared typed service."""
     listed = _call("proot.sessions.list")
@@ -142,11 +184,16 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
     sessions = data.get("sessions", []) if isinstance(data, dict) else []
     if not isinstance(sessions, list):
         return {"ok": False, "error": {"code": "invalid_session_inventory"}}
-    choice = _prompt(screen, "PRoot sessions: status, recovery, start-probe, start-login, stop (blank cancels)").lower()
+    choice = _choose(screen, "Debian sessions", [
+        ("status", "View session status"), ("recovery", "Inspect session recovery"),
+        ("start-probe", "Start a bounded diagnostic probe"),
+        ("start-login", "Start an interactive terminal"),
+        ("attach", "Attach to an existing terminal"), ("stop", "Close a managed session"),
+    ])
     if choice in {"status", "list"}:
         return listed
     if choice == "recovery":
-        session_id = _prompt(screen, "Exact Ternuxx session ID")
+        session_id = _select_session(screen, "Inspect recovery", [x for x in sessions if isinstance(x, dict)])
         if not session_id:
             return {"ok": False, "error": {"code": "cancelled"}}
         return _call("proot.recovery.inspect", {"session_id": session_id})
@@ -176,34 +223,34 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
                 or not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
             return {"ok": False, "error": {"code": "invalid_session_preview"}}
         _show_details(screen, {"ok": True, "data": plan})
-        if _prompt(screen, "Live login unqualified; start attached Debian? Type yes").lower() != "yes":
+        if _prompt(screen, "Start the interactive Debian terminal shown in this plan? Type yes").lower() != "yes":
             return {"ok": False, "error": {"code": "cancelled"}}
-        curses.def_prog_mode()
-        curses.endwin()
+        return _attached_terminal(screen, client, plan_id=plan_id)
+    if choice == "attach":
+        candidates = [item for item in sessions if isinstance(item, dict)
+                      and item.get("ownership") == "ternuxx_verified"
+                      and item.get("state") == "running"
+                      and item.get("profile") == "debian-interactive"]
+        if not candidates:
+            return {"ok": False, "error": {"code": "no_verified_terminal_session"}}
+        client = terminal_cli._client()
         try:
-            started = terminal_cli._ok(client.request("terminal.start", args={
-                "confirmed": True, "plan_id": plan_id}))
-            lease = started.get("result")
-            if not isinstance(lease, dict):
-                return {"ok": False, "error": {"code": "invalid_terminal_start"}}
-            terminal_cli.attach(lease["session_id"], client=client, lease=lease)
-            return {"ok": True, "data": {"session_id": lease["session_id"],
-                                          "state": "detached_or_closed"}}
-        except (OSError, terminal_broker.BrokerError) as exc:
-            return {"ok": False, "error": {"code": "terminal_attach_failed",
-                                              "detail": str(exc)}}
-        finally:
-            curses.reset_prog_mode()
-            screen.clear()
-            screen.refresh()
+            status = terminal_cli._ok(client.request("broker.status"))
+        except (OSError, terminal_broker.BrokerError):
+            return {"ok": False, "error": {"code": "terminal_broker_unavailable"}}
+        if status.get("pty_relay") != "running":
+            return {"ok": False, "error": {"code": "terminal_not_attachable"}}
+        session_id = _select_session(screen, "Attach to a managed terminal", candidates)
+        if not any(item.get("session_id") == session_id for item in candidates):
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _attached_terminal(screen, client, session_id=session_id)
     if choice == "stop":
         candidates = [item for item in sessions if isinstance(item, dict)
                       and item.get("ownership") == "ternuxx_verified"
-                      and item.get("state") == "running"]
+                      and item.get("state") in {"running", "stopping"}]
         if not candidates:
             return {"ok": False, "error": {"code": "no_verified_live_session"}}
-        inventory = ", ".join(f"{item.get('session_id')} ({item.get('profile')})" for item in candidates)
-        session_id = _prompt(screen, "Verified live Ternuxx sessions: " + inventory + "\nExact ID to stop")
+        session_id = _select_session(screen, "Close a managed session", candidates)
         if not any(item.get("session_id") == session_id for item in candidates):
             return {"ok": False, "error": {"code": "session_not_in_verified_inventory"}}
         preview = _call("proot.stop.preview", {"session_id": session_id})
@@ -214,7 +261,8 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
         if (not isinstance(plan, dict) or plan.get("ownership") != "ternuxx_verified"
                 or not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
             return {"ok": False, "error": {"code": "session_stop_not_verified"}}
-        if _prompt(screen, f"Stop only session {session_id} and its verified process group? Type yes").lower() != "yes":
+        _show_details(screen, preview)
+        if _prompt(screen, "Close only the managed session shown in this plan? Type yes").lower() != "yes":
             return {"ok": False, "error": {"code": "cancelled"}}
         return _call("proot.stop", {"session_id": session_id, "confirmed": True, "plan_id": plan_id})
     return {"ok": False, "error": {"code": "cancelled"}}
