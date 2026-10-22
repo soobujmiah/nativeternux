@@ -94,6 +94,23 @@ class ManagementSessionTests(unittest.TestCase):
             services_only.bearer_token, "ssh.service.stop", csrf_token=services_only.csrf_token).reason,
             "scope_denied")
 
+    def test_graphics_and_guest_execution_require_control_scope_and_csrf(self):
+        control = self.make_authority(grants={"graphics.manage"})
+        issued = self.issue(control, {"graphics.manage"})
+        with self.assertRaises(ValueError):
+            self.make_authority(grants={"guest.diagnostics.read"})
+        reader = self.make_authority(grants={"diagnostics.read"})
+        read_session = self.issue(reader, {"diagnostics.read"})
+        for operation in ("graphics.provider.verify", "proot.guest.verify"):
+            with self.subTest(operation=operation):
+                self.assertEqual(reader.authorize_request(
+                    read_session.bearer_token, operation,
+                    csrf_token=read_session.csrf_token).reason, "scope_denied")
+                self.assertEqual(control.authorize_request(
+                    issued.bearer_token, operation).reason, "csrf_rejected")
+                self.assertTrue(control.authorize_request(
+                    issued.bearer_token, operation, csrf_token=issued.csrf_token).allowed)
+
     def test_unknown_operations_and_bad_tokens_are_unauthenticated_or_denied(self) -> None:
         authority = self.make_authority()
         issued = self.issue(authority, {"diagnostics.read"})

@@ -200,10 +200,12 @@ class ProotDiagnosticsTests(unittest.TestCase):
         self.assertFalse(any(item == "ternux" or item.endswith("/ternux") for item in command))
         self.assertIn("/native/private/pulse-cookie:/tmp/.ternuxx-pulse-cookie", command)
         self.assertIn("PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie", command)
-        self.assertTrue(report["read_only"])
+        self.assertFalse(report["read_only"])
+        self.assertTrue(report["probe_payload_read_only"])
+        self.assertTrue(report["safety"]["launcher_profile_write_possible"])
         self.assertTrue(report["safety"]["host_home_and_shared_storage_unbound"])
         self.assertTrue(all(value is False for key, value in report["safety"].items()
-                            if key != "host_home_and_shared_storage_unbound"))
+                            if key not in {"host_home_and_shared_storage_unbound", "launcher_profile_write_possible"}))
 
     def test_nested_gles_context_does_not_claim_glx_or_draw_success(self):
         outputs = [
@@ -313,9 +315,17 @@ class ProotDiagnosticsTests(unittest.TestCase):
             self.assertEqual(set(report["safety"]), set(schema["properties"]["safety"]["required"]))
             self.assertTrue(report["safety"]["host_home_and_shared_storage_unbound"])
             self.assertTrue(all(value is False for key, value in report["safety"].items()
-                                if key != "host_home_and_shared_storage_unbound"))
+                                if key not in {"host_home_and_shared_storage_unbound", "launcher_profile_write_possible"}))
         self.assertEqual(complete["status"], "complete")
         self.assertEqual(absent["status"], "unavailable")
+
+    def test_launcher_side_effect_metadata_includes_failed_login_attempts(self):
+        for entered in (False, True):
+            report = proot_diagnostics._verification_result(
+                status="unknown", display=":1", backend="zink", guest_entered=entered)
+            self.assertEqual(report["read_only"], not entered)
+            self.assertEqual(report["safety"]["launcher_profile_write_possible"], entered)
+            self.assertTrue(report["probe_payload_read_only"])
 
     def test_guest_command_rejects_unsafe_cookie_bind_paths(self):
         for path in ("relative/cookie", "/tmp/cookie:guest", "/tmp/cookie\n--env=BAD=1"):

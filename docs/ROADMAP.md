@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Finish separate guest setup and preservation verification, then qualify managed terminal start/attach/I-O/resize/detach/close across clients; continue installed/profile inventory, P1-P3 mapping and shared credential/service policy controls.
+**Next action:** Qualify TUI, Web and GTK terminal lifecycle on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

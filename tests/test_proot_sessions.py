@@ -172,6 +172,71 @@ class PRootSessionRegistryTests(unittest.TestCase):
         self.assertTrue(result["stopped"])
         signal_group.assert_called_once_with(4312, proot_sessions.signal.SIGTERM)
 
+    def test_stopping_record_remains_readable_after_graceful_timeout(self):
+        root, path, _lock = proot_sessions._paths(self.state, create=True)
+        record = self.make_record(state="stopping")
+        proot_sessions._write_registry(root, path, [record])
+        self.assertEqual(proot_sessions.list_sessions(self.state)[0]["recorded_state"], "stopping")
+
+    def test_interactive_close_uses_terminal_hangup_and_returns_state(self):
+        root, path, _lock = proot_sessions._paths(self.state, create=True)
+        record = self.make_record(pid=4312, process_start="fixture-start", profile="debian-interactive")
+        proot_sessions._write_registry(root, path, [record])
+        with mock.patch.object(proot_sessions, "_verified", return_value=True), \
+             mock.patch.object(proot_sessions, "_members", return_value=[]), \
+             mock.patch.object(proot_sessions, "_proc", return_value=None), \
+             mock.patch.object(proot_sessions.os, "killpg") as signal_group:
+            result = proot_sessions.stop_session(self.state, record["session_id"],
+                confirmed=True, plan_id=proot_sessions._plan_id(record), timeout=0)
+        signal_group.assert_called_once_with(4312, proot_sessions.signal.SIGHUP)
+        self.assertEqual(result["state"], "stopped")
+        self.assertTrue(result["stopped"])
+
+    def test_interactive_hangup_reaches_only_verified_private_session_job_group(self):
+        root, path, _lock = proot_sessions._paths(self.state, create=True)
+        record = self.make_record(pid=4312, process_start="fixture-start", profile="debian-interactive")
+        proot_sessions._write_registry(root, path, [record])
+        signals = []
+        member = {"state": "S", "pgrp": 4313, "session": 4312, "start": "job-start"}
+        with mock.patch.object(proot_sessions, "_verified", return_value=True), \
+             mock.patch.object(proot_sessions, "_members", side_effect=lambda _sid: [] if len(signals) == 2 else [(4313, "S")]), \
+             mock.patch.object(proot_sessions, "_proc", side_effect=lambda pid: member if pid == 4313 else None), \
+             mock.patch.object(proot_sessions.os, "killpg", side_effect=lambda group, sig: signals.append((group, sig))):
+            result = proot_sessions.stop_session(self.state, record["session_id"],
+                confirmed=True, plan_id=proot_sessions._plan_id(record), timeout=0)
+        self.assertEqual(signals, [(4312, proot_sessions.signal.SIGHUP), (4313, proot_sessions.signal.SIGHUP)])
+        self.assertTrue(result["stopped"])
+
+    def test_interactive_hangup_skips_changed_job_group_identity(self):
+        for field in ("session", "pgrp", "start"):
+            with self.subTest(field=field):
+                root, path, _lock = proot_sessions._paths(self.state, create=True)
+                record = self.make_record(pid=4312, process_start="fixture-start", profile="debian-interactive")
+                proot_sessions._write_registry(root, path, [record])
+                first = {"state": "S", "pgrp": 4313, "session": 4312, "start": "job-start"}
+                second = dict(first, **{field: "reused" if field == "start" else 9999})
+                identities = iter([first, second])
+                with mock.patch.object(proot_sessions, "_verified", return_value=True), \
+                     mock.patch.object(proot_sessions, "_members", return_value=[(4313, "S")]), \
+                     mock.patch.object(proot_sessions, "_proc", side_effect=lambda _pid: next(identities)), \
+                     mock.patch.object(proot_sessions.os, "killpg") as signal_group:
+                    result = proot_sessions.stop_session(self.state, record["session_id"],
+                        confirmed=True, plan_id=proot_sessions._plan_id(record), timeout=0)
+                signal_group.assert_called_once_with(4312, proot_sessions.signal.SIGHUP)
+                self.assertFalse(result["stopped"])
+                self.assertEqual(result["state"], "stopping")
+
+    def test_stop_preview_discloses_hangup_scope_and_binds_profile(self):
+        root, path, _lock = proot_sessions._paths(self.state, create=True)
+        record = self.make_record(pid=4312, process_start="fixture-start", profile="debian-interactive")
+        proot_sessions._write_registry(root, path, [record])
+        with mock.patch.object(proot_sessions, "_verified", return_value=True):
+            plan = proot_sessions.preview_stop(self.state, record["session_id"])
+        self.assertEqual(plan["signal"], "SIGHUP")
+        self.assertEqual(plan["scope"], "verified_private_session_job_groups")
+        self.assertIn("no force signal", plan["impact"])
+        self.assertNotEqual(plan["plan_id"], proot_sessions._plan_id(dict(record, profile="isolated-probe")))
+
     def test_readonly_inventory_does_not_create_registry_lock(self):
         root, path, lock_path = proot_sessions._paths(self.state, create=True)
         proot_sessions._write_registry(root, path, [])

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ternuxx:schema:proot-guest-diagnostics:v1",
-  "title": "Ternuxx read-only Debian PRoot display, audio, and renderer diagnostics",
+  "title": "Ternuxx bounded Debian PRoot display, audio, and renderer diagnostics",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -17,7 +17,8 @@
     "checks",
     "blockers",
     "read_only",
-    "safety"
+    "safety",
+    "probe_payload_read_only"
   ],
   "properties": {
     "component": {
@@ -155,7 +156,11 @@
           "maxLength": 1024
         },
         "dri3_extension": {
-          "enum": ["available", "unavailable", "unknown"]
+          "enum": [
+            "available",
+            "unavailable",
+            "unknown"
+          ]
         }
       }
     },
@@ -168,7 +173,7 @@
       }
     },
     "read_only": {
-      "const": true
+      "type": "boolean"
     },
     "safety": {
       "type": "object",
@@ -180,7 +185,8 @@
         "host_lifecycle_stopped",
         "services_started",
         "services_stopped",
-        "host_home_and_shared_storage_unbound"
+        "host_home_and_shared_storage_unbound",
+        "launcher_profile_write_possible"
       ],
       "properties": {
         "packages_changed": {
@@ -203,6 +209,9 @@
         },
         "host_home_and_shared_storage_unbound": {
           "const": true
+        },
+        "launcher_profile_write_possible": {
+          "type": "boolean"
         }
       }
     },
@@ -239,6 +248,9 @@
           "pattern": "^[A-Za-z0-9_.:+-]{1,128}$"
         }
       }
+    },
+    "probe_payload_read_only": {
+      "const": true
     }
   },
   "allOf": [
@@ -267,6 +279,52 @@
           },
           "blockers": {
             "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "guest_entered": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "read_only": {
+            "const": false
+          },
+          "safety": {
+            "properties": {
+              "launcher_profile_write_possible": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "guest_entered": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "read_only": {
+            "const": true
+          },
+          "safety": {
+            "properties": {
+              "launcher_profile_write_possible": {
+                "const": false
+              }
+            }
           }
         }
       }

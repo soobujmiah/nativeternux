@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native broker/four client paths and monitor exist; guarded fresh aliases implemented and live replay is under qualification. Full audit and all-client terminal acceptance remain open.
+Separate pinned guest setup and broker/actual CLI lifecycle passed with scoped preservation. Probe execution and interactive close defects fixed; full audit and remaining client acceptance stay open.
 
-**Next action:** Finish separate guest setup and preservation verification, then qualify managed terminal start/attach/I-O/resize/detach/close across clients; continue installed/profile inventory, P1-P3 mapping and shared credential/service policy controls.
+**Next action:** Qualify TUI, Web and GTK terminal lifecycle on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

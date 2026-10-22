@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "target_alias": "ternuxx-replay-p4",
+  "runtime": "Native Termux through SSH 8022",
+  "result": {
+    "production_broker_guest_start": true,
+    "guest_io": true,
+    "guest_observed_resize": true,
+    "actual_cli_io": true,
+    "actual_cli_resize": true,
+    "actual_cli_detach": true,
+    "detach_reattach": true,
+    "exact_guest_close": true,
+    "working_debian_root_identity_preserved": true,
+    "four_client_qualification": false
+  },
+  "initial_live_close_failure": {
+    "sigterm_ignored": true,
+    "stopping_state_unreadable": true,
+    "interactive_job_control_group_separate": true,
+    "recovered_without_force_signal": true
+  },
+  "final_stop_contract_replay": {
+    "preview_signal": "SIGHUP",
+    "preview_scope": "verified_private_session_job_groups",
+    "exact_close": "stopped",
+    "runtime": "not_connected"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "target_alias": "ternuxx-replay-p4",
+  "runtime": "Native Termux through SSH 8022",
+  "status": "installed",
+  "manifest_sha256": "7b83c7d070dc23caf2eefc6ef5d6af37481219e3c531b6d5c8c587a6a619ae11",
+  "requested_package_count": 54,
+  "requested_packages_verified_installed": true,
+  "installed_inventory_entries": 1102,
+  "package_inventory_sha256": "5835f69ca5f67f2d3e98e2e1a8237edb0c4447c4dece3b9423a44be79ba0c234",
+  "owned_root_identity_matches_receipt": true,
+  "ordinary_user_and_sudo_membership_verified": true,
+  "locale_verified": true,
+  "pinned_turnip_driver_hash_matches": true,
+  "graphics_runtime_qualified": false,
+  "installer_wrapper_preservation": {
+    "working_debian_root_identity_unchanged": true,
+    "selected_protected_file_hashes_unchanged": true,
+    "scope": "Selected-file and root identity checks; no full rootfs snapshot comparison"
+  },
+  "no_working_guest_stop_or_replacement": true,
+  "preview_identity_revalidated": true
+}

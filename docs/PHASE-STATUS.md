@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Native broker/four client paths and monitor exist; guarded fresh aliases implemented and live replay is under qualification. Full audit and all-client terminal acceptance remain open.
+Separate pinned guest setup and broker/actual CLI lifecycle passed with scoped preservation. Probe execution and interactive close defects fixed; full audit and remaining client acceptance stay open.
 
-**Next action:** Finish separate guest setup and preservation verification, then qualify managed terminal start/attach/I-O/resize/detach/close across clients; continue installed/profile inventory, P1-P3 mapping and shared credential/service policy controls.
+**Next action:** Qualify TUI, Web and GTK terminal lifecycle on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -92,6 +92,7 @@ Evidence:
 - [docs/evidence/2026-10-22-monitor-service-registration.md](evidence/2026-10-22-monitor-service-registration.md)
 - [docs/evidence/2026-10-22-native-entrypoint-and-contract-audit.md](evidence/2026-10-22-native-entrypoint-and-contract-audit.md)
 - [docs/evidence/2026-10-22-guarded-fresh-replay.md](evidence/2026-10-22-guarded-fresh-replay.md)
+- [docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md](evidence/2026-10-22-fresh-setup-and-probe-safety.md)
 
 ## P5 — Distro and display compatibility profiles
 

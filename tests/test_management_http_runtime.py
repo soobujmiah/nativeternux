@@ -65,6 +65,31 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("Clipboard copy failed", err.getvalue())
         event.return_value.wait.assert_not_called()
 
+    def test_browser_detection_reads_rootfs_without_entering_guest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "var/lib/proot-distro/containers/debian/rootfs"
+            (root / "etc").mkdir(parents=True)
+            (root / "etc/passwd").write_text("sbj:x:1000:1000::/home/sbj:/bin/bash\n")
+            (root / "usr/bin").mkdir(parents=True)
+            browser = root / "usr/bin/firefox-esr"
+            browser.write_text("#!/bin/sh\n")
+            browser.chmod(0o755)
+            with patch.object(management_http_runtime.shutil, "which", return_value="/fixture/proot-distro"), \
+                 patch.object(management_http_runtime.subprocess, "run", side_effect=AssertionError("detection must not log in")):
+                self.assertEqual(management_http_runtime.detect_proot_browser({"PREFIX": directory}),
+                                 management_http_runtime.PROOT_BROWSER)
+                browser.unlink()
+                (root / "usr/lib").mkdir()
+                target = root / "usr/lib/browser"
+                target.write_text("#!/bin/sh\n")
+                target.chmod(0o755)
+                browser.symlink_to("../lib/browser")
+                self.assertEqual(management_http_runtime.detect_proot_browser({"PREFIX": directory}),
+                                 management_http_runtime.PROOT_BROWSER)
+                browser.unlink()
+                browser.symlink_to(Path(directory) / "outside-browser")
+                self.assertIsNone(management_http_runtime.detect_proot_browser({"PREFIX": directory}))
+
     def test_interactive_auto_choices_resolve_to_a_launch_target(self) -> None:
         native = ("/native/firefox", "Firefox")
         proot = ("/guest/firefox-esr", "Firefox ESR")

@@ -22,7 +22,9 @@ Browser menu Auto selection and failed code-handoff handling are repaired. The c
 
 GTK was rebuilt and source/bridge/binary identities match. All three checked-in Runit definitions, all three boot helpers, tx shim and the three installed canonical recovery modules match source; isolated recovery imports resolve from the installed path. See the [entrypoint inventory](docs/evidence/2026-10-22-native-entrypoint-inventory.json). The fixed GUI monitor scheduler is now installed and running idle; monitoring/focus/Activity launch remain off. Fresh registration and two 30-second Linux-only ticks passed in a separate private Runit root. CLI service registration is available; shared-client install controls remain open. This is partial live/source parity, not a completed audit of every installed component. See [UI/audit evidence](docs/evidence/2026-10-22-native-ui-and-audit-remediation.md) and [monitor deployment/replay](docs/evidence/2026-10-22-monitor-service-registration.md).
 
-Fresh Debian setup now accepts a guarded separate `ternuxx-replay-NAME` target. Failed-refusal journal adoption and shell failure masking were reproduced and fixed; identity-bound resume, package status validation and safe artifact staging are regression-covered. The new `ternuxx-replay-p4` image verified and reached package provisioning; live completion/preservation remains under observation. The production broker now accepts an explicit guarded replay alias for separate-state qualification; client-selected paths/commands remain forbidden and no lifecycle pass is claimed. Shared CLI/TUI detach and early attach failures now release their writer lease without stopping the guest. [Exact close attachment checks](docs/evidence/2026-10-22-terminal-close-authorization.md) passed 733-test regression and were loaded into the idle live broker. Guest diagnostics launcher side effects still need source/authorization correction (A29). See [guarded replay evidence](docs/evidence/2026-10-22-guarded-fresh-replay.md).
+The separate `ternuxx-replay-p4` setup completed: 54 requested packages, account/locale, installed inventory and pinned Turnip hash verified. Working Debian root identity and selected protected-file hashes were preserved. The production broker and actual CLI I/O/resize/detach/reattach/exact close passed on this new guest after live stop defects were fixed. TUI/Web/GTK lifecycle, graphics workload and rollback remain open. [Fresh setup and probe safety](docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md) records 743 passing Native tests and scope limits.
+
+Guest probes now disclose launcher profile writes and require control scope/CSRF over HTTP. Debian graphics status and browser detection no longer enter the guest. New loopback runtimes passed live authorization/status checks; existing Web listeners were preserved. Exact probe preview/rollback remains open under A29.
 
 ## Required continuation
 
@@ -30,7 +32,7 @@ The full owner objective remains active in [the repository audit worklist](docs/
 
 - Review every narrative/structured document and relevant source/test; inventory is not proof of review.
 - Deliver missing shared SSH credential/key/password/recovery controls and per-service boot/Wake Lock policy.
-- Complete disposable PRoot replay and all-client terminal qualification while preserving the working guest.
+- Complete remaining guest replay/rollback and TUI/Web/GTK terminal qualification while preserving the working guest.
 - Reconcile every installed runtime component and reproduce the supported setup from a clean isolated target.
 - Recheck P1–P3 acceptance scope, correct stale claims, and continue the remaining roadmap in order.
 

@@ -1,6 +1,6 @@
 # Shared interactive PRoot terminals
 
-**Status:** P4 implementation in progress. The Native broker service and CLI/TUI/Web/GTK client paths are implemented. Web uses a locally vendored xterm.js renderer. The installed Management Web UI has now been visually reviewed in Firefox ESR running in the existing Debian PRoot on Native X11 `:1`. A responsive category-navigation defect found in that review is fixed in source. A managed guest attach has not been live-qualified; the owner-provisioned `tx db` process remains untouched and is not a Ternuxx-owned test session.
+**Status:** P4 implementation in progress. The Native broker service and CLI/TUI/Web/GTK client paths are implemented. Web uses a locally vendored xterm.js renderer. The installed Management Web UI has now been visually reviewed in Firefox ESR running in the existing Debian PRoot on Native X11 `:1`. A responsive category-navigation defect found in that review is fixed in source. A separate fresh guest now has production broker and actual CLI I/O/resize/detach/reattach/close evidence; full TUI/Web/GTK lifecycle acceptance remains open; the owner-provisioned `tx db` process remains untouched and is not a Ternuxx-owned test session.
 
 **Owner requirement:** interactive terminal support is required in CLI, TUI, Web, and GTK. Web and GTK use the shared typed broker operations; they may not expose a host shell, arbitrary argv/command, or bypass Android app isolation. See the [P3-first owner decision](../evidence/2026-10-21-p3-before-p4-owner-decision.md).
 
@@ -39,9 +39,9 @@ Run this from the Native source checkout only after the new guest setup finishes
 
 ## Remaining P4 acceptance
 
-1. Finish the separate setup and record working-guest preservation plus new guest package/account/driver identities.
-2. Qualify start, attach, input/output, resize, detach, and exact close with that disposable Ternuxx-managed guest.
-3. Verify the complete lifecycle through CLI, TUI, Web and GTK/VTE and record actual visual/interactive results. Opening the terminal dialog is not an I/O pass.
+1. Retain the [completed separate setup and broker/CLI evidence](../evidence/2026-10-22-fresh-setup-and-probe-safety.md); rollback/removal, broader config replay and graphics workload acceptance remain open.
+2. Verify the complete lifecycle through TUI, Web and GTK/VTE on that guest and record actual visual/interactive results.
+3. Recheck cross-client state, attachment ownership and close behavior under failure/concurrency. Opening the terminal dialog is not an I/O pass.
 4. Keep P4 in progress until the full phase criteria pass; update evidence and the roadmap from observed results.
 
 ## Legacy Ternux CLI retirement

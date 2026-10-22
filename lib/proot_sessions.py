@@ -108,7 +108,7 @@ def _validate_record(record: object) -> None:
     for key in ("rootfs_device", "rootfs_inode", "launcher_device", "launcher_inode", "pid", "process_group"):
         if type(record[key]) is not int or record[key] < 0:
             raise SessionError(f"PRoot session {key} is invalid")
-    if record["state"] not in {"starting", "running", "stopped", "failed", "unknown", "unverified"}:
+    if record["state"] not in {"starting", "running", "stopping", "stopped", "failed", "unknown", "unverified"}:
         raise SessionError("PRoot session state is invalid")
     if record["pid"] == 0:
         if (record["state"] not in {"starting", "unverified"}
@@ -524,6 +524,8 @@ def _plan_id(record: dict[str, object]) -> str:
     selected = {key: record[key] for key in (
         "session_id", "pid", "process_start", "process_group", "rootfs",
         "rootfs_device", "rootfs_inode", "launcher", "launcher_device", "launcher_inode")}
+    selected.update({"stop_contract": 2, "profile": record["profile"],
+                     "signal": "SIGHUP" if record["profile"] == "debian-interactive" else "SIGTERM"})
     payload = json.dumps(selected, sort_keys=True, separators=(",", ":")).encode()
     return "plan-" + __import__("hashlib").sha256(payload).hexdigest()
 
@@ -531,9 +533,14 @@ def _plan_id(record: dict[str, object]) -> str:
 def preview_stop(state_dir: str | os.PathLike[str], session_id: str) -> dict[str, object]:
     record = show_session(state_dir, session_id, include_private=True)
     verified = record["ownership"] == "ternuxx_verified"
+    interactive = record["profile"] == "debian-interactive"
     return {"session_id": session_id, "profile": record["profile"],
             "ownership": record["ownership"],
-            "action": "signal_owned_process_group" if verified else "blocked",
+            "action": ("hangup_owned_terminal_session" if interactive else "signal_owned_process_group") if verified else "blocked",
+            "signal": "SIGHUP" if interactive else "SIGTERM",
+            "scope": "verified_private_session_job_groups" if interactive else "verified_process_group",
+            "impact": ("Hang up this owned terminal and its verified private-session job groups; no force signal."
+                       if interactive else "Request graceful termination of this owned diagnostic process group; no force signal."),
             "affected_process_group": record["process_group"] if verified else None,
             "rootfs": record["rootfs"], "plan_id": _plan_id(record) if verified else None,
             "confirmation_required": True}
@@ -570,16 +577,41 @@ def stop_session(state_dir: str | os.PathLike[str], session_id: str, *, confirme
         _write_registry(root, path, records)
         if not _verified(record):
             raise SessionError("PRoot session identity changed immediately before stop")
-        os.killpg(record["process_group"], signal.SIGTERM)
+        # Interactive shells normally ignore SIGTERM. Terminal hangup is
+        # their graceful close signal; headless probes retain SIGTERM.
+        interactive = record["profile"] == "debian-interactive"
+        groups = {}
+        if interactive:
+            # Job control gives the login shell/jobs separate process groups
+            # inside our newly created kernel session. The tracer ignores HUP;
+            # closing only its group cannot hang up the foreground shell.
+            for member_pid, _state in _members(record["process_group"]):
+                member = _proc(member_pid)
+                if (member and member["session"] == record["process_group"]
+                        and member["pgrp"] > 0 and member["state"] not in {"Z", "X"}):
+                    groups.setdefault(member["pgrp"], (member_pid, member["start"]))
+        os.killpg(record["process_group"], signal.SIGHUP if interactive else signal.SIGTERM)
+        for group, (member_pid, member_start) in groups.items():
+            if group == record["process_group"]:
+                continue
+            member = _proc(member_pid)
+            if (not _verified(record) or not member or member["start"] != member_start
+                    or member["session"] != record["process_group"] or member["pgrp"] != group
+                    or member["state"] in {"Z", "X"}):
+                continue
+            try:
+                os.killpg(group, signal.SIGHUP)
+            except ProcessLookupError:
+                pass
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline and _members(record["process_group"]):
             time.sleep(0.05)
         if _members(record["process_group"]):
-            return {"stopped": False, "stop_requested": True, "session_id": session_id,
+            return {"stopped": False, "state": "stopping", "stop_requested": True, "session_id": session_id,
                     "reason": "graceful stop timed out; no force signal was sent"}
         identity = _proc(pid)
         if identity is not None and identity["start"] == start and identity["state"] not in {"Z", "X"}:
-            return {"stopped": False, "stop_requested": True, "session_id": session_id,
+            return {"stopped": False, "state": "stopping", "stop_requested": True, "session_id": session_id,
                     "reason": "owned process remains alive; no force signal was sent"}
         record["state"] = "stopped"
         record["transitions"].append({"state": "stopped", "at": __import__("datetime").datetime.now(
@@ -587,7 +619,7 @@ def stop_session(state_dir: str | os.PathLike[str], session_id: str, *, confirme
         record["last_verified_at"] = __import__("datetime").datetime.now(
             __import__("datetime").timezone.utc).isoformat()
         _write_registry(root, path, records)
-        return {"stopped": True, "session_id": session_id, "ownership": "verified"}
+        return {"stopped": True, "state": "stopped", "session_id": session_id, "ownership": "verified"}
     finally:
         lock.close()
 

@@ -28,6 +28,24 @@ class TerminalBrokerAssemblyTests(unittest.TestCase):
             self.assertEqual(spawn.call_args.kwargs["alias"], "ternuxx-replay-test")
             self.assertEqual(spawn.call_args.kwargs["plan_id"], "plan-fixture")
 
+    def test_close_accepts_already_completed_cleanup_but_not_another_live_pty(self):
+        for status in ("not_connected", "running"):
+            with self.subTest(status=status), \
+                 mock.patch.dict(os.environ, {"TERMUX_VERSION": "fixture"}), \
+                 mock.patch.object(service.terminal_broker, "TerminalPTYRuntime") as runtime, \
+                 mock.patch.object(service.terminal_broker, "TerminalBrokerDispatcher") as dispatcher, \
+                 mock.patch.object(service.terminal_broker, "UnixBrokerServer"), \
+                 mock.patch.object(service.proot_sessions, "stop_session", return_value={"state": "stopped", "stopped": True}):
+                runtime.return_value.release_after_stop.side_effect = service.terminal_broker.BrokerError("already released")
+                runtime.return_value.status.return_value = status
+                service.build_service()
+                close = dispatcher.call_args.kwargs["close_apply"]
+                if status == "running":
+                    with self.assertRaises(service.terminal_broker.BrokerError):
+                        close("proot-fixture", "plan-fixture")
+                else:
+                    self.assertEqual(close("proot-fixture", "plan-fixture")["state"], "stopped")
+
     def test_invalid_alias_refused_before_runtime_construction(self):
         with mock.patch.dict(os.environ, {"TERMUX_VERSION": "fixture"}), \
              mock.patch.object(service.terminal_broker, "TerminalPTYRuntime") as runtime:

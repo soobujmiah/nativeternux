@@ -36,6 +36,14 @@ With Native Runit tools already installed, run `python3 tools/check_monitor_serv
 
 See [registration and evidence](../evidence/2026-10-22-monitor-service-registration.md). Android Activity/focus behavior and cold-boot delivery require separate qualification.
 
+## Separate guest terminal replay
+
+The [separate guest setup and broker/CLI replay](../evidence/2026-10-22-fresh-setup-and-probe-safety.md) completed with scoped preservation checks. Follow [the isolated broker procedure](../architecture/INTERACTIVE-PROOT-TERMINALS.md#separate-guest-qualification) after fresh setup succeeds. In a second Native terminal, use that same private state namespace with `./tx terminal start`; review the selected replay alias/rootfs before confirming. Exercise I/O and terminal resizing, use Ctrl+] to detach, then `./tx terminal attach SESSION_ID` and `./tx terminal close SESSION_ID` with the same namespace. Close must show the exact session and profile-specific signal/scope before confirmation.
+
+This is an opt-in device replay, not part of the ordinary unit suite. Terminal content stays out of evidence/logs. Preserve failed state for diagnosis; never force-signal or adopt the working guest. Actual CLI and broker lifecycle passed; TUI/Web/GTK interaction and cross-client acceptance remain open.
+
+Guest graphics status and browser availability detection do not enter the guest. Explicit verification can invoke PRoot-Distro's generated-profile writer; HTTP requires `graphics.manage` and CSRF, and read-only API access rejects it. See [the current API contract](../architecture/MANAGEMENT-API.md) and [probe metadata/authorization checks](../evidence/2026-10-22-probe-http-live.json). Full exact probe plans/rollback remain under audit.
+
 ## Evidence and qualification
 
 [Current limits](KNOWN-LIMITATIONS.md), [device compatibility](DEVICE-COMPATIBILITY.md), [client coverage](../architecture/CAPABILITY-MATRIX.md), and [the active audit](../audit/REPOSITORY-AUDIT.md) track remaining gates.

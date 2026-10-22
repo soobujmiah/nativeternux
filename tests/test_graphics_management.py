@@ -73,6 +73,25 @@ class GraphicsManagementTests(unittest.TestCase):
                                                state_dir=str(self.state), repo_root=str(self.repo))
         self.assertTrue(link.is_symlink())
 
+    def test_debian_status_does_not_enter_guest_but_explicit_verify_does(self):
+        import proot_diagnostics
+        inventory = {"status": "installed", "installed_distributions": ["debian"], "guest_entered": False}
+        with patch.object(proot_diagnostics, "inspect_installed", return_value=inventory), \
+             patch.object(proot_diagnostics, "resolve_proot_guest_user", return_value="sbj"), \
+             patch.object(proot_diagnostics, "verify_proot_guest", side_effect=AssertionError("status must not log in")):
+            result = graphics_manager.status("debian", home=str(self.home), state_dir=str(self.state),
+                process_env={}, prefix="/fixture")
+        self.assertTrue(result["read_only"])
+        self.assertFalse(result["guest_entered"])
+        self.assertEqual(result["verification"], "not_run")
+        with patch.object(proot_diagnostics, "resolve_proot_guest_user", return_value="sbj"), \
+             patch.object(proot_diagnostics, "verify_proot_guest", return_value={"guest_entered": True, "read_only": False}) as verify:
+            result = graphics_manager.verify("debian", "opengl", home=str(self.home), state_dir=str(self.state),
+                process_env={}, prefix="/fixture", repo_root=str(self.repo))
+        verify.assert_called_once()
+        self.assertTrue(result["guest_entered"])
+        self.assertFalse(result["read_only"])
+
     def test_gles_is_not_reported_from_an_opengl_only_probe(self) -> None:
         native = graphics_manager.verify("native", "gles", home=str(self.home), state_dir=str(self.state),
                                          process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))

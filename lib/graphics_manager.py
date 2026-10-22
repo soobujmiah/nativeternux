@@ -143,13 +143,12 @@ def status(provider: str, *, home: str, state_dir: str, process_env: dict[str, s
                 "provider_boundary": "native Termux/Bionic"}
     if provider == "debian":
         import proot_diagnostics
-        user = proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=prefix)
-        result = proot_diagnostics.verify_proot_guest(
-            distro="debian", user=user, display=process_env.get("TERNUXX_GRAPHICS_DISPLAY", ":1"),
-            backend="zink", prefix=prefix)
-        result["provider"] = provider
-        result["provider_boundary"] = "existing Debian PRoot/glibc"
-        return result
+        inventory = proot_diagnostics.inspect_installed()
+        return {"provider": provider, "provider_boundary": "existing Debian PRoot/glibc",
+                "status": inventory["status"],
+                "installed_distributions": inventory["installed_distributions"],
+                "guest_entered": False, "read_only": True, "verification": "not_run",
+                "reason": "Use explicit OpenGL verification for guest display, audio and renderer checks; login may write its generated profile."}
     raise ValueError("provider must be native or debian")
 
 
@@ -216,7 +215,14 @@ def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: d
         if api != "opengl":
             return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
                     "reason": "current Debian adapter verifies OpenGL/Zink only; it does not run an OpenGL ES workload"}
-        return status(provider, home=home, state_dir=state_dir, process_env=process_env, prefix=prefix)
+        import proot_diagnostics
+        user = proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=prefix)
+        result = proot_diagnostics.verify_proot_guest(
+            distro="debian", user=user, display=process_env.get("TERNUXX_GRAPHICS_DISPLAY", ":1"),
+            backend="zink", prefix=prefix)
+        result["provider"] = provider
+        result["provider_boundary"] = "existing Debian PRoot/glibc"
+        return result
     env = _native_env(home=home, state_dir=state_dir, process_env=process_env)
     if api == "gles":
         result = _gles_draw(env, repo_root=repo_root, state_dir=state_dir)

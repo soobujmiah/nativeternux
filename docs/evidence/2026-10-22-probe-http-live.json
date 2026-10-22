@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "runtime": "Native Termux through SSH 8022",
+  "results": {
+    "read_api_guest_probe_rejected": true,
+    "read_only_debian_status_no_guest": true,
+    "web_missing_csrf_rejected": true,
+    "web_control_reaches_typed_validation": true,
+    "working_guest_profile_unchanged": true
+  },
+  "existing_web_listener_restarted": false,
+  "probe_executed_in_working_guest": false
+}

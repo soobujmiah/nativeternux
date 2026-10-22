@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "runtime": "Native Termux through SSH 8022",
+  "suite": {
+    "command": "bash scripts/repo_test.sh",
+    "passed": 743,
+    "run": 743,
+    "seconds": 105.231
+  },
+  "source_sha256": {
+    "lib/graphics_manager.py": "adec144ce2bfbe283e6ed714f9b2fc590e91a7c7cb8d5f4deb7bf438ad01e7ce",
+    "lib/management_authorization.py": "083109478f0ff1a689cec0272eb170628ab8e8db4bff0463a29160df958bfdf4",
+    "lib/management_http_runtime.py": "2196e66d2514a3c6034f8491a0c7e40fed4667393dd0c339bb07191d7556712d",
+    "lib/management_sessions.py": "a3792b79ff5d68f903cc215ac86fca18fdda7ba935698d6fc81fe64bc68662c0",
+    "lib/management_web_ui.html": "51879c5777cefc07bef8e1408373abdb221cb35b62ddf0e6d29ea73d413009b9",
+    "lib/proot_diagnostics.py": "f338395debf8a594085c3a008ae0692b19e4f7212e64e0c6ba8ef61f3d60153c",
+    "lib/proot_sessions.py": "d4719f7476cf725f480aa1b2c791a21f4270f812cca0fe994126dfa791f94aaa",
+    "lib/terminal_broker_service.py": "bd2cc304823d37071f93f58a0a01402e998a324132a1da10dbf2415fb71103fc",
+    "schemas/proot-guest-diagnostics.schema.json": "79bf1ffd79e9ac311f7f13454683287eafe7520bb0d5216f5dbf9fe2a9eb40fa",
+    "tests/test_graphics_management.py": "fd73343354e56eacd18deff9374a9d922d9f3e89cd9cb67cf478ee0ef2388a82",
+    "tests/test_management_http_runtime.py": "1bf30537aeab30157540b200714b65500c3628f69acfa9fde4520e322dbe83c4",
+    "tests/test_management_sessions.py": "8d788c1365ffcfe28ebd742b5d0ddd2395c5550ed2645de73ad28f834d9dc37c",
+    "tests/test_proot_diagnostics.py": "319b1c48f4aab92578d27fe5b1830b1f568637e86df08e59a27c3f7ebcaafa6a",
+    "tests/test_proot_sessions.py": "a36318083b3fcdf251a6b2a6842123da14054d652d919dfea5f1ab1c19b67c55",
+    "tests/test_terminal_broker_service.py": "d00761af34134bab22fc4e71ad4bbc759e14b4637a51d663e15b89e2f25c33c2"
+  },
+  "focused_passed": {
+    "sessions": 44,
+    "broker_assembly": 4,
+    "guest_diagnostics": 24,
+    "http_runtime": 17,
+    "management_sessions": 10,
+    "graphics": 16
+  },
+  "working_guest_probe_executed_for_this_change": false,
+  "fresh_target": "ternuxx-replay-p4",
+  "all_client_terminal_qualified": false,
+  "idle_default_broker_final_reload": true,
+  "default_broker_guest_started": false
+}

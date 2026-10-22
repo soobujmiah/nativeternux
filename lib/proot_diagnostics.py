@@ -319,8 +319,10 @@ def _verification_result(*, status: str, display: str, backend: str,
                    "glx_draw": glx_draw, "glx_draw_frames": glx_draw_frames,
                    "glx_draw_renderer": glx_draw_renderer, "dri3_extension": dri3_extension},
         "blockers": blockers or [],
-        "read_only": True,
-        "safety": {"packages_changed": False, "guest_write_command_invoked": False,
+        "read_only": not guest_entered,
+        "probe_payload_read_only": True,
+        "safety": {"launcher_profile_write_possible": guest_entered,
+                    "packages_changed": False, "guest_write_command_invoked": False,
                     "host_lifecycle_started": False, "host_lifecycle_stopped": False,
                     "services_started": False, "services_stopped": False,
                     "host_home_and_shared_storage_unbound": True},
@@ -424,7 +426,7 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
                        prefix: str = "/data/data/com.termux/files/usr",
                        which: Callable[[str], str | None] = shutil.which,
                        runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> dict[str, object]:
-    """Run a fixed, bounded, read-only display/audio/renderer probe in Debian."""
+    """Run a bounded probe; the upstream login may write its guest profile."""
     if distro != "debian":
         raise ValueError("the managed Debian guest probe supports Debian only")
     if not isinstance(user, str) or not _GUEST_USER.fullmatch(user) or user == "root":

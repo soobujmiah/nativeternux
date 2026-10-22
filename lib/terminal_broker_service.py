@@ -57,7 +57,11 @@ def build_service(*, prefix: str | None = None, home: str | None = None,
         result = proot_sessions.stop_session(
             state_dir, session_id, confirmed=True, plan_id=plan_id)
         if result.get("state") == "stopped":
-            runtime.release_after_stop(session_id)
+            try:
+                runtime.release_after_stop(session_id)
+            except terminal_broker.BrokerError:
+                if runtime.status() != "not_connected":
+                    raise
         return result
 
     dispatcher = terminal_broker.TerminalBrokerDispatcher(

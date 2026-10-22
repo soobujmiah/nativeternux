@@ -25,6 +25,7 @@ MAX_TOKEN_LENGTH = 256
 # Every known operation must be explicitly classified. Mutations also require
 # the session-specific CSRF proof in a custom header.
 MUTATING_OPERATIONS = frozenset({
+    "graphics.provider.verify", "proot.guest.verify",
     "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "graphics.provider.select",
     "ssh.service.start", "ssh.service.stop", "ssh.service.deploy", "ssh.service.deploy.rollback.apply", "boot.enable", "boot.disable", "boot.cron.enable", "boot.cron.disable",
     "backup.create", "restore.apply", "recovery.resolve",
@@ -40,13 +41,13 @@ MUTATING_OPERATIONS = frozenset({
     "terminal.detach", "terminal.close.preview", "terminal.close",
 })
 READ_ONLY_OPERATIONS = frozenset({
-    "management.catalog", "management.logs.list", "management.logs.read", "graphics.provider.status", "graphics.provider.verify", "agent.hermes.status", "cron.status", "cron.executor.self_test",
+    "management.catalog", "management.logs.list", "management.logs.read", "graphics.provider.status", "agent.hermes.status", "cron.status", "cron.executor.self_test",
     "proot.sessions.list", "proot.sessions.show", "proot.sessions.health", "proot.recovery.inspect",
     "proot.recovery.reconcile.preview", "proot.profiles.list", "proot.profiles.show",
     "proot.start.preview", "proot.stop.preview", "cron.jobs.list",
     "timezone.status", "timezone.list",
     "cron.jobs.show", "cron.jobs.validate", "cron.jobs.next_runs", "cron.executions.list", "cron.executions.show", "desktop.status", "desktop.monitor.status", "doctor.report",
-    "ssh.inspect", "ssh.service.deploy.rollback.preview", "native.ssh.status", "proot.status", "proot.guest.verify",
+    "ssh.inspect", "ssh.service.deploy.rollback.preview", "native.ssh.status", "proot.status",
     "proot.shortcuts.list", "proot.shortcuts.preview",
     "terminal.broker.status",
     "remote.access.preview", "boot.status", "boot.profile.status", "boot.helpers.status",

@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+from pathlib import Path
 import re
 import signal
 import shutil
@@ -26,7 +27,6 @@ import proot_diagnostics
 DEFAULT_PORT = 8765
 READ_CAPABILITIES = frozenset({
     "diagnostics.read",
-    "guest.diagnostics.read",
     "remote_policy.read",
     "continuity.read",
 })
@@ -37,7 +37,7 @@ _MUTATING_CAPABILITIES = {
     for operation in management_sessions.MUTATING_OPERATIONS
 }
 WEB_READ_CAPABILITIES = frozenset({
-    "diagnostics.read", "guest.diagnostics.read", "remote_policy.read", "continuity.read",
+    "diagnostics.read", "remote_policy.read", "continuity.read",
 })
 WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "graphics.manage", "applications.launch", "applications.shortcuts.manage", "cron.manage", "proot.session.manage"})
 _WEB_MUTATING_OPERATIONS = {
@@ -45,7 +45,7 @@ _WEB_MUTATING_OPERATIONS = {
     if management_authorization.required_capability(operation) in WEB_CAPABILITIES
     and operation != "proot.recovery.reconcile"
 }
-if _WEB_MUTATING_OPERATIONS != {"desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply", "proot.start", "proot.stop", "terminal.start.preview", "terminal.start", "terminal.channel.issue", "terminal.attach", "terminal.input", "terminal.resize", "terminal.output", "terminal.detach", "terminal.close.preview", "terminal.close", "cron.jobs.mutation.preview", "cron.jobs.mutation.apply"}:
+if _WEB_MUTATING_OPERATIONS != {"graphics.provider.verify", "proot.guest.verify", "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply", "proot.start", "proot.stop", "terminal.start.preview", "terminal.start", "terminal.channel.issue", "terminal.attach", "terminal.input", "terminal.resize", "terminal.output", "terminal.detach", "terminal.close.preview", "terminal.close", "cron.jobs.mutation.preview", "cron.jobs.mutation.apply"}:
     raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy, managed SSH, typed graphics/app actions, previewed PRoot and terminal sessions, shortcuts, and previewed Cron job mutations")
 if READ_CAPABILITIES & _MUTATING_CAPABILITIES:
     raise RuntimeError("read-only API runtime contains a mutation capability")
@@ -117,21 +117,19 @@ def detect_native_browser() -> tuple[str, str] | None:
 
 
 def detect_proot_browser(env: Mapping[str, str]) -> tuple[str, str] | None:
-    proot_distro = shutil.which("proot-distro")
-    if not proot_distro:
+    """Inspect the guest executable without invoking a login/profile writer."""
+    if not shutil.which("proot-distro"):
         return None
+    prefix = env.get("PREFIX", EXPECTED_PREFIX)
     try:
-        guest_user = proot_diagnostics.resolve_proot_guest_user(
-            distro="debian", prefix=env.get("PREFIX", EXPECTED_PREFIX))
-        result = subprocess.run(
-            [proot_distro, "login", "debian", "--user", guest_user,
-             "--", "sh", "-c", "command -v firefox-esr"],
-            env=dict(env), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-            text=True, check=False, timeout=15, close_fds=True)
-    except (OSError, subprocess.SubprocessError, ValueError):
-        return None
-    paths = result.stdout.strip().splitlines()
-    if result.returncode != 0 or not paths or not paths[0].startswith("/"):
+        proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=prefix)
+        root = Path(prefix) / "var/lib/proot-distro/containers/debian/rootfs"
+        if root.resolve(strict=True) != root.absolute():
+            return None
+        browser = (root / "usr/bin/firefox-esr").resolve(strict=True)
+        if not browser.is_relative_to(root) or not browser.is_file() or not os.access(browser, os.X_OK):
+            return None
+    except (OSError, RuntimeError, ValueError):
         return None
     return PROOT_BROWSER
 
