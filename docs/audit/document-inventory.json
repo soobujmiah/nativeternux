@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 415,
-  "read_count": 90,
+  "document_count": 416,
+  "read_count": 91,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "34319f233f61e2d97113a7bda6b59ad31ab4170f9b927996d791b0416c38720f",
+      "sha256": "535fb1109d5a84f846b8280a7dadbe83c949a441d53f12355ccaebf037657f7b",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "f45dd63b351b94a395f8d65d76c70658b34e441c0bb2bc0b36656d7546df00ee",
-      "lines": 173,
+      "sha256": "dd2a4b33662fb961a8d9695121eb24b5df1b27d0a50e3ea9affc3b181f5db261",
+      "lines": 174,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "b32ddad0387c9c5a243d87dfa8fe38fdb4e88a51a1ea99fc6c8c90984bee980e",
+      "sha256": "e436ea94c6a6cfb9f88030b50eb354ff3fff1c8379800889ee97164c6f523376",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -2457,6 +2457,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-22-p4-replay-download-timeout.md",
+      "kind": "narrative",
+      "sha256": "488c5aed23249daf6bdc3eefbc736eebf287ae73bd1a79f91c954bb1c3f2dfd1",
+      "lines": 53,
+      "read_status": "read",
+      "read_sha256": "488c5aed23249daf6bdc3eefbc736eebf287ae73bd1a79f91c954bb1c3f2dfd1"
+    },
+    {
       "path": "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",
       "kind": "narrative",
       "sha256": "5b00ce59126b8e1c969c3c790c5bbb30ba98161babce33ee4d815ca13f08e34a",
@@ -2955,8 +2963,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "5249d5d3f0af49380ac92b80349d67bdc311a7cbcf5acef6b00a7e56ca3e9f74",
-      "lines": 188,
+      "sha256": "7f9ca52285b90724af3e9a95395416839d0dd27c43e4317b2edb97b7a852bdf5",
+      "lines": 189,
       "read_status": "pending",
       "read_sha256": null
     },

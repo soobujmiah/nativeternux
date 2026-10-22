@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented; same-session handoff, exact replay-guest retire/restore and visible Web/GTK interaction checks pass. A full Doctor report now stays read-only and healthy when optional PRoot inventory raises FileNotFoundError. Full P4 acceptance remains open for clean replay reproducibility/rollback, broader provider and route configuration, graphics workload evidence, Web mutation/client parity, wider Native independence failure injection, and the full source/installed audit.
+Replay package acquisition diagnosed: the pinned 54-package profile needs 761 MB; the former one-hour bound was insufficient on measured mobile throughput. Fresh guest setup now has a six-hour bounded configuration window; the APT select (38) trigger remains under investigation. Full P4 acceptance remains open for replay runtime/rollback, provider and route configuration, graphics evidence, Web mutation/client parity, wider Native independence injection and full source/installed audit.
 
-**Next action:** Finish the pinned isolated replay setup and verify exact package/config receipt plus protected-rootfs preservation; then perform exact retire/restore and close remaining provider/configuration, route, client-parity, Native-independence, and full-audit gates.
+**Next action:** Resume the exact reviewed replay plan with the six-hour bound, capture package/config receipt and exact retire/restore evidence, and investigate any recurring APT select (38) failure without touching the existing Debian rootfs.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -112,6 +112,7 @@ Evidence:
 - [docs/evidence/2026-10-22-web-ui-visible-acceptance.json](evidence/2026-10-22-web-ui-visible-acceptance.json)
 - [docs/evidence/2026-10-22-p4-next-gate-reconciliation.md](evidence/2026-10-22-p4-next-gate-reconciliation.md)
 - [docs/evidence/2026-10-22-native-optional-proot-failure-injection.md](evidence/2026-10-22-native-optional-proot-failure-injection.md)
+- [docs/evidence/2026-10-22-p4-replay-download-timeout.md](evidence/2026-10-22-p4-replay-download-timeout.md)
 
 ## P5 — Distro and display compatibility profiles
 

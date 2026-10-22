@@ -219,8 +219,10 @@ class FreshProotSetupTests(unittest.TestCase):
                 repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
                 state_dir=str(self.state), user="sbj")
         calls = []
+        call_options = []
         def runner(args, **kwargs):
             calls.append(args)
+            call_options.append(kwargs)
             if args[1] == "install":
                 root = self.containers / "debian/rootfs"
                 (root / "etc").mkdir(parents=True)
@@ -253,6 +255,7 @@ class FreshProotSetupTests(unittest.TestCase):
         self.assertIn("apt-get install -y --no-install-recommends", calls[1][-1])
         self.assertIn("snapshot.debian.org/archive/debian/20261020T000000Z", calls[1][-1])
         self.assertEqual(calls[1][-3:], ["/bin/bash", "-lc", calls[1][-1]])
+        self.assertEqual(call_options[1]["timeout"], proot_fresh_setup.FRESH_CONFIGURATION_TIMEOUT_SECONDS)
         syntax = subprocess.run(["bash", "-n", "-c", calls[1][-1]], check=False)
         self.assertEqual(syntax.returncode, 0)
 

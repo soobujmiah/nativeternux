@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Finish the pinned isolated replay setup and verify exact package/config receipt plus protected-rootfs preservation; then perform exact retire/restore and close remaining provider/configuration, route, client-parity, Native-independence, and full-audit gates.
+**Next action:** Resume the exact reviewed replay plan with the six-hour bound, capture package/config receipt and exact retire/restore evidence, and investigate any recurring APT select (38) failure without touching the existing Debian rootfs.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
