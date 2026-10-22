@@ -93,7 +93,8 @@
         "docs/evidence/2026-10-22-tui-terminal-replay.md",
         "docs/evidence/2026-10-22-web-terminal-replay.md",
         "docs/evidence/2026-10-22-gtk-terminal-picker-review.md",
-        "docs/evidence/2026-10-22-ssh-gtk-key-controls.md"
+        "docs/evidence/2026-10-22-ssh-gtk-key-controls.md",
+        "docs/evidence/2026-10-22-native-installed-parity-1007.json"
       ],
       "next_action": "Complete remaining SSH key generation/recovery, authentication and service-policy acceptance; qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and continue the full source/document audit."
     },

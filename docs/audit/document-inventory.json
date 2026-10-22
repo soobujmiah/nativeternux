@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 398,
-  "read_count": 93,
+  "document_count": 399,
+  "read_count": 94,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "cc7f9735fa645c9a1165afdf7d56706116dca8c72401d2232b5341eabc842ae4",
+      "sha256": "f20d70d99bbd70122f4ad3aad9dec5c83c2765d79e92e1ff94ae7ff9f087765c",
       "lines": 47,
       "read_status": "read",
-      "read_sha256": "cc7f9735fa645c9a1165afdf7d56706116dca8c72401d2232b5341eabc842ae4"
+      "read_sha256": "f20d70d99bbd70122f4ad3aad9dec5c83c2765d79e92e1ff94ae7ff9f087765c"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "6b6fa5df3a9442ee0dcc479c9d1ef1ce3d85e9a77d0c12f630d0317a945fc9cf",
-      "lines": 158,
+      "sha256": "dab8a2a07a524f3cb8eed9786594b28e5a3ba692e94db008e334e8a613db643a",
+      "lines": 159,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -515,10 +515,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "56ca05496bb317b93892dfb0ec479812a03e11ef931845f64934396b3c99ba2d",
+      "sha256": "05eff751cd3ce6c17da8e6313ee082dd0cf830172b13dc4be4f8feb44125326d",
       "lines": 86,
       "read_status": "read",
-      "read_sha256": "56ca05496bb317b93892dfb0ec479812a03e11ef931845f64934396b3c99ba2d"
+      "read_sha256": "05eff751cd3ce6c17da8e6313ee082dd0cf830172b13dc4be4f8feb44125326d"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2321,6 +2321,14 @@
       "read_sha256": "68d32ce6609078f0e76090f8bdf4a7746ba03fe7f8ec0e0deb92a8e5ef4a6eaa"
     },
     {
+      "path": "docs/evidence/2026-10-22-native-installed-parity-1007.json",
+      "kind": "structured",
+      "sha256": "093f868666ca0e94e506a512b07674f3a245c62ff9079fa8b88b9aa5d436669f",
+      "lines": 239,
+      "read_status": "read",
+      "read_sha256": "093f868666ca0e94e506a512b07674f3a245c62ff9079fa8b88b9aa5d436669f"
+    },
+    {
       "path": "docs/evidence/2026-10-22-native-selected-deployment-parity.json",
       "kind": "structured",
       "sha256": "8bf7f0a2e22d690367d237f8339078a1535e3a316ce4a28b09279628be3cd127",
@@ -2819,10 +2827,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "b312c8a43e571807018675c1794ac8bb8e4afc511e532ec4d954f9be85ec0d81",
-      "lines": 173,
+      "sha256": "ecf57852b1770f118e2231659a7d1dda101339c824cb1c30e671db44986995ce",
+      "lines": 174,
       "read_status": "read",
-      "read_sha256": "b312c8a43e571807018675c1794ac8bb8e4afc511e532ec4d954f9be85ec0d81"
+      "read_sha256": "ecf57852b1770f118e2231659a7d1dda101339c824cb1c30e671db44986995ce"
     },
     {
       "path": "requirements-dev.txt",

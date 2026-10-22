@@ -1,0 +1,239 @@
+{
+  "android_termux_boot_enabled": "unverified",
+  "complete_repository_deployment_audit": false,
+  "entrypoint_count": 7,
+  "entrypoint_parity_count": 7,
+  "entrypoints": [
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o755",
+        "owner_verified": true,
+        "sha256": "6cdd345256c740215350cf52c6a46b662aa0ce698bdd5fe3a63798c16a1bfabd"
+      },
+      "installed_role": "run",
+      "matches": true,
+      "source": "scripts/termux-services/ternuxx-gui-monitor/run",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o755",
+        "owner_verified": true,
+        "sha256": "6cdd345256c740215350cf52c6a46b662aa0ce698bdd5fe3a63798c16a1bfabd"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "1e45a818d1d5c4b9d74eddb46ee57b3e74412915e63fadacfb609c25301b9237"
+      },
+      "installed_role": "run",
+      "matches": true,
+      "source": "scripts/termux-services/ternuxx-sshd/run",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "1e45a818d1d5c4b9d74eddb46ee57b3e74412915e63fadacfb609c25301b9237"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o755",
+        "owner_verified": true,
+        "sha256": "cd6a3f107bad6bb434ca6770ac3f28de8386b8afa582f45809d7c45855881eb4"
+      },
+      "installed_role": "run",
+      "matches": true,
+      "source": "scripts/termux-services/ternuxx-terminal-broker/run",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o755",
+        "owner_verified": true,
+        "sha256": "cd6a3f107bad6bb434ca6770ac3f28de8386b8afa582f45809d7c45855881eb4"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "7dfdd79e1add71e2d26a4fa9cd7dbd8c16f88d69ddf39ba2a3a85f1f1cedd36a"
+      },
+      "installed_role": "00-ternuxx-services",
+      "matches": true,
+      "source": "scripts/termux-boot/00-ternuxx-services",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "7dfdd79e1add71e2d26a4fa9cd7dbd8c16f88d69ddf39ba2a3a85f1f1cedd36a"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "99d14d969ba47f77057611079c239058e40e19c49ed5b12575f89765cd48b12f"
+      },
+      "installed_role": "20-ternuxx-cron",
+      "matches": true,
+      "source": "scripts/termux-boot/20-ternuxx-cron",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o755",
+        "owner_verified": true,
+        "sha256": "99d14d969ba47f77057611079c239058e40e19c49ed5b12575f89765cd48b12f"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "fdb974fec7e8e026d7b4f8ba305eb54dd8a95e82bda01eac42c9a81de8fba896"
+      },
+      "installed_role": "ternuxx-recovery",
+      "matches": true,
+      "source": "scripts/termux-boot/ternuxx-recovery",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "fdb974fec7e8e026d7b4f8ba305eb54dd8a95e82bda01eac42c9a81de8fba896"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o755",
+        "owner_verified": true,
+        "sha256": "a8735006203922cb7d7ab885e7fa1b85ca8608282de79d427d12a21a2511c401"
+      },
+      "installed_role": "tx",
+      "matches": true,
+      "source": "scripts/tx-installed",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o700",
+        "owner_verified": true,
+        "sha256": "a8735006203922cb7d7ab885e7fa1b85ca8608282de79d427d12a21a2511c401"
+      }
+    }
+  ],
+  "gtk": {
+    "binary": {
+      "kind": "regular",
+      "mode": "0o755",
+      "owner_verified": true,
+      "sha256": "80bdf4ab7aded05b24452a9d4b59c5f02001abcff7a39ad79b8c02018bcd50bf"
+    },
+    "desktop": {
+      "kind": "regular",
+      "mode": "0o644",
+      "owner_verified": true,
+      "sha256": "85136ed5cf3a658fc35ac8a6105abff6da07f6b2a775efa0bad03153eb37010a"
+    },
+    "identity_file_mode": "0o600",
+    "identity_match_binary": true,
+    "identity_match_desktop": true,
+    "identity_match_launcher": true,
+    "identity_match_source_bridge": true,
+    "identity_match_source_c": true,
+    "identity_valid": true,
+    "launcher": {
+      "kind": "regular",
+      "mode": "0o755",
+      "owner_verified": true,
+      "sha256": "e6bd1ffb7f001d557202fd66925bb993dd282d488814997a49c3022c0fc6efbd"
+    },
+    "source_bridge": {
+      "kind": "regular",
+      "mode": "0o700",
+      "owner_verified": true,
+      "sha256": "15e65b7abd6749d6ea43f17d2c52d675c367a20cd4821fbb05aa136377885097"
+    },
+    "source_c": {
+      "kind": "regular",
+      "mode": "0o600",
+      "owner_verified": true,
+      "sha256": "6ab82e029147712a7f704ac97cb08fddd66a32491cbbd821d8e1fd3cde3260b8"
+    }
+  },
+  "next_boot_execution": "unverified",
+  "observed_at": "2026-10-22T10:09:33.124723+00:00",
+  "recognized_parity_pass": true,
+  "recovery_module_count": 3,
+  "recovery_module_parity_count": 3,
+  "recovery_modules": [
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o600",
+        "owner_verified": true,
+        "sha256": "1e4118766bac840eccad578506f18759db1ab877f29f62d66947f6a4e7d37843"
+      },
+      "installed_role": "continuity.py",
+      "matches": true,
+      "source": "lib/continuity.py",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o600",
+        "owner_verified": true,
+        "sha256": "1e4118766bac840eccad578506f18759db1ab877f29f62d66947f6a4e7d37843"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o600",
+        "owner_verified": true,
+        "sha256": "6e7fdb678966e1ae4fa5f871b2c251dbc66be8710a9f3421118c61f7de56dfe3"
+      },
+      "installed_role": "reboot_recovery.py",
+      "matches": true,
+      "source": "lib/reboot_recovery.py",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o600",
+        "owner_verified": true,
+        "sha256": "6e7fdb678966e1ae4fa5f871b2c251dbc66be8710a9f3421118c61f7de56dfe3"
+      }
+    },
+    {
+      "installed_facts": {
+        "kind": "regular",
+        "mode": "0o600",
+        "owner_verified": true,
+        "sha256": "e012e70aa865344f522970fe36b1be34eaa9f48b9508ffeb21e07d8eba61f48a"
+      },
+      "installed_role": "ssh_diagnostics.py",
+      "matches": true,
+      "source": "lib/ssh_diagnostics.py",
+      "source_facts": {
+        "kind": "regular",
+        "mode": "0o600",
+        "owner_verified": true,
+        "sha256": "e012e70aa865344f522970fe36b1be34eaa9f48b9508ffeb21e07d8eba61f48a"
+      }
+    }
+  ],
+  "remaining": [
+    "Android Termux:Boot enabled state and future cold-boot execution",
+    "Shell/profile hooks and optional app shortcuts",
+    "Runtime configuration and package/driver provenance",
+    "PRoot profile contents and clean/existing guest replay/rollback",
+    "Full source/document/client operation audit"
+  ],
+  "schema_version": 1,
+  "scope": "Allowlisted Native Termux service/boot entrypoints, tx shim, canonical recovery modules, GTK identity and three Runit service states. Read-only; no PRoot process, rootfs or credential file inspected.",
+  "service_state": {
+    "ternuxx-gui-monitor": "running",
+    "ternuxx-sshd": "running",
+    "ternuxx-terminal-broker": "running"
+  },
+  "source_head": "c480c57934a5ab559b4036b63536256028f95197"
+}

@@ -97,6 +97,7 @@ Evidence:
 - [docs/evidence/2026-10-22-web-terminal-replay.md](evidence/2026-10-22-web-terminal-replay.md)
 - [docs/evidence/2026-10-22-gtk-terminal-picker-review.md](evidence/2026-10-22-gtk-terminal-picker-review.md)
 - [docs/evidence/2026-10-22-ssh-gtk-key-controls.md](evidence/2026-10-22-ssh-gtk-key-controls.md)
+- [docs/evidence/2026-10-22-native-installed-parity-1007.json](evidence/2026-10-22-native-installed-parity-1007.json)
 
 ## P5 — Distro and display compatibility profiles
 
