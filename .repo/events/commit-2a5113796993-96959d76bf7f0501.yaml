@@ -1,0 +1,7 @@
+event_id: commit-2a5113796993-96959d76bf7f0501
+repository: soobujmiah/ternuxx
+commit: 2a511379699357e2437d8dd15589d9e8924f8c06
+kind: commit
+occurred_at: '2026-10-22T09:27:56Z'
+status: completed
+summary: 'docs(proot): clarify tx db and legacy entrypoints'
