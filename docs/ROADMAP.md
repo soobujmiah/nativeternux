@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Review and exercise the installed GTK replay-guest dialog, then complete GTK/VTE same-session attach and remaining provider routes without touching the owner's active PRoot.
+**Next action:** Complete GTK/VTE same-session attach and remaining provider routes without touching the owner's active PRoot; keep browser-rendered controls and GTK apply explicitly unqualified until exercised.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

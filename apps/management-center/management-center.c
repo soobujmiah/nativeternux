@@ -4,7 +4,7 @@
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search, *action_scroll;
-                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_terminal_button, *proot_stop_button, *proot_guest_button, *proot_confirm_button, *proot_cancel_button, *monitor_box, *monitor_enabled,
+                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_terminal_button, *proot_stop_button, *proot_guest_button, *replay_guest_actions, *proot_confirm_button, *proot_cancel_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; gchar *proot_pending_action, *proot_pending_session_id, *proot_pending_plan_id; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; guint category_count; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
@@ -502,6 +502,8 @@ static void show_resource(Center *c, Resource *r) {
         gui_actions = "View or change Ternuxx timezone";
     else if (g_strcmp0(r->id, "proot.debian.workloads") == 0)
         gui_actions = "Launch apps · Manage shortcuts · Inspect sessions";
+    else if (g_strcmp0(r->id, "proot.replay-guests") == 0)
+        gui_actions = "Retire or restore an exact, idle Ternuxx replay guest";
     gchar *availability = g_strdup(r->availability && *r->availability ? r->availability : "unknown");
     g_strdelimit(availability, "-_", ' ');
     availability[0] = g_ascii_toupper(availability[0]);
@@ -521,6 +523,8 @@ static void show_resource(Center *c, Resource *r) {
     gboolean proot_apps = g_strcmp0(r->id, "proot.debian.workloads") == 0;
     gboolean replay_guests = g_strcmp0(r->id, "proot.replay-guests") == 0;
     gtk_widget_set_visible(c->proot_guest_button, proot_apps || replay_guests);
+    gtk_widget_set_visible(c->replay_guest_actions, proot_apps || replay_guests);
+    gtk_widget_set_visible(c->action_scroll, !replay_guests);
     gtk_widget_set_visible(c->proot_sessions_button, proot_apps);
     gtk_widget_set_visible(c->proot_recovery_button, proot_apps);
     gtk_widget_set_visible(c->proot_probe_button, proot_apps);
@@ -914,11 +918,14 @@ static void manage_replay_guest(GtkButton *button, gpointer data) {
     (void)button; Center *c=data; GtkWidget *window=gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(window),"Retire or restore a replay guest");
     gtk_window_set_transient_for(GTK_WINDOW(window),GTK_WINDOW(c->window)); gtk_window_set_modal(GTK_WINDOW(window),TRUE);
-    gtk_window_set_default_size(GTK_WINDOW(window),420,260);
+    gtk_window_set_default_size(GTK_WINDOW(window),420,300);
     GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_margin_top(box,14);
     gtk_widget_set_margin_bottom(box,14); gtk_widget_set_margin_start(box,14); gtk_widget_set_margin_end(box,14);
     gtk_window_set_child(GTK_WINDOW(window),box);
-    gtk_box_append(GTK_BOX(box),gtk_label_new("Only a receipt-verified ternuxx-replay-* guest can be changed. Existing Debian is protected. Retirement preserves the exact directory for restore."));
+    GtkWidget *explanation=gtk_label_new("Only a receipt-verified ternuxx-replay-* guest can be changed. Existing Debian is protected. Retirement preserves the exact directory for restore.");
+    gtk_label_set_wrap(GTK_LABEL(explanation),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(explanation),PANGO_WRAP_WORD_CHAR);
+    gtk_label_set_max_width_chars(GTK_LABEL(explanation),46); gtk_widget_set_halign(explanation,GTK_ALIGN_START);
+    gtk_box_append(GTK_BOX(box),explanation);
     const gchar *choices[]={"retire","restore",NULL}; GtkWidget *kind=gtk_drop_down_new_from_strings(choices);
     GtkWidget *alias=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(alias),"Exact alias: ternuxx-replay-NAME");
     GtkWidget *backup=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(backup),"Backup ID (restore only)");
@@ -1314,7 +1321,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->proot_sessions_button=gtk_button_new_with_label("List PRoot sessions"); gtk_widget_set_visible(c->proot_sessions_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_sessions_button);
     c->proot_recovery_button=gtk_button_new_with_label("Inspect PRoot recovery..."); gtk_widget_set_visible(c->proot_recovery_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_recovery_button);
     c->proot_probe_button=gtk_button_new_with_label("Start isolated probe..."); gtk_widget_set_visible(c->proot_probe_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_probe_button); c->proot_terminal_button=gtk_button_new_with_label("Open Debian terminal..."); gtk_widget_set_visible(c->proot_terminal_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_terminal_button);
-    c->proot_stop_button=gtk_button_new_with_label("Stop verified session..."); gtk_widget_set_visible(c->proot_stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_stop_button); c->proot_guest_button=gtk_button_new_with_label("Retire or restore replay guest..."); gtk_widget_set_visible(c->proot_guest_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_guest_button); c->proot_confirm_button=gtk_button_new_with_label("Confirm exact PRoot action"); gtk_widget_set_visible(c->proot_confirm_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_confirm_button); c->proot_cancel_button=gtk_button_new_with_label("Cancel PRoot action"); gtk_widget_set_visible(c->proot_cancel_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_cancel_button); c->action_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(c->action_scroll),actions); gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(c->action_scroll),190); gtk_scrolled_window_set_propagate_natural_height(GTK_SCROLLED_WINDOW(c->action_scroll),TRUE); gtk_widget_set_size_request(c->action_scroll,-1,1); gtk_box_append(GTK_BOX(right),c->action_scroll); gtk_box_append(GTK_BOX(right),detail_scroll);
+    c->proot_stop_button=gtk_button_new_with_label("Stop verified session..."); gtk_widget_set_visible(c->proot_stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_stop_button); c->replay_guest_actions=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->proot_guest_button=gtk_button_new_with_label("Retire or restore replay guest..."); gtk_widget_set_visible(c->proot_guest_button,FALSE); gtk_box_append(GTK_BOX(c->replay_guest_actions),c->proot_guest_button); gtk_widget_set_visible(c->replay_guest_actions,FALSE); c->proot_confirm_button=gtk_button_new_with_label("Confirm exact PRoot action"); gtk_widget_set_visible(c->proot_confirm_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_confirm_button); c->proot_cancel_button=gtk_button_new_with_label("Cancel PRoot action"); gtk_widget_set_visible(c->proot_cancel_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_cancel_button); c->action_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(c->action_scroll),actions); gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(c->action_scroll),190); gtk_scrolled_window_set_propagate_natural_height(GTK_SCROLLED_WINDOW(c->action_scroll),TRUE); gtk_widget_set_size_request(c->action_scroll,-1,1); gtk_box_append(GTK_BOX(right),c->replay_guest_actions); gtk_box_append(GTK_BOX(right),c->action_scroll); gtk_box_append(GTK_BOX(right),detail_scroll);
     c->monitor_box=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->monitor_enabled=gtk_check_button_new_with_label("Enable Activity/focus monitoring"); c->monitor_interval=gtk_spin_button_new_with_range(1,86400,1); const gchar *units[]={"seconds","minutes","hours",NULL}; c->monitor_unit=gtk_drop_down_new_from_strings(units); c->monitor_focus=gtk_check_button_new_with_label("Check Android Activity focus"); c->monitor_launch=gtk_check_button_new_with_label("Request Activity when background"); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_enabled); gtk_box_append(GTK_BOX(c->monitor_box),gtk_label_new("Polling interval")); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_interval); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_unit); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_focus); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_launch); GtkWidget *save=gtk_button_new_with_label("Save monitoring policy"); gtk_box_append(GTK_BOX(c->monitor_box),save); gtk_widget_set_visible(c->monitor_box,FALSE); gtk_box_append(GTK_BOX(right),c->monitor_box);
     gtk_paned_set_end_child(GTK_PANED(middle),right); gtk_paned_set_end_child(GTK_PANED(paned),middle); gtk_paned_set_position(GTK_PANED(paned),165); gtk_paned_set_position(GTK_PANED(middle),190);
     c->notice=gtk_label_new("Loading resource catalog…"); gtk_widget_set_halign(c->notice,GTK_ALIGN_START); gtk_box_append(GTK_BOX(root),c->notice);
