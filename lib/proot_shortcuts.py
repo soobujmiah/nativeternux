@@ -575,9 +575,10 @@ def _sync_state_root(home: str, state_dir: str | None, *, create: bool) -> Path:
             raise ShortcutError("shortcut rollback state contains a symbolic link")
         if cursor.exists():
             info = cursor.lstat()
-            if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()
-                    or stat.S_IMODE(info.st_mode) & 0o077):
-                raise ShortcutError("shortcut rollback state directory is not private and owned")
+            if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+                raise ShortcutError("shortcut rollback state path is not an owned directory")
+            if cursor == root and stat.S_IMODE(info.st_mode) != 0o700:
+                raise ShortcutError("shortcut rollback state directory is not private")
     if create:
         root.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.chmod(root, 0o700)

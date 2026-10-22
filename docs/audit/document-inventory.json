@@ -2491,10 +2491,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-shortcut-sync-rollback.md",
       "kind": "narrative",
-      "sha256": "d14e167e3493a8ead0b469734bb97500852a5bfc14e07b1f27f98bf6d8941979",
+      "sha256": "fe72475a36df4a6e85dceed3486e1bbb8b697c70d3a690a890d3faafe0eb2750",
       "lines": 31,
       "read_status": "read",
-      "read_sha256": "d14e167e3493a8ead0b469734bb97500852a5bfc14e07b1f27f98bf6d8941979"
+      "read_sha256": "fe72475a36df4a6e85dceed3486e1bbb8b697c70d3a690a890d3faafe0eb2750"
     },
     {
       "path": "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",

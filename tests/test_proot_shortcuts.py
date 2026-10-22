@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import stat
 import sys
 import tempfile
 import unittest
@@ -259,6 +260,22 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertIn("PRoot Apps", (config / "menus/xfce-applications.menu").read_text())
         self.assertIn("MergeFile type=\"parent\"", (config / "menus/xfce-applications.menu").read_text())
         self.assertTrue((data / "desktop-directories/ternuxx-proot-apps.directory").is_file())
+
+    def test_sync_rollback_state_allows_shared_ancestors_under_umask_022(self) -> None:
+        import os
+        home = Path(self.temp.name) / "ordinary-home"
+        home.mkdir(mode=0o755)
+        old_mask = os.umask(0o022)
+        try:
+            state = proot_shortcuts._sync_state_root(
+                str(home), str(home / ".local/share/ternuxx"), create=True)
+            self.assertEqual(stat.S_IMODE((home / ".local").stat().st_mode), 0o755)
+            self.assertEqual(stat.S_IMODE((home / ".local/share").stat().st_mode), 0o755)
+            self.assertEqual(stat.S_IMODE(state.stat().st_mode), 0o700)
+            self.assertEqual(proot_shortcuts._sync_state_root(
+                str(home), str(home / ".local/share/ternuxx"), create=False), state)
+        finally:
+            os.umask(old_mask)
 
     def test_bulk_sync_preview_requires_confirmation_and_applies_exact_plan(self) -> None:
         prefix = Path(self.temp.name) / "termux"
