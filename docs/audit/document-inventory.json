@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 371,
-  "read_count": 52,
+  "document_count": 373,
+  "read_count": 55,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -489,12 +489,20 @@
       "read_sha256": "d071d65ea4179a9984d27a493060cdfe6f6c445ff23f1db9b1141b3155a62f28"
     },
     {
+      "path": "docs/audit/PHASE-REVALIDATION.md",
+      "kind": "narrative",
+      "sha256": "da4f3d15e651ec8df4784d7b3a4850c931a478520ccc30d5420771ca6c4f7cee",
+      "lines": 38,
+      "read_status": "read",
+      "read_sha256": "da4f3d15e651ec8df4784d7b3a4850c931a478520ccc30d5420771ca6c4f7cee"
+    },
+    {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "0f0fdbe5778fa16e59ba8bc71236a59ce92b5bad51b00fa504f8f98bb6acc09e",
+      "sha256": "f8b420f290e218e015dcc899e0e95f1ca8d69e3495bfa6d89a4edeb544c5380c",
       "lines": 72,
       "read_status": "read",
-      "read_sha256": "0f0fdbe5778fa16e59ba8bc71236a59ce92b5bad51b00fa504f8f98bb6acc09e"
+      "read_sha256": "f8b420f290e218e015dcc899e0e95f1ca8d69e3495bfa6d89a4edeb544c5380c"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2273,6 +2281,14 @@
       "read_sha256": "05beea580a6144b2ca9166dc14093f9d78dda051ee2e22a20a42610a73c7fdf9"
     },
     {
+      "path": "docs/evidence/2026-10-22-p2-package-revalidation.json",
+      "kind": "structured",
+      "sha256": "6e1aa951b5ede246b92396f18fa1fbfa418582e48ef2f160f2399dfeca0d5c3c",
+      "lines": 15,
+      "read_status": "read",
+      "read_sha256": "6e1aa951b5ede246b92396f18fa1fbfa418582e48ef2f160f2399dfeca0d5c3c"
+    },
+    {
       "path": "docs/evidence/2026-10-22-p3-rb08-postboot-exit-audit.md",
       "kind": "narrative",
       "sha256": "aa846056d0f8868728e6d157809716cc9b407c3386673c5eb9a4e64f503db506",
@@ -2365,8 +2381,8 @@
       "kind": "structured",
       "sha256": "dc598c1b8922305183ac4038d22ce4b0cd8fe791ef1d310643fc326e3f3a4055",
       "lines": 42,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "dc598c1b8922305183ac4038d22ce4b0cd8fe791ef1d310643fc326e3f3a4055"
     },
     {
       "path": "docs/evidence/P2-phase-completion-2026-10-18.md",

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-22T05:47:38.865305+00:00",
+  "runtime": "Native Termux through SSH 8022",
+  "source_transaction": "docs/evidence/P2-termux-xfce-install-transaction-2026-10-18.json",
+  "source_sha256": "8b8ec780d3c5174666d370391ca2c9ca24d9d5bbd590a7fd2caeed5fad8be6d5",
+  "package_count": 77,
+  "exact_installed_matches": 77,
+  "mismatches": [],
+  "package_query_exit": 0,
+  "package_mutation": false,
+  "index_refresh": false,
+  "original_preconsent_preview_recovered": false,
+  "lifecycle_replay": false
+}
