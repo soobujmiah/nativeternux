@@ -270,11 +270,13 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
                 ((stdout_text && *stdout_text) ? stdout_text : "Request completed.");
             set_text(c, message);
         }
-        gtk_label_set_text(GTK_LABEL(c->notice),
-            success && g_strcmp0(request->action,"terminal-session-options")==0
-                ? "Choose a managed terminal or start a new one."
-                : success ? "Shared management service request completed"
-                : ((stderr_text && *stderr_text) ? stderr_text : "Operation failed; inspect the result details."));
+        const gchar *notice = success && g_strcmp0(request->action,"terminal-session-options")==0
+            ? "Choose a managed terminal or start a new one."
+            : success && g_strcmp0(request->action,"proot-session-stop-apply")==0
+            ? "Verified Debian terminal stopped."
+            : success ? "Shared management service request completed"
+            : ((stderr_text && *stderr_text) ? stderr_text : "Operation failed; inspect the result details.");
+        gtk_label_set_text(GTK_LABEL(c->notice), notice);
         gtk_widget_set_sensitive(c->start_button, TRUE); gtk_widget_set_sensitive(c->stop_button, TRUE);
         if (success && (g_strcmp0(request->action,"start-desktop")==0 || g_strcmp0(request->action,"stop-desktop")==0))
             run_bridge(c,"inspect","native.desktop.session",NULL,NULL,NULL,NULL);

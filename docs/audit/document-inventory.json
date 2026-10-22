@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 389,
-  "read_count": 75,
+  "read_count": 76,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "dbe6463aa07dc2004b8ae733f3b43846dc42bd52d686d68a4e35dd6da34b1621",
+      "sha256": "ede6a44ca78b2411de3f66d8560b99a9314c1b8ecf0b0b39b9535697438e1037",
       "lines": 43,
       "read_status": "read",
-      "read_sha256": "dbe6463aa07dc2004b8ae733f3b43846dc42bd52d686d68a4e35dd6da34b1621"
+      "read_sha256": "ede6a44ca78b2411de3f66d8560b99a9314c1b8ecf0b0b39b9535697438e1037"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "a539a0b4bab6df4fb724d5eda5f5e998bc90020baae2c6884bd9da2ccdc28e63",
+      "sha256": "bdecad18a17cc2b30e91e5cbecc73c5b2521aaf2097279f06fbd71eca1f0c5a7",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -107,10 +107,10 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "kind": "narrative",
-      "sha256": "ee4006c74aa08205cd0038913dcb85efafc492d9ca4876b2115cf70ac85f5b46",
+      "sha256": "420be2b5a2fb78ea09492dcc63186f0c52deb234202108dea350e794b77c96ce",
       "lines": 43,
       "read_status": "read",
-      "read_sha256": "ee4006c74aa08205cd0038913dcb85efafc492d9ca4876b2115cf70ac85f5b46"
+      "read_sha256": "420be2b5a2fb78ea09492dcc63186f0c52deb234202108dea350e794b77c96ce"
     },
     {
       "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
@@ -163,7 +163,7 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "6920013797a74b361e862fcf789ebc8201e0f6ca18194289da65d86aa0f94fcd",
+      "sha256": "393defdbb2c25baf009c61b92c7e6e0a09cfe58a0cff7a503a633a6df84e1b41",
       "lines": 156,
       "read_status": "pending",
       "read_sha256": null
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "cf87181e2436580e32b790773f0e638447295b7bb4745490d8288bb7e65cbfc4",
+      "sha256": "30c8f70e68fc0ab698d7244c9cd548a77237567092ac1e124d17f57ed27a6371",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -243,10 +243,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "671b0eddf2bb516c4f06c2f2487387471b7c7d078a76f7789414b006208db5f2",
+      "sha256": "9c4750e4321462d001082d564fb525c7b17ffc1dfc31072d51db4678b2154f7f",
       "lines": 25,
       "read_status": "read",
-      "read_sha256": "671b0eddf2bb516c4f06c2f2487387471b7c7d078a76f7789414b006208db5f2"
+      "read_sha256": "9c4750e4321462d001082d564fb525c7b17ffc1dfc31072d51db4678b2154f7f"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -291,10 +291,10 @@
     {
       "path": "docs/architecture/INTERACTIVE-PROOT-TERMINALS.md",
       "kind": "narrative",
-      "sha256": "2ea75897065a2684442b487b538909475d86bc0acec829872565096b32872977",
+      "sha256": "53634918f544a498666f7ff5c06f16f9177097017a03ce18973a269713472ec8",
       "lines": 49,
       "read_status": "read",
-      "read_sha256": "2ea75897065a2684442b487b538909475d86bc0acec829872565096b32872977"
+      "read_sha256": "53634918f544a498666f7ff5c06f16f9177097017a03ce18973a269713472ec8"
     },
     {
       "path": "docs/architecture/MANAGEMENT-API.md",
@@ -507,10 +507,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "c6f7c5d2432073be9df9c6a6c02af10344b47c81ab67bdabd5e830f69a7fb0e4",
+      "sha256": "3550a7b2654110781835877f9f9606ca7e279d14bbf4d2c394a831fe2adf1b86",
       "lines": 81,
       "read_status": "read",
-      "read_sha256": "c6f7c5d2432073be9df9c6a6c02af10344b47c81ab67bdabd5e830f69a7fb0e4"
+      "read_sha256": "3550a7b2654110781835877f9f9606ca7e279d14bbf4d2c394a831fe2adf1b86"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2227,10 +2227,10 @@
     {
       "path": "docs/evidence/2026-10-22-gtk-terminal-picker-review.md",
       "kind": "narrative",
-      "sha256": "01425b97a29ef2f211aa244a1a2c0d4b87e3b2b6e3c6888351107556a755f55c",
+      "sha256": "9daf2021c1046309e965a13ba5056e51572a0c71ca2eb06bcd344f2de64a7eaa",
       "lines": 13,
       "read_status": "read",
-      "read_sha256": "01425b97a29ef2f211aa244a1a2c0d4b87e3b2b6e3c6888351107556a755f55c"
+      "read_sha256": "9daf2021c1046309e965a13ba5056e51572a0c71ca2eb06bcd344f2de64a7eaa"
     },
     {
       "path": "docs/evidence/2026-10-22-guarded-fresh-replay.md",
@@ -2747,10 +2747,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "53b328c334ac12abcae6edfd85acabe9e203d802d2a9c280e6fd7d3950fe3d1a",
+      "sha256": "f3f36520e4ee3f4fb87b2c110ade34e56149339ef8052c70479d6298418ebc34",
       "lines": 171,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "f3f36520e4ee3f4fb87b2c110ade34e56149339ef8052c70479d6298418ebc34"
     },
     {
       "path": "requirements-dev.txt",

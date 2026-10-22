@@ -39,8 +39,8 @@ Run this from the Native source checkout only after the new guest setup finishes
 
 ## Remaining P4 acceptance
 
-1. Retain the [completed separate setup and broker/CLI evidence](../evidence/2026-10-22-fresh-setup-and-probe-safety.md); rollback/removal, broader config replay and graphics workload acceptance remain open.
-2. Retain completed TUI and Web lifecycle evidence; verify GTK/VTE on that guest and record actual visual/interactive results.
+1. Retain the [completed separate setup and broker/client evidence](../evidence/2026-10-22-fresh-setup-and-probe-safety.md); exact replay-guest retirement/rollback, broader config replay and graphics workload acceptance remain open.
+2. Retain completed CLI, TUI, Web and GTK/VTE lifecycle evidence; verify cross-client continuity and record any remaining interactive gaps.
 3. Recheck cross-client state, attachment ownership and close behavior under failure/concurrency. Opening the terminal dialog is not an I/O pass. [Web replay](../evidence/2026-10-22-web-terminal-replay.md) covers actual Firefox I/O and viewport-to-guest resize.
 4. Keep P4 in progress until the full phase criteria pass; update evidence and the roadmap from observed results.
 

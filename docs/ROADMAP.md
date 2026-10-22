@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Qualify GTK/VTE terminal lifecycle and cross-client continuity on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit.
+**Next action:** Qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and implement shared credential/service-policy controls while continuing the full source/document audit.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

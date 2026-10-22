@@ -45,7 +45,7 @@ FIELD_LABELS: Final[dict[str, str]] = {
     'process_start': 'Process start identity',
     'owner_count': 'Active Wake Lock owners',
     'platform_lock_state': 'Android Wake Lock state',
-    'phase': 'Phase',
+    'phase': 'Phase', 'app_id': 'App',
 }
 
 HIDDEN_FIELDS: Final[frozenset[str]] = frozenset({
@@ -83,7 +83,7 @@ VALUE_LABELS: Final[dict[str, str]] = {
     'available': 'Available',
     'unavailable': 'Unavailable',
     'true': 'Yes',
-    'false': 'No',
+    'false': 'No', 'UTC': 'UTC', 'X11': 'Termux:X11',
 }
 
 STATUS_LABELS: Final[dict[str, str]] = {

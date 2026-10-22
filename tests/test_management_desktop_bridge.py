@@ -122,7 +122,7 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             with redirect_stdout(output):
                 self.assertEqual(bridge.main(["cron-jobs"]), 0)
         dispatch.assert_called_once_with("cron.jobs.list")
-        self.assertIn('"jobs": []', output.getvalue())
+        self.assertIn("Jobs: None", output.getvalue())
 
     def test_cron_preview_and_apply_bridge_use_shared_saved_plan(self) -> None:
         preview_result = {"ok": True, "data": {"plan": {
@@ -151,7 +151,7 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             with redirect_stdout(output):
                 self.assertEqual(bridge.main(["shortcut-list"]), 0)
         dispatch.assert_called_once_with("proot.shortcuts.list")
-        self.assertIn('"shortcut_state": "installed"', output.getvalue())
+        self.assertIn("Shortcut state: Installed", output.getvalue())
 
     def test_proot_session_inventory_and_recovery_bridge_use_read_operations(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"sessions": []}}) as dispatch:
@@ -208,11 +208,18 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                 self.assertEqual(bridge.main(["proot-session-stop-preview", session_id]), 0)
         dispatch.assert_called_once_with("proot.stop.preview", {"session_id": session_id})
         self.assertIn("P\t" + plan_id, output.getvalue())
-        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"stopped": True}}) as dispatch:
-            with redirect_stdout(StringIO()):
+        applied = {"ok": True, "data": {"stopped": True, "state": "stopped",
+                                             "ownership": "verified", "session_id": session_id}}
+        with mock.patch.object(bridge, "call", return_value=applied) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
                 self.assertEqual(bridge.main(["proot-session-stop-apply", session_id, plan_id]), 0)
         dispatch.assert_called_once_with("proot.stop", {"session_id": session_id,
                                                           "confirmed": True, "plan_id": plan_id})
+        self.assertIn("Result: Completed", output.getvalue())
+        self.assertIn("State: Stopped", output.getvalue())
+        self.assertIn("Ownership: Verified", output.getvalue())
+        self.assertNotIn("api_version", output.getvalue())
 
     def test_interactive_terminal_stop_preview_discloses_hangup_scope(self) -> None:
         session_id="proot-"+"d"*32
@@ -245,7 +252,7 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             with redirect_stdout(output):
                 self.assertEqual(bridge.main(["proot-app-launch", "files"]), 0)
         dispatch.assert_called_once_with("proot.app.launch", {"app_id": "files"})
-        self.assertIn("files", output.getvalue())
+        self.assertIn("App: Files", output.getvalue())
 
     def test_named_proot_launch_bridge_rejects_unknown_app_before_dispatch(self) -> None:
         with mock.patch.object(bridge, "call") as dispatch:
@@ -291,7 +298,7 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             with redirect_stdout(output):
                 self.assertEqual(bridge.main(["cron-history"]), 0)
         dispatch.assert_called_once_with("cron.executions.list", {"limit": 20})
-        self.assertIn("executions", output.getvalue())
+        self.assertIn("Executions: None", output.getvalue())
 
     def test_history_bridge_reads_the_shared_recovery_journal(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
@@ -300,7 +307,7 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             with redirect_stdout(output):
                 self.assertEqual(bridge.main(["history"]), 0)
         dispatch.assert_called_once_with("recovery.status")
-        self.assertIn("unresolved_count", output.getvalue())
+        self.assertIn("Items needing attention: 0", output.getvalue())
 
     def test_managed_ssh_preview_is_typed_and_targets_only_8023(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {

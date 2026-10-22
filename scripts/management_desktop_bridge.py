@@ -40,17 +40,17 @@ def main(argv: list[str]) -> int:
     action = argv[0]
     if action == "graphics-select" and len(argv) == 2 and argv[1] in {"kgsl-freedreno", "system"}:
         result = call("graphics.provider.select", {"provider": "native", "backend": argv[1], "confirmed": True})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "graphics-verify" and len(argv) == 3:
         provider, api = argv[1], argv[2]
         result = call("graphics.provider.verify", {"provider": provider, "api": api, "display": ":1"})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "catalog" and len(argv) == 1:
         result = call("management.catalog")
         if not result.get("ok"):
-            print(json.dumps(result, ensure_ascii=False))
+            print(management_presentation.format_report(result))
             return 1
         data = result["data"]
         categories = data["categories"]
@@ -131,7 +131,7 @@ def main(argv: list[str]) -> int:
             return 2
         preview = call("cron.jobs.mutation.preview", args)
         if not preview.get("ok"):
-            print(json.dumps(preview, ensure_ascii=False))
+            print(management_presentation.format_report(preview))
             return 1
         plan = preview.get("data", {}).get("plan", {})
         if not isinstance(plan.get("plan_id"), str):
@@ -145,24 +145,24 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"ok": False, "error": {"code": "invalid_plan_id"}}))
             return 2
         result = call("cron.jobs.mutation.apply", {"plan_id": plan_id, "confirmed": True})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "cron-jobs" and len(argv) == 1:
         result = call("cron.jobs.list")
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "shortcut-list" and len(argv) == 1:
         result = call("proot.shortcuts.list")
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "proot-session-list" and len(argv) == 1:
         result = call("proot.sessions.list")
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "terminal-session-options" and len(argv) == 1:
         result = call("proot.sessions.list")
         if not result.get("ok"):
-            print(json.dumps(result, ensure_ascii=False))
+            print(management_presentation.format_report(result))
             return 1
         sessions = result.get("data", {}).get("sessions", [])
         if not isinstance(sessions, list):
@@ -185,12 +185,12 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"ok": False, "error": {"code": "invalid_session_id"}}))
             return 2
         result = call("proot.recovery.inspect", {"session_id": argv[1]})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "proot-probe-preview" and len(argv) == 1:
         result = call("proot.start.preview", {"profile": "isolated-probe"})
         if not result.get("ok"):
-            print(json.dumps(result, ensure_ascii=False))
+            print(management_presentation.format_report(result))
             return 1
         data = result.get("data", {})
         plan_id = data.get("plan_id") if isinstance(data, dict) else None
@@ -206,7 +206,7 @@ def main(argv: list[str]) -> int:
             return 2
         result = call("proot.start", {"profile": "isolated-probe", "confirmed": True,
                                       "plan_id": argv[1], "timeout_seconds": 300})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "proot-session-stop-preview" and len(argv) == 2:
         session_id = argv[1]
@@ -215,7 +215,7 @@ def main(argv: list[str]) -> int:
             return 2
         result = call("proot.stop.preview", {"session_id": session_id})
         if not result.get("ok"):
-            print(json.dumps(result, ensure_ascii=False))
+            print(management_presentation.format_report(result))
             return 1
         data = result.get("data", {})
         allowed_contracts = {
@@ -243,7 +243,7 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"ok": False, "error": {"code": "invalid_session_plan"}}))
             return 2
         result = call("proot.stop", {"session_id": session_id, "confirmed": True, "plan_id": plan_id})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "proot-app-launch" and len(argv) == 2:
         import proot_shortcuts
@@ -251,7 +251,7 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"ok": False, "error": {"code": "unknown_proot_app"}}))
             return 2
         result = call("proot.app.launch", {"app_id": argv[1]})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "shortcut-preview" and len(argv) == 3:
         import proot_shortcuts
@@ -261,7 +261,7 @@ def main(argv: list[str]) -> int:
             return 2
         result = call("proot.shortcuts.preview", {"action": shortcut_action, "app_id": app_id})
         if not result.get("ok"):
-            print(json.dumps(result, ensure_ascii=False))
+            print(management_presentation.format_report(result))
             return 1
         data = result.get("data", {})
         changed = str(bool(data.get("changed"))).lower()
@@ -281,15 +281,15 @@ def main(argv: list[str]) -> int:
         result = call("proot.shortcuts.apply", {
             "action": shortcut_action, "app_id": app_id, "confirmed": True, "plan_id": plan_id,
         })
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "timezone-set" and len(argv) == 2:
         result = call("timezone.set", {"timezone": argv[1]})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "cron-history" and len(argv) == 1:
         result = call("cron.executions.list", {"limit": 20})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "logs-read" and len(argv) == 2:
         source_id = argv[1]
@@ -297,17 +297,17 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"ok": False, "error": {"code": "invalid_log_source"}}))
             return 2
         result = call("management.logs.read", {"source_id": source_id, "limit": 100})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "history" and len(argv) == 1:
         result = call("recovery.status")
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action in {"ssh-preview-start", "ssh-preview-stop"} and len(argv) == 1:
         operation = "ssh.service.start" if action.endswith("start") else "ssh.service.stop"
         result = call(operation, {"confirmed": False, "plan_id": None})
         if not result.get("ok"):
-            print(json.dumps(result, ensure_ascii=False))
+            print(management_presentation.format_report(result))
             return 1
         data = result.get("data", {})
         fields = ("P", clean(data.get("plan_id")) or "-",
@@ -322,16 +322,16 @@ def main(argv: list[str]) -> int:
             return 2
         operation = "ssh.service.start" if action.endswith("start") else "ssh.service.stop"
         result = call(operation, {"confirmed": True, "plan_id": plan_id})
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action in {"start-desktop", "stop-desktop"} and len(argv) == 2 and argv[1] == "confirmed":
         result = call("desktop.start" if action == "start-desktop" else "desktop.stop")
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "monitor" and len(argv) == 1:
         result = call("desktop.monitor.status")
         if not result.get("ok"):
-            print(json.dumps(result, ensure_ascii=False, indent=2))
+            print(management_presentation.format_report(result))
             return 1
         data = result["data"]
         print("M\t" + "\t".join(clean(data.get(k)) for k in (
@@ -347,7 +347,7 @@ def main(argv: list[str]) -> int:
             "enabled": enabled == "true", "interval_value": int(interval), "unit": unit,
             "focus_check": focus == "true", "activity_launch": launch == "true",
         })
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     print("Unsupported typed management action.", file=sys.stderr)
     return 2

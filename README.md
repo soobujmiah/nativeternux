@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Separate pinned guest setup and production broker plus actual CLI, TUI and Web terminal lifecycles passed with scoped preservation; GTK and remaining P4 acceptance stay open.
+Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles passed with scoped preservation; cross-client continuity, fresh-guest retirement/rollback and remaining P4 acceptance stay open.
 
-**Next action:** Qualify GTK/VTE terminal lifecycle and cross-client continuity on the separate guest; complete rollback/config parity, exact probe plans and shared credential/service-policy controls while continuing the full source/document audit.
+**Next action:** Qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and implement shared credential/service-policy controls while continuing the full source/document audit.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
