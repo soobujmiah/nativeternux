@@ -217,6 +217,7 @@ class LaunchCommandTests(unittest.TestCase):
             "<status>", "<--display>", "<:1>", "<--json>",
             "<" + str(ROOT / "lib/virgl_lifecycle.py") + ">",
             "<status>", "<--display>", "<:2>", "<--json>",
+            "<" + str(ROOT / "lib/virgl_lifecycle.py") + ">",
             "<status>", "<--display>", "<:1>", "<--json>",
         ])
 
