@@ -471,7 +471,7 @@ def main(argv: list[str]) -> int:
         result = call("proot.stop", {"session_id": session_id, "confirmed": True, "plan_id": plan_id})
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
-    if action == "proot-app-options" and len(argv) == 1:
+    if action in {"proot-app-options", "proot-shortcut-options"} and len(argv) == 1:
         import proot_shortcuts
         result = call("proot.shortcuts.list")
         if not result.get("ok"):
@@ -503,11 +503,22 @@ def main(argv: list[str]) -> int:
         return 0 if result.get("ok") else 1
     if action == "shortcut-preview" and len(argv) == 3:
         import proot_shortcuts
-        shortcut_action, app_id = argv[1:]
-        if shortcut_action not in {"add", "remove"} or app_id not in proot_shortcuts.CATALOG:
+        shortcut_action, selected = argv[1:]
+        if shortcut_action not in {"add", "remove"}:
             print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
             return 2
-        result = call("proot.shortcuts.preview", {"action": shortcut_action, "app_id": app_id})
+        if selected.startswith("desktop:"):
+            desktop_id = selected[8:]
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id):
+                print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
+                return 2
+            shortcut_args = {"action": shortcut_action, "desktop_id": desktop_id}
+        elif selected in proot_shortcuts.CATALOG:
+            shortcut_args = {"action": shortcut_action, "app_id": selected}
+        else:
+            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
+            return 2
+        result = call("proot.shortcuts.preview", shortcut_args)
         if not result.get("ok"):
             print(management_presentation.format_report(result))
             return 1
@@ -521,13 +532,23 @@ def main(argv: list[str]) -> int:
         return 0
     if action == "shortcut-apply" and len(argv) == 4:
         import proot_shortcuts
-        shortcut_action, app_id, plan_id = argv[1:]
-        if (shortcut_action not in {"add", "remove"} or app_id not in proot_shortcuts.CATALOG
-                or not re.fullmatch(r"[0-9a-f]{24}", plan_id)):
+        shortcut_action, selected, plan_id = argv[1:]
+        if shortcut_action not in {"add", "remove"} or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
+            return 2
+        if selected.startswith("desktop:"):
+            desktop_id = selected[8:]
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id):
+                print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
+                return 2
+            target_args = {"desktop_id": desktop_id}
+        elif selected in proot_shortcuts.CATALOG:
+            target_args = {"app_id": selected}
+        else:
             print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
             return 2
         result = call("proot.shortcuts.apply", {
-            "action": shortcut_action, "app_id": app_id, "confirmed": True, "plan_id": plan_id,
+            "action": shortcut_action, **target_args, "confirmed": True, "plan_id": plan_id,
         })
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1

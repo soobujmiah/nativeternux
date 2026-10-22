@@ -1018,6 +1018,7 @@ def list_shortcuts(*, home: str, prefix: str, xdg_data_home: str | None = None,
                 raw = _file_bytes(target)
             except ShortcutError:
                 item["shortcut_state"] = "conflict"
+                item["shortcut_owner"] = "unknown"
                 item["shortcut_diagnostic"] = "A symbolic link or non-file occupies this shortcut name."
                 continue
             expected = _dynamic_entry(item["desktop_id"], item, cli=cli)
@@ -1032,32 +1033,71 @@ def list_shortcuts(*, home: str, prefix: str, xdg_data_home: str | None = None,
             "desktop_applications": dynamic, "read_only": True}
 
 
-def preview(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
-            xdg_data_home: str | None = None, path: str = "") -> dict[str, Any]:
-    if action not in {"add", "remove"} or app_id not in CATALOG:
-        raise ShortcutError("shortcut action or ID is unsupported")
+def _dynamic_shortcut_details(desktop_id: str, *, home: str, prefix: str,
+                              repo_root: str, xdg_data_home: str | None,
+                              allow_unavailable: bool = False) -> tuple[Path, Path, dict[str, Any], bytes]:
+    if not isinstance(desktop_id, str) or not _DESKTOP_ID.fullmatch(desktop_id):
+        raise ShortcutError("invalid Debian desktop application ID")
+    inventory = inspect_desktop_apps(prefix=prefix)
+    allowed_states = {"available", "unavailable"} if allow_unavailable else {"available"}
+    item = next((row for row in inventory.get("items", [])
+                 if row.get("desktop_id") == desktop_id and row.get("status") in allowed_states), None)
+    if item is None:
+        raise ShortcutError("Debian desktop application is no longer available")
     home_path, app_dir = _paths(home, xdg_data_home)
-    target = _target(app_dir, app_id)
-    existing = _file_bytes(target)
-    desired = _entry(app_id, repo_root=repo_root)
-    managed = _managed(existing, app_id, prefix=prefix, repo_root=repo_root)
+    target = app_dir / ("ternuxx-proot-app-" + desktop_id)
+    cli = str(Path(prefix) / "bin" / "tx")
+    if not (Path(cli).is_file() and os.access(cli, os.X_OK)):
+        cli = str(Path(repo_root) / "tx")
+    return home_path, target, item, _dynamic_entry(desktop_id, item, cli=cli)
+
+
+def preview(action: str, app_id: str | None = None, *, home: str, prefix: str, repo_root: str,
+            xdg_data_home: str | None = None, path: str = "",
+            desktop_id: str | None = None) -> dict[str, Any]:
+    if (action not in {"add", "remove"}
+            or (app_id is None) == (desktop_id is None)
+            or (app_id is not None and not isinstance(app_id, str))):
+        raise ShortcutError("shortcut action and exactly one app ID are required")
+    dynamic = desktop_id is not None
+    if dynamic:
+        home_path, target, item, desired = _dynamic_shortcut_details(
+            desktop_id, home=home, prefix=prefix, repo_root=repo_root,
+            xdg_data_home=xdg_data_home, allow_unavailable=(action == "remove"))
+        app_id = desktop_id
+        existing = _file_bytes(target)
+        managed = existing == desired
+        # Never replace or remove a user-edited/unowned desktop file.
+        if existing is not None and not managed:
+            raise ShortcutError("the existing launcher is modified or not Ternuxx-owned; it was preserved")
+    else:
+        if app_id not in CATALOG:
+            raise ShortcutError("shortcut action or ID is unsupported")
+        home_path, app_dir = _paths(home, xdg_data_home)
+        target = _target(app_dir, app_id)
+        existing = _file_bytes(target)
+        desired = _entry(app_id, repo_root=repo_root)
+        managed = _managed(existing, app_id, prefix=prefix, repo_root=repo_root)
     if existing is not None and action == "add" and existing != desired and not managed:
         raise ShortcutError("a non-Ternuxx launcher already uses this shortcut ID; it was preserved")
     if existing is not None and action == "remove" and not managed:
         raise ShortcutError("the target is not a Ternuxx-managed launcher; it was preserved")
-    if action == "add" and existing is None and not _available(
+    if action == "add" and existing is None and not dynamic and not _available(
         app_id, prefix=prefix, home=str(home_path), path=path, repo_root=repo_root,
     ):
         raise ShortcutError("the PRoot application or launcher manager is unavailable")
     changed = (action == "add" and existing != desired) or (action == "remove" and existing is not None)
     before = hashlib.sha256(existing).hexdigest() if existing is not None else "absent"
-    plan = {"provider": "proot_debian", "action": action, "app_id": app_id,
+    plan = {"provider": "proot_debian", "action": action,
+            ("desktop_id" if dynamic else "app_id"): app_id,
             "target": str(target.relative_to(home_path)), "before": before,
             "after": hashlib.sha256(desired).hexdigest() if action == "add" else "absent"}
     canonical_plan = json.dumps(plan, sort_keys=True, separators=(",", ":")).encode()
     plan_id = hashlib.sha256(canonical_plan).hexdigest()[:24]
     return {"resource_id": f"proot.x11.shortcut.{app_id}", "provider": "proot_debian",
-            "storage_provider": "native_termux", "action": action, "app_id": app_id,
+            "storage_provider": "native_termux", "action": action,
+            ("desktop_id" if dynamic else "app_id"): app_id,
+            "name": item["name"] if dynamic else CATALOG[app_id]["name"],
             "changed": changed, "requires_confirmation": changed, "plan_id": plan_id,
             "affected_resources": [{"provider": "native_termux", "path": str(target.relative_to(home_path)),
                                      "before": "absent" if existing is None else "present",
@@ -1065,11 +1105,12 @@ def preview(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
             "safety": {"read_only": True, "running_apps_stopped": False}}
 
 
-def apply(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
+def apply(action: str, app_id: str | None = None, *, home: str, prefix: str, repo_root: str,
           confirmed: bool, plan_id: str | None, xdg_data_home: str | None = None,
-          path: str = "", state_dir: str | None = None) -> dict[str, Any]:
+          path: str = "", state_dir: str | None = None,
+          desktop_id: str | None = None) -> dict[str, Any]:
     initial = preview(action, app_id, home=home, prefix=prefix, repo_root=repo_root,
-                      xdg_data_home=xdg_data_home, path=path)
+                      xdg_data_home=xdg_data_home, path=path, desktop_id=desktop_id)
     if not initial["changed"]:
         return {**initial, "status": "already_in_requested_state"}
     if not confirmed or not isinstance(plan_id, str):
@@ -1082,18 +1123,24 @@ def apply(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
     lock_fd = _sync_lock(state)
     try:
         current = preview(action, app_id, home=home, prefix=prefix, repo_root=repo_root,
-                          xdg_data_home=xdg_data_home, path=path)
+                          xdg_data_home=xdg_data_home, path=path, desktop_id=desktop_id)
         if not current["changed"]:
             return {**current, "status": "already_in_requested_state"}
         if plan_id != current["plan_id"]:
             raise ShortcutError("shortcut state changed or plan ID does not match the current preview")
         _, app_dir = _paths(home, xdg_data_home)
-        target = _target(app_dir, app_id)
+        if desktop_id is not None:
+            _, target, _item, dynamic_payload = _dynamic_shortcut_details(
+                desktop_id, home=home, prefix=prefix, repo_root=repo_root,
+                xdg_data_home=xdg_data_home, allow_unavailable=(action == "remove"))
+            payload = dynamic_payload
+        else:
+            target = _target(app_dir, app_id)
+            payload = _entry(app_id, repo_root=repo_root)
         app_dir.mkdir(parents=True, exist_ok=True)
         if action == "remove":
             target.unlink()
         else:
-            payload = _entry(app_id, repo_root=repo_root)
             fd, temporary = tempfile.mkstemp(prefix=".ternuxx-shortcut-", dir=app_dir)
             try:
                 with os.fdopen(fd, "wb") as stream:

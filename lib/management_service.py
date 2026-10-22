@@ -118,8 +118,8 @@ OPERATIONS = {
     "proot.shortcuts.sync.rollback.preview": {"args": {"rollback_id"}},
     "proot.shortcuts.sync.rollback.apply": {"args": {"rollback_id", "confirmed", "plan_id"}},
     "proot.shortcuts.list": {"args": set()},
-    "proot.shortcuts.preview": {"args": {"action", "app_id"}},
-    "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
+    "proot.shortcuts.preview": {"args": {"action", "app_id", "desktop_id"}},
+    "proot.shortcuts.apply": {"args": {"action", "app_id", "desktop_id", "confirmed", "plan_id"}},
     "proot.guest.verify": {"args": {"distro", "user", "user_source", "display", "backend"}},
     "proot.setup.retire.preview": {"args": {"alias"}},
     "proot.setup.retire.apply": {"args": {"alias", "confirmed", "plan_id"}},
@@ -616,10 +616,14 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         elif operation in {"proot.shortcuts.preview", "proot.shortcuts.apply"}:
             action = args.get("action")
             app_id = args.get("app_id")
-            if not isinstance(action, str) or not isinstance(app_id, str):
-                return _error(request_id, "invalid_arguments", "shortcut action and app ID are required")
+            desktop_id = args.get("desktop_id")
+            if (not isinstance(action, str)
+                    or (isinstance(app_id, str) == isinstance(desktop_id, str))):
+                return _error(request_id, "invalid_arguments",
+                              "shortcut action and exactly one app ID or desktop ID are required")
             shortcut_args = {
-                "action": action, "app_id": app_id, "home": home,
+                "action": action, "app_id": app_id, "desktop_id": desktop_id,
+                "home": home,
                 "prefix": process_env["PREFIX"],
                 "repo_root": os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                 "xdg_data_home": process_env.get("XDG_DATA_HOME"),
@@ -1647,8 +1651,8 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         payload = {}
     elif args.operation in {"proot.shortcuts.preview", "proot.shortcuts.apply"}:
-        if not args.shortcut_action or not args.app_id:
-            response = _error(request_id, "invalid_arguments", "--shortcut-action and --app-id are required")
+        if not args.shortcut_action or (bool(args.app_id) == bool(args.desktop_id)):
+            response = _error(request_id, "invalid_arguments", "--shortcut-action and exactly one of --app-id or --desktop-id are required")
             if args.json:
                 print(json.dumps(response, sort_keys=True))
             else:
@@ -1662,7 +1666,8 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     print("Ternuxx operation failed [invalid_arguments]: shortcut preview does not accept apply flags", file=sys.stderr)
                 return 1
-            payload = {"action": args.shortcut_action, "app_id": args.app_id}
+            payload = {"action": args.shortcut_action}
+            payload["app_id" if args.app_id else "desktop_id"] = args.app_id or args.desktop_id
         else:
             if not args.yes or not args.plan_id:
                 response = _error(request_id, "invalid_arguments", "shortcut apply requires --yes and --plan-id from its exact preview")
@@ -1671,7 +1676,8 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     print("Ternuxx operation failed [invalid_arguments]: shortcut apply requires --yes and --plan-id", file=sys.stderr)
                 return 1
-            payload = {"action": args.shortcut_action, "app_id": args.app_id,
+            payload = {"action": args.shortcut_action,
+                       "app_id" if args.app_id else "desktop_id": args.app_id or args.desktop_id,
                        "confirmed": True, "plan_id": args.plan_id}
     elif args.operation in {"ssh.inspect", "ssh.keys.list", "ssh.keys.rollback.list"}:
         payload = {}

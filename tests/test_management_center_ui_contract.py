@@ -40,18 +40,18 @@ class ManagementCenterReplayGuestUiTests(unittest.TestCase):
 
     def test_proot_app_launcher_uses_friendly_selection_not_raw_ids(self):
         self.assertIn('run_bridge(data, "proot-app-options"', SOURCE)
-        self.assertIn('show_proot_app_options(c, stdout_text);', SOURCE)
+        self.assertIn('show_proot_app_options(c, stdout_text,', SOURCE)
         self.assertIn('gtk_drop_down_new(G_LIST_MODEL(model), NULL)', SOURCE)
         self.assertIn('g_object_get_data(G_OBJECT(window), "proot-app-ids")', SOURCE)
         self.assertIn('" (Debian)"', SOURCE)
         self.assertNotIn('"App ID, for example files"', SOURCE)
 
-    def test_proot_shortcut_manager_uses_friendly_catalog_selections(self):
-        self.assertIn('gtk_drop_down_new_from_strings(proot_shortcut_labels)', SOURCE)
-        self.assertIn('gtk_drop_down_new_from_strings(actions)', SOURCE)
-        self.assertIn('"PRoot Terminal", "PRoot Files", "PRoot Firefox"', SOURCE)
-        self.assertIn('proot_shortcut_ids[app_index]', SOURCE)
-        self.assertNotIn('Catalog app ID, for example files', SOURCE)
+    def test_proot_shortcut_manager_uses_live_named_catalog_and_exact_preview(self):
+        self.assertIn('run_bridge(data, "proot-shortcut-options"', SOURCE)
+        self.assertIn('g_strcmp0(request->action, "proot-shortcut-options") == 0', SOURCE)
+        self.assertIn('shortcut_mode ? "Preview shortcut change" : "Launch app"', SOURCE)
+        self.assertIn('run_bridge(c, "shortcut-preview", actions[action_index], target', SOURCE)
+        self.assertIn('shortcut for the selected Debian app?', SOURCE)
         self.assertNotIn('Action: add or remove', SOURCE)
 
     def test_shortcut_sync_rollback_has_a_visible_shared_service_action(self):

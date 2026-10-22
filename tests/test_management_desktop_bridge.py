@@ -414,6 +414,30 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_not_called()
         self.assertIn("unknown_proot_app", output.getvalue())
 
+    def test_dynamic_shortcut_preview_bridge_uses_desktop_id(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
+                "plan_id": "b" * 24, "changed": True, "name": "Firefox",
+                "affected_resources": [{"path": "applications/firefox.desktop",
+                                        "before": "absent", "after": "present"}]}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main([
+                    "shortcut-preview", "add", "desktop:firefox.desktop"]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.preview", {
+            "action": "add", "desktop_id": "firefox.desktop"})
+        self.assertIn("P\t" + "b" * 24, output.getvalue())
+
+    def test_dynamic_shortcut_apply_bridge_uses_desktop_id_and_saved_plan(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"status": "complete"}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main([
+                    "shortcut-apply", "add", "desktop:firefox.desktop", "a" * 24]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.apply", {
+            "action": "add", "desktop_id": "firefox.desktop",
+            "confirmed": True, "plan_id": "a" * 24,
+        })
+
     def test_proot_shortcut_preview_emits_exact_review_fields(self) -> None:
         payload = {"ok": True, "data": {"plan_id": "a" * 24, "changed": True,
             "affected_resources": [{"path": "xfce/data/applications/files.desktop",

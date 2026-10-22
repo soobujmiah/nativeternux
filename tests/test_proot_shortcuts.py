@@ -92,6 +92,79 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertNotIn(str(self.repo / "ternuxx"), text)
         self.assertNotIn('proot-x11-app.sh', text)
 
+    def test_dynamic_shortcut_add_remove_uses_exact_preview_and_managed_file(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        rootfs = prefix / "var/lib/proot-distro/containers/debian/rootfs"
+        app_dir = rootfs / "usr/share/applications"
+        app_dir.mkdir(parents=True)
+        self.make_guest_executable(prefix)
+        (app_dir / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor %f\n"
+        )
+        data = self.home / "xfce-data"
+        kwargs = {"home": str(self.home), "prefix": str(prefix), "repo_root": str(self.repo),
+                  "xdg_data_home": str(data)}
+        plan = proot_shortcuts.preview("add", desktop_id="org.example.Editor.desktop", **kwargs)
+        self.assertEqual(plan["name"], "Editor")
+        self.assertTrue(plan["requires_confirmation"])
+        applied = proot_shortcuts.apply("add", desktop_id="org.example.Editor.desktop",
+            confirmed=True, plan_id=plan["plan_id"], state_dir=str(self.home / ".local/share/ternuxx"), **kwargs)
+        self.assertEqual(applied["status"], "complete")
+        target = data / "applications/ternuxx-proot-app-org.example.Editor.desktop"
+        self.assertIn("X-Ternuxx-Generated=proot-app-v2", target.read_text())
+        inventory = proot_shortcuts.list_shortcuts(home=str(self.home), prefix=str(prefix),
+                                                    xdg_data_home=str(data), repo_root=str(self.repo))
+        item = next(row for row in inventory["desktop_applications"]["items"]
+                    if row["desktop_id"] == "org.example.Editor.desktop")
+        self.assertEqual(item["shortcut_state"], "installed")
+        remove = proot_shortcuts.preview("remove", desktop_id="org.example.Editor.desktop", **kwargs)
+        removed = proot_shortcuts.apply("remove", desktop_id="org.example.Editor.desktop",
+            confirmed=True, plan_id=remove["plan_id"], state_dir=str(self.home / ".local/share/ternuxx"), **kwargs)
+        self.assertEqual(removed["status"], "complete")
+        self.assertFalse(target.exists())
+
+    def test_dynamic_shortcut_can_remove_owned_launcher_when_app_command_is_unavailable(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        rootfs = prefix / "var/lib/proot-distro/containers/debian/rootfs"
+        app_dir = rootfs / "usr/share/applications"
+        app_dir.mkdir(parents=True)
+        executable = self.make_guest_executable(prefix)
+        (app_dir / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor\n"
+        )
+        data = self.home / "xfce-data"
+        kwargs = {"home": str(self.home), "prefix": str(prefix), "repo_root": str(self.repo),
+                  "xdg_data_home": str(data)}
+        added = proot_shortcuts.preview("add", desktop_id="org.example.Editor.desktop", **kwargs)
+        proot_shortcuts.apply("add", desktop_id="org.example.Editor.desktop", confirmed=True,
+            plan_id=added["plan_id"], state_dir=str(self.home / ".local/share/ternuxx"), **kwargs)
+        executable.chmod(0o644)
+        with self.assertRaisesRegex(proot_shortcuts.ShortcutError, "no longer available"):
+            proot_shortcuts.preview("add", desktop_id="org.example.Editor.desktop", **kwargs)
+        removal = proot_shortcuts.preview("remove", desktop_id="org.example.Editor.desktop", **kwargs)
+        result = proot_shortcuts.apply("remove", desktop_id="org.example.Editor.desktop", confirmed=True,
+            plan_id=removal["plan_id"], state_dir=str(self.home / ".local/share/ternuxx"), **kwargs)
+        self.assertEqual(result["status"], "complete")
+        self.assertFalse((data / "applications/ternuxx-proot-app-org.example.Editor.desktop").exists())
+
+    def test_dynamic_shortcut_preserves_modified_generated_launcher(self) -> None:
+        prefix = Path(self.temp.name) / "termux"
+        rootfs = prefix / "var/lib/proot-distro/containers/debian/rootfs"
+        app_dir = rootfs / "usr/share/applications"
+        app_dir.mkdir(parents=True)
+        self.make_guest_executable(prefix)
+        (app_dir / "org.example.Editor.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Editor\nExec=/usr/bin/editor\n"
+        )
+        data = self.home / "xfce-data"
+        target = data / "applications/ternuxx-proot-app-org.example.Editor.desktop"
+        target.parent.mkdir(parents=True)
+        target.write_text("[Desktop Entry]\nName=User edit\n")
+        with self.assertRaisesRegex(proot_shortcuts.ShortcutError, "modified or not Ternuxx-owned"):
+            proot_shortcuts.preview("remove", desktop_id="org.example.Editor.desktop",
+                home=str(self.home), prefix=str(prefix), repo_root=str(self.repo), xdg_data_home=str(data))
+        self.assertEqual(target.read_text(), "[Desktop Entry]\nName=User edit\n")
+
     def test_individual_shortcut_apply_waits_for_shared_sync_lock(self) -> None:
         with patch.object(proot_shortcuts, "_available", return_value=True):
             plan = self.preview()

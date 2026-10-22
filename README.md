@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Persistent terminal broker and Web/TUI/GTK dynamic Debian app launch selection are installed and regression-tested. GTK source/install identity matches. GTK per-app shortcut CRUD remains fixed-catalog only; VirGL cleanup, broken-rootfs/cold-boot qualification, runtime reconciliation, human UI interaction, and the full requirement audit remain open.
+Dynamic Debian per-app shortcut add/remove now flows through exact-preview typed shared operations in CLI/TUI/Web/GTK. The service verifies current desktop-entry ownership and executable availability, allows safe removal of unchanged Ternuxx launchers when apps become unavailable, shares the bulk mutation lock, and preserves modified or unowned targets. GTK source/install identity matches; schema documents the inventory and dual target contract.
 
-**Next action:** Complete dynamic per-app shortcut CRUD with preview/apply/rollback parity across clients; qualify safe VirGL cleanup and broken-rootfs/cold boot on an isolated guest; reconcile installed/source/runtime state; complete requirement-by-requirement audit and human-operated GTK review.
+**Next action:** Finish safe VirGL client visibility and cleanup; qualify broken-rootfs recovery and cold boot on an isolated guest; reconcile source/install/runtime state; complete requirement-by-requirement full audit and human-operated GTK interaction review.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

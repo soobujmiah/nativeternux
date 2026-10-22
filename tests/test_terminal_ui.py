@@ -162,6 +162,27 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             }),
         ])
 
+    def test_dynamic_proot_shortcut_uses_named_preview_and_confirmed_desktop_id(self) -> None:
+        inventory = {"ok": True, "data": {"items": [], "desktop_applications": {"items": [
+            {"desktop_id": "org.example.Editor.desktop", "name": "Editor",
+             "status": "available", "shortcut_state": "absent"}]}}}
+        preview = {"ok": True, "data": {"plan_id": "d" * 24, "changed": True,
+            "name": "Editor", "affected_resources": [{"path": "applications/editor.desktop",
+            "before": "absent", "after": "present"}]}}
+        applied = {"ok": True, "data": {"status": "complete"}}
+        with mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
+             mock.patch.object(terminal_ui, "_choose", side_effect=["add", "desktop:org.example.Editor.desktop"]), \
+             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
+            result = terminal_ui._manage_proot_shortcut(mock.Mock())
+        self.assertIs(result, applied)
+        call.assert_has_calls([
+            mock.call("proot.shortcuts.preview", {
+                "action": "add", "desktop_id": "org.example.Editor.desktop"}),
+            mock.call("proot.shortcuts.apply", {
+                "action": "add", "desktop_id": "org.example.Editor.desktop",
+                "confirmed": True, "plan_id": "d" * 24}),
+        ])
+
     def test_proot_shortcut_rollback_previews_and_applies_exact_plan(self) -> None:
         rollback_id = "c" * 32
         inventory = {"ok": True, "data": {"rollbacks": [{"rollback_id": rollback_id,

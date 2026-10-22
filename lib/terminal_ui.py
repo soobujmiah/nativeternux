@@ -140,13 +140,21 @@ def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
     items = data.get("items", []) if isinstance(data, dict) else []
     options = [(item["id"], f"{item.get('name', item['id'])} · {item.get('shortcut_state', 'unknown')}")
                for item in items if isinstance(item, dict) and item.get("id") in proot_shortcuts.CATALOG]
+    dynamic = data.get("desktop_applications", {}) if isinstance(data, dict) else {}
+    for item in dynamic.get("items", []) if isinstance(dynamic, dict) else []:
+        if item.get("status") == "available" and isinstance(item.get("desktop_id"), str):
+            options.append(("desktop:" + item["desktop_id"],
+                            f"{item.get('name', item['desktop_id'])} · {item.get('shortcut_state', 'unknown')} · Debian app"))
     action = _choose(screen, "Shortcut action", [("add", "Add shortcut"), ("remove", "Remove owned shortcut")])
     if action not in {"add", "remove"}:
         return {"ok": False, "error": {"code": "cancelled"}}
     app_id = _choose(screen, "Choose a named PRoot app shortcut", options)
-    if app_id not in proot_shortcuts.CATALOG:
-        return {"ok": False, "error": {"code": "cancelled" if not app_id else "unknown_proot_app"}}
-    preview = _call("proot.shortcuts.preview", {"action": action, "app_id": app_id})
+    if not app_id:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    dynamic_app = app_id.startswith("desktop:")
+    target_args = {"desktop_id": app_id[8:]} if dynamic_app else {"app_id": app_id}
+    app_name = next((label.split(" · ", 1)[0] for value, label in options if value == app_id), app_id)
+    preview = _call("proot.shortcuts.preview", {"action": action, **target_args})
     if not preview.get("ok"):
         return preview
     plan = preview.get("data", {})
@@ -161,11 +169,11 @@ def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
     target = affected[0].get("path", "the selected launcher") if affected and isinstance(affected[0], dict) else "the selected launcher"
     before = affected[0].get("before", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
     after = affected[0].get("after", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
-    confirm = _prompt(screen, f"{action.title()} {proot_shortcuts.CATALOG[app_id]['name']} at {target} ({before} → {after}). Type yes")
+    confirm = _prompt(screen, f"{action.title()} {app_name} at {target} ({before} → {after}). Type yes")
     if confirm.lower() != "yes":
         return {"ok": False, "error": {"code": "cancelled"}}
     return _call("proot.shortcuts.apply", {
-        "action": action, "app_id": app_id, "confirmed": True, "plan_id": plan_id,
+        "action": action, **target_args, "confirmed": True, "plan_id": plan_id,
     })
 
 

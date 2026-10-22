@@ -23,4 +23,8 @@ The bridge returns 35 live available Debian desktop entries on this device. This
 
 ## Limits
 
-This delivers dynamic launch selection, not per-app dynamic shortcut CRUD in GTK. GTK shortcut add/remove still targets the fixed catalog; bulk sync/rollback remains available separately. No UI automation or user click was performed. Actual launch rendering, human interaction, rootfs migration, broken-rootfs recovery, cold boot, and P4 exit remain unverified/open.
+Dynamic per-app add/remove is supported by Web, TUI, CLI, and GTK through the shared service. Bulk sync/rollback covers menu-wide operations; per-app add/remove does not yet create its own rollback receipt. No UI automation or user click was performed. Actual launch rendering, human interaction, rootfs migration, broken-rootfs recovery, cold boot, and P4 exit remain unverified/open.
+
+## Follow-up
+
+This records the initial launch-only GTK checkpoint. Later on 2026-10-23, dynamic per-app shortcut add/remove was added across CLI/TUI/Web/GTK; see docs/evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md for current behavior and regression evidence.
