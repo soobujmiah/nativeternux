@@ -35,6 +35,8 @@ class RetireFreshGuestTests(unittest.TestCase):
         (self.container / "manifest.json").write_text('{"image_ref":"debian:trixie"}\n')
         setup_state = self.state / "proot-setup"
         (setup_state / "previews").mkdir(parents=True, mode=0o700)
+        setup_state.chmod(0o700)
+        (setup_state / "previews").chmod(0o700)
         receipt = {
             "schema_version": 1, "alias": self.alias, "guest_user": "sbj",
             "release": "Debian Trixie", "origin": "fresh-preview-confirmed-install",
