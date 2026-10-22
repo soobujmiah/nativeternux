@@ -141,6 +141,40 @@ def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
     })
 
 
+def _manage_proot_shortcut_rollback(screen: "curses._CursesWindow") -> dict[str, object]:
+    """Select a saved bulk sync, review its exact paths, then confirm restore."""
+    inventory = _call("proot.shortcuts.sync.rollback.list")
+    if not inventory.get("ok"):
+        return inventory
+    data = inventory.get("data", {})
+    rows = data.get("rollbacks", []) if isinstance(data, dict) else []
+    eligible = [item for item in rows if isinstance(item, dict)
+                and item.get("integrity") == "valid" and item.get("status") == "applied"
+                and isinstance(item.get("rollback_id"), str)]
+    options = [(item["rollback_id"],
+                f"{item.get('created_at', 'Saved sync')} · {item.get('entry_count', 0)} changes")
+               for item in eligible]
+    rollback_id = _choose(screen, "Saved PRoot shortcut syncs", options)
+    if not rollback_id:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    preview = _call("proot.shortcuts.sync.rollback.preview", {"rollback_id": rollback_id})
+    if not preview.get("ok"):
+        return preview
+    plan = preview.get("data", {})
+    if not isinstance(plan, dict) or not isinstance(plan.get("plan_id"), str):
+        return {"ok": False, "error": {"code": "invalid_rollback_preview"}}
+    changes = plan.get("changes", [])
+    summary = "; ".join(
+        f"{item.get('action')} {item.get('path')}" for item in changes if isinstance(item, dict))
+    confirmation = _prompt(
+        screen, f"Restore this PRoot menu state: {summary}. Type yes")
+    if confirmation.lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("proot.shortcuts.sync.rollback.apply", {
+        "rollback_id": rollback_id, "confirmed": True, "plan_id": plan["plan_id"],
+    })
+
+
 def _select_session(screen, title, sessions):
     options = []
     for item in sessions:
@@ -677,6 +711,7 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     elif resource_id == "proot.debian.workloads":
         labels.append("launch named PRoot app")
         labels.append("preview and manage PRoot app shortcut")
+        labels.append("review and restore a saved PRoot app menu")
         labels.append("inspect, start attached login, or manage bounded PRoot sessions")
     elif resource_id == "network.ssh.managed-8023":
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
@@ -1170,10 +1205,12 @@ def _run(screen: "curses._CursesWindow") -> int:
                 report = _manage_replay_guest(screen)
             elif resource["id"] == "proot.debian.workloads":
                 choice = _choose(screen, "PRoot workloads", [("launch", "Launch named app"),
-                    ("shortcut", "Add or remove app shortcut"), ("sessions", "Inspect or manage sessions"),
+                    ("shortcut", "Add or remove app shortcut"), ("rollback", "Review and restore saved shortcut sync"),
+                    ("sessions", "Inspect or manage sessions"),
                     ("guest", "Retire or restore a Ternuxx replay guest")]).lower()
                 report = (_launch_proot_app(screen) if choice == "launch" else
                           _manage_proot_shortcut(screen) if choice == "shortcut" else
+                          _manage_proot_shortcut_rollback(screen) if choice == "rollback" else
                           _manage_proot_sessions(screen) if choice == "sessions" else
                           _manage_replay_guest(screen) if choice == "guest" else
                           {"ok": False, "error": {"code": "cancelled"}})

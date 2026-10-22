@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "f625e474212289b8bd55d39b186e99d34ccaa38a1a8a91312a024d1c3fde0629",
+      "sha256": "036e5771512f2a4c0270daa69435e74fca76b94eec00304333c709d94533f455",
       "lines": 57,
       "read_status": "pending",
       "read_sha256": null
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "736be663da4d7bd1807364e7cd0f8dc2a58034080394ec8689612fe7011d7fd8",
+      "sha256": "6fae1147493046fd6348b44cdefeceac442df56699aa2f7d1b744d46b3edd61a",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,7 +163,7 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "e864c80ebe737603d8a18ca8b785281b67765e8a57f4e1763aa738f8a3e9e049",
+      "sha256": "cb55969043e8adcf1c4d68f756ed6fcd2faa89d1bc791aff08c1e7e31226c67c",
       "lines": 179,
       "read_status": "pending",
       "read_sha256": null
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "2084789be460b7d8a41a57421beafa3b5535c5bb151df82087be72904b731486",
+      "sha256": "0c194e183ebe96e373b716a2509046a358a99d85360de160c950307b86e2d6f0",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -515,7 +515,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "b30984b5119b2cdeb7b38b114b371fdb7c507291f66a02d380d5d4650440dd17",
+      "sha256": "0eca9cfffc6a47e6f5d6f3c976e7628f3802886615b63c1b75a7c6c2fe745855",
       "lines": 97,
       "read_status": "pending",
       "read_sha256": null
@@ -2491,10 +2491,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-shortcut-sync-rollback.md",
       "kind": "narrative",
-      "sha256": "fe72475a36df4a6e85dceed3486e1bbb8b697c70d3a690a890d3faafe0eb2750",
-      "lines": 31,
+      "sha256": "42387313a5fb6eb689758f080a8c90655dd78ff6cd1c70163676390398960578",
+      "lines": 34,
       "read_status": "read",
-      "read_sha256": "fe72475a36df4a6e85dceed3486e1bbb8b697c70d3a690a890d3faafe0eb2750"
+      "read_sha256": "42387313a5fb6eb689758f080a8c90655dd78ff6cd1c70163676390398960578"
     },
     {
       "path": "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",
@@ -3035,7 +3035,7 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "0e90c1e827bbbd6ca3a2aca4133e14477dbc170c478d1d64176c5731ca0c05ca",
+      "sha256": "2975728d45d9e6c7b63dbf9bf9c294426a0a02febeac0cc7dca9c1d9d6e76c70",
       "lines": 194,
       "read_status": "pending",
       "read_sha256": null

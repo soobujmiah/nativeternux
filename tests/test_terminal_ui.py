@@ -139,6 +139,37 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             }),
         ])
 
+    def test_proot_shortcut_rollback_previews_and_applies_exact_plan(self) -> None:
+        rollback_id = "c" * 32
+        inventory = {"ok": True, "data": {"rollbacks": [{"rollback_id": rollback_id,
+            "status": "applied", "integrity": "valid", "created_at": "today", "entry_count": 3}]}}
+        preview = {"ok": True, "data": {"plan_id": "d" * 24, "changes": [
+            {"action": "restore", "path": "xfce/data/applications/ternuxx-proot-app-files.desktop"}]}}
+        applied = {"ok": True, "data": {"status": "complete"}}
+        with mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call, \
+             mock.patch.object(terminal_ui, "_choose", return_value=rollback_id), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="yes"):
+            result = terminal_ui._manage_proot_shortcut_rollback(mock.Mock())
+        self.assertIs(result, applied)
+        self.assertEqual(call.call_args_list, [
+            mock.call("proot.shortcuts.sync.rollback.list"),
+            mock.call("proot.shortcuts.sync.rollback.preview", {"rollback_id": rollback_id}),
+            mock.call("proot.shortcuts.sync.rollback.apply", {
+                "rollback_id": rollback_id, "confirmed": True, "plan_id": "d" * 24}),
+        ])
+
+    def test_proot_shortcut_rollback_requires_confirmation(self) -> None:
+        rollback_id = "e" * 32
+        inventory = {"ok": True, "data": {"rollbacks": [{"rollback_id": rollback_id,
+            "status": "applied", "integrity": "valid"}]}}
+        preview = {"ok": True, "data": {"plan_id": "f" * 24, "changes": []}}
+        with mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview]) as call, \
+             mock.patch.object(terminal_ui, "_choose", return_value=rollback_id), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="no"):
+            result = terminal_ui._manage_proot_shortcut_rollback(mock.Mock())
+        self.assertEqual(result["error"]["code"], "cancelled")
+        self.assertEqual(call.call_count, 2)
+
     def test_proot_shortcut_cancel_does_not_apply(self) -> None:
         preview = {"ok": True, "data": {"changed": True, "plan_id": "b" * 24}}
         with mock.patch.object(terminal_ui, "_prompt", side_effect=["remove", "files", "no"]), \
