@@ -6,6 +6,8 @@ or authorizes an operation.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import re
 from typing import Final
 
 
@@ -150,6 +152,13 @@ OPERATION_LABELS: Final[dict[str, str]] = {
     "cron.status": "Scheduled task service status",
     "management.logs.list": "Available Ternuxx logs",
     "management.logs.read": "Read recent Ternuxx log entries",
+    "service.deploy": "Deploy service definition",
+    "desktop.start": "Start desktop",
+    "desktop.stop": "Stop desktop",
+    "desktop.restart": "Restart desktop",
+    "recovery.backup.create": "Create recovery backup",
+    "recovery.restore.apply": "Restore recovery backup",
+    "recovery.restore.rollback": "Roll back recovery restore",
 }
 
 ERROR_MESSAGES: Final[dict[str, str]] = {
@@ -242,3 +251,67 @@ def format_report(value: object) -> str:
 
     visit(value)
     return "\n".join(lines) if lines else "No readable details were returned."
+
+
+def _history_time(value: object) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if instant.tzinfo is None:
+            instant = instant.replace(tzinfo=timezone.utc)
+        local = instant.astimezone()
+    except (ValueError, OverflowError):
+        return None
+    hour = local.hour % 12 or 12
+    return f"{local:%b} {local.day}, {hour}:{local:%M} {local:%p}"
+
+
+def _history_detail(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    detail = " ".join(value.split())
+    detail = re.sub(
+        r"(?i)\b(rollback|backup|plan|operation|journal)(?:[_ -]?id)?\s*[=:]\s*[a-f0-9-]{12,}",
+        r"\1 reference hidden", detail,
+    )
+    detail = re.sub(r"\b[0-9a-f]{32,}\b", "internal reference hidden", detail, flags=re.I)
+    detail = detail.strip(" ;,.")
+    if not detail:
+        return None
+    return detail[:180].rstrip() + ("…" if len(detail) > 180 else "")
+
+
+def format_activity_history(value: object, *, limit: int = 8) -> str:
+    """Show a compact, readable operation history without opaque journal IDs."""
+    if not isinstance(value, dict) or value.get("ok") is not True:
+        return format_report(value)
+    data = value.get("data")
+    if not isinstance(data, dict):
+        return "Recent management activity is unavailable."
+    operations = data.get("operations")
+    if not isinstance(operations, list):
+        return "Recent management activity is unavailable."
+    rows = [item for item in operations if isinstance(item, dict)]
+    lines = [f"Recent management activity - {len(rows)} recorded actions"]
+    unresolved = data.get("unresolved_count")
+    if isinstance(unresolved, int) and not isinstance(unresolved, bool):
+        lines.append(f"Items needing attention: {unresolved}")
+    if not rows:
+        lines.append("No management actions have been recorded yet.")
+        return "\n".join(lines)
+    count = max(1, limit)
+    for index, item in enumerate(rows[:count], 1):
+        kind = item.get("kind")
+        action = operation_label(kind) if isinstance(kind, str) else "Management action"
+        status = status_label(item.get("status"))
+        lines.append(f"{index}. {action} - {status}")
+        updated = _history_time(item.get("updated_at") or item.get("created_at"))
+        if updated:
+            lines.append(f"   {updated}")
+        detail = _history_detail(item.get("detail"))
+        if detail:
+            lines.append(f"   {detail}")
+    if len(rows) > count:
+        lines.append(f"Showing the latest {count} of {len(rows)} actions.")
+    return "\n".join(lines)

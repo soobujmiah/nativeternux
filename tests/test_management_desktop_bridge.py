@@ -53,7 +53,7 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         desktop = next(row for row in resources if row[1] == "native.desktop.session")
         graphics = next(row for row in resources if row[1] == "graphics.native")
         self.assertGreaterEqual(len(desktop), 8)
-        self.assertIn("Desktop start", desktop[7])
+        self.assertIn("Start desktop", desktop[7])
         self.assertIn("Graphics provider verify", graphics[7])
 
     def test_inspection_is_selected_from_resource_supported_read_operation(self) -> None:
@@ -308,6 +308,27 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                 self.assertEqual(bridge.main(["history"]), 0)
         dispatch.assert_called_once_with("recovery.status")
         self.assertIn("Items needing attention: 0", output.getvalue())
+
+    def test_history_bridge_hides_internal_ids_and_formats_timestamps(self) -> None:
+        payload = {"ok": True, "data": {"unresolved_count": 0, "operations": [{
+            "operation_id": "a" * 32, "kind": "service.deploy", "status": "complete",
+            "created_at": "2026-10-18T23:04:19.753138+00:00",
+            "updated_at": "2026-10-18T23:04:19.782579+00:00",
+            "detail": "Definition deployed; rollback=" + "b" * 64,
+        }]}}
+        with mock.patch.object(bridge, "call", return_value=payload) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["history"]), 0)
+        dispatch.assert_called_once_with("recovery.status")
+        rendered = output.getvalue()
+        self.assertIn("Deploy service definition - Complete", rendered)
+        self.assertIn("Items needing attention: 0", rendered)
+        self.assertIn("Definition deployed", rendered)
+        self.assertIn("reference hidden", rendered)
+        self.assertNotIn("2026-10-18T", rendered)
+        self.assertNotIn("b" * 32, rendered)
+        self.assertNotIn("a" * 32, rendered)
 
     def test_managed_ssh_preview_is_typed_and_targets_only_8023(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {

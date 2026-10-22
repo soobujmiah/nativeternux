@@ -301,7 +301,7 @@ def main(argv: list[str]) -> int:
         return 0 if result.get("ok") else 1
     if action == "history" and len(argv) == 1:
         result = call("recovery.status")
-        print(management_presentation.format_report(result))
+        print(management_presentation.format_activity_history(result))
         return 0 if result.get("ok") else 1
     if action in {"ssh-preview-start", "ssh-preview-stop"} and len(argv) == 1:
         operation = "ssh.service.start" if action.endswith("start") else "ssh.service.stop"

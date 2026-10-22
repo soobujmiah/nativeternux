@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 389,
-  "read_count": 76,
+  "document_count": 390,
+  "read_count": 77,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "ede6a44ca78b2411de3f66d8560b99a9314c1b8ecf0b0b39b9535697438e1037",
+      "sha256": "d6a8aafc8624b03417f063f559b1c1b277d007100746d58c467d136883705d68",
       "lines": 43,
       "read_status": "read",
-      "read_sha256": "ede6a44ca78b2411de3f66d8560b99a9314c1b8ecf0b0b39b9535697438e1037"
+      "read_sha256": "d6a8aafc8624b03417f063f559b1c1b277d007100746d58c467d136883705d68"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -507,10 +507,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "4609c2067610c1c6e60733df06e3f8dd5f006fb005bd53dfe13c6ef74f80012a",
-      "lines": 81,
+      "sha256": "20d7590faf37ab254db959db4ca3199b4a9f6f8bb0f6d7dae4c4ffd78fe13496",
+      "lines": 82,
       "read_status": "read",
-      "read_sha256": "4609c2067610c1c6e60733df06e3f8dd5f006fb005bd53dfe13c6ef74f80012a"
+      "read_sha256": "20d7590faf37ab254db959db4ca3199b4a9f6f8bb0f6d7dae4c4ffd78fe13496"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2239,6 +2239,14 @@
       "lines": 27,
       "read_status": "read",
       "read_sha256": "5bc22126f3d9dc4cf3961b09215da3621081543a7e2b49b6880d6948efb9daf8"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-management-center-visual-review.md",
+      "kind": "narrative",
+      "sha256": "abb3f7b3d4788d3d9457e3d7c85fb85c49f31a54ee847d6aa69fbd9705af4858",
+      "lines": 29,
+      "read_status": "read",
+      "read_sha256": "abb3f7b3d4788d3d9457e3d7c85fb85c49f31a54ee847d6aa69fbd9705af4858"
     },
     {
       "path": "docs/evidence/2026-10-22-management-ui-readability-and-tui-actions.md",
