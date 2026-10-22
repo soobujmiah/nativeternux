@@ -1,0 +1,7 @@
+event_id: commit-aafb98d9b51b-8da674c9a23cf2bf
+repository: soobujmiah/ternuxx
+commit: aafb98d9b51ba60651a9b96bba3eacb30541ae46
+kind: commit
+occurred_at: '2026-10-22T16:47:52Z'
+status: completed
+summary: 'test(native): qualify core with failing optional PRoot'
