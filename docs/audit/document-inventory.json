@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 373,
-  "read_count": 55,
+  "document_count": 375,
+  "read_count": 58,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "883ab006668910b09087038244872fa2d172d07359babd7a69b0b24fa4193049",
+      "sha256": "760a7a45dfb9d2bfeeb0af4758509ab938516b357c6ab5d8b75e627234016720",
       "lines": 37,
       "read_status": "read",
-      "read_sha256": "883ab006668910b09087038244872fa2d172d07359babd7a69b0b24fa4193049"
+      "read_sha256": "760a7a45dfb9d2bfeeb0af4758509ab938516b357c6ab5d8b75e627234016720"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -179,10 +179,10 @@
     {
       "path": "docs/PROOT-GPU.md",
       "kind": "narrative",
-      "sha256": "400747fc7709be2b6aeeb2dba1f4cc284b10f23b925d904fb0df8dacaa997e9d",
+      "sha256": "2b8bec0c77ac3ab261f90560672b21078139dfec1c43431c2e1c2cf275b0a8d7",
       "lines": 50,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "2b8bec0c77ac3ab261f90560672b21078139dfec1c43431c2e1c2cf275b0a8d7"
     },
     {
       "path": "docs/PROOT-GUI-DISPLAY0.md",
@@ -499,10 +499,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "f8b420f290e218e015dcc899e0e95f1ca8d69e3495bfa6d89a4edeb544c5380c",
-      "lines": 72,
+      "sha256": "08e54c570db55f5bb621ae73ce0486df1c690ac98f2526020a31c8dc73bfa53c",
+      "lines": 75,
       "read_status": "read",
-      "read_sha256": "f8b420f290e218e015dcc899e0e95f1ca8d69e3495bfa6d89a4edeb544c5380c"
+      "read_sha256": "08e54c570db55f5bb621ae73ce0486df1c690ac98f2526020a31c8dc73bfa53c"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2319,6 +2319,22 @@
       "lines": 41,
       "read_status": "pending",
       "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-22-terminal-close-authorization.md",
+      "kind": "narrative",
+      "sha256": "6ec1eda2d03e48cc2f69410364436b865fec0b0d315c0a0c41b78a353198fb35",
+      "lines": 21,
+      "read_status": "read",
+      "read_sha256": "6ec1eda2d03e48cc2f69410364436b865fec0b0d315c0a0c41b78a353198fb35"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-terminal-close-regression.json",
+      "kind": "structured",
+      "sha256": "00487ebe5deaf867c5830ebc9d65e97d34d8e11a9cbcb2af0bbc78646becb404",
+      "lines": 23,
+      "read_status": "read",
+      "read_sha256": "00487ebe5deaf867c5830ebc9d65e97d34d8e11a9cbcb2af0bbc78646becb404"
     },
     {
       "path": "docs/evidence/2026-10-22-terminal-guest-regression.json",

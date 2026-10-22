@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "runtime": "Native Termux through SSH 8022",
+  "suite": {
+    "passed": 733,
+    "run": 733,
+    "seconds": 102.713
+  },
+  "source_sha256": {
+    "lib/terminal_broker.py": "61187519bc886d7d1f1dee07e12253e9b1c91571337fc1af29070bff51c9d66e",
+    "lib/terminal_broker_service.py": "3b7e3d0ee89754bb2e7e006d12a767fff46ca23b42d2ed777c30dfe9c1202b5d",
+    "tests/test_terminal_broker.py": "38a5333ce9fb788f41d48908a8c2555e51c24d9ba36e2d22d581e5dc68547ccd",
+    "scripts/termux-services/ternuxx-terminal-broker/run": "cd6a3f107bad6bb434ca6770ac3f28de8386b8afa582f45809d7c45855881eb4"
+  },
+  "negative_cases_failed_before_fix": 6,
+  "focused_broker_tests_passed": 11,
+  "idle_live_broker_reloaded": true,
+  "before_and_after_pty_relay": "not_connected",
+  "nonterminal_session_records": 0,
+  "generation_changed": true,
+  "ssh_or_desktop_service_controlled": false,
+  "guest_lifecycle_qualified": false
+}

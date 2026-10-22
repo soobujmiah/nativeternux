@@ -60,6 +60,9 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 
 | A27 | Ctrl+] and early CLI/TUI attach failures leaked the single writer lease, preventing subsequent attachment | Three cases reproduced before fix; unconditional exact-lease release now covers detach, initial resize failure and loss of the caller terminal without stopping the guest |
 
+| A28 | Broker close preview/apply did not validate the current attachment generation, token and principal | Six negative cases reproduced; exact attachment validation added before callbacks. 733-test regression passed; idle live broker reload verified without a guest start. See [close authorization evidence](../evidence/2026-10-22-terminal-close-authorization.md) |
+| A29 | Guest graphics diagnostics label the entire login read-only although installed PRoot-Distro writes its profile in isolated mode too | Native dependency source confirms `inject_termux_profile` runs for normal containers independently of isolated/minimal. GPU procedure now discloses the side effect; result metadata and management authorization/preview classification require source correction. No working guest probe was run for this inspection |
+
 ## Continuation order
 
 1. Finish reviewing/pushing this Native UI/runtime remediation and capture CI.

@@ -347,6 +347,12 @@ class TerminalAttachmentRegistry:
             raise BrokerError("terminal attachment is unauthorized or stale")
         return attachment
 
+    def validate_attachment(self, session_id: str, generation: int,
+                            attachment_id: str, principal: str) -> None:
+        """Require the current exact writer before previewing or closing."""
+        with self._lock:
+            self._require(session_id, generation, attachment_id, principal)
+
     def accept_input(self, session_id: str, generation: int, attachment_id: str,
                      principal: str, data: bytes) -> bytes:
         if not isinstance(data, bytes) or not 1 <= len(data) <= MAX_INPUT:
@@ -522,11 +528,13 @@ class TerminalBrokerDispatcher:
             return {"ok": True, **self.registry.detach(
                 session_id, generation, attachment_id, principal)}
         if operation == "terminal.close.preview":
+            self.registry.validate_attachment(session_id, generation, attachment_id, principal)
             self._args(request, set())
             if not self.verify_session(session_id):
                 raise BrokerError("PRoot session identity is not verified")
             return {"ok": True, "plan": self.close_preview(session_id)}
         if operation == "terminal.close":
+            self.registry.validate_attachment(session_id, generation, attachment_id, principal)
             args = self._args(request, {"confirmed", "plan_id"})
             if args["confirmed"] is not True or not isinstance(args["plan_id"], str):
                 raise BrokerError("terminal close requires its exact preview and confirmation")

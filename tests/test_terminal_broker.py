@@ -72,6 +72,31 @@ class TerminalBrokerTransportTests(unittest.TestCase):
         with self.assertRaisesRegex(terminal_broker.BrokerError, "unauthorized"):
             dispatcher(request(**{**shared, "operation": "terminal.detach"}), os.getuid() + 1)
 
+    def test_close_operations_reject_stale_or_foreign_attachments_before_callbacks(self):
+        from unittest import mock
+        session = "proot-" + "d" * 32
+        for operation in ("terminal.close.preview", "terminal.close"):
+            for invalid in ("generation", "attachment", "principal"):
+                with self.subTest(operation=operation, invalid=invalid):
+                    registry = terminal_broker.TerminalAttachmentRegistry(generation=41)
+                    lease = registry.attach(session, "owner")
+                    preview, apply = mock.Mock(), mock.Mock(return_value={"state": "stopped"})
+                    dispatcher = terminal_broker.TerminalBrokerDispatcher(
+                        registry, authorize=lambda _r, _uid: "other" if invalid == "principal" else "owner",
+                        verify_session=lambda _s: True, write_input=mock.Mock(), resize_pty=mock.Mock(),
+                        close_preview=preview, close_apply=apply)
+                    args = {} if operation.endswith("preview") else {"confirmed": True, "plan_id": "plan-exact"}
+                    envelope = request(operation=operation, session_id=session,
+                        generation=40 if invalid == "generation" else 41,
+                        attachment_id="attach-" + "0" * 32 if invalid == "attachment" else lease["attachment_id"],
+                        args=args)
+                    with self.assertRaises(terminal_broker.BrokerError):
+                        dispatcher(envelope, os.getuid())
+                    preview.assert_not_called()
+                    apply.assert_not_called()
+                    # Rejected requests must not revoke the real writer.
+                    registry.validate_resize(session, 41, lease["attachment_id"], "owner", 80, 24)
+
     def test_single_writer_input_resize_output_and_detach_contract(self):
         registry = terminal_broker.TerminalAttachmentRegistry(
             generation=42, max_output_bytes=4096)
