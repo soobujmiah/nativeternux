@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Review browser-rendered Web controls on the isolated replay guest, finish remaining provider/configuration acceptance and clean replay rollback/reproducibility gates, then continue the full audit without touching the owner's active PRoot.
+**Next action:** Finish the pinned isolated replay setup and verify exact package/config receipt plus protected-rootfs preservation; then perform exact retire/restore and close remaining provider/configuration, route, client-parity, Native-independence, and full-audit gates.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

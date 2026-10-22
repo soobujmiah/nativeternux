@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 412,
+  "document_count": 414,
   "read_count": 89,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "868dec0ac7bfa7d95a673f3f86bdaaacc776a9fccd423a2f06415f5a7198f6ee",
+      "sha256": "c4b4fc7cdb50aa1a2b6407f03a0cad71efc9fe0e7c69d028eeba8bcb8adbde80",
       "lines": 51,
       "read_status": "pending",
       "read_sha256": null
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "364edbad2b025e9b85dfb95a2f7a941bc2772c289fbd425351b04ef438779c34",
+      "sha256": "f9d60b3b7b2f279f450f53f576a5c13d1aee4c87d2f7aac4b8f1cb80f6980f3c",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -107,7 +107,7 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "kind": "narrative",
-      "sha256": "86a980c59991b8468f7ee765f9c8eb3c69193c644a114e091eb7afa50450fd82",
+      "sha256": "297830d2bbef5cbe63e82eeb41facc3c4e26d86691f9996d534390cf8532e5a1",
       "lines": 43,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "75e70741c1aac6d28e0fbbeeaf455fe3cee095ff39a39fba987d3d759b7bb8b6",
-      "lines": 170,
+      "sha256": "269338464e67773cc2a8dcd75465ed79dcb3c09d588f3f905e8172b1691fa549",
+      "lines": 172,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "e561d2961731a0c7b2c24aa132f5e04d28819eac3b2ee713ae708ec4f8338b1d",
+      "sha256": "b32ddad0387c9c5a243d87dfa8fe38fdb4e88a51a1ea99fc6c8c90984bee980e",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -243,7 +243,7 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "6c8a61e96efeba336f6e4496ff64dfb92121ae9f188f3f5a4714049eff74bed4",
+      "sha256": "29e99c032d13ccedaafc6989aa6a19044b199dccaaeba6b0406e161fd233fba6",
       "lines": 25,
       "read_status": "pending",
       "read_sha256": null
@@ -331,10 +331,10 @@
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
       "kind": "narrative",
-      "sha256": "915912c7d52d7562559c7f294c8224eba63b7013225b76a219ce734abb979157",
+      "sha256": "ce38da31f4fdad62b3c0b0d14e8156ec6320661f58b0a93094120b8ea257717d",
       "lines": 55,
-      "read_status": "read",
-      "read_sha256": "915912c7d52d7562559c7f294c8224eba63b7013225b76a219ce734abb979157"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",
@@ -515,8 +515,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "465171d31dfe9b5eb22140db1ee692bbc04cb0374f1285afd041630ab5da0e88",
-      "lines": 91,
+      "sha256": "4240b770d66bc6d7b685e8efa1f825e849c66aa756c05ea9f879833f4ce0d627",
+      "lines": 93,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2433,6 +2433,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-22-p4-next-gate-reconciliation.md",
+      "kind": "narrative",
+      "sha256": "56b9a5e355d0b2fc2eb0ac9a929c7fb712aee6f9e7fe1ebc7875820812c240bb",
+      "lines": 24,
+      "read_status": "read",
+      "read_sha256": "56b9a5e355d0b2fc2eb0ac9a929c7fb712aee6f9e7fe1ebc7875820812c240bb"
+    },
+    {
       "path": "docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md",
       "kind": "narrative",
       "sha256": "6c98cfd9108168c0ba1f7eab740b0384d18b61c3659625b2e4a699672cafe72a",
@@ -2655,6 +2663,14 @@
       "lines": 54,
       "read_status": "read",
       "read_sha256": "4ef13828c14b4e54a5687b03bad952c58d1475b2f2c54957d6e2c275fb7ef053"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-web-ui-visible-acceptance.json",
+      "kind": "structured",
+      "sha256": "3ff151c200eceec87a4e70ad9f8020edcafb34686e47dfa82de033ec180eb2df",
+      "lines": 69,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/P0-foundation.md",
@@ -2931,8 +2947,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "1f25c7ab9a57e9eff6440befad2e11c839cfaec72c2eea03ef654b1ea0de133d",
-      "lines": 185,
+      "sha256": "119ec7db8ac606ec520d5422f38428bd1b366726208ef38046cdf1e23cc2d46c",
+      "lines": 187,
       "read_status": "pending",
       "read_sha256": null
     },

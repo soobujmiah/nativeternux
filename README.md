@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented. Same-session four-client terminal handoff and receipt-verified replay-guest retire/restore through CLI, authenticated Web API, and installed GTK are verified. Browser-rendered Web controls and the remaining provider/configuration and reproducibility gates remain open.
+Persistent Native broker and CLI/TUI/Web/GTK terminal paths are implemented; same-session handoff, exact replay-guest retire/restore and visible Web/GTK interaction checks pass. Full P4 acceptance remains open for clean replay reproducibility/rollback, broader provider and route configuration, graphics workload evidence, Web mutation/client parity, Native independence failure injection, and the full source/installed audit.
 
-**Next action:** Review browser-rendered Web controls on the isolated replay guest, finish remaining provider/configuration acceptance and clean replay rollback/reproducibility gates, then continue the full audit without touching the owner's active PRoot.
+**Next action:** Finish the pinned isolated replay setup and verify exact package/config receipt plus protected-rootfs preservation; then perform exact retire/restore and close remaining provider/configuration, route, client-parity, Native-independence, and full-audit gates.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
