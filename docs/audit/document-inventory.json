@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "393defdbb2c25baf009c61b92c7e6e0a09cfe58a0cff7a503a633a6df84e1b41",
-      "lines": 156,
+      "sha256": "1979c650a8b244adca53c0c30edee039b6e8b4efa178397220163e11400a9401",
+      "lines": 157,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -507,10 +507,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "3550a7b2654110781835877f9f9606ca7e279d14bbf4d2c394a831fe2adf1b86",
+      "sha256": "4609c2067610c1c6e60733df06e3f8dd5f006fb005bd53dfe13c6ef74f80012a",
       "lines": 81,
       "read_status": "read",
-      "read_sha256": "3550a7b2654110781835877f9f9606ca7e279d14bbf4d2c394a831fe2adf1b86"
+      "read_sha256": "4609c2067610c1c6e60733df06e3f8dd5f006fb005bd53dfe13c6ef74f80012a"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2747,10 +2747,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "f3f36520e4ee3f4fb87b2c110ade34e56149339ef8052c70479d6298418ebc34",
-      "lines": 171,
+      "sha256": "738958b0d329fcebeae52df62fa3aa84257fd7fd7120e239af8b0e6ada0af6a7",
+      "lines": 172,
       "read_status": "read",
-      "read_sha256": "f3f36520e4ee3f4fb87b2c110ade34e56149339ef8052c70479d6298418ebc34"
+      "read_sha256": "738958b0d329fcebeae52df62fa3aa84257fd7fd7120e239af8b0e6ada0af6a7"
     },
     {
       "path": "requirements-dev.txt",

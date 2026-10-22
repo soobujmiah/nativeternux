@@ -74,7 +74,7 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 1. Finish reviewing/pushing this Native UI/runtime remediation and capture CI.
 2. Complete remaining installed/service/boot/profile parity inventory and P1–P3 requirement evidence matrix.
 3. Implement the shared SSH credential/recovery and service policy gaps with preservation/preview/rollback tests; connect all clients.
-4. Complete separate-guest GTK and cross-client terminal replay, rollback and provider routes without touching Codex's working guest.
+4. Complete cross-client terminal continuity, test-guest retirement/rollback and provider routes without touching Codex working guest; GTK lifecycle is evidenced separately.
 5. Continue the full source and all-document review, updating reviewed hashes after fixes; audit the remaining roadmap, software/graphics/inference and release/reproducibility gates.
 6. Run final requirement-by-requirement completion audit. Keep the overarching goal active until every explicit requirement is proven.
 

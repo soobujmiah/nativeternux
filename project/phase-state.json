@@ -91,7 +91,8 @@
         "docs/evidence/2026-10-22-guarded-fresh-replay.md",
         "docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md",
         "docs/evidence/2026-10-22-tui-terminal-replay.md",
-        "docs/evidence/2026-10-22-web-terminal-replay.md"
+        "docs/evidence/2026-10-22-web-terminal-replay.md",
+        "docs/evidence/2026-10-22-gtk-terminal-picker-review.md"
       ],
       "next_action": "Qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and implement shared credential/service-policy controls while continuing the full source/document audit."
     },

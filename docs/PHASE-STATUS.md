@@ -95,6 +95,7 @@ Evidence:
 - [docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md](evidence/2026-10-22-fresh-setup-and-probe-safety.md)
 - [docs/evidence/2026-10-22-tui-terminal-replay.md](evidence/2026-10-22-tui-terminal-replay.md)
 - [docs/evidence/2026-10-22-web-terminal-replay.md](evidence/2026-10-22-web-terminal-replay.md)
+- [docs/evidence/2026-10-22-gtk-terminal-picker-review.md](evidence/2026-10-22-gtk-terminal-picker-review.md)
 
 ## P5 — Distro and display compatibility profiles
 
