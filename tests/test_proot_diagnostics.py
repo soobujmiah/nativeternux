@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import json
+import os
 import stat
 import subprocess
 import tempfile
@@ -15,6 +16,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
 import proot_diagnostics  # noqa: E402
+import proot_fresh_setup  # noqa: E402
 
 
 class ProotDiagnosticsTests(unittest.TestCase):
@@ -158,6 +160,53 @@ class ProotDiagnosticsTests(unittest.TestCase):
             self.assertIsInstance(report["manager_available"], bool)
             self.assertIsInstance(report["installed_distributions"], list)
             self.assertEqual(report["installed_distributions"], sorted(set(report["installed_distributions"])))
+
+    def test_receipt_verified_replay_guest_can_run_the_same_readonly_graphics_probe(self):
+        alias = "ternuxx-replay-fixture"
+        with tempfile.TemporaryDirectory(prefix="ternuxx-replay-probe-") as temporary:
+            base = Path(temporary)
+            home = base / "home"
+            home.mkdir()
+            state = home / ".local/share/ternuxx"
+            setup_state = state / "proot-setup"
+            (setup_state / "previews").mkdir(parents=True, mode=0o700)
+            prefix = base / "prefix"
+            containers = prefix / "var/lib/proot-distro/containers"
+            container = containers / alias
+            root = container / "rootfs"
+            (root / "etc").mkdir(parents=True)
+            identity = proot_fresh_setup._root_identity(container, root)
+            receipt = {"schema_version": 1, "alias": alias, "plan_id": "a" * 64,
+                       "rootfs_identity": identity, "package_versions_recorded": True,
+                       "requested_packages_verified_installed": True}
+            receipt_path = setup_state / f"fresh-provider-{alias}.json"
+            receipt_path.write_text(json.dumps(receipt))
+            receipt_path.chmod(0o600)
+            outputs = [
+                SimpleNamespace(returncode=0, stdout=f"Installed containers:\n * {alias}\nLog in with: proot-distro login <name>\n"),
+                SimpleNamespace(returncode=0, stdout="Display: :1\nX11: reachable\nRenderer: zink Vulkan (Turnip)\nGLX draw: verified\nGLX draw frames: 10\n"),
+            ]
+            calls = []
+            def runner(args, **kwargs):
+                calls.append((args, kwargs))
+                return outputs.pop(0)
+            with mock.patch.object(proot_diagnostics.Path, "home", return_value=home), \
+                 mock.patch.dict(os.environ, {"TERNUXX_STATE_DIR": str(state)}), \
+                 mock.patch.object(proot_diagnostics, "_native_pulse_cookie_path", return_value=None):
+                report = proot_diagnostics.verify_proot_guest(
+                    distro=alias, user="sbj", display=":1", backend="zink",
+                    prefix=str(prefix),
+                    which=lambda name: "/prefix/bin/proot-distro" if name == "proot-distro" else None,
+                    runner=runner)
+            self.assertEqual(report["distro"], alias)
+            self.assertEqual(report["status"], "partial")
+            self.assertIn(alias, calls[1][0])
+
+    def test_replay_graphics_probe_rejects_missing_or_replaced_receipt_rootfs(self):
+        with self.assertRaisesRegex(ValueError, "valid Ternuxx install receipt"):
+            proot_diagnostics.verify_proot_guest(
+                distro="ternuxx-replay-missing", user="sbj", display=":1", backend="zink",
+                prefix="/nonexistent/prefix", which=lambda _name: self.fail("must fail before probing"))
 
     def test_proot_guest_verify_uses_fixed_readonly_probe_and_no_ternux_cli(self):
         calls = []

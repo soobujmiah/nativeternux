@@ -424,7 +424,7 @@ EOF
       cat <<'EOF'
 tx proot status — Read-only installed guest inventory
 tx proot gui {start|status|stop} — legacy session status/stop; separate :0 start disabled
-tx proot verify --distro debian (--guest-user USER|--guest-user-from rootfs) --display :N --backend zink|virgl
+tx proot verify --distro debian|ternuxx-replay-NAME (--guest-user USER|--guest-user-from rootfs) --display :N --backend zink|virgl
 tx proot setup status
 tx proot setup adopt-preview --user NAME
 tx proot setup adopt --user NAME --yes --plan-id PLAN_ID

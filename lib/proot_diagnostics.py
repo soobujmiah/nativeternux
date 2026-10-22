@@ -11,6 +11,8 @@ import shutil
 import subprocess
 from typing import Callable
 
+import proot_fresh_setup
+
 
 _ANSI = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _DISTRO = re.compile(r"^\s*\*\s+([A-Za-z0-9][A-Za-z0-9_-]{0,31})\s*$")
@@ -292,7 +294,7 @@ def inspect_installed(*, which: Callable[[str], str | None] = shutil.which,
 
 
 def _verification_result(*, status: str, display: str, backend: str,
-                         guest_entered: bool = False,
+                         distro: str = "debian", guest_entered: bool = False,
                          observed_display: str | None = None, x11: str = "unknown", audio: str = "unknown",
                          renderer: str | None = None, renderer_class: str = "unavailable",
                          gles_context: str = "unknown", gles_renderer: str | None = None,
@@ -304,7 +306,7 @@ def _verification_result(*, status: str, display: str, backend: str,
     return {
         "component": "proot_guest_diagnostics",
         "status": status,
-        "distro": "debian",
+        "distro": distro,
         "display": display,
         "requested_backend": backend,
         "pulse_server": _PULSE_SERVER,
@@ -331,7 +333,7 @@ def _verification_result(*, status: str, display: str, backend: str,
 
 def _guest_command(manager: str, user: str, display: str, backend: str,
                    command: str, *, prefix: str = "/data/data/com.termux/files/usr",
-                   cookie_path: str | Path | None = None) -> list[str]:
+                   cookie_path: str | Path | None = None, distro: str = "debian") -> list[str]:
     args = [manager, "login", "--isolated"]
     if backend == "zink":
         x11_host_dir = str(Path(prefix) / "tmp" / ".X11-unix")
@@ -348,7 +350,7 @@ def _guest_command(manager: str, user: str, display: str, backend: str,
             raise ValueError("PulseAudio cookie bind path must be a safe absolute path")
         guest_cookie = "/tmp/.ternuxx-pulse-cookie"
         args.extend(["--bind", f"{cookie}:{guest_cookie}"])
-    args.append("debian")
+    args.append(distro)
     args.extend(["--user", user, "--env", f"DISPLAY={display}",
                  "--env", f"PULSE_SERVER={_PULSE_SERVER}"])
     if guest_cookie:
@@ -426,9 +428,25 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
                        prefix: str = "/data/data/com.termux/files/usr",
                        which: Callable[[str], str | None] = shutil.which,
                        runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> dict[str, object]:
-    """Run a bounded probe; the upstream login may write its guest profile."""
+    """Run a bounded probe against Debian or a receipt-verified Ternuxx replay guest."""
     if distro != "debian":
-        raise ValueError("the managed Debian guest probe supports Debian only")
+        if not isinstance(distro, str) or not re.fullmatch(
+                r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", distro):
+            raise ValueError("the managed guest probe supports Debian or an exact Ternuxx replay alias")
+        state_dir = os.environ.get(
+            "TERNUXX_STATE_DIR", str(Path.home() / ".local/share/ternuxx"))
+        try:
+            state = proot_fresh_setup._state_root(str(Path.home()), state_dir, create=False)
+            receipt = proot_fresh_setup._read_private(state / f"fresh-provider-{distro}.json")
+            identity = receipt.get("rootfs_identity")
+            if (receipt.get("schema_version") != 1 or receipt.get("alias") != distro
+                    or receipt.get("requested_packages_verified_installed") is not True
+                    or receipt.get("package_versions_recorded") is not True
+                    or not isinstance(receipt.get("plan_id"), str)):
+                raise ValueError("replay install receipt is incomplete")
+            proot_fresh_setup._verify_owned_target(prefix, distro, identity)
+        except (OSError, ValueError, KeyError) as exc:
+            raise ValueError("replay guest lacks an exact, valid Ternuxx install receipt") from exc
     if not isinstance(user, str) or not _GUEST_USER.fullmatch(user) or user == "root":
         raise ValueError("guest user must be a non-root Debian username")
     if not isinstance(display, str) or not _DISPLAY.fullmatch(display):
@@ -439,6 +457,7 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
     native_pulseaudio_endpoint = inspect_native_pulseaudio_endpoint(which=which, runner=runner)
 
     def verification_result(**values: object) -> dict[str, object]:
+        values["distro"] = distro
         values["native_pulseaudio_endpoint"] = native_pulseaudio_endpoint
         return _verification_result(**values)
 
@@ -451,20 +470,20 @@ def verify_proot_guest(*, distro: str, user: str, display: str, backend: str,
                            text=True, timeout=5, check=False)
     except (OSError, subprocess.TimeoutExpired):
         return verification_result(status="unknown", display=display, backend=backend,
-                                  blockers=["installed Debian inventory could not be read"])
+                                  blockers=["installed PRoot distribution inventory could not be read"])
     installed = (_installed_names(inventory.stdout) if isinstance(getattr(inventory, "stdout", None), str)
                  else None) if inventory.returncode == 0 else None
     if installed is None:
         return verification_result(status="unknown", display=display, backend=backend,
-                                  blockers=["installed Debian inventory is unavailable or unrecognized"])
+                                  blockers=["installed PRoot distribution inventory is unavailable or unrecognized"])
     if distro not in installed:
         return verification_result(status="not_installed", display=display, backend=backend,
-                                  blockers=["Debian is not listed as an installed PRoot distribution"])
+                                  blockers=[f"{distro} is not listed as an installed PRoot distribution"])
 
     cookie_path = _native_pulse_cookie_path()
     try:
         result = runner(_guest_command(manager, user, display, backend, _GUEST_PROBE_SCRIPT,
-                                       prefix=prefix, cookie_path=cookie_path),
+                                       prefix=prefix, cookie_path=cookie_path, distro=distro),
                         capture_output=True, text=True, timeout=30, check=False)
     except (OSError, subprocess.TimeoutExpired):
         return verification_result(status="unknown", display=display, backend=backend,

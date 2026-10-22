@@ -37,17 +37,51 @@ at device 65086, inode 3240111.
   does not prove that current device throughput is caused by that policy:
   [Debian Snapshot](https://snapshot.debian.org/).
 
-## Change and verification
+## Corrected conclusion after clean replay
 
-Raised the whole fresh-guest configuration subprocess timeout from one hour to
-six hours, matching the measured archive volume and slow mobile-link samples
-while keeping a finite upper bound. Added a regression assertion that the
-fresh setup runner receives the configured bound.
+A clean, separately previewed alias (`ternuxx-replay-p4-retry`) completed the
+same 54-package setup against the same pinned Snapshot under the original
+one-hour bound. APT reported **761 MB fetched in 4 minutes 7 seconds at
+3,081 kB/s aggregate**; the full setup, locale/user creation, Turnip installation
+and package-version recording all completed in under one hour. The earlier
+six-hour timeout change was therefore reverted. The earlier failure's
+`select (38)` trigger remains unexplained and was not reproduced in this clean
+run; the larger archive size alone did not explain that failure.
 
-- Focused suite: `python3 -m unittest tests.test_proot_fresh_setup -v` —
-  **14/14 passed**.
-- Native full suite: `bash scripts/repo_test.sh` — **849 passed, 1 skipped**,
-  exit 0.
-- `git diff --check` passed before evidence generation.
-- This change does not claim to fix the unresolved APT `select (38)` error.
-  The exact same-plan replay resume remains the runtime acceptance step.
+The Cloudflare-backed Snapshot endpoint was not adopted. It served identical
+range samples more slowly than the configured endpoint in this session.
+
+## Clean replay and rollback evidence
+
+- Plan: `d597a873f05cfb10feb60f1ded175c3c405fa7e730e283308f98016f97905b62`
+- Journal/receipt: alias `ternuxx-replay-p4-retry`, Ternuxx install receipt
+  recorded all requested packages, the package version inventory SHA-256 is
+  `5835f69ca5f67f2d3e98e2e1a8237edb0c4447c4dece3b9423a44be79ba0c234`.
+- Rootfs identity: device 65086, inode 4048696. The protected default Debian
+  rootfs stayed device 65086, inode 3240111.
+- `dpkg --audit` returned no findings; `apt-get check` passed; `en_US.utf8`
+  exists and account `sbj` resolves as UID 10491.
+- Zink/Turnip driver SHA-256 matches the manifest. A live
+  `tx proot verify --distro ternuxx-replay-p4-retry --guest-user sbj --display :1 --backend zink`
+  returned `complete`: X11/audio reachable, renderer
+  `zink Vulkan 1.4(Adreno TM 825, MESA_TURNIP)`, GLX draw verified at 396 frames.
+- Exact preview-bound retire and restore passed for the same alias and directory
+  identity. Retirement reported `files_deleted=false`; restore returned the
+  same container inode 4167750 and rootfs inode 4048696.
+- The fresh-guest diagnostic path now accepts only `debian` or an exact
+  receipt-verified `ternuxx-replay-*` alias. It verifies the private install
+  receipt and device/inode before entering the guest. GUI/CLI diagnostic tests
+  cover acceptance and fail-closed receipt checks.
+
+## Tests and remaining status
+
+- `python3 -m unittest tests.test_proot_diagnostics tests.test_management_service -v` —
+  **71/71 passed**.
+- Latest Native full suite: `bash scripts/repo_test.sh` — **852 passed,
+  1 skipped**, exit 0.
+- Document inventory and repo-knowledge checks remain to be rerun after this
+  evidence correction.
+- P4 is still in progress: broader provider/route configuration, Web
+  mutation/client parity, Native-independence injection and full
+  source/installed audit remain open. The first failed attempt's exact APT
+  `select (38)` trigger remains unresolved.

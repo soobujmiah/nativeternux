@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Replay package acquisition diagnosed: the pinned 54-package profile needs 761 MB; the former one-hour bound was insufficient on measured mobile throughput. Fresh guest setup now has a six-hour bounded configuration window; the APT select (38) trigger remains under investigation. Full P4 acceptance remains open for replay runtime/rollback, provider and route configuration, graphics evidence, Web mutation/client parity, wider Native independence injection and full source/installed audit.
+A clean preview-bound Debian Trixie replay alias installed all 1,024 resolved packages from the pinned snapshot, recorded package versions, passed apt/dpkg/locale/user checks, verified live Zink/Turnip GLX at 396 frames on Native :1, and passed exact retire/restore with rootfs identity preserved. The initial select (38) APT failure did not reproduce and its trigger remains unresolved. P4 remains open for broader provider/route configuration, Web mutation/client parity, wider Native-independence failure injection and full source/installed audit.
 
-**Next action:** Resume the exact reviewed replay plan with the six-hour bound, capture package/config receipt and exact retire/restore evidence, and investigate any recurring APT select (38) failure without touching the existing Debian rootfs.
+**Next action:** Continue P4 with provider and route configuration acceptance, Web mutation/client parity, wider Native-independence failure injection, and the full source/installed audit; preserve the now-qualified replay receipt and investigate any recurrence of APT select (38).
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)

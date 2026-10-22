@@ -928,7 +928,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--next-safe-action", default="owner_verify_after_reboot", choices=sorted(continuity.NEXT_ACTIONS))
     parser.add_argument("--checkpoint-id")
     parser.add_argument("--baseline-json")
-    parser.add_argument("--distro", choices=("debian",))
+    parser.add_argument("--distro")
     parser.add_argument("--guest-user")
     parser.add_argument("--guest-user-source", choices=("rootfs",))
     parser.add_argument("--display", choices=tuple(f":{number}" for number in range(11)))

@@ -409,6 +409,24 @@ class ManagementServiceTests(unittest.TestCase):
         verify.assert_called_once_with(distro="debian", user=secret_user, display=":1", backend="zink",
                                        prefix=env["PREFIX"])
 
+    def test_proot_guest_verify_cli_accepts_a_receipt_verified_replay_alias(self) -> None:
+        import contextlib
+        import io
+        stdout = io.StringIO()
+        env = {**NATIVE_ENV, "PATH": "/fixture/bin"}
+        alias = "ternuxx-replay-fixture"
+        report = {"component": "proot_guest_diagnostics", "status": "partial", "read_only": True}
+        with patch.dict("os.environ", env), \
+             patch.object(management_service.proot_diagnostics, "verify_proot_guest", return_value=report) as verify, \
+             contextlib.redirect_stdout(stdout):
+            code = management_service.main([
+                "--operation", "proot.guest.verify", "--distro", alias,
+                "--guest-user", "sbj", "--display", ":1", "--backend", "zink", "--json",
+            ])
+        self.assertEqual(code, 0)
+        verify.assert_called_once_with(distro=alias, user="sbj", display=":1", backend="zink",
+                                       prefix=env["PREFIX"])
+
     def test_proot_guest_verify_cli_requires_all_explicit_profile_fields(self) -> None:
         import contextlib
         import io

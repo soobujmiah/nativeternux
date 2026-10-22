@@ -18,9 +18,6 @@ import urllib.request
 
 
 ALIAS = "debian"
-# A pinned workstation install can require roughly 761 MiB of package archives.
-# Mobile snapshot links may need hours; keep a bounded six-hour setup window.
-FRESH_CONFIGURATION_TIMEOUT_SECONDS = 21600
 
 
 class FreshSetupError(ValueError):
@@ -466,8 +463,7 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
         ])
         _verify_owned_target(prefix, alias, owned)
         result = runner([manager, "login", "--isolated", "--user", "root", alias,
-                         "--", "/bin/bash", "-lc", script], check=False,
-                        timeout=FRESH_CONFIGURATION_TIMEOUT_SECONDS)
+                         "--", "/bin/bash", "-lc", script], check=False, timeout=3600)
         if result.returncode:
             raise FreshSetupError("Debian package setup failed; new alias retained for inspection")
         release = (rootfs / "etc/os-release").read_text(encoding="utf-8")
