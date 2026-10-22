@@ -27,6 +27,7 @@ import runtime_diagnostics
 import ssh_diagnostics
 import ssh_key_inventory
 import ssh_key_manager
+import ssh_client_keys
 import runit_service
 import runit_deployment
 import operation_recovery
@@ -86,6 +87,8 @@ OPERATIONS = {
     "ssh.keys.add.apply": {"args": {"public_key", "fingerprint", "confirmed", "plan_id"}},
     "ssh.keys.remove.preview": {"args": {"fingerprint"}},
     "ssh.keys.remove.apply": {"args": {"fingerprint", "confirmed", "plan_id"}},
+    "ssh.client-key.create.preview": {"args": {"name"}},
+    "ssh.client-key.create.apply": {"args": {"name", "confirmed", "plan_id"}},
     "proot.status": {"args": set()},
     "proot.profiles.list": {"args": set()},
     "proot.profiles.show": {"args": {"profile"}},
@@ -422,6 +425,18 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                         confirmed=args["confirmed"], plan_id=args["plan_id"])
             else:
                 return _error(request_id, "invalid_arguments", "unsupported SSH key action")
+        elif operation in {"ssh.client-key.create.preview", "ssh.client-key.create.apply"}:
+            name = args.get("name")
+            if not isinstance(name, str):
+                return _error(request_id, "invalid_arguments", "a safe Native SSH key name is required")
+            if operation.endswith(".apply") and (
+                    args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
+                return _error(request_id, "confirmation_required", "client key creation requires an exact preview plan and explicit confirmation")
+            if operation.endswith(".preview"):
+                data = ssh_client_keys.preview(home=home, uid=os.getuid(), name=name)
+            else:
+                data = ssh_client_keys.apply(home=home, uid=os.getuid(), name=name,
+                    confirmed=args["confirmed"], plan_id=args["plan_id"])
         elif operation in {"ssh.inspect", "native.ssh.status"}:
             data = ssh_diagnostics.inspect_native(prefix=process_env["PREFIX"], home=home)
         elif operation == "proot.status":
@@ -785,6 +800,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "shortcut_operation_failed", str(exc))
     except ssh_key_manager.SshKeyMutationError as exc:
         return _error(request_id, "ssh_key_operation_failed", str(exc))
+    except ssh_client_keys.ClientKeyError as exc:
+        return _error(request_id, "ssh_client_key_operation_failed", str(exc))
     except config_recovery.RecoveryError as exc:
         return _error(request_id, "recovery_failed", str(exc))
     except remote_access_policy.RemoteAccessPolicyError as exc:
@@ -878,6 +895,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--count", type=int, default=5)
     parser.add_argument("--shortcut-action", choices=("add", "remove"))
     parser.add_argument("--key-fingerprint")
+    parser.add_argument("--key-name")
     parser.add_argument("--public-key-stdin", action="store_true",
                         help="read one public authorized-key line from stdin; never pass key material as a command argument")
     parser.add_argument("--app-id")
@@ -1479,6 +1497,18 @@ def main(argv: list[str] | None = None) -> int:
         payload = {}
         if args.key_fingerprint: payload["fingerprint"] = args.key_fingerprint
         if public_key is not None: payload["public_key"] = public_key
+        if is_apply: payload.update({"confirmed": True, "plan_id": args.plan_id})
+    elif args.operation in {"ssh.client-key.create.preview", "ssh.client-key.create.apply"}:
+        is_apply = args.operation.endswith(".apply")
+        if (not args.key_name or args.key_fingerprint or args.public_key_stdin
+                or (is_apply and (not args.yes or not args.plan_id))
+                or (not is_apply and (args.yes or args.plan_id))):
+            response = _error(request_id, "invalid_arguments",
+                              "provide --key-name; apply additionally needs --yes and --plan-id")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Preview first; apply with the same --key-name, --yes and --plan-id.", file=sys.stderr)
+            return 1
+        payload = {"name": args.key_name}
         if is_apply: payload.update({"confirmed": True, "plan_id": args.plan_id})
     elif args.operation == "continuity.prepare":
         payload = {"test_id": args.test_id or "manual-checkpoint", "repository": args.repository, "commit": args.commit,

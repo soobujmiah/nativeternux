@@ -47,6 +47,8 @@ OPERATION_CAPABILITIES: dict[str, str] = {
     "ssh.keys.add.apply": "ssh.credentials.manage",
     "ssh.keys.remove.preview": "ssh.credentials.manage",
     "ssh.keys.remove.apply": "ssh.credentials.manage",
+    "ssh.client-key.create.preview": "ssh.credentials.manage",
+    "ssh.client-key.create.apply": "ssh.credentials.manage",
     "native.ssh.status": "diagnostics.read",
     "proot.status": "diagnostics.read",
     "proot.sessions.list": "diagnostics.read",

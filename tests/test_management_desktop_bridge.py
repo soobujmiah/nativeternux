@@ -56,6 +56,28 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             "public_key": "ssh-ed25519 AAAA test", "confirmed": True, "plan_id": "a" * 24,
         })
 
+    def test_native_ssh_client_key_preview_and_apply_use_exact_shared_plan(self) -> None:
+        preview = {"ok": True, "data": {"changed": True, "plan_id": "c" * 32,
+                   "name": "recovery8023", "private_key_path": "/tmp/native/.ssh/ternuxx-keys/recovery8023"}}
+        with mock.patch.object(bridge, "call", return_value=preview) as dispatch, \
+             redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["ssh-client-key-preview", "recovery8023"]), 0)
+        dispatch.assert_called_once_with("ssh.client-key.create.preview", {"name": "recovery8023"})
+        fields = output.getvalue().strip().split(chr(9))
+        self.assertEqual(fields[:4], ["P", "c" * 32, "recovery8023", "/tmp/native/.ssh/ternuxx-keys/recovery8023"])
+        self.assertIn("not enrolled", fields[4])
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"created": True}}) as dispatch, \
+             redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["ssh-client-key-apply", "confirmed", "recovery8023", "c" * 32]), 0)
+        dispatch.assert_called_once_with("ssh.client-key.create.apply", {
+            "name": "recovery8023", "confirmed": True, "plan_id": "c" * 32,
+        })
+
+    def test_native_ssh_client_key_apply_rejects_malformed_plan_before_dispatch(self) -> None:
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["ssh-client-key-apply", "confirmed", "recovery8023", "bad"]), 2)
+        dispatch.assert_not_called()
+
     def test_ssh_key_apply_rejects_malformed_plan_before_dispatch(self) -> None:
         with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
             self.assertEqual(bridge.main(["ssh-key-remove-apply", "confirmed", "SHA256:x", "bad"]), 2)

@@ -382,10 +382,12 @@ EOF
       ;;
     ssh)
       cat <<'EOF'
-tx ssh inspect/keys-list/enroll-preview/enroll/revoke-preview/revoke/start/stop/restart - Native SSH management
+tx ssh inspect/keys-list/enroll-preview/enroll/revoke-preview/revoke/client-key-preview/client-key-create/start/stop/restart - Native SSH management
 
   tx ssh inspect
   tx ssh keys-list                    # shared Termux account key fingerprints and labels
+  tx ssh client-key-preview --key-name recovery8023
+  tx ssh client-key-create --key-name recovery8023 --yes --plan-id <id>
   cat ~/.ssh/id_ed25519.pub | tx ssh enroll-preview --public-key-stdin
   cat ~/.ssh/id_ed25519.pub | tx ssh enroll --public-key-stdin --yes --plan-id <id>
   tx ssh revoke-preview --key-fingerprint SHA256:<fingerprint>

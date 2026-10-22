@@ -3,7 +3,7 @@
 nt_cmd_ssh() {
   local action="${1:-}"; [ $# -gt 0 ] && shift
   case "$action" in
-    inspect|keys-list|enroll-preview|enroll|revoke-preview|revoke|start|stop|restart|deploy|deploy-rollback-preview|deploy-rollback)
+    inspect|keys-list|enroll-preview|enroll|revoke-preview|revoke|client-key-preview|client-key-create|start|stop|restart|deploy|deploy-rollback-preview|deploy-rollback)
       nt_require_termux || return 1
       nt_require_command python3 || return 1
       local format_args=()
@@ -15,12 +15,14 @@ nt_cmd_ssh() {
       [ "$action" = "enroll" ] && operation="ssh.keys.add.apply"
       [ "$action" = "revoke-preview" ] && operation="ssh.keys.remove.preview"
       [ "$action" = "revoke" ] && operation="ssh.keys.remove.apply"
+      [ "$action" = "client-key-preview" ] && operation="ssh.client-key.create.preview"
+      [ "$action" = "client-key-create" ] && operation="ssh.client-key.create.apply"
       [ "$action" = "deploy-rollback-preview" ] && operation="ssh.service.deploy.rollback.preview"
       [ "$action" = "deploy-rollback" ] && operation="ssh.service.deploy.rollback.apply"
       python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" "${format_args[@]}" "$@"
       ;;
     *)
-      nt_fail "Supported SSH operations: inspect, keys-list, enroll-preview, enroll, revoke-preview, revoke, start, stop, restart, deploy, deploy-rollback-preview, deploy-rollback. For rollback use management-service rollback operations."
+      nt_fail "Supported SSH operations: inspect, keys-list, enroll-preview, enroll, revoke-preview, revoke, client-key-preview, client-key-create, start, stop, restart, deploy, deploy-rollback-preview, deploy-rollback. For rollback use management-service rollback operations."
       return 2
       ;;
   esac

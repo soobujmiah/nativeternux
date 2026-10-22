@@ -330,6 +330,8 @@ def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]
     operations = set(resource.get("supported_operations", []))
     choices = [(name, f"{name.title()} SSH service") for name in ("start", "stop", "restart")
                if f"ssh.service.{name}" in operations]
+    if "ssh.client-key.create.preview" in operations:
+        choices.append(("generate", "Create a Native SSH recovery key"))
     if "ssh.keys.list" in operations:
         choices.append(("keys", "View shared SSH key fingerprints"))
     if "ssh.keys.add.preview" in operations:
@@ -339,6 +341,39 @@ def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]
     action = _choose(screen, "Managed SSH · port 8023", choices)
     if action == "keys":
         return _call("ssh.keys.list")
+    if action == "generate":
+        name = _prompt(screen, "Recovery key name (lowercase, numbers, hyphen, underscore)")
+        preview = _call("ssh.client-key.create.preview", {"name": name})
+        if not preview.get("ok"):
+            return preview
+        plan = preview.get("data", {})
+        if not isinstance(plan, dict) or not plan.get("changed"):
+            return preview
+        _show_details(screen, plan)
+        if _prompt(screen, "Private file is stored without passphrase, mode 0600. Type yes to create").lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        created = _call("ssh.client-key.create.apply", {
+            "name": name, "confirmed": True, "plan_id": plan.get("plan_id")})
+        if not created.get("ok"):
+            return created
+        data = created.get("data", {})
+        public_key = data.get("public_key") if isinstance(data, dict) else None
+        if not isinstance(public_key, str):
+            return created
+        key_preview = _call("ssh.keys.add.preview", {"public_key": public_key})
+        if not key_preview.get("ok"):
+            return {"ok": True, "data": {"key": data, "enrollment": key_preview}}
+        key_plan = key_preview.get("data", {})
+        if not isinstance(key_plan, dict) or not key_plan.get("changed"):
+            return {"ok": True, "data": {"key": data, "enrollment": key_preview}}
+        _show_details(screen, key_plan)
+        if _prompt(screen, "Enroll this public key for both 8022 and 8023? Type yes").lower() != "yes":
+            return {"ok": True, "data": {"key": data, "enrollment": "not enrolled"}}
+        enrolled = _call("ssh.keys.add.apply", {"public_key": public_key,
+            "confirmed": True, "plan_id": key_plan.get("plan_id")})
+        if enrolled.get("ok"):
+            _call("ssh.keys.list")
+        return {"ok": bool(enrolled.get("ok")), "data": {"key": data, "enrollment": enrolled}}
     if action in {"enroll", "revoke"}:
         if action == "enroll":
             keys = _public_key_catalog()
@@ -535,6 +570,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)"),
                                             ("ssh.service.restart", "restart SSH 8023 (preview)")) if op in operations)
+        if "ssh.client-key.create.preview" in operations:
+            labels.append("create and optionally enroll a Native SSH recovery key")
         if "ssh.keys.add.preview" in operations:
             labels.append("enroll a public key from Native .ssh")
         if "ssh.keys.remove.preview" in operations:

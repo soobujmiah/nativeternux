@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles passed with scoped preservation; GTK shared SSH key enrollment/revocation source and installed identity now pass. Cross-client continuity, fresh-guest retirement/rollback, key generation/recovery, authentication qualification, per-service SSH boot/Wake Lock policy, and remaining P4 acceptance stay open.
+Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles pass; all four clients now expose preview-confirmed Native SSH recovery-key creation, with GTK installed/source identity verified. Cross-client continuity, disposable authentication qualification, durable credential rollback, password/service policy, fresh-guest retirement/rollback, and remaining P4 acceptance stay open.
 
-**Next action:** Complete remaining SSH key generation/recovery, authentication and service-policy acceptance; qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and continue the full source/document audit.
+**Next action:** Qualify recovery-key enrollment/authentication and durable rollback on disposable credentials; resolve password recovery and per-service boot/Wake Lock policy; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -98,6 +98,7 @@ Evidence:
 - [docs/evidence/2026-10-22-gtk-terminal-picker-review.md](evidence/2026-10-22-gtk-terminal-picker-review.md)
 - [docs/evidence/2026-10-22-ssh-gtk-key-controls.md](evidence/2026-10-22-ssh-gtk-key-controls.md)
 - [docs/evidence/2026-10-22-native-installed-parity-1007.json](evidence/2026-10-22-native-installed-parity-1007.json)
+- [docs/evidence/2026-10-22-ssh-client-key-generation.md](evidence/2026-10-22-ssh-client-key-generation.md)
 
 ## P5 — Distro and display compatibility profiles
 

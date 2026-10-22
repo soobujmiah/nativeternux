@@ -64,6 +64,32 @@ def main(argv: list[str]) -> int:
                 "id", "category_id", "name", "status", "availability", "description"))
                   + "\t" + clean(", ".join(operation_names)))
         return 0
+    if action == "ssh-client-key-preview" and len(argv) == 2:
+        result = call("ssh.client-key.create.preview", {"name": argv[1]})
+        if not result.get("ok"):
+            print(management_presentation.format_report(result))
+            return 1
+        data = result.get("data", {})
+        plan_id = data.get("plan_id")
+        if data.get("changed") is not True:
+            print(management_presentation.format_report(result))
+            return 0
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{32}", plan_id):
+            print("Could not verify the exact Native SSH recovery key plan.")
+            return 1
+        impact = "Creates a local Ed25519 private key (mode 0600); it is not enrolled yet."
+        print("P\t" + plan_id + "\t" + clean(data.get("name")) + "\t"
+              + clean(data.get("private_key_path")) + "\t" + impact)
+        return 0
+    if action == "ssh-client-key-apply" and len(argv) == 4 and argv[1] == "confirmed":
+        name, plan_id = argv[2:]
+        if not re.fullmatch(r"[0-9a-f]{32}", plan_id):
+            print("The Native SSH key preview expired; create a new preview.")
+            return 2
+        result = call("ssh.client-key.create.apply", {
+            "name": name, "confirmed": True, "plan_id": plan_id})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action in {"ssh-key-add-preview", "ssh-key-remove-preview"} and len(argv) == 2:
         operation = "ssh.keys.add.preview" if action == "ssh-key-add-preview" else "ssh.keys.remove.preview"
         args = {"public_key": argv[1]} if action == "ssh-key-add-preview" else {"fingerprint": argv[1]}

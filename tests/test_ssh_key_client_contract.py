@@ -47,9 +47,22 @@ class SshKeyClientContractTests(unittest.TestCase):
         self.assertEqual(request["args"], {"public_key": key})
         self.assertNotIn(key, output.getvalue())
 
+    def test_cli_client_key_preview_uses_typed_name_argument(self):
+        response = {"ok": True, "data": {"status": "ready"}}
+        output = io.StringIO()
+        with patch.dict(os.environ, {"TERMUX_VERSION": "test",
+                "PREFIX": "/data/data/com.termux/files/usr", "HOME": "/tmp/home"}), \
+             patch.object(sys, "stdout", output), \
+             patch.object(management_service, "dispatch", return_value=response) as dispatch:
+            self.assertEqual(management_service.main([
+                "--operation", "ssh.client-key.create.preview",
+                "--key-name", "recovery8023", "--json"]), 0)
+        self.assertEqual(dispatch.call_args.args[0]["args"], {"name": "recovery8023"})
+
     def test_web_and_session_policies_expose_only_scoped_previewed_key_mutations(self):
         expected = {"ssh.keys.add.preview", "ssh.keys.add.apply",
-                    "ssh.keys.remove.preview", "ssh.keys.remove.apply"}
+                    "ssh.keys.remove.preview", "ssh.keys.remove.apply",
+                    "ssh.client-key.create.preview", "ssh.client-key.create.apply"}
         self.assertTrue(expected <= management_http_runtime._WEB_MUTATING_OPERATIONS)
         self.assertEqual({management_authorization.required_capability(op) for op in expected},
                          {"ssh.credentials.manage"})
@@ -77,7 +90,7 @@ class SshKeyClientContractTests(unittest.TestCase):
         self.assertEqual([item["name"] for item in keys], ["laptop.pub"])
         self.assertEqual(keys[0]["key_type"], "ssh-ed25519")
 
-    def test_gtk_key_management_is_still_not_claimed_as_available(self):
+    def test_gtk_key_management_is_in_shared_resource_catalog(self):
         catalog = management_service.dispatch({
             "api_version": 1, "request_id": "gtk-key-catalog-001",
             "operation": "management.catalog", "args": {},
@@ -87,6 +100,7 @@ class SshKeyClientContractTests(unittest.TestCase):
         ssh = next(item for item in catalog["data"]["resources"]
                    if item["id"] == "network.ssh.managed-8023")
         self.assertIn("ssh.keys.add.preview", ssh["supported_operations"])
+        self.assertIn("ssh.client-key.create.preview", ssh["supported_operations"])
 
 
 if __name__ == "__main__":

@@ -75,6 +75,32 @@ class ManagementServiceTests(unittest.TestCase):
             self.assertEqual((home / ".ssh/authorized_keys").read_text(), public_key + "\n")
             self.assertEqual((home / ".ssh/authorized_keys").stat().st_mode & 0o777, 0o600)
 
+    def test_native_ssh_client_key_generation_uses_preview_and_private_file_permissions(self) -> None:
+        import os
+        with tempfile.TemporaryDirectory(prefix="ssh-client-key-service-") as temp:
+            home = Path(temp)
+            home.mkdir(mode=0o700, exist_ok=True)
+            ssh = home / ".ssh"
+            ssh.mkdir(mode=0o700)
+            os.chown(home, os.getuid(), -1); os.chown(ssh, os.getuid(), -1)
+            env = {**NATIVE_ENV, "HOME": str(home)}
+            preview = management_service.dispatch(request("ssh.client-key.create.preview", {
+                "name": "recovery8023"}), env=env)
+            self.assertTrue(preview["ok"])
+            self.assertTrue(preview["data"]["requires_confirmation"])
+            self.assertNotIn("BEGIN OPENSSH PRIVATE KEY", repr(preview))
+            created = management_service.dispatch(request("ssh.client-key.create.apply", {
+                "name": "recovery8023", "confirmed": True,
+                "plan_id": preview["data"]["plan_id"]}), env=env)
+            self.assertTrue(created["ok"])
+            private = ssh / "ternuxx-keys" / "recovery8023"
+            public = Path(str(private) + ".pub")
+            self.assertEqual(private.stat().st_mode & 0o777, 0o600)
+            self.assertTrue(public.is_file())
+            self.assertRegex(created["data"]["fingerprint"], r"^SHA256:[A-Za-z0-9+/]{43}$")
+            self.assertNotIn(private.read_text(), repr(created))
+            self.assertTrue(created["data"]["enrollment_required"])
+
     def test_ssh_key_changes_fail_closed_without_verified_managed_key_path(self) -> None:
         result = management_service.dispatch(request("ssh.keys.remove.preview", {
             "fingerprint": "SHA256:abc"}), env=NATIVE_ENV)
