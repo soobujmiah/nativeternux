@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles passed with scoped preservation; cross-client continuity, fresh-guest retirement/rollback and remaining P4 acceptance stay open.
+Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles passed with scoped preservation; GTK shared SSH key enrollment/revocation source and installed identity now pass. Cross-client continuity, fresh-guest retirement/rollback, key generation/recovery, authentication qualification, per-service SSH boot/Wake Lock policy, and remaining P4 acceptance stay open.
 
-**Next action:** Qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and implement shared credential/service-policy controls while continuing the full source/document audit.
+**Next action:** Complete remaining SSH key generation/recovery, authentication and service-policy acceptance; qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and continue the full source/document audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -96,6 +96,7 @@ Evidence:
 - [docs/evidence/2026-10-22-tui-terminal-replay.md](evidence/2026-10-22-tui-terminal-replay.md)
 - [docs/evidence/2026-10-22-web-terminal-replay.md](evidence/2026-10-22-web-terminal-replay.md)
 - [docs/evidence/2026-10-22-gtk-terminal-picker-review.md](evidence/2026-10-22-gtk-terminal-picker-review.md)
+- [docs/evidence/2026-10-22-ssh-gtk-key-controls.md](evidence/2026-10-22-ssh-gtk-key-controls.md)
 
 ## P5 — Distro and display compatibility profiles
 

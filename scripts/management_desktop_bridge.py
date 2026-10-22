@@ -64,6 +64,35 @@ def main(argv: list[str]) -> int:
                 "id", "category_id", "name", "status", "availability", "description"))
                   + "\t" + clean(", ".join(operation_names)))
         return 0
+    if action in {"ssh-key-add-preview", "ssh-key-remove-preview"} and len(argv) == 2:
+        operation = "ssh.keys.add.preview" if action == "ssh-key-add-preview" else "ssh.keys.remove.preview"
+        args = {"public_key": argv[1]} if action == "ssh-key-add-preview" else {"fingerprint": argv[1]}
+        result = call(operation, args)
+        if not result.get("ok"):
+            print(management_presentation.format_report(result))
+            return 1
+        data = result.get("data", {})
+        plan_id = data.get("plan_id")
+        fingerprint = data.get("fingerprint")
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{24}", plan_id) or not isinstance(fingerprint, str):
+            print("Could not verify the exact SSH key change preview.")
+            return 1
+        impact = "Shared authorized keys for owner-managed SSH 8022 and Ternuxx SSH 8023. "
+        impact += ("Adds " if action == "ssh-key-add-preview" else "Removes ") + fingerprint
+        print("P\t" + plan_id + "\t" + fingerprint + "\t" + clean(impact))
+        return 0
+    if action in {"ssh-key-add-apply", "ssh-key-remove-apply"} and len(argv) == 4 and argv[1] == "confirmed":
+        subject, plan_id = argv[2:]
+        if not re.fullmatch(r"[0-9a-f]{24}", plan_id):
+            print("The SSH key change preview expired; create a new preview.")
+            return 2
+        is_add = action == "ssh-key-add-apply"
+        operation = "ssh.keys.add.apply" if is_add else "ssh.keys.remove.apply"
+        args = ({"public_key": subject} if is_add else {"fingerprint": subject})
+        args.update({"confirmed": True, "plan_id": plan_id})
+        result = call(operation, args)
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "ssh-keys-list" and len(argv) == 1:
         result = call("ssh.keys.list")
         print(management_presentation.format_report(result))

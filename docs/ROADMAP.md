@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and implement shared credential/service-policy controls while continuing the full source/document audit.
+**Next action:** Complete remaining SSH key generation/recovery, authentication and service-policy acceptance; qualify cross-client terminal continuity on the separate guest; add exact fresh-guest retirement/rollback, complete config parity and probe plans, and continue the full source/document audit.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

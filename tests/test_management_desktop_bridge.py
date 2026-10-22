@@ -39,6 +39,28 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.env.stop()
 
+    def test_ssh_key_previews_and_applies_use_shared_service_with_exact_plan(self) -> None:
+        preview = {"ok": True, "data": {"plan_id": "a" * 24,
+                  "fingerprint": "SHA256:" + "b" * 43}}
+        with mock.patch.object(bridge, "call", return_value=preview) as dispatch, \
+             redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["ssh-key-add-preview", "ssh-ed25519 AAAA test"]), 0)
+        dispatch.assert_called_once_with("ssh.keys.add.preview", {"public_key": "ssh-ed25519 AAAA test"})
+        fields = output.getvalue().strip().split(chr(9))
+        self.assertEqual(fields[:3], ["P", "a" * 24, "SHA256:" + "b" * 43])
+        self.assertIn("8022", fields[3]); self.assertIn("8023", fields[3])
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"changed": True}}) as dispatch, \
+             redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["ssh-key-add-apply", "confirmed", "ssh-ed25519 AAAA test", "a" * 24]), 0)
+        dispatch.assert_called_once_with("ssh.keys.add.apply", {
+            "public_key": "ssh-ed25519 AAAA test", "confirmed": True, "plan_id": "a" * 24,
+        })
+
+    def test_ssh_key_apply_rejects_malformed_plan_before_dispatch(self) -> None:
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["ssh-key-remove-apply", "confirmed", "SHA256:x", "bad"]), 2)
+        dispatch.assert_not_called()
+
     def test_ssh_key_inventory_uses_the_shared_read_operation(self) -> None:
         report = {"ok": True, "data": {"status": "available", "key_count": 1,
                   "keys": [{"key_type": "ssh-ed25519", "fingerprint": "SHA256:abc", "label": "laptop"}]}}
