@@ -62,6 +62,17 @@ class ManagementCatalogTests(unittest.TestCase):
             self.assertTrue(set(resource["supported_operations"]).issubset(management_service.OPERATIONS))
             self.assertEqual(set(resource["operation_capabilities"]), set(resource["supported_operations"]))
 
+    def test_replay_guest_lifecycle_is_separate_from_existing_debian(self):
+        catalog = management_catalog.build_catalog(set(management_service.OPERATIONS))
+        resources = {item["id"]: item for item in catalog["resources"]}
+        replay = resources["proot.replay-guests"]
+        existing = resources["proot.debian.workloads"]
+        self.assertIn("proot.setup.retire.preview", replay["supported_operations"])
+        self.assertIn("proot.setup.restore.apply", replay["supported_operations"])
+        self.assertNotIn("proot.setup.retire.apply", existing["supported_operations"])
+        self.assertNotIn("proot.setup.restore.apply", existing["supported_operations"])
+        self.assertTrue(replay["security"]["disruptive_operations"])
+
     def test_proot_session_health_is_catalogued_as_read_only(self):
         catalog = management_catalog.build_catalog(set(management_service.OPERATIONS))
         resource = next(item for item in catalog["resources"] if item["id"] == "proot.debian.workloads")

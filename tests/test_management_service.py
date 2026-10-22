@@ -29,6 +29,24 @@ def request(operation: object, args: object = None, api_version: int = 1) -> dic
 
 
 class ManagementServiceTests(unittest.TestCase):
+    def test_replay_guest_lifecycle_is_routed_through_typed_shared_operations(self) -> None:
+        env = {**NATIVE_ENV, "HOME": "/tmp/replay-home",
+               "TERNUXX_STATE_DIR": "/tmp/replay-home/.local/share/ternuxx"}
+        with patch.object(management_service.retire_fresh_guest, "retire_preview",
+                          return_value={"status": "preview", "plan_id": "a" * 64}) as preview:
+            result = management_service.dispatch(request("proot.setup.retire.preview", {
+                "alias": "ternuxx-replay-p4"}), env=env)
+        self.assertTrue(result["ok"])
+        preview.assert_called_once_with(prefix=NATIVE_ENV["PREFIX"], home="/tmp/replay-home",
+                                        state_dir=env["TERNUXX_STATE_DIR"], alias="ternuxx-replay-p4")
+        denied_default = management_service.dispatch(request("proot.setup.retire.preview", {
+            "alias": "debian"}), env=env)
+        self.assertFalse(denied_default["ok"])
+        self.assertEqual(denied_default["error"]["code"], "proot_guest_retirement_failed")
+        denied_unconfirmed = management_service.dispatch(request("proot.setup.retire.apply", {
+            "alias": "ternuxx-replay-p4", "confirmed": False, "plan_id": "a" * 64}), env=env)
+        self.assertFalse(denied_unconfirmed["ok"])
+        self.assertEqual(denied_unconfirmed["error"]["code"], "confirmation_required")
     def test_ssh_key_inventory_is_a_separate_read_only_shared_operation(self) -> None:
         import tempfile
         with tempfile.TemporaryDirectory(prefix="ssh-keys-read-") as temp:

@@ -430,6 +430,10 @@ tx proot setup adopt-preview --user NAME
 tx proot setup adopt --user NAME --yes --plan-id PLAN_ID
 tx proot setup fresh-preview --user NAME [--alias ternuxx-replay-NAME]
 tx proot setup fresh-install --user NAME [--alias ternuxx-replay-NAME] --yes --plan-id PLAN_ID
+tx proot setup retire-preview --alias ternuxx-replay-NAME
+tx proot setup retire --alias ternuxx-replay-NAME --yes --plan-id PLAN_ID
+tx proot setup restore-preview --alias ternuxx-replay-NAME --backup-id BACKUP_ID
+tx proot setup restore --alias ternuxx-replay-NAME --backup-id BACKUP_ID --yes --plan-id PLAN_ID
 tx proot legacy-cli preview
 tx proot legacy-cli remove --plan-id PLAN_ID
 tx proot legacy-cli rollback --backup-id BACKUP_ID

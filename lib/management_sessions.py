@@ -37,6 +37,7 @@ MUTATING_OPERATIONS = frozenset({
     "continuity.verify-reboot-test", "proot.app.launch", "proot.shortcuts.apply", "proot.shortcuts.sync",
     "cron.jobs.mutation.preview", "cron.jobs.mutation.apply",
     "proot.start", "proot.stop", "proot.recovery.reconcile",
+    "proot.setup.retire.preview", "proot.setup.retire.apply", "proot.setup.restore.preview", "proot.setup.restore.apply",
     "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",
     "boot.helpers.preview", "boot.helpers.apply",
     "terminal.start.preview", "terminal.start", "terminal.channel.issue",

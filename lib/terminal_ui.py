@@ -178,6 +178,39 @@ def _attached_terminal(screen, client, *, session_id=None, plan_id=None):
         screen.refresh()
 
 
+def _manage_replay_guest(screen: "curses._CursesWindow") -> dict[str, object]:
+    action = _choose(screen, "Ternuxx replay guest", [
+        ("retire", "Retire an idle replay guest (keeps exact backup)"),
+        ("restore", "Restore a retired replay guest"),
+    ])
+    alias = _prompt(screen, "Exact alias (ternuxx-replay-NAME)")
+    if not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias):
+        return {"ok": False, "error": {"code": "invalid_replay_alias"}}
+    backup_id = ""
+    if action == "retire":
+        preview = _call("proot.setup.retire.preview", {"alias": alias})
+    elif action == "restore":
+        backup_id = _prompt(screen, "Backup ID (32 lowercase hex characters)", 32)
+        if not re.fullmatch(r"[0-9a-f]{32}", backup_id):
+            return {"ok": False, "error": {"code": "invalid_backup_id"}}
+        preview = _call("proot.setup.restore.preview", {"alias": alias, "backup_id": backup_id})
+    else:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    if not preview.get("ok"):
+        return preview
+    plan = preview.get("data", {})
+    plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
+    if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        return {"ok": False, "error": {"code": "invalid_guest_lifecycle_preview"}}
+    _show_details(screen, preview)
+    if _prompt(screen, "Apply this exact guest change? Type yes").lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    if action == "retire":
+        return _call("proot.setup.retire.apply", {"alias": alias, "confirmed": True, "plan_id": plan_id})
+    return _call("proot.setup.restore.apply", {"alias": alias, "backup_id": backup_id,
+                                                "confirmed": True, "plan_id": plan_id})
+
+
 def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
     """Manage fixed Ternuxx PRoot sessions through the shared typed service."""
     listed = _call("proot.sessions.list")
@@ -192,6 +225,7 @@ def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
         ("start-probe", "Start a bounded diagnostic probe"),
         ("start-login", "Start an interactive terminal"),
         ("attach", "Attach to an existing terminal"), ("stop", "Close a managed session"),
+        ("guest-lifecycle", "Retire or restore a Ternuxx replay guest"),
     ])
     if choice in {"status", "list"}:
         return listed
@@ -1132,12 +1166,16 @@ def _run(screen: "curses._CursesWindow") -> int:
                 report = _manage_logs(screen)
             elif resource["id"] == "native.desktop.session":
                 report = _desktop_action(screen, resource)
+            elif resource["id"] == "proot.replay-guests":
+                report = _manage_replay_guest(screen)
             elif resource["id"] == "proot.debian.workloads":
                 choice = _choose(screen, "PRoot workloads", [("launch", "Launch named app"),
-                    ("shortcut", "Add or remove app shortcut"), ("sessions", "Inspect or manage sessions")]).lower()
+                    ("shortcut", "Add or remove app shortcut"), ("sessions", "Inspect or manage sessions"),
+                    ("guest", "Retire or restore a Ternuxx replay guest")]).lower()
                 report = (_launch_proot_app(screen) if choice == "launch" else
                           _manage_proot_shortcut(screen) if choice == "shortcut" else
                           _manage_proot_sessions(screen) if choice == "sessions" else
+                          _manage_replay_guest(screen) if choice == "guest" else
                           {"ok": False, "error": {"code": "cancelled"}})
             elif resource["id"] == "network.ssh.managed-8023":
                 report = _managed_ssh_action(screen, resource)

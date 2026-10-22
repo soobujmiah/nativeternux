@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Separate replay guest setup and CLI, authenticated Web API, TUI, and GTK terminal lifecycles pass. A real same-session CLI→Web API→TUI handoff passes; GTK picker sees that session, while GTK/VTE same-session handoff, fresh-guest retirement/rollback, provider routes and remaining P4 acceptance stay open. Durable SSH key rollback and four-client startup/Wake Lock controls pass; bounded password/cold-boot gates remain.
+Exact replay-guest retire/restore now shares typed Native management operations across CLI, authenticated Web, TUI and installed GTK; the live CLI cycle preserved exact guest identity. Web and GTK interactions and the remaining P4 provider/terminal gates remain open.
 
-**Next action:** Qualify same-session attach and I/O through GTK/VTE, then finish exact replay guest retirement/rollback and remaining provider-route/config acceptance without touching the owner’s active PRoot; continue the requirement and document audit. Keep SSH work bounded to password recovery and cold-boot evidence.
+**Next action:** Verify authenticated Web preview/apply authorization and review the GTK replay-guest dialog; then complete GTK/VTE same-session attach and remaining provider routes without touching the owner’s active PRoot.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -103,6 +103,7 @@ Evidence:
 - [docs/evidence/2026-10-22-managed-ssh-wakelock-policy.md](evidence/2026-10-22-managed-ssh-wakelock-policy.md)
 - [docs/evidence/2026-10-22-ssh-disposable-auth-qualification.md](evidence/2026-10-22-ssh-disposable-auth-qualification.md)
 - [docs/evidence/2026-10-22-cross-client-terminal-handoff.md](evidence/2026-10-22-cross-client-terminal-handoff.md)
+- [docs/evidence/2026-10-22-replay-guest-retirement.md](evidence/2026-10-22-replay-guest-retirement.md)
 
 ## P5 — Distro and display compatibility profiles
 

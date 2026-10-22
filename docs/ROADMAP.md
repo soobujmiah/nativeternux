@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Qualify same-session attach and I/O through GTK/VTE, then finish exact replay guest retirement/rollback and remaining provider-route/config acceptance without touching the owner’s active PRoot; continue the requirement and document audit. Keep SSH work bounded to password recovery and cold-boot evidence.
+**Next action:** Verify authenticated Web preview/apply authorization and review the GTK replay-guest dialog; then complete GTK/VTE same-session attach and remaining provider routes without touching the owner’s active PRoot.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

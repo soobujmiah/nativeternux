@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 406,
+  "document_count": 407,
   "read_count": 95,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "2ef575e29358338e36a05d35373d3c648e47930729eaa55116115885f7be8f25",
+      "sha256": "dd6622926c500a0423d75bbe1c9e3b4d6e66571ed77503fe7e09b82ad573504b",
       "lines": 53,
-      "read_status": "read",
-      "read_sha256": "2ef575e29358338e36a05d35373d3c648e47930729eaa55116115885f7be8f25"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "f15d94cd83dc255135b13feb6608472fba564ed97841e2dda4d603cca99f9912",
+      "sha256": "8e710536a48ea41e9d3efdaacaf949e6a70c188220398eb1e64df5386ceada8a",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "9a7bd5dcf71cfa606eb6394e4afcfe33395de2f2533112b0080bfb496b7a98ed",
-      "lines": 164,
+      "sha256": "c61a23367ccc02f67f50806b330c69ef8730ddb797e0ed3c58475062bd503d46",
+      "lines": 165,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "ab288c95a2119bd32e71fe58060b7adaf7714a51b9c040f2f56d216c2fe4eb43",
+      "sha256": "feed1f215091c1ad9dcf58136ed1db9e70a6ac8683b2bfad3403e683c65922df",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -515,8 +515,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "1c28facdab402c697295ddf50831e917bdf64a19955ad5c7faebed9d8227a55f",
-      "lines": 89,
+      "sha256": "fde87513d822d49018b32d733f2636dc974a8845de149dd2516d27ed4eb650ac",
+      "lines": 90,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2433,6 +2433,14 @@
       "read_sha256": "c33ce87a4edef08faa7fea9a3eaa683e5565fd86c4cd711bde09e64ddeb96c47"
     },
     {
+      "path": "docs/evidence/2026-10-22-replay-guest-retirement.md",
+      "kind": "narrative",
+      "sha256": "78e753d4d2dd3ca3764ba06623c53bf0e63b576fa09404c3341fdcc00c9d950d",
+      "lines": 39,
+      "read_status": "read",
+      "read_sha256": "78e753d4d2dd3ca3764ba06623c53bf0e63b576fa09404c3341fdcc00c9d950d"
+    },
+    {
       "path": "docs/evidence/2026-10-22-ssh-8023-key-recovery.md",
       "kind": "narrative",
       "sha256": "79773527bf5b1097d8a088e931fcef17712aaffc9c33077eb6feed3c38c2c999",
@@ -2851,8 +2859,8 @@
     {
       "path": "docs/testing/README.md",
       "kind": "narrative",
-      "sha256": "311de97703a22af52cd3dbe14144ba3800f2675fa73ba83fa823c98d308a4551",
-      "lines": 85,
+      "sha256": "75002eb74ed3cb123cf08868c560cf7cecc47fd1523f27cb26207344c5e15473",
+      "lines": 87,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2883,8 +2891,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "446f5a574ae4eea725ecfc16d96ac9be0f3f333858615845941b4ee5132c83c8",
-      "lines": 179,
+      "sha256": "90365d6b1c0746c4f6b527bd9059c75b9dbd598b9811cb9c19f34b548abd57f3",
+      "lines": 180,
       "read_status": "pending",
       "read_sha256": null
     },

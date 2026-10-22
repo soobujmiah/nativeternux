@@ -302,6 +302,42 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.list")
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action == "guest-lifecycle-preview" and len(argv) == 4:
+        kind, alias, backup_id = argv[1:]
+        if not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_replay_alias"}}))
+            return 2
+        if kind == "retire" and backup_id == "-":
+            result = call("proot.setup.retire.preview", {"alias": alias})
+        elif kind == "restore" and re.fullmatch(r"[0-9a-f]{32}", backup_id):
+            result = call("proot.setup.restore.preview", {"alias": alias, "backup_id": backup_id})
+        else:
+            print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_target"}}))
+            return 2
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        data = result.get("data", {})
+        plan_id = data.get("plan_id") if isinstance(data, dict) else None
+        impact = data.get("operation", {}).get("impact", "") if isinstance(data, dict) else ""
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_preview"}})); return 1
+        print("\t".join(("G", kind, plan_id, alias, backup_id, clean(impact))))
+        return 0
+    if action == "guest-lifecycle-apply" and len(argv) == 5:
+        kind, alias, backup_id, plan_id = argv[1:]
+        if (kind not in {"retire", "restore"}
+                or not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias)
+                or not re.fullmatch(r"[0-9a-f]{64}", plan_id)
+                or (kind == "retire" and backup_id != "-")
+                or (kind == "restore" and not re.fullmatch(r"[0-9a-f]{32}", backup_id))):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_target"}})); return 2
+        if kind == "retire":
+            result = call("proot.setup.retire.apply", {"alias": alias, "confirmed": True, "plan_id": plan_id})
+        else:
+            result = call("proot.setup.restore.apply", {"alias": alias, "backup_id": backup_id,
+                                                         "confirmed": True, "plan_id": plan_id})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "shortcut-list" and len(argv) == 1:
         result = call("proot.shortcuts.list")
         print(management_presentation.format_report(result))

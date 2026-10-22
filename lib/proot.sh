@@ -157,11 +157,11 @@ nt_cmd_proot() {
     db) _nt_use launch; nt_cmd_db "$@" ;;
     gui)   _nt_proot_gui "$@" ;;
     setup)
-      local action="${1:-status}" user="" plan_id="" guest_alias="" confirmed=0 option
+      local action="${1:-status}" user="" plan_id="" backup_id="" guest_alias="" confirmed=0 option
       [ $# -eq 0 ] || shift
       case "$action" in
-        status|adopt-preview|adopt|fresh-preview|fresh-install) ;;
-        *) nt_fail "Use tx proot setup {status|adopt-preview|adopt|fresh-preview|fresh-install}."; return 2 ;;
+        status|adopt-preview|adopt|fresh-preview|fresh-install|retire-preview|retire|restore-preview|restore) ;;
+        *) nt_fail "Use tx proot setup status|adopt-preview|adopt|fresh-preview|fresh-install|retire-preview|retire|restore-preview|restore."; return 2 ;;
       esac
       while [ "$#" -gt 0 ]; do
         option="$1"; shift
@@ -171,6 +171,7 @@ nt_cmd_proot() {
             [ "$#" -gt 0 ] && [ -n "$1" ] || { nt_fail "--alias needs a value."; return 2; }
             guest_alias="$1"; shift ;;
           --plan-id) [ "$#" -gt 0 ] || { nt_fail "--plan-id needs a value."; return 2; }; plan_id="$1"; shift ;;
+          --backup-id) [ "$#" -gt 0 ] || { nt_fail "--backup-id needs a value."; return 2; }; backup_id="$1"; shift ;;
           --yes) confirmed=1 ;;
           --help|-h) nt_help proot; return 0 ;;
           *) nt_fail "Unknown PRoot setup option: $option"; return 2 ;;
@@ -179,6 +180,31 @@ nt_cmd_proot() {
       nt_require_termux || return 1
       nt_require_command python3 || return 1
       local repo_root="${_TN_LIB_DIR%/lib}"
+      if [[ "$action" == retire-preview || "$action" == retire || "$action" == restore-preview || "$action" == restore ]]; then
+        [ -n "$guest_alias" ] && [ -z "$user" ] || { nt_fail "Replay retirement requires --alias ternuxx-replay-NAME."; return 2; }
+        local retirement_action
+        local -a retirement_args=()
+        case "$action" in
+          retire-preview)
+            [ -z "$plan_id" ] && [ -z "$backup_id" ] && [ "$confirmed" -eq 0 ] || { nt_fail "Usage: tx proot setup retire-preview --alias ternuxx-replay-NAME"; return 2; }
+            retirement_action="proot.setup.retire.preview" ;;
+          retire)
+            [ -n "$plan_id" ] && [ -z "$backup_id" ] && [ "$confirmed" -eq 1 ] || { nt_fail "Retire requires --yes and --plan-id from the exact preview."; return 2; }
+            retirement_action="proot.setup.retire.apply" ;;
+          restore-preview)
+            [ -n "$backup_id" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || { nt_fail "Restore preview requires only --backup-id."; return 2; }
+            retirement_action="proot.setup.restore.preview" ;;
+          restore)
+            [ -n "$backup_id" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || { nt_fail "Restore requires --backup-id, --yes, and --plan-id from its exact preview."; return 2; }
+            retirement_action="proot.setup.restore.apply" ;;
+        esac
+        retirement_args=(--operation "$retirement_action" --alias "$guest_alias" --json)
+        [ -z "$plan_id" ] || retirement_args+=(--plan-id "$plan_id")
+        [ -z "$backup_id" ] || retirement_args+=(--backup-id "$backup_id")
+        [ "$confirmed" -eq 0 ] || retirement_args+=(--yes)
+        python3 "$repo_root/lib/management_service.py" "${retirement_args[@]}"
+        return $?
+      fi
       local setup_args=("$action" --repo-root "$repo_root" --json)
       case "$action" in
         status) [ -z "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {

@@ -50,6 +50,8 @@ import proot_sessions
 import terminal_broker
 import timezone_support
 
+import proot_guest_retirement as retire_fresh_guest
+
 
 API_VERSION = 1
 OPERATIONS = {
@@ -115,6 +117,10 @@ OPERATIONS = {
     "proot.shortcuts.preview": {"args": {"action", "app_id"}},
     "proot.shortcuts.apply": {"args": {"action", "app_id", "confirmed", "plan_id"}},
     "proot.guest.verify": {"args": {"distro", "user", "user_source", "display", "backend"}},
+    "proot.setup.retire.preview": {"args": {"alias"}},
+    "proot.setup.retire.apply": {"args": {"alias", "confirmed", "plan_id"}},
+    "proot.setup.restore.preview": {"args": {"alias", "backup_id"}},
+    "proot.setup.restore.apply": {"args": {"alias", "backup_id", "confirmed", "plan_id"}},
     "terminal.broker.status": {"args": set()},
     "terminal.start.preview": {"args": set()},
     "terminal.start": {"args": {"confirmed", "plan_id"}},
@@ -228,6 +234,14 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             or not isinstance(args.get("session_id"), str) or args.get("confirmed") is not True
             or not isinstance(args.get("plan_id"), str)):
         return _error(request_id, "confirmation_required", "PRoot stop requires an exact preview plan and confirmation")
+    if operation == "proot.setup.retire.preview" and (set(args) != {"alias"} or not isinstance(args.get("alias"), str)):
+        return _error(request_id, "invalid_arguments", "retirement preview requires one exact replay alias")
+    if operation == "proot.setup.retire.apply" and (set(args) != {"alias", "confirmed", "plan_id"} or not isinstance(args.get("alias"), str) or args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
+        return _error(request_id, "confirmation_required", "retirement apply requires an exact preview plan and confirmation")
+    if operation == "proot.setup.restore.preview" and (set(args) != {"alias", "backup_id"} or not isinstance(args.get("alias"), str) or not isinstance(args.get("backup_id"), str)):
+        return _error(request_id, "invalid_arguments", "restore preview requires an exact replay alias and backup ID")
+    if operation == "proot.setup.restore.apply" and (set(args) != {"alias", "backup_id", "confirmed", "plan_id"} or not isinstance(args.get("alias"), str) or not isinstance(args.get("backup_id"), str) or args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
+        return _error(request_id, "confirmation_required", "restore apply requires an exact preview plan and confirmation")
     if operation == "timezone.set" and (set(args) != {"timezone"} or not isinstance(args.get("timezone"), str)):
         return _error(request_id, "invalid_arguments", "timezone.set requires one IANA timezone name")
     if operation == "cron.jobs.validate":
@@ -586,6 +600,18 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 if type(confirmed) is not bool or (plan_id is not None and not isinstance(plan_id, str)):
                     return _error(request_id, "invalid_arguments", "shortcut confirmation or plan ID is invalid")
                 data = proot_shortcuts.apply(**shortcut_args, confirmed=confirmed, plan_id=plan_id)
+        elif operation in {"proot.setup.retire.preview", "proot.setup.retire.apply", "proot.setup.restore.preview", "proot.setup.restore.apply"}:
+            common = {"prefix": process_env["PREFIX"], "home": home,
+                      "state_dir": state_dir or os.path.join(home, ".local/share/ternuxx"),
+                      "alias": args["alias"]}
+            if operation == "proot.setup.retire.preview":
+                data = retire_fresh_guest.retire_preview(**common)
+            elif operation == "proot.setup.retire.apply":
+                data = retire_fresh_guest.retire_apply(**common, plan_id=args["plan_id"], confirmed=args["confirmed"])
+            elif operation == "proot.setup.restore.preview":
+                data = retire_fresh_guest.restore_preview(**common, backup_id=args["backup_id"])
+            else:
+                data = retire_fresh_guest.restore_apply(**common, backup_id=args["backup_id"], plan_id=args["plan_id"], confirmed=args["confirmed"])
         elif operation == "proot.guest.verify":
             source = args.get("user_source", "explicit")
             if (not isinstance(args.get("distro"), str)
@@ -857,6 +883,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "deployment_failed", str(exc))
     except proot_sessions.SessionError as exc:
         return _error(request_id, "proot_operation_failed", str(exc))
+    except retire_fresh_guest.RetirementError as exc:
+        return _error(request_id, "proot_guest_retirement_failed", str(exc))
     except proot_shortcuts.ShortcutError as exc:
         return _error(request_id, "shortcut_operation_failed", str(exc))
     except ssh_key_manager.SshKeyMutationError as exc:
@@ -918,6 +946,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--helper-action", choices=("deploy", "rollback"))
     parser.add_argument("--snapshot-id")
     parser.add_argument("--name")
+    parser.add_argument("--alias")
     parser.add_argument("--backup-id")
     parser.add_argument("--operation-id")
     parser.add_argument("--job-id")
@@ -1169,6 +1198,18 @@ def main(argv: list[str] | None = None) -> int:
             else: print("Provide the Ternuxx PRoot session ID.", file=sys.stderr)
             return 1
         payload = {"session_id": args.operation_id}
+    elif args.operation == "proot.setup.retire.preview":
+        if not args.alias: raise SystemExit("--alias is required")
+        payload = {"alias": args.alias}
+    elif args.operation == "proot.setup.retire.apply":
+        if not args.alias or not args.yes or not args.plan_id: raise SystemExit("retire apply requires --alias, --yes and exact --plan-id")
+        payload = {"alias": args.alias, "confirmed": True, "plan_id": args.plan_id}
+    elif args.operation == "proot.setup.restore.preview":
+        if not args.alias or not args.backup_id: raise SystemExit("restore preview requires --alias and --backup-id")
+        payload = {"alias": args.alias, "backup_id": args.backup_id}
+    elif args.operation == "proot.setup.restore.apply":
+        if not args.alias or not args.backup_id or not args.yes or not args.plan_id: raise SystemExit("restore apply requires --alias, --backup-id, --yes and exact --plan-id")
+        payload = {"alias": args.alias, "backup_id": args.backup_id, "confirmed": True, "plan_id": args.plan_id}
     elif args.operation == "timezone.set":
         if not args.timezone:
             response = _error(request_id, "invalid_arguments", "--timezone is required")
