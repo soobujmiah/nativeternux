@@ -1,0 +1,7 @@
+event_id: commit-40d6ee3b2e14-7e7fc4b4bb710900
+repository: soobujmiah/ternuxx
+commit: 40d6ee3b2e1464ffb423f097e9381d1c0c5b8d9e
+kind: commit
+occurred_at: '2026-10-22T06:58:55Z'
+status: completed
+summary: 'fix(web): preserve terminal generation across browser transport'
