@@ -1,0 +1,7 @@
+event_id: commit-d2318634eaa2-0de04b7c6cf3163a
+repository: soobujmiah/ternuxx
+commit: d2318634eaa247a62248083f2bf78b76bbc457c7
+kind: commit
+occurred_at: '2026-10-22T05:46:43Z'
+status: completed
+summary: 'fix(terminal): bind replay guests and release client attachments'
