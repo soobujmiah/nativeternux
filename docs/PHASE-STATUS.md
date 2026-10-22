@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Broker dispatcher, CLI/TUI/GTK terminal paths and GTK shortcut rollback controls are implemented; rollback controls are installed with source/artifact hash parity and visibly present, while the GTK action interaction remains unverified. Foreground no-guest status smoke check passed; persistent service and Web terminal client remain open.
+Broker dispatcher, CLI/TUI/GTK terminal paths and shortcut rollback are implemented across clients. GTK rollback control is installed with source/artifact parity and visually present, but its chooser/preview/confirmation interaction remains unverified. Individual add/remove now share the bulk sync/rollback lock and revalidate under it. Foreground no-guest status smoke check passed; persistent service and Web terminal client remain open.
 
-**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; then unify synchronization with per-shortcut add/remove, continue safe VirGL client visibility and cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit.
+**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; continue safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit. Keep persistent broker service and Web terminal client open until their end-to-end gates pass.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -119,6 +119,7 @@ Evidence:
 - [docs/evidence/2026-10-22-p4-previewed-shortcut-sync.md](evidence/2026-10-22-p4-previewed-shortcut-sync.md)
 - [docs/evidence/2026-10-22-p4-shortcut-sync-rollback.md](evidence/2026-10-22-p4-shortcut-sync-rollback.md)
 - [docs/evidence/2026-10-23-gtk-shortcut-rollback.md](evidence/2026-10-23-gtk-shortcut-rollback.md)
+- [docs/evidence/2026-10-23-p4-shortcut-serialization.md](evidence/2026-10-23-p4-shortcut-serialization.md)
 
 ## P5 — Distro and display compatibility profiles
 

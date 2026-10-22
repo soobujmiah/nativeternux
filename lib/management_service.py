@@ -632,7 +632,10 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 plan_id = args.get("plan_id")
                 if type(confirmed) is not bool or (plan_id is not None and not isinstance(plan_id, str)):
                     return _error(request_id, "invalid_arguments", "shortcut confirmation or plan ID is invalid")
-                data = proot_shortcuts.apply(**shortcut_args, confirmed=confirmed, plan_id=plan_id)
+                data = proot_shortcuts.apply(
+                    **shortcut_args, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"),
+                    confirmed=confirmed, plan_id=plan_id,
+                )
         elif operation in {"proot.setup.retire.preview", "proot.setup.retire.apply", "proot.setup.restore.preview", "proot.setup.restore.apply"}:
             common = {"prefix": process_env["PREFIX"], "home": home,
                       "state_dir": state_dir or os.path.join(home, ".local/share/ternuxx"),

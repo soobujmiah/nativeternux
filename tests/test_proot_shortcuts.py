@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import stat
+import threading
 import sys
 import tempfile
 import unittest
@@ -81,6 +83,46 @@ class ProotShortcutTests(unittest.TestCase):
         self.assertIn(str(self.repo / "tx"), text)
         self.assertNotIn(str(self.repo / "ternuxx"), text)
         self.assertNotIn('proot-x11-app.sh', text)
+
+    def test_individual_shortcut_apply_waits_for_shared_sync_lock(self) -> None:
+        with patch.object(proot_shortcuts, "_available", return_value=True):
+            plan = self.preview()
+            state_dir = self.home / ".local" / "share" / "ternuxx"
+            state = proot_shortcuts._sync_state_root(str(self.home), str(state_dir), create=True)
+            held = proot_shortcuts._sync_lock(state)
+            attempted, done = threading.Event(), threading.Event()
+            outcomes = []
+
+            def apply_shortcut():
+                try:
+                    outcomes.append(proot_shortcuts.apply(
+                        "add", "terminal", home=str(self.home), prefix="/termux",
+                        repo_root=str(self.repo), confirmed=True, plan_id=plan["plan_id"],
+                        path="/bin", state_dir=str(state_dir)))
+                except Exception as exc:
+                    outcomes.append(exc)
+                finally:
+                    done.set()
+
+            original_lock = proot_shortcuts._sync_lock
+
+            def tracked_lock(path):
+                attempted.set()
+                return original_lock(path)
+
+            worker = threading.Thread(target=apply_shortcut)
+            with patch.object(proot_shortcuts, "_sync_lock", side_effect=tracked_lock):
+                worker.start()
+                try:
+                    self.assertTrue(attempted.wait(2))
+                    self.assertFalse(done.wait(0.15), "individual apply bypassed the bulk-sync lock")
+                finally:
+                    os.close(held)
+                self.assertTrue(done.wait(2))
+                worker.join(timeout=2)
+        self.assertEqual(len(outcomes), 1)
+        self.assertIsInstance(outcomes[0], dict)
+        self.assertEqual(outcomes[0]["status"], "complete")
 
     def test_stale_preview_is_rejected_and_existing_unowned_file_is_preserved(self) -> None:
         with patch.object(proot_shortcuts, "_available", return_value=True):

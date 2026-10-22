@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Broker dispatcher, CLI/TUI/GTK terminal paths and GTK shortcut rollback controls are implemented; rollback controls are installed with source/artifact hash parity and visibly present, while the GTK action interaction remains unverified. Foreground no-guest status smoke check passed; persistent service and Web terminal client remain open.
+Broker dispatcher, CLI/TUI/GTK terminal paths and shortcut rollback are implemented across clients. GTK rollback control is installed with source/artifact parity and visually present, but its chooser/preview/confirmation interaction remains unverified. Individual add/remove now share the bulk sync/rollback lock and revalidate under it. Foreground no-guest status smoke check passed; persistent service and Web terminal client remain open.
 
-**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; then unify synchronization with per-shortcut add/remove, continue safe VirGL client visibility and cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit.
+**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; continue safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit. Keep persistent broker service and Web terminal client open until their end-to-end gates pass.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

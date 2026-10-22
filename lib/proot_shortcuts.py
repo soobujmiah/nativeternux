@@ -974,38 +974,50 @@ def preview(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
 
 def apply(action: str, app_id: str, *, home: str, prefix: str, repo_root: str,
           confirmed: bool, plan_id: str | None, xdg_data_home: str | None = None,
-          path: str = "") -> dict[str, Any]:
-    plan = preview(action, app_id, home=home, prefix=prefix, repo_root=repo_root,
-                   xdg_data_home=xdg_data_home, path=path)
-    if not plan["changed"]:
-        return {**plan, "status": "already_in_requested_state"}
+          path: str = "", state_dir: str | None = None) -> dict[str, Any]:
+    initial = preview(action, app_id, home=home, prefix=prefix, repo_root=repo_root,
+                      xdg_data_home=xdg_data_home, path=path)
+    if not initial["changed"]:
+        return {**initial, "status": "already_in_requested_state"}
     if not confirmed or not isinstance(plan_id, str):
-        return {**plan, "status": "confirmation_required"}
-    if plan_id != plan["plan_id"]:
+        return {**initial, "status": "confirmation_required"}
+    if plan_id != initial["plan_id"]:
         raise ShortcutError("shortcut state changed or plan ID does not match the current preview")
-    _, app_dir = _paths(home, xdg_data_home)
-    target = _target(app_dir, app_id)
-    app_dir.mkdir(parents=True, exist_ok=True)
-    if action == "remove":
-        target.unlink()
-    else:
-        payload = _entry(app_id, repo_root=repo_root)
-        fd, temporary = tempfile.mkstemp(prefix=".ternuxx-shortcut-", dir=app_dir)
-        try:
-            with os.fdopen(fd, "wb") as stream:
-                stream.write(payload)
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.chmod(temporary, 0o644)
-            os.replace(temporary, target)
-        finally:
-            try:
-                os.unlink(temporary)
-            except FileNotFoundError:
-                pass
-    return {**plan, "status": "complete", "changed": True,
-            "safety": {"read_only": False, "running_apps_stopped": False}}
 
+    # Individual add/remove and bulk sync/rollback share one inter-process lock.
+    state = _sync_state_root(home, state_dir, create=True)
+    lock_fd = _sync_lock(state)
+    try:
+        current = preview(action, app_id, home=home, prefix=prefix, repo_root=repo_root,
+                          xdg_data_home=xdg_data_home, path=path)
+        if not current["changed"]:
+            return {**current, "status": "already_in_requested_state"}
+        if plan_id != current["plan_id"]:
+            raise ShortcutError("shortcut state changed or plan ID does not match the current preview")
+        _, app_dir = _paths(home, xdg_data_home)
+        target = _target(app_dir, app_id)
+        app_dir.mkdir(parents=True, exist_ok=True)
+        if action == "remove":
+            target.unlink()
+        else:
+            payload = _entry(app_id, repo_root=repo_root)
+            fd, temporary = tempfile.mkstemp(prefix=".ternuxx-shortcut-", dir=app_dir)
+            try:
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(payload)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.chmod(temporary, 0o644)
+                os.replace(temporary, target)
+            finally:
+                try:
+                    os.unlink(temporary)
+                except FileNotFoundError:
+                    pass
+        return {**current, "status": "complete", "changed": True,
+                "safety": {"read_only": False, "running_apps_stopped": False}}
+    finally:
+        os.close(lock_fd)
 
 def launch(app_id: str, *, prefix: str, repo_root: str, env: dict[str, str],
            display: str | None = None) -> dict[str, Any]:
