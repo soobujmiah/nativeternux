@@ -2,7 +2,7 @@
 
 **Owner direction recorded:** 2026-10-18
 **Architecture:** [ADR-0004](decisions/ADR-0004-three-interfaces-shared-management.md)
-**Current project phase:** P3 — Doctor, management, and recovery
+**Current project phase:** P4 - Existing Ternux PRoot feature-parity provider — Doctor, management, and recovery
 
 ## Product requirement
 
@@ -24,7 +24,7 @@ CLI, X11 GUI, and local Web UI must manage the same Ternuxx resources through th
 
 - `lib/management_service.py` is a typed local application-service with a narrow operation allowlist. Many P3 operations use it, but the CLI/API coverage is incomplete.
 - `lib/management_authorization.py`, `lib/management_sessions.py`, the HTTP adapter/server, and the foreground runtime provide default-deny scopes, one-use session bootstrap, loopback/origin guards, bounded requests, and graceful drain.
-- The HTTP runtime is read-only, started explicitly in the foreground, and requires a TTY-delivered bootstrap secret. The tx web client presents authenticated read-only catalog, Doctor, desktop, PRoot, SSH, and recovery views; it has no mutation dispatch. A browser bootstrap without terminal secret delivery and a general X11 management client remain unimplemented.
+- The HTTP runtime starts explicitly in the foreground and requires a TTY-delivered bootstrap secret. Ordinary sessions are read-only; authenticated Web mode grants durable, CSRF-protected mutations for reviewed desktop, SSH/key, graphics, named-app, shortcut, Cron, PRoot session, and replay-guest actions. PRoot dead-session reconciliation now has a preview-confirm flow that updates only an exactly verified exited session record and sends no signal. Broad boot, backup/restore, scheduler, timezone, and recovery-write parity remain open. Browser bootstrap without terminal secret delivery and a general X11 management client also remain unimplemented.
 - PRoot GUI apps have been verified as X11 clients on native `:1`; the first PRoot shortcut/app slice now has typed operations in `lib/management_service.py`. CLI shortcuts, desktop-entry launches, and the X11 shortcut manager route through those operations. The list reports Debian as the launch provider and native Termux as the shortcut-storage owner; unknown availability is not promoted to installed.
 - `tx tui` now has a guided named-app launch path: the user selects the existing PRoot app ID and explicit `ternuxx`/`ternux` X11 session, confirms, and dispatches through `proot.app.launch`. A Ternux session requires an explicit display. This adapter does not manage the existing desktop or rootfs; source/test evidence is in [the guided launch record](../evidence/2026-10-19-tui-guided-proot-launch.md).
 - Shortcut add/remove uses a state-bound preview and explicit confirmation. It preserves unowned, edited, symlinked, or out-of-home entries. Existing exact legacy entries can be safely adopted; ambiguous entries remain conflicts. Removing a launcher never stops its running app.
@@ -44,9 +44,9 @@ The product scope also includes PRoot guest lifecycle: adapt/verify the already-
 
 ### M3 — Non-CLI Web/X11 read-only client
 
-**Status: partial.** The tx web command starts the authenticated loopback server, opens the Android browser, and provides read-only management views after a one-time terminal-delivered secret. The TUI also provides shared-service views and an allowlisted operation runner, but it does not close M3's browser/X11 access and usability gates. Browser bootstrap without terminal secret delivery, an X11 Applications-menu entry, and general Graphical management remain open.
+**Status: partial.** The tx web command starts the authenticated loopback server, opens the Android browser, and provides catalog/status views plus reviewed preview-confirmed actions after a one-time terminal-delivered secret. The TUI also provides shared-service views and an allowlisted operation runner, but browser onboarding, X11 Applications-menu entry, general graphical management, and broad client parity remain open.
 
-Serve a small accessible Web client from the same-origin loopback server. Show native and PRoot status with provider labels, evidence age/source, and clear unsupported/unavailable states. Add an X11 Applications-menu entry that starts the on-demand client safely. Design a user-visible bootstrap flow that does not require terminal copy/paste and does not weaken same-origin/session protections. Keep mutation scopes unavailable in this milestone.
+Serve a small accessible Web client from the same-origin loopback server. Show native and PRoot status with provider labels, evidence age/source, and clear unsupported/unavailable states. Add an X11 Applications-menu entry that starts the on-demand client safely. Design a user-visible bootstrap flow that does not require terminal copy/paste and does not weaken same-origin/session protections. Grant mutation scopes only to reviewed shared-service operations with exact previews, CSRF, idempotency, and client-side confirmation.
 
 ### M4 — Confirmed configuration operations
 
@@ -58,7 +58,7 @@ Provide guided setup, optional provider selection, dependency previews, applicat
 
 ## Current disposition
 
-The M1 domain registry and Doctor service entry are implemented; M1 is not complete because several domain adapters and PRoot lifecycle operations remain. The first app slice and M2 source/fixture gates pass. Web mode grants narrow, durable and CSRF-protected mutations for selected desktop, graphics, SSH, named-app and shortcut actions; the ordinary API stays read-only. TUI and GTK use the shared service with typed actions and confirmations. Physical X11 manager interaction, complete browser onboarding and broad resource parity remain open. P3 remains active; do not infer phase completion from these source gates.
+The M1 domain registry and Doctor service entry are implemented; M1 is not complete because several domain adapters and PRoot lifecycle operations remain. The first app slice and M2 source/fixture gates pass. Web mode grants narrow, durable and CSRF-protected mutations for selected desktop, graphics, SSH/key, named-app, shortcut, Cron, PRoot-session and replay-guest actions; the ordinary API stays read-only. Web PRoot recovery reconciliation shares the typed service and changes only an exactly verified exited session record without signaling a process. TUI and GTK use the same service with typed actions and confirmations. Physical X11 manager interaction, complete browser onboarding, broad resource parity and the remaining recovery writes stay open. P4 remains active; do not infer phase completion from this source slice.
 
 ## Completion gates
 

@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "browser": "153.5.0",
+  "mode": "visible",
+  "distro": "ternuxx-replay-p4",
+  "display": ":1",
+  "viewport": {
+    "requested_width": 752,
+    "width": 742,
+    "height": 881,
+    "horizontal_overflow": false,
+    "active_category_fits": true
+  },
+  "proot_recovery_control": {
+    "visible_in_action_dock": true,
+    "disabled": true,
+    "label": "Preview and reconcile exited session",
+    "recorded_sessions": 0
+  },
+  "operations": [
+    "management.catalog",
+    "proot.sessions.list",
+    "proot.sessions.list"
+  ],
+  "managed_terminal_session_started": false,
+  "screenshots": [
+    "web-752.png",
+    "web-proot-reconcile-control.png"
+  ],
+  "source_sha256": {
+    "lib/management_web_ui.html": "4461edad9fa365ffefbb288435c319512a701f073c7cf187f63ca8cbb8db57b5",
+    "lib/management_http_runtime.py": "4b70a538d4a4da76ad9a077c952d6cc5b206343a13d51b521e63c7184d9cd8ed",
+    "lib/management_catalog.py": "de79e89bf5ac1db74efdd4a25098659952a7a9c4686195ed761c44dfaa0de84f"
+  },
+  "note": "One visible run completed successfully. Two later reruns timed out; the completed render and screenshot are retained."
+}

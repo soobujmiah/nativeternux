@@ -81,6 +81,8 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 
 | A44 | Web management page inline JavaScript contained three syntax errors, preventing controls from binding; mobile active-category tab clipped after resize | Fixed three confirmation-string/replay-guest syntax defects and added resize-aware active-tab scrolling. Firefox ESR 153.5.0 visible on Native X11 :1 passed the browser control/render acceptance at 752px; headless 390/752/1440 viewport matrix passed. All 848 Native tests pass; no managed guest session started. See [visible Web acceptance](../evidence/2026-10-22-web-ui-visible-acceptance.json) and screenshot. Full mutation/client parity remains open. |
 
+| A45 | Authenticated Web blocked stale PRoot-session recovery even though the shared typed operation was available to CLI, TUI, and GTK | Fixed with a scoped Web mutation, fresh preview, exact plan confirmation, CSRF, durable idempotency, and a control that refuses ambiguous/live processes and states that no signal is sent. The Native API integration uses only a private temporary fixture; the real existing/default guest and processes were untouched. Full cross-client recovery parity remains open. See [Web PRoot recovery reconciliation](../evidence/2026-10-22-web-proot-recovery-reconcile.md) |
+
 ## Continuation order
 
 1. Native UI/GTK SSH key-control remediation, install identity, Native read-only preview, push and CI are complete; the running 720×980 Services/SSH screens have now had a read-only visual pass. Key dialogs, action scrolling and smaller GTK viewports remain unverified; the Web UI now has visible Firefox acceptance.

@@ -415,8 +415,6 @@ class ManagementHTTPAdapter:
 
     def _operation(self, headers: dict[str, object], payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:
         operation = payload.get("operation")
-        if operation == "proot.recovery.reconcile":
-            return self._response(403, {"ok": False, "error": "operation_not_available_in_web"})
         bearer = self._bearer(headers)
         csrf = headers.get("x-ternuxx-csrf")
         if not bearer:

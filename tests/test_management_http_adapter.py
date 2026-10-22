@@ -12,8 +12,10 @@ from unittest.mock import Mock, patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
 import management_http_adapter  # noqa: E402
+import management_service  # noqa: E402
 import management_request_store  # noqa: E402
 import management_sessions  # noqa: E402
+import proot_sessions  # noqa: E402
 
 
 BOOTSTRAP = "T" * 48
@@ -234,16 +236,149 @@ class ManagementHTTPAdapterTests(unittest.TestCase):
             self.assertEqual(json.loads(response)["error"], "mutation_transport_disabled")
             dispatch.assert_not_called()
 
-    def test_web_recovery_reconcile_is_explicitly_unavailable(self) -> None:
-        dispatch = Mock()
-        adapter = make_adapter(dispatcher=dispatch, caps={"proot.session.manage"})
-        payload = {"api_version": 1, "request_id": "request-1234",
-                   "operation": "proot.recovery.reconcile", "args": {"session_id": "proot-" + "a" * 32}}
-        status, _headers, response = adapter.handle(
-            method="POST", path="/api/v1/operations", headers=headers_for(payload_bytes(payload)), body=payload_bytes(payload))
-        self.assertEqual(status, 403)
-        self.assertEqual(json.loads(response)["error"], "operation_not_available_in_web")
-        dispatch.assert_not_called()
+    def test_web_recovery_reconcile_requires_scoped_preview_and_confirmed_idempotent_apply(self) -> None:
+        dispatch = Mock(side_effect=[
+            {"ok": True, "api_version": 1, "request_id": "request-1234",
+             "data": {"action": "mark_exited_without_signal", "confirmation_required": True,
+                      "signal_allowed": False, "plan_id": "plan-" + "b" * 64,
+                      "evidence": "process_absent"}},
+            {"ok": True, "api_version": 1, "request_id": "request-1235",
+             "data": {"state": "stopped", "signal_sent": False}},
+        ])
+        with tempfile.TemporaryDirectory(prefix="ternuxx-http-reconcile-") as temp:
+            home = Path(temp) / "home"
+            home.mkdir(mode=0o700)
+            state_dir = home / ".state"
+            state_dir.mkdir(mode=0o700)
+            store = management_request_store.ManagementRequestStore(home=home, state_dir=state_dir)
+            capabilities = {"diagnostics.read", "proot.session.manage"}
+            adapter = make_adapter(dispatcher=dispatch, caps=capabilities,
+                                   allow_mutations=True, request_store=store)
+            _status, issued = bootstrap(adapter, sorted(capabilities))
+            session = issued["session"]
+
+            preview = {"api_version": 1, "request_id": "request-1234",
+                       "operation": "proot.recovery.reconcile.preview",
+                       "args": {"session_id": "proot-" + "a" * 32}}
+            preview_body = payload_bytes(preview)
+            status, _headers, raw = adapter.handle(
+                method="POST", path="/api/v1/operations",
+                headers=headers_for(preview_body, Authorization=f"Bearer {session['bearer_token']}"),
+                body=preview_body)
+            self.assertEqual(status, 200)
+            self.assertTrue(json.loads(raw)["data"]["signal_allowed"] is False)
+
+            apply = {"api_version": 1, "request_id": "request-1235",
+                     "operation": "proot.recovery.reconcile",
+                     "args": {"session_id": "proot-" + "a" * 32, "confirmed": True,
+                              "plan_id": "plan-" + "b" * 64}}
+            apply_body = payload_bytes(apply)
+            apply_headers = headers_for(
+                apply_body, Authorization=f"Bearer {session['bearer_token']}",
+                **{"X-Ternuxx-CSRF": session["csrf_token"],
+                   "Idempotency-Key": "mutation-key-0004"})
+            status, _headers, raw = adapter.handle(
+                method="POST", path="/api/v1/operations", headers=apply_headers, body=apply_body)
+            self.assertEqual(status, 200)
+            self.assertFalse(json.loads(raw)["data"]["signal_sent"])
+            self.assertEqual(dispatch.call_count, 2)
+            self.assertEqual(dispatch.call_args_list[1].kwargs["caller"], "local_cli")
+
+    def test_web_recovery_reconcile_runs_shared_service_on_private_dead_session_fixture(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="ternuxx-web-reconcile-live-") as temp:
+            base = Path(temp)
+            home = base / "home"
+            home.mkdir(mode=0o700)
+            state_dir = home / ".local/share/ternuxx"
+            state_dir.mkdir(parents=True, mode=0o700)
+            rootfs = base / "fixture-rootfs"
+            rootfs.mkdir(mode=0o700)
+            launcher = base / "fixture-proot-distro"
+            launcher.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            launcher.chmod(0o700)
+            state_root, registry_path, _lock_path = proot_sessions._paths(state_dir, create=True)
+            session_id = "proot-" + "c" * 32
+            pid = 2_000_000_000
+            profile = proot_sessions.PROFILES["isolated-probe"]
+            marker = "TERNUXX_PROOT_SESSION=" + "d" * 32
+            record = {
+                "schema_version": proot_sessions.SCHEMA,
+                "session_id": session_id,
+                "profile": "isolated-probe",
+                "profile_version": 1,
+                "purpose": profile["purpose"],
+                "mode": profile["mode"],
+                "rootfs": str(rootfs),
+                "rootfs_device": rootfs.stat().st_dev,
+                "rootfs_inode": rootfs.stat().st_ino,
+                "launcher": str(launcher),
+                "launcher_device": launcher.stat().st_dev,
+                "launcher_inode": launcher.stat().st_ino,
+                "pid": pid,
+                "process_start": "fixture-process-that-does-not-exist",
+                "process_group": pid,
+                "marker": marker,
+                "expected_argv": [str(launcher), "login", "--minimal", "debian", "--",
+                                  "/usr/bin/env", marker, "/bin/sleep", "300"],
+                "working_directory": "guest-default",
+                "environment_profile": "isolated-no-host-home-or-display",
+                "created_at": "2026-10-22T00:00:00+00:00",
+                "state": "running",
+                "last_verified_at": None,
+                "last_exit_code": None,
+                "transitions": [],
+            }
+            proot_sessions._write_registry(state_root, registry_path, [record])
+            env = {
+                "TERMUX_VERSION": "test",
+                "PREFIX": "/data/data/com.termux/files/usr",
+                "HOME": str(home),
+                "TERNUXX_STATE_DIR": str(state_dir),
+            }
+            store = management_request_store.ManagementRequestStore(home=home, state_dir=state_dir)
+            adapter = management_http_adapter.ManagementHTTPAdapter(
+                expected_origin=ORIGIN,
+                bootstrap_secret=BOOTSTRAP,
+                bootstrap_capabilities={"diagnostics.read", "proot.session.manage"},
+                env=env,
+                dispatcher=management_service.dispatch,
+                allow_mutations=True,
+                request_store=store,
+            )
+            _status, issued = bootstrap(adapter, ["diagnostics.read", "proot.session.manage"])
+            session = issued["session"]
+            session_args = {"session_id": session_id}
+            preview = {"api_version": 1, "request_id": "request-1234",
+                       "operation": "proot.recovery.reconcile.preview", "args": session_args}
+            preview_body = payload_bytes(preview)
+            status, _headers, raw = adapter.handle(
+                method="POST", path="/api/v1/operations",
+                headers=headers_for(preview_body, Authorization=f"Bearer {session['bearer_token']}"),
+                body=preview_body)
+            self.assertEqual(status, 200)
+            preview_result = json.loads(raw)
+            self.assertTrue(preview_result["ok"])
+            self.assertEqual(preview_result["data"]["action"], "mark_exited_without_signal")
+            self.assertFalse(preview_result["data"]["signal_allowed"])
+
+            apply = {"api_version": 1, "request_id": "request-1235",
+                     "operation": "proot.recovery.reconcile",
+                     "args": {"session_id": session_id, "confirmed": True,
+                              "plan_id": preview_result["data"]["plan_id"]}}
+            apply_body = payload_bytes(apply)
+            apply_headers = headers_for(
+                apply_body, Authorization=f"Bearer {session['bearer_token']}",
+                **{"X-Ternuxx-CSRF": session["csrf_token"],
+                   "Idempotency-Key": "mutation-key-0005"})
+            status, _headers, raw = adapter.handle(
+                method="POST", path="/api/v1/operations", headers=apply_headers, body=apply_body)
+            self.assertEqual(status, 200)
+            apply_result = json.loads(raw)
+            self.assertTrue(apply_result["ok"])
+            self.assertEqual(apply_result["data"]["state"], "stopped")
+            self.assertFalse(apply_result["data"]["signal_sent"])
+            self.assertEqual(
+                proot_sessions.show_session(state_dir, session_id)["state"], "stopped")
 
     def test_mutation_idempotency_replays_and_rejects_key_reuse(self) -> None:
         dispatch = Mock(return_value={"ok": True, "api_version": 1,

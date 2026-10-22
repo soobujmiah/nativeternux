@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 417,
+  "document_count": 419,
   "read_count": 97,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "ea45aac4d55aef76acb9633fa0141ca791e7bd5965dbdf8b6f9bffd509b403c0",
-      "lines": 53,
+      "sha256": "4d70759f2ee8361c5c713faf4425716b76c66587b40bde8a89ee43a8d8e6e084",
+      "lines": 55,
       "read_status": "read",
-      "read_sha256": "ea45aac4d55aef76acb9633fa0141ca791e7bd5965dbdf8b6f9bffd509b403c0"
+      "read_sha256": "4d70759f2ee8361c5c713faf4425716b76c66587b40bde8a89ee43a8d8e6e084"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "5b392a190f97e32fcb8f7bf63989e82a63d4727be19155418cfee4860dc7eea1",
+      "sha256": "9c8e3a85c2e032b7a90d1af5c570be1f7c1dd7ff2209e3eae426c541f06c6b7a",
       "lines": 82,
       "read_status": "read",
-      "read_sha256": "5b392a190f97e32fcb8f7bf63989e82a63d4727be19155418cfee4860dc7eea1"
+      "read_sha256": "9c8e3a85c2e032b7a90d1af5c570be1f7c1dd7ff2209e3eae426c541f06c6b7a"
     },
     {
       "path": "SECURITY.md",
@@ -163,10 +163,10 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "d9b848e7e567ddbb1ff508c688c4278ca84426b03e1d5ae58f8b50ac252e3432",
-      "lines": 175,
+      "sha256": "aa383ded7a8050de5c8405e08f8a1fb1e79d5bfe50532b1380841b0c186859f1",
+      "lines": 176,
       "read_status": "read",
-      "read_sha256": "d9b848e7e567ddbb1ff508c688c4278ca84426b03e1d5ae58f8b50ac252e3432"
+      "read_sha256": "aa383ded7a8050de5c8405e08f8a1fb1e79d5bfe50532b1380841b0c186859f1"
     },
     {
       "path": "docs/PRODUCT-VISION.md",
@@ -211,10 +211,10 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "8d1b7ea68d29c615b4233547782bd9d60e10e0c37f1a8359b6873b22290ce2cd",
+      "sha256": "e317b544d8a8b8f7a473ef8fb8de45c4ca7e36c4706aadd17c7a16f5aaca45e9",
       "lines": 311,
       "read_status": "read",
-      "read_sha256": "8d1b7ea68d29c615b4233547782bd9d60e10e0c37f1a8359b6873b22290ce2cd"
+      "read_sha256": "e317b544d8a8b8f7a473ef8fb8de45c4ca7e36c4706aadd17c7a16f5aaca45e9"
     },
     {
       "path": "docs/SOFTWARE-CATALOG.md",
@@ -243,10 +243,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "de9e9c87db67bfe0ead5f7ea5aa66b0b9d6c78eea29d1b1e87829de67eb22ba8",
+      "sha256": "c9273f1480147e44ddc7fef2b7c51238f0570b84f9816ef32bb9d66b256337f4",
       "lines": 25,
       "read_status": "read",
-      "read_sha256": "de9e9c87db67bfe0ead5f7ea5aa66b0b9d6c78eea29d1b1e87829de67eb22ba8"
+      "read_sha256": "c9273f1480147e44ddc7fef2b7c51238f0570b84f9816ef32bb9d66b256337f4"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -323,10 +323,10 @@
     {
       "path": "docs/architecture/SHARED-MANAGEMENT-PLAN.md",
       "kind": "narrative",
-      "sha256": "dde4a759bd9c0bbd85aba61a2e023fa01b3fbd04970e1d834bddfc3830c72f98",
+      "sha256": "0f66b11f1182955024366d8ab50296f088bcf64165098f581fbc6d76a3909694",
       "lines": 69,
       "read_status": "read",
-      "read_sha256": "dde4a759bd9c0bbd85aba61a2e023fa01b3fbd04970e1d834bddfc3830c72f98"
+      "read_sha256": "0f66b11f1182955024366d8ab50296f088bcf64165098f581fbc6d76a3909694"
     },
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
@@ -515,10 +515,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "7183f2f1bed4c1e33e45358704a38318db586541cc7e6c9430b15f11107fb584",
-      "lines": 93,
+      "sha256": "66afd29ab1e9addfe52f92a350aeec913175865d1b7ef9a80379a339eb39a45b",
+      "lines": 95,
       "read_status": "read",
-      "read_sha256": "7183f2f1bed4c1e33e45358704a38318db586541cc7e6c9430b15f11107fb584"
+      "read_sha256": "66afd29ab1e9addfe52f92a350aeec913175865d1b7ef9a80379a339eb39a45b"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2443,10 +2443,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-next-gate-reconciliation.md",
       "kind": "narrative",
-      "sha256": "40e211bdf71ebf7df0ed680839df42a33feb7a723302c5b03dc6af6484330d28",
+      "sha256": "c97edca24f1e16185e3d403a1aba37cc06f88522c123c2131d8ed10fb16b3a2d",
       "lines": 26,
       "read_status": "read",
-      "read_sha256": "40e211bdf71ebf7df0ed680839df42a33feb7a723302c5b03dc6af6484330d28"
+      "read_sha256": "c97edca24f1e16185e3d403a1aba37cc06f88522c123c2131d8ed10fb16b3a2d"
     },
     {
       "path": "docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md",
@@ -2649,6 +2649,14 @@
       "read_sha256": "8e5ef12e08bd415b924aa6bf299f3de1cb3281d77f516c3d5bb59ef74cb5b8b3"
     },
     {
+      "path": "docs/evidence/2026-10-22-web-proot-recovery-reconcile.md",
+      "kind": "narrative",
+      "sha256": "74afa538410246fa3c1f4467087d5efec999184b7276ff4f494042b6b96168cd",
+      "lines": 45,
+      "read_status": "read",
+      "read_sha256": "74afa538410246fa3c1f4467087d5efec999184b7276ff4f494042b6b96168cd"
+    },
+    {
       "path": "docs/evidence/2026-10-22-web-replay-guest-retirement.md",
       "kind": "narrative",
       "sha256": "48ec82008ad5a0ef63cdc2f6ffa5c2a690d633e30a5ede49ca98b9d430aa02d1",
@@ -2781,6 +2789,14 @@
       "kind": "narrative",
       "sha256": "8a224db5de8a842b17d2cd2ab670355bb05ceffe5cd8f7fae3d779fe42d57a7c",
       "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/web-reconcile-visual/report.json",
+      "kind": "structured",
+      "sha256": "2a42a42798c32c63dca32aa7f6a99eebbf8d7bd74cc3b79e7294e9c6eecb83d4",
+      "lines": 36,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2971,10 +2987,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "e26653c65ce8219e5c2b09f929078c982b1f861d5183cd7555a388a2c3c92f1f",
-      "lines": 190,
-      "read_status": "read",
-      "read_sha256": "e26653c65ce8219e5c2b09f929078c982b1f861d5183cd7555a388a2c3c92f1f"
+      "sha256": "40eb3e6db3be17d7ee8582c0577cb405403acbe70365314a01a9c3cab5e72d5a",
+      "lines": 191,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "requirements-dev.txt",

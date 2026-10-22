@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Fresh replay setup and rollback, Zink/Turnip, VirGL drawing, GUI terminal handoff, and visible Web acceptance are evidenced. A bounded Native read-only core sweep also passed with an injected failing proot-distro command; missing/broken guest isolation, Web mutation parity, safe VirGL cleanup, and the full audit remain open.
+Fresh replay setup and rollback, Zink/Turnip, VirGL drawing, GUI terminal handoff, visible Web acceptance, and a bounded Native core sweep with failing optional PRoot are evidenced. Web now has one preview-confirmed non-signaling dead-session recovery action through the shared service; broader client parity, missing/broken guest isolation, safe VirGL cleanup, and the full audit remain open.
 
-**Next action:** Continue Web mutation parity and a safe exact VirGL client-visibility path; extend failure injection to a positively isolated missing/broken guest scenario, then finish the source/installed/runtime audit and P4 acceptance.
+**Next action:** Continue Web mutation/client parity and safe exact VirGL client visibility; extend Native failure injection to an isolated missing/broken guest scenario, then finish the source/installed/runtime audit and P4 acceptance.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -114,6 +114,7 @@ Evidence:
 - [docs/evidence/2026-10-22-native-optional-proot-failure-injection.md](evidence/2026-10-22-native-optional-proot-failure-injection.md)
 - [docs/evidence/2026-10-22-p4-replay-download-timeout.md](evidence/2026-10-22-p4-replay-download-timeout.md)
 - [docs/evidence/2026-10-22-p4-virgl-route-recheck.md](evidence/2026-10-22-p4-virgl-route-recheck.md)
+- [docs/evidence/2026-10-22-web-proot-recovery-reconcile.md](evidence/2026-10-22-web-proot-recovery-reconcile.md)
 
 ## P5 — Distro and display compatibility profiles
 

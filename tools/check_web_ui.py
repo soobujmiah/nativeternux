@@ -220,6 +220,41 @@ def run_checks(browser, secret, screenshots, *, visible=False):
             (screenshots / ("web-" + str(width) + ".png")).write_bytes(base64.b64decode(encoded))
         select_resource(browser, "Services & background", "8023")
 
+    # Visually inspect the exact Web PRoot session controls. This uses only the
+    # read-only session inventory operation; it never starts, stops, or reconciles.
+    select_resource(browser, "Debian PRoot", "Existing Debian PRoot")
+    require(browser.evaluate("""
+      return [...document.querySelectorAll('#resource-actions button')]
+        .some(x=>x.textContent==='Preview and reconcile exited session');
+    """), "Web PRoot recovery reconciliation control is missing")
+    require(browser.evaluate("""
+      const b=[...document.querySelectorAll('#resource-actions button')]
+        .find(x=>x.textContent==='Load PRoot sessions');
+      if(!b)return false;b.click();return true;
+    """), "Web PRoot session inventory control is missing")
+    browser.wait("return document.querySelector('#resource-actions').textContent"
+                 ".includes('recorded Ternuxx sessions')")
+    recovery_control = browser.evaluate("""
+      const b=[...document.querySelectorAll('#resource-actions button')]
+        .find(x=>x.textContent==='Preview and reconcile exited session');
+      b?.scrollIntoView({block:'center',inline:'nearest'});
+      const r=b?.getBoundingClientRect();
+      const dock=document.querySelector('.action-dock .actions').getBoundingClientRect();
+      const quick=document.querySelector('#mobile-action-bar');
+      const quickTop=getComputedStyle(quick).display==='none'?innerHeight:quick.getBoundingClientRect().top;
+      return {visible:!!r&&r.width>0&&r.height>0&&r.top>=dock.top&&r.bottom<=dock.bottom
+          &&r.bottom<=quickTop,
+        disabled:!!b?.disabled,label:b?.textContent,buttonTop:r?.top,dockTop:dock.top,
+        dockBottom:dock.bottom,quickTop};
+    """)
+    require(recovery_control["visible"], "Web PRoot recovery control is outside the visible action area")
+    if screenshots:
+        encoded = browser.call("WebDriver:TakeScreenshot", {})
+        if isinstance(encoded, dict):
+            encoded = encoded["value"]
+        (screenshots / "web-proot-reconcile-control.png").write_bytes(base64.b64decode(encoded))
+    report.append({"proot_recovery_control": recovery_control})
+
     # A delayed response from the previous resource must not label the next one.
     select_resource(browser, "Services & background", "8023")
     browser.evaluate("""
@@ -366,7 +401,8 @@ def main():
                               "checks": ["unauthenticated-hidden-state", "bootstrap-cleared",
                                          "catalog-order", "resource-search", "ssh-password-disabled-recovery-hint", "horizontal-overflow",
                                          "stable-actions", "late-response-resource-binding", "8022-inspection-only",
-                                         "wakelock-status-control", "terminal-renderer-no-guest-start"],
+                                         "wakelock-status-control", "proot-recovery-reconcile-control",
+                                         "terminal-renderer-no-guest-start"],
                               "source_sha256": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
                                                 for name in ["lib/management_web_ui.html",
                                                              "lib/management_http_runtime.py",

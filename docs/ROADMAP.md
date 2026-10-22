@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Continue Web mutation parity and a safe exact VirGL client-visibility path; extend failure injection to a positively isolated missing/broken guest scenario, then finish the source/installed/runtime audit and P4 acceptance.
+**Next action:** Continue Web mutation/client parity and safe exact VirGL client visibility; extend Native failure injection to an isolated missing/broken guest scenario, then finish the source/installed/runtime audit and P4 acceptance.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
