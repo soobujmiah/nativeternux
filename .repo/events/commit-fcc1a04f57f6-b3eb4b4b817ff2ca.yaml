@@ -1,0 +1,7 @@
+event_id: commit-fcc1a04f57f6-b3eb4b4b817ff2ca
+repository: soobujmiah/ternuxx
+commit: fcc1a04f57f6b821ffdcb2d9cf907833127e4a3b
+kind: commit
+occurred_at: '2026-10-22T07:35:00Z'
+status: completed
+summary: 'fix(gtk): preserve VTE spawn context and close detached views'
