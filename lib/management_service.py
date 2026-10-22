@@ -28,6 +28,7 @@ import ssh_diagnostics
 import ssh_key_inventory
 import ssh_key_manager
 import ssh_client_keys
+import ssh_service_autostart
 import runit_service
 import runit_deployment
 import operation_recovery
@@ -89,6 +90,9 @@ OPERATIONS = {
     "ssh.keys.remove.apply": {"args": {"fingerprint", "confirmed", "plan_id"}},
     "ssh.client-key.create.preview": {"args": {"name"}},
     "ssh.client-key.create.apply": {"args": {"name", "confirmed", "plan_id"}},
+    "ssh.service.autostart.status": {"args": set()},
+    "ssh.service.autostart.preview": {"args": {"enabled"}},
+    "ssh.service.autostart.apply": {"args": {"enabled", "confirmed", "plan_id"}},
     "proot.status": {"args": set()},
     "proot.profiles.list": {"args": set()},
     "proot.profiles.show": {"args": {"profile"}},
@@ -601,6 +605,23 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 data = runit_deployment.apply_rollback(
                     **rollback_args, confirmed=confirmed, plan_id=plan_id,
                 )
+        elif operation == "ssh.service.autostart.status":
+            data = ssh_service_autostart.status(home=home, state_dir=state_dir,
+                prefix=process_env["PREFIX"], uid=os.getuid())
+        elif operation in {"ssh.service.autostart.preview", "ssh.service.autostart.apply"}:
+            enabled = args.get("enabled")
+            if type(enabled) is not bool:
+                return _error(request_id, "invalid_arguments", "enabled must be a boolean")
+            if operation.endswith(".preview"):
+                data = ssh_service_autostart.preview(enabled=enabled, home=home,
+                    state_dir=state_dir, prefix=process_env["PREFIX"], uid=os.getuid())
+            else:
+                confirmed, plan_id = args.get("confirmed", False), args.get("plan_id")
+                if type(confirmed) is not bool or not isinstance(plan_id, str):
+                    return _error(request_id, "confirmation_required", "startup policy requires exact preview and confirmation")
+                data = ssh_service_autostart.apply(enabled=enabled, confirmed=confirmed,
+                    plan_id=plan_id, home=home, state_dir=state_dir,
+                    prefix=process_env["PREFIX"], uid=os.getuid())
         elif operation in {"ssh.service.start", "ssh.service.stop", "ssh.service.restart"}:
             confirmed = args.get("confirmed", False)
             plan_id = args.get("plan_id")
@@ -802,6 +823,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "ssh_key_operation_failed", str(exc))
     except ssh_client_keys.ClientKeyError as exc:
         return _error(request_id, "ssh_client_key_operation_failed", str(exc))
+    except ssh_service_autostart.AutostartPolicyError as exc:
+        return _error(request_id, "ssh_autostart_policy_failed", str(exc))
     except config_recovery.RecoveryError as exc:
         return _error(request_id, "recovery_failed", str(exc))
     except remote_access_policy.RemoteAccessPolicyError as exc:
@@ -896,6 +919,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--shortcut-action", choices=("add", "remove"))
     parser.add_argument("--key-fingerprint")
     parser.add_argument("--key-name")
+    autostart_toggle = parser.add_mutually_exclusive_group()
+    autostart_toggle.add_argument("--autostart-enabled", dest="autostart_enabled", action="store_true", default=None)
+    autostart_toggle.add_argument("--autostart-disabled", dest="autostart_enabled", action="store_false")
     parser.add_argument("--public-key-stdin", action="store_true",
                         help="read one public authorized-key line from stdin; never pass key material as a command argument")
     parser.add_argument("--app-id")
@@ -1233,6 +1259,20 @@ def main(argv: list[str] | None = None) -> int:
         payload = {"operation_id": args.operation_id}
         if not is_preview:
             payload.update({"confirmed": True, "plan_id": args.plan_id})
+    elif args.operation == "ssh.service.autostart.status":
+        payload = {}
+    elif args.operation == "ssh.service.autostart.preview":
+        if args.autostart_enabled is None:
+            response = _error(request_id, "invalid_arguments", "choose --autostart-enabled or --autostart-disabled")
+            print(json.dumps(response, sort_keys=True) if args.json else "Choose an autostart preference.", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"enabled": args.autostart_enabled}
+    elif args.operation == "ssh.service.autostart.apply":
+        if args.autostart_enabled is None or not args.yes or not args.plan_id:
+            response = _error(request_id, "confirmation_required", "choose an autostart preference and confirm its exact preview with --yes --plan-id")
+            print(json.dumps(response, sort_keys=True) if args.json else "Preview first, then choose a preference and pass --yes --plan-id.", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"enabled": args.autostart_enabled, "confirmed": True, "plan_id": args.plan_id}
     elif args.operation in {"ssh.service.start", "ssh.service.stop", "ssh.service.restart", "ssh.service.deploy"}:
         if args.yes != bool(args.plan_id):
             response = _error(request_id, "invalid_arguments", "service apply requires --yes and --plan-id from its exact preview")

@@ -64,6 +64,44 @@ def main(argv: list[str]) -> int:
                 "id", "category_id", "name", "status", "availability", "description"))
                   + "\t" + clean(", ".join(operation_names)))
         return 0
+    if action == "ssh-autostart-status" and len(argv) == 1:
+        result = call("ssh.service.autostart.status")
+        if not result.get("ok"):
+            print(management_presentation.format_report(result))
+            return 1
+        enabled = result.get("data", {}).get("enabled")
+        if type(enabled) is not bool:
+            print("Could not verify the SSH startup preference.")
+            return 1
+        print("S\t" + ("true" if enabled else "false"))
+        return 0
+    if action == "ssh-autostart-preview" and len(argv) == 2 and argv[1] in {"enabled", "disabled"}:
+        enabled = argv[1] == "enabled"
+        result = call("ssh.service.autostart.preview", {"enabled": enabled})
+        if not result.get("ok"):
+            print(management_presentation.format_report(result))
+            return 1
+        data = result.get("data", {})
+        if data.get("changed") is not True:
+            print(management_presentation.format_report(result))
+            return 0
+        plan_id = data.get("plan_id")
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{32}", plan_id):
+            print("Could not verify the exact SSH startup preference plan.")
+            return 1
+        print("P\t" + plan_id + "\t" + ("true" if enabled else "false") + "\t"
+              + clean(data.get("effect")))
+        return 0
+    if action == "ssh-autostart-apply" and len(argv) == 4 and argv[1] == "confirmed" and argv[2] in {"true", "false"}:
+        enabled = argv[2] == "true"
+        plan_id = argv[3]
+        if not re.fullmatch(r"[0-9a-f]{32}", plan_id):
+            print("SSH startup preference preview expired; create a new preview.")
+            return 2
+        result = call("ssh.service.autostart.apply", {
+            "enabled": enabled, "confirmed": True, "plan_id": plan_id})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "ssh-client-key-preview" and len(argv) == 2:
         result = call("ssh.client-key.create.preview", {"name": argv[1]})
         if not result.get("ok"):

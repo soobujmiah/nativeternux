@@ -56,6 +56,30 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             "public_key": "ssh-ed25519 AAAA test", "confirmed": True, "plan_id": "a" * 24,
         })
 
+    def test_ssh_autostart_status_preview_and_apply_share_typed_service(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"enabled": True}}) as dispatch, \
+             redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["ssh-autostart-status"]), 0)
+        dispatch.assert_called_once_with("ssh.service.autostart.status")
+        self.assertEqual(output.getvalue().strip(), "S\ttrue")
+        preview = {"ok": True, "data": {"changed": True, "plan_id": "d" * 32,
+                   "effect": "next supervisor starts with sshd down; current service unchanged"}}
+        with mock.patch.object(bridge, "call", return_value=preview) as dispatch, \
+             redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["ssh-autostart-preview", "disabled"]), 0)
+        dispatch.assert_called_once_with("ssh.service.autostart.preview", {"enabled": False})
+        self.assertEqual(output.getvalue().strip().split(chr(9))[:3], ["P", "d" * 32, "false"])
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"enabled": False}}) as dispatch, \
+             redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["ssh-autostart-apply", "confirmed", "false", "d" * 32]), 0)
+        dispatch.assert_called_once_with("ssh.service.autostart.apply", {
+            "enabled": False, "confirmed": True, "plan_id": "d" * 32})
+
+    def test_ssh_autostart_apply_rejects_malformed_plan(self) -> None:
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["ssh-autostart-apply", "confirmed", "false", "bad"]), 2)
+        dispatch.assert_not_called()
+
     def test_native_ssh_client_key_preview_and_apply_use_exact_shared_plan(self) -> None:
         preview = {"ok": True, "data": {"changed": True, "plan_id": "c" * 32,
                    "name": "recovery8023", "private_key_path": "/tmp/native/.ssh/ternuxx-keys/recovery8023"}}

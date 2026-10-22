@@ -497,6 +497,29 @@ class ManagementServiceTests(unittest.TestCase):
             self.assertFalse(denied["ok"])
             self.assertEqual(denied["error"]["code"], "invalid_arguments")
 
+    def test_ssh_autostart_policy_routes_status_preview_and_apply_through_shared_service(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="ssh-autostart-service-") as temp:
+            home = Path(temp) / "home"; home.mkdir(mode=0o700, parents=True)
+            state = home / ".local/share/ternuxx"; state.mkdir(mode=0o700, parents=True)
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(state)}
+            with patch.object(management_service.ssh_service_autostart, "status", return_value={"enabled": True}) as status:
+                result = management_service.dispatch(request("ssh.service.autostart.status"), env=env)
+            self.assertTrue(result["ok"]); status.assert_called_once()
+            with patch.object(management_service.ssh_service_autostart, "preview", return_value={
+                    "status": "ready", "changed": True, "plan_id": "a" * 32}) as preview:
+                result = management_service.dispatch(request("ssh.service.autostart.preview", {"enabled": False}), env=env)
+            self.assertTrue(result["ok"]); preview.assert_called_once()
+            self.assertFalse(preview.call_args.kwargs["enabled"])
+            with patch.object(management_service.ssh_service_autostart, "apply", return_value={
+                    "status": "disabled", "changed": True, "enabled": False}) as apply:
+                result = management_service.dispatch(request("ssh.service.autostart.apply", {
+                    "enabled": False, "confirmed": True, "plan_id": "a" * 32}), env=env)
+            self.assertTrue(result["ok"]); apply.assert_called_once()
+            self.assertEqual(apply.call_args.kwargs["plan_id"], "a" * 32)
+            denied = management_service.dispatch(request("ssh.service.autostart.apply", {
+                "enabled": False, "confirmed": "yes", "plan_id": "a" * 32}), env=env)
+            self.assertFalse(denied["ok"])
+
     def test_ssh_service_preview_is_allowlisted_and_requires_native_private_state(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ternuxx-ssh-service-api-") as temp:
             home = Path(temp) / "home"

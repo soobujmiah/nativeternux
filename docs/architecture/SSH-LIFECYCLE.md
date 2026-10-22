@@ -36,7 +36,7 @@ Stop/restart must account for the caller's access path and preserve an out-of-ba
 
 ## Boot, Wake Lock and continuity
 
-The installed Native service boot helper starts the official Runit supervisor and checks managed SSH readiness. It does not enter PRoot. Per-service SSH startup selection is not implemented. The current run script acquires the `native.sshd` lease; owner-selectable lease policy remains a requested feature. A proposal's “never by default” policy is not the current installed behavior.
+The installed Native service boot helper starts the official Runit supervisor and checks managed SSH readiness. It does not enter PRoot. Managed SSH now has a shared preview/apply automatic-start preference backed by the fixed Termux Runit `down` marker. It affects the next supervisor start only; live start/stop actions are separate. Native read-only preview verified the current enabled policy and confirmed no marker/process change. The current run script acquires the `native.sshd` lease; owner-selectable Wake Lock policy remains a requested feature, and Android cold-boot delivery remains unverified. See [startup policy evidence](../evidence/2026-10-22-ssh-service-autostart-policy.md). A proposal's “never by default” policy is not the current installed behavior.
 
 Wake Lock accounting is owned by `lib/wakelock_manager.py`. A workload may release only its own lease; stopping a guest cannot release Native SSH's lease. Android's app-global holder state can remain unknown even when Ternuxx accounting is verified.
 

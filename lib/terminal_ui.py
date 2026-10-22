@@ -332,6 +332,8 @@ def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]
                if f"ssh.service.{name}" in operations]
     if "ssh.client-key.create.preview" in operations:
         choices.append(("generate", "Create a Native SSH recovery key"))
+    if "ssh.service.autostart.status" in operations:
+        choices.append(("autostart", "Change SSH start-with-Termux-services setting"))
     if "ssh.keys.list" in operations:
         choices.append(("keys", "View shared SSH key fingerprints"))
     if "ssh.keys.add.preview" in operations:
@@ -341,6 +343,24 @@ def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]
     action = _choose(screen, "Managed SSH · port 8023", choices)
     if action == "keys":
         return _call("ssh.keys.list")
+    if action == "autostart":
+        current = _call("ssh.service.autostart.status")
+        if not current.get("ok"):
+            return current
+        enabled = current.get("data", {}).get("enabled") is True
+        requested = _prompt(screen, "Start SSH automatically with Termux services? Current: "
+                             + ("Yes" if enabled else "No") + "; enter yes or no").lower()
+        if requested not in {"yes", "no"}:
+            return {"ok": False, "error": {"code": "cancelled"}}
+        desired = requested == "yes"
+        preview = _call("ssh.service.autostart.preview", {"enabled": desired})
+        if not preview.get("ok") or not preview.get("data", {}).get("changed"):
+            return preview
+        _show_details(screen, preview)
+        if _prompt(screen, "This changes next-supervisor startup only; current sshd stays as-is. Type yes").lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("ssh.service.autostart.apply", {"enabled": desired, "confirmed": True,
+                                                       "plan_id": preview.get("data", {}).get("plan_id")})
     if action == "generate":
         name = _prompt(screen, "Recovery key name (lowercase, numbers, hyphen, underscore)")
         preview = _call("ssh.client-key.create.preview", {"name": name})
@@ -577,6 +597,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         if "ssh.keys.remove.preview" in operations:
             labels.append("remove an authorized key by fingerprint")
         labels.append("public-key login only; password login is disabled")
+        if "ssh.service.autostart.status" in operations:
+            labels.append("change SSH start-with-Termux-services preference")
     elif resource_id == "native.wakelock":
         labels.append("inspect Ternuxx-owned Wake Lock leases")
         if {"wakelock.acquire", "wakelock.release"} <= operations:

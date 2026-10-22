@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles pass; all four clients now expose preview-confirmed Native SSH recovery-key creation, with GTK installed/source identity verified. Cross-client continuity, disposable authentication qualification, durable credential rollback, password/service policy, fresh-guest retirement/rollback, and remaining P4 acceptance stay open.
+Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles pass; all four clients now expose preview-confirmed Native SSH recovery-key creation and next-supervisor autostart policy, with GTK install/source identity verified. Cross-client continuity, disposable authentication qualification, durable credential rollback, password/Wake Lock/cold-boot policy, fresh-guest retirement/rollback, and remaining P4 acceptance stay open.
 
-**Next action:** Qualify recovery-key enrollment/authentication and durable rollback on disposable credentials; resolve password recovery and per-service boot/Wake Lock policy; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
+**Next action:** Qualify recovery-key enrollment/authentication and durable rollback on disposable credentials; resolve password recovery and per-service Wake Lock policy plus cold-boot delivery; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

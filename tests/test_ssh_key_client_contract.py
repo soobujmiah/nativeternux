@@ -47,6 +47,15 @@ class SshKeyClientContractTests(unittest.TestCase):
         self.assertEqual(request["args"], {"public_key": key})
         self.assertNotIn(key, output.getvalue())
 
+    def test_cli_ssh_autostart_preview_requires_typed_preference(self):
+        response = {"ok": True, "data": {"status": "ready", "changed": True}}
+        with patch.dict(os.environ, {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr", "HOME": "/tmp/home"}), \
+             patch("sys.stdout", io.StringIO()), \
+             patch.object(management_service, "dispatch", return_value=response) as dispatch:
+            self.assertEqual(management_service.main(["--operation", "ssh.service.autostart.preview",
+                "--autostart-disabled", "--json"]), 0)
+        self.assertEqual(dispatch.call_args.args[0]["args"], {"enabled": False})
+
     def test_cli_client_key_preview_uses_typed_name_argument(self):
         response = {"ok": True, "data": {"status": "ready"}}
         output = io.StringIO()
@@ -63,10 +72,12 @@ class SshKeyClientContractTests(unittest.TestCase):
         expected = {"ssh.keys.add.preview", "ssh.keys.add.apply",
                     "ssh.keys.remove.preview", "ssh.keys.remove.apply",
                     "ssh.client-key.create.preview", "ssh.client-key.create.apply"}
-        self.assertTrue(expected <= management_http_runtime._WEB_MUTATING_OPERATIONS)
+        autostart_mutations = {"ssh.service.autostart.preview", "ssh.service.autostart.apply"}
+        self.assertTrue(expected | autostart_mutations <= management_http_runtime._WEB_MUTATING_OPERATIONS)
         self.assertEqual({management_authorization.required_capability(op) for op in expected},
                          {"ssh.credentials.manage"})
-        self.assertTrue(expected <= management_sessions.MUTATING_OPERATIONS)
+        self.assertTrue(expected | autostart_mutations <= management_sessions.MUTATING_OPERATIONS)
+        self.assertEqual(management_authorization.required_capability("ssh.service.autostart.status"), "diagnostics.read")
         page = (ROOT / "lib/management_web_ui.html").read_text()
         self.assertIn("Enroll a public key", page)
         self.assertIn("Remove a key by fingerprint", page)
@@ -101,6 +112,9 @@ class SshKeyClientContractTests(unittest.TestCase):
                    if item["id"] == "network.ssh.managed-8023")
         self.assertIn("ssh.keys.add.preview", ssh["supported_operations"])
         self.assertIn("ssh.client-key.create.preview", ssh["supported_operations"])
+        self.assertIn("ssh.service.autostart.status", ssh["supported_operations"])
+        self.assertIn("ssh.service.autostart.preview", ssh["supported_operations"])
+        self.assertIn("ssh.service.autostart.apply", ssh["supported_operations"])
 
 
 if __name__ == "__main__":

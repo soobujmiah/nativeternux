@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 400,
+  "document_count": 401,
   "read_count": 89,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "d23544b415fb3a6c61643e7cb0a48ce3ce006de4fe465d1f55b5ebac2090dc22",
+      "sha256": "983b940a9e4d27c5c91b8a01f28b84a5617d7dd662842aec2fec045b42b9bae7",
       "lines": 47,
       "read_status": "pending",
       "read_sha256": null
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "315da99489e3970b04988b9a71b0cc0e0de2faa84b5e4073a9c26bb8ebb1b6af",
+      "sha256": "3ad09cacf51e1f7216fbe8ea87bf9f4deda9c962be3feba3bbd10c1854b814a8",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "5d2c868443e835f8a0fb997121d1562ff05ddeaa2883795473bf6d262c46015e",
-      "lines": 160,
+      "sha256": "693de35325a19514d7bc4536862019390f08ce535847a7410965c80ea64b3e97",
+      "lines": 161,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "ba9adf2e783d3de1e33b9b46091e17af1e3f87bacc9587b089c7141e62d8eb50",
+      "sha256": "7c824730962fa4624bd4b89a2286d1c59f07e234ab2738e5f9ff2766cd6dbf40",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -243,7 +243,7 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "c0cd929f34e11dac8ddba6467a8de29e5eca7c7d6986fdb0b20e26620dc9fbf0",
+      "sha256": "f353eb9a8299737f2ab4fb8a0c1b6ade4d842dd9212516b0205892fbcaa1daac",
       "lines": 25,
       "read_status": "pending",
       "read_sha256": null
@@ -331,7 +331,7 @@
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
       "kind": "narrative",
-      "sha256": "b0a78757b6c68d1f98f0ee374f086ff2e9aafadd18c726ef9ba5866ce1b0dad3",
+      "sha256": "7520b419ee8d5e8d7f49df5afe49e5848c0adabd3407a05c809ccc40c9b29ed8",
       "lines": 55,
       "read_status": "pending",
       "read_sha256": null
@@ -515,7 +515,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "eab47516cf6bf6daf80e1d7ea5da6a338d3611796b4572c3fea6dbc5f20b0af4",
+      "sha256": "bcddde0cbda31ea85d774b6bbdc9fef079d50b98cb10b00ef0ce1db365326ca8",
       "lines": 86,
       "read_status": "pending",
       "read_sha256": null
@@ -2449,6 +2449,14 @@
       "read_sha256": "00930158b14eea46148166ff8625ec7f923663f71202d7f4338b8e627462136d"
     },
     {
+      "path": "docs/evidence/2026-10-22-ssh-service-autostart-policy.md",
+      "kind": "narrative",
+      "sha256": "270f42ad59ff0e68d58875e568d5f14c649ed8a3b41621f8497ef8587193db30",
+      "lines": 26,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-22-ssh-service-restart.md",
       "kind": "narrative",
       "sha256": "e6b9468e81adbf7a120e8e49a3e170af89a659cfe975a5fd62c1896369791166",
@@ -2835,8 +2843,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "c506029a281e486d502037cce5bf5a43c953586ef9bdc5cf89997ad903990aa0",
-      "lines": 175,
+      "sha256": "92906a8eeefe42e7e2de86908fd7fd387f2e905194e0970c0d31ab89547d7d88",
+      "lines": 176,
       "read_status": "pending",
       "read_sha256": null
     },

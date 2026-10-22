@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Qualify recovery-key enrollment/authentication and durable rollback on disposable credentials; resolve password recovery and per-service boot/Wake Lock policy; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
+**Next action:** Qualify recovery-key enrollment/authentication and durable rollback on disposable credentials; resolve password recovery and per-service Wake Lock policy plus cold-boot delivery; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
