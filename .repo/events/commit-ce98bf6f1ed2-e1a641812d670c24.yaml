@@ -1,0 +1,7 @@
+event_id: commit-ce98bf6f1ed2-e1a641812d670c24
+repository: soobujmiah/ternuxx
+commit: ce98bf6f1ed273ee7ce897699398007b8c3d45ae
+kind: commit
+occurred_at: '2026-10-22T11:54:00Z'
+status: completed
+summary: 'test(p4): qualify terminal handoff across clients'
