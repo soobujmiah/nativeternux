@@ -39,3 +39,7 @@ Focused TUI tests passed 31/31. The full Native Termux repository suite passed 6
 ## Preservation
 
 The existing PRoot process/rootfs, existing db launcher behavior, SSH 8022/8023 configuration, and user files were not modified by this review. Native X11 :1 is running after the requested GUI review.
+
+## GTK chooser follow-up — 2026-10-22
+
+The installed Native GTK binary now includes an asynchronous, verified running-session chooser for starting or attaching the shared terminal CLI in VTE. Interactive terminal SIGHUP stop previews are accepted and disclosed by the GTK bridge. Focused app-window visual review and bridge tests passed; full GTK start/attach/stop interaction remains unqualified because the X11 input coordinates were inconsistent. See [GTK terminal picker review](2026-10-22-gtk-terminal-picker-review.md).

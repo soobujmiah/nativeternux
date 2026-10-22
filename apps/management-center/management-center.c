@@ -26,17 +26,20 @@ static gchar *python_path(void);
 static void terminal_spawn_done(VteTerminal *terminal, GPid pid, GError *error, gpointer data) {
     Center *c = data;
     if (error) {
-        gchar *message = g_strdup_printf("Could not start the terminal client: %s\n", error->message);
+        gchar *message = g_strdup_printf("Could not open the terminal client: %s\n", error->message);
         vte_terminal_feed_child(terminal, message, -1); g_free(message);
-        gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client could not start; inspect the terminal window.");
+        gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client could not open; inspect its window.");
     } else {
         vte_terminal_watch_child(terminal, pid);
-        gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client opened; review its exact preview before confirming.");
+        gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client opened; closing its window detaches.");
     }
 }
 
-static void open_interactive_terminal(GtkButton *button, gpointer data) {
-    (void)button; Center *c=data;
+static void spawn_interactive_terminal(Center *c, const gchar *session_id) {
+    if (session_id && !g_regex_match_simple("^proot-[0-9a-f]{32}$", session_id, 0, 0)) {
+        gtk_label_set_text(GTK_LABEL(c->notice), "The selected managed terminal identity is invalid.");
+        return;
+    }
     const gchar *root=g_getenv("TERNUXX_CHECKOUT");
     if (!root || !g_file_test(root,G_FILE_TEST_IS_DIR)) {
         gtk_label_set_text(GTK_LABEL(c->notice),"Native Ternuxx checkout is unavailable."); return;
@@ -46,7 +49,9 @@ static void open_interactive_terminal(GtkButton *button, gpointer data) {
     gtk_window_set_transient_for(GTK_WINDOW(window),GTK_WINDOW(c->window));
     gtk_window_set_default_size(GTK_WINDOW(window),680,720);
     GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,6);
-    GtkWidget *hint=gtk_label_new("Fixed Debian login · exact preview and confirmation · close this window or press Ctrl-] to detach");
+    GtkWidget *hint=gtk_label_new(session_id
+        ? "Attach to the selected managed Debian terminal. Close this window or press Ctrl-] to detach."
+        : "Review the exact Debian login preview before confirming. Close this window or press Ctrl-] to detach.");
     gtk_label_set_wrap(GTK_LABEL(hint),TRUE); gtk_box_append(GTK_BOX(box),hint);
     VteTerminal *terminal=VTE_TERMINAL(vte_terminal_new());
     vte_terminal_set_scrollback_lines(terminal,2000);
@@ -56,11 +61,75 @@ static void open_interactive_terminal(GtkButton *button, gpointer data) {
     gchar *python=python_path();
     gchar *script=g_build_filename(root,"lib","terminal_cli.py",NULL);
     gchar *workdir=g_strdup(root);
-    gchar *argv[]={python,script,"start",NULL};
+    gchar *argv[]={python,script,session_id ? "attach" : "start",(gchar *)session_id,NULL};
     vte_terminal_spawn_async(terminal,VTE_PTY_DEFAULT,workdir,argv,NULL,G_SPAWN_DEFAULT,
                              NULL,NULL,NULL,10000,NULL,terminal_spawn_done,c);
     g_free(python); g_free(script); g_free(workdir);
     gtk_window_present(GTK_WINDOW(window));
+}
+
+static void terminal_choice_cancel(GtkButton *button, gpointer data) {
+    (void)button; gtk_window_destroy(GTK_WINDOW(data));
+}
+static void terminal_choice_start(GtkButton *button, gpointer data) {
+    (void)button; GtkWidget *dialog=data;
+    Center *c=g_object_get_data(G_OBJECT(dialog),"terminal-center");
+    gtk_window_destroy(GTK_WINDOW(dialog));
+    spawn_interactive_terminal(c,NULL);
+}
+static void terminal_choice_attach(GtkButton *button, gpointer data) {
+    GtkWidget *dialog=data;
+    Center *c=g_object_get_data(G_OBJECT(dialog),"terminal-center");
+    gchar *session_id=g_strdup(g_object_get_data(G_OBJECT(button),"terminal-session-id"));
+    gtk_window_destroy(GTK_WINDOW(dialog));
+    spawn_interactive_terminal(c,session_id);
+    g_free(session_id);
+}
+static void show_terminal_choices(Center *c, const gchar *options) {
+    GtkWidget *dialog=gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(dialog),"Debian terminal");
+    gtk_window_set_transient_for(GTK_WINDOW(dialog),GTK_WINDOW(c->window));
+    gtk_window_set_modal(GTK_WINDOW(dialog),TRUE);
+    gtk_window_set_default_size(GTK_WINDOW(dialog),460,330);
+    g_object_set_data(G_OBJECT(dialog),"terminal-center",c);
+    GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,8);
+    gtk_widget_set_margin_top(box,14);gtk_widget_set_margin_bottom(box,14);
+    gtk_widget_set_margin_start(box,14);gtk_widget_set_margin_end(box,14);
+    gtk_window_set_child(GTK_WINDOW(dialog),box);
+    GtkWidget *intro=gtk_label_new("Start a fixed Debian terminal or attach to a verified running one.");
+    gtk_label_set_wrap(GTK_LABEL(intro),TRUE);gtk_box_append(GTK_BOX(box),intro);
+    GtkWidget *start=gtk_button_new_with_label("Start new Debian terminal…");
+    gtk_box_append(GTK_BOX(box),start);
+    g_signal_connect(start,"clicked",G_CALLBACK(terminal_choice_start),dialog);
+    GtkWidget *scroll=gtk_scrolled_window_new();
+    gtk_widget_set_vexpand(scroll,TRUE);
+    GtkWidget *list=gtk_box_new(GTK_ORIENTATION_VERTICAL,6);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),list);
+    gtk_box_append(GTK_BOX(box),scroll);
+    guint count=0;
+    gchar **lines=g_strsplit(options ? options : "","\n",-1);
+    for (guint i=0;lines[i];i++) {
+        gchar **fields=g_strsplit(lines[i],"\t",3);
+        if (fields[0] && g_strcmp0(fields[0],"S")==0 && fields[1] && fields[2]
+                && g_regex_match_simple("^proot-[0-9a-f]{32}$",fields[1],0,0)) {
+            GtkWidget *attach=gtk_button_new_with_label(fields[2]);
+            gtk_widget_set_tooltip_text(attach,fields[1]);
+            g_object_set_data_full(G_OBJECT(attach),"terminal-session-id",g_strdup(fields[1]),g_free);
+            g_signal_connect(attach,"clicked",G_CALLBACK(terminal_choice_attach),dialog);
+            gtk_box_append(GTK_BOX(list),attach);
+            count++;
+        }
+        g_strfreev(fields);
+    }
+    g_strfreev(lines);
+    if (!count) gtk_box_append(GTK_BOX(list),gtk_label_new("No verified running Debian terminal is available to attach."));
+    GtkWidget *cancel=gtk_button_new_with_label("Cancel");
+    gtk_box_append(GTK_BOX(box),cancel);
+    g_signal_connect(cancel,"clicked",G_CALLBACK(terminal_choice_cancel),dialog);
+    gtk_window_present(GTK_WINDOW(dialog));
+}
+static void open_interactive_terminal(GtkButton *button, gpointer data) {
+    (void)button;run_bridge(data,"terminal-session-options",NULL,NULL,NULL,NULL,NULL);
 }
 
 static gchar *bridge_path(void) {
@@ -110,7 +179,9 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
         g_clear_error(&error);
     } else {
         gboolean success = g_subprocess_get_successful(G_SUBPROCESS(source));
-        if (g_strcmp0(request->action, "cron-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+        if (g_strcmp0(request->action, "terminal-session-options") == 0 && success) {
+            show_terminal_choices(c, stdout_text);
+        } else if (g_strcmp0(request->action, "cron-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
             gchar **f = g_strsplit(stdout_text, "\t", 3);
             if (f[1] && f[2] && strlen(f[1]) == 32) {
                 g_strchomp(f[2]);
@@ -142,16 +213,18 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
             g_strfreev(f);
         } else if ((g_strcmp0(request->action, "proot-probe-preview") == 0 || g_strcmp0(request->action, "proot-session-stop-preview") == 0)
                 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
-            gchar **f = g_strsplit(stdout_text, "\t", 5);
+            gchar **f = g_strsplit(stdout_text, "\t", 7);
             gboolean valid_plan = f[1] && g_str_has_prefix(f[1], "plan-") && strlen(f[1]) == 69;
             if (valid_plan && g_strcmp0(request->action, "proot-probe-preview") == 0 && f[2]) {
                 g_strchomp(f[2]);
                 gchar *message = g_strdup_printf("Start only the fixed 300-second isolated Debian diagnostic probe?\n\n%s", f[2]);
                 queue_proot_confirmation(c, "proot-probe-apply", NULL, f[1], message);
                 g_free(message);
-            } else if (valid_plan && g_strcmp0(request->action, "proot-session-stop-preview") == 0 && f[2] && f[3]) {
-                g_strchomp(f[3]);
-                gchar *message = g_strdup_printf("Stop only this Ternuxx-owned PRoot session?\n\nSession: %s\nProfile: %s", f[3], f[2]);
+            } else if (valid_plan && g_strcmp0(request->action, "proot-session-stop-preview") == 0
+                       && f[2] && f[3] && f[4] && f[5] && f[6]) {
+                g_strchomp(f[6]);
+                gchar *message = g_strdup_printf("Close only this Ternuxx-owned PRoot session?\n\nSession: %s\nProfile: %s\nSignal: %s\nScope: %s\nImpact: %s",
+                                                  f[3], f[2], f[4], f[5], f[6]);
                 queue_proot_confirmation(c, "proot-session-stop-apply", f[3], f[1], message);
                 g_free(message);
             } else {
@@ -173,8 +246,11 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
                 ((stdout_text && *stdout_text) ? stdout_text : "Request completed.");
             set_text(c, message);
         }
-        gtk_label_set_text(GTK_LABEL(c->notice), success ? "Shared management service request completed" :
-            ((stderr_text && *stderr_text) ? stderr_text : "Operation failed; inspect the result details."));
+        gtk_label_set_text(GTK_LABEL(c->notice),
+            success && g_strcmp0(request->action,"terminal-session-options")==0
+                ? "Choose a managed terminal or start a new one."
+                : success ? "Shared management service request completed"
+                : ((stderr_text && *stderr_text) ? stderr_text : "Operation failed; inspect the result details."));
         gtk_widget_set_sensitive(c->start_button, TRUE); gtk_widget_set_sensitive(c->stop_button, TRUE);
         if (success && (g_strcmp0(request->action,"start-desktop")==0 || g_strcmp0(request->action,"stop-desktop")==0))
             run_bridge(c,"inspect","native.desktop.session",NULL,NULL,NULL,NULL);

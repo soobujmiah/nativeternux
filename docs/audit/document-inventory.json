@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 388,
-  "read_count": 73,
+  "document_count": 389,
+  "read_count": 75,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -2225,6 +2225,14 @@
       "read_sha256": "696f65b3ad56eca26bde7f6f5a29d78f170672951fabd3c880580171613b50e3"
     },
     {
+      "path": "docs/evidence/2026-10-22-gtk-terminal-picker-review.md",
+      "kind": "narrative",
+      "sha256": "0eb5bfdbac6f97d3b3e0091cf34e3dbbbee6b97c4d9c070e8d46ece8ee3ab326",
+      "lines": 13,
+      "read_status": "read",
+      "read_sha256": "0eb5bfdbac6f97d3b3e0091cf34e3dbbbee6b97c4d9c070e8d46ece8ee3ab326"
+    },
+    {
       "path": "docs/evidence/2026-10-22-guarded-fresh-replay.md",
       "kind": "narrative",
       "sha256": "5bc22126f3d9dc4cf3961b09215da3621081543a7e2b49b6880d6948efb9daf8",
@@ -2347,10 +2355,10 @@
     {
       "path": "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",
       "kind": "narrative",
-      "sha256": "cbfd68cd20af66c487d94b62ada874ecf239bb1472f354152eadc91c4c65a8a0",
-      "lines": 41,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "32be157d721dbbc01a6dfebb7b0d4dfe0e1c8c7f3b83f76c25bff74520df1f94",
+      "lines": 45,
+      "read_status": "read",
+      "read_sha256": "32be157d721dbbc01a6dfebb7b0d4dfe0e1c8c7f3b83f76c25bff74520df1f94"
     },
     {
       "path": "docs/evidence/2026-10-22-probe-http-live.json",

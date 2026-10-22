@@ -164,6 +164,22 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                 self.assertEqual(bridge.main(["proot-session-recovery", session_id]), 0)
         dispatch.assert_called_once_with("proot.recovery.inspect", {"session_id": session_id})
 
+    def test_terminal_picker_bridge_lists_only_owned_running_debian(self) -> None:
+        sid="proot-"+"a"*32
+        payload={"ok":True,"data":{"sessions":[
+            {"session_id":sid,"profile":"debian-interactive","state":"running",
+             "ownership":"ternuxx_verified"},
+            {"session_id":"proot-"+"b"*32,"profile":"debian-interactive",
+             "state":"running","ownership":"unverified"},
+            {"session_id":"proot-"+"c"*32,"profile":"isolated-probe",
+             "state":"running","ownership":"ternuxx_verified"}]}}
+        with mock.patch.object(bridge,"call",return_value=payload) as dispatch:
+            output=StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["terminal-session-options"]),0)
+        dispatch.assert_called_once_with("proot.sessions.list")
+        self.assertEqual(output.getvalue(),"S\t"+sid+"\tDebian aaaaaaaa · Running\n")
+
     def test_proot_probe_bridge_previews_fixed_profile_and_applies_exact_plan(self) -> None:
         plan_id = "plan-" + "a" * 64
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
@@ -183,8 +199,9 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         session_id = "proot-" + "b" * 32
         plan_id = "plan-" + "c" * 64
         preview = {"ok": True, "data": {"ownership": "ternuxx_verified",
-                   "action": "signal_owned_process_group", "plan_id": plan_id,
-                   "profile": "isolated-probe"}}
+                   "action": "signal_owned_process_group", "signal": "SIGTERM",
+                   "scope": "verified_process_group", "impact": "Stop this owned probe.",
+                   "plan_id": plan_id, "profile": "isolated-probe"}}
         with mock.patch.object(bridge, "call", return_value=preview) as dispatch:
             output = StringIO()
             with redirect_stdout(output):
@@ -196,6 +213,22 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                 self.assertEqual(bridge.main(["proot-session-stop-apply", session_id, plan_id]), 0)
         dispatch.assert_called_once_with("proot.stop", {"session_id": session_id,
                                                           "confirmed": True, "plan_id": plan_id})
+
+    def test_interactive_terminal_stop_preview_discloses_hangup_scope(self) -> None:
+        session_id="proot-"+"d"*32
+        plan_id="plan-"+"e"*64
+        preview={"ok":True,"data":{"ownership":"ternuxx_verified",
+            "action":"hangup_owned_terminal_session","signal":"SIGHUP",
+            "scope":"verified_private_session_job_groups",
+            "impact":"Hang up this owned terminal and its verified private-session job groups.",
+            "plan_id":plan_id,"profile":"debian-interactive"}}
+        with mock.patch.object(bridge,"call",return_value=preview) as dispatch:
+            output=StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["proot-session-stop-preview",session_id]),0)
+        dispatch.assert_called_once_with("proot.stop.preview",{"session_id":session_id})
+        self.assertIn("SIGHUP",output.getvalue())
+        self.assertIn("Verified private session job groups",output.getvalue())
 
     def test_proot_session_bridge_rejects_invalid_ids_before_dispatch(self) -> None:
         for args in (["proot-session-recovery", "../../bad"],

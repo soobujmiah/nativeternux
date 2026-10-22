@@ -159,6 +159,27 @@ def main(argv: list[str]) -> int:
         result = call("proot.sessions.list")
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
+    if action == "terminal-session-options" and len(argv) == 1:
+        result = call("proot.sessions.list")
+        if not result.get("ok"):
+            print(json.dumps(result, ensure_ascii=False))
+            return 1
+        sessions = result.get("data", {}).get("sessions", [])
+        if not isinstance(sessions, list):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_session_inventory"}}))
+            return 1
+        for item in sessions:
+            if not isinstance(item, dict):
+                continue
+            session_id = item.get("session_id")
+            if (not isinstance(session_id, str)
+                    or not re.fullmatch(r"proot-[0-9a-f]{32}", session_id)
+                    or item.get("profile") != "debian-interactive"
+                    or item.get("state") != "running"
+                    or item.get("ownership") != "ternuxx_verified"):
+                continue
+            print("S\t" + session_id + "\tDebian " + session_id[-8:] + " · Running")
+        return 0
     if action == "proot-session-recovery" and len(argv) == 2:
         if not re.fullmatch(r"proot-[0-9a-f]{32}", argv[1]):
             print(json.dumps({"ok": False, "error": {"code": "invalid_session_id"}}))
@@ -197,13 +218,23 @@ def main(argv: list[str]) -> int:
             print(json.dumps(result, ensure_ascii=False))
             return 1
         data = result.get("data", {})
+        allowed_contracts = {
+            ("isolated-probe", "signal_owned_process_group", "SIGTERM", "verified_process_group"),
+            ("debian-interactive", "hangup_owned_terminal_session", "SIGHUP",
+             "verified_private_session_job_groups"),
+        }
+        contract = (data.get("profile"), data.get("action"), data.get("signal"),
+                    data.get("scope")) if isinstance(data, dict) else None
         if (not isinstance(data, dict) or data.get("ownership") != "ternuxx_verified"
-                or data.get("action") != "signal_owned_process_group"
+                or contract not in allowed_contracts
                 or not isinstance(data.get("plan_id"), str)
                 or not re.fullmatch(r"plan-[0-9a-f]{64}", data["plan_id"])):
             print(json.dumps({"ok": False, "error": {"code": "session_stop_not_verified"}}))
             return 1
-        print("P\t" + data["plan_id"] + "\t" + clean(data.get("profile")) + "\t" + clean(session_id))
+        print("P\t" + data["plan_id"] + "\t" + clean(
+            management_presentation.human_value(data["profile"])) + "\t" + clean(session_id)
+            + "\t" + data["signal"] + "\t" + clean(
+                management_presentation.human_value(data["scope"])) + "\t" + clean(data.get("impact")))
         return 0
     if action == "proot-session-stop-apply" and len(argv) == 3:
         session_id, plan_id = argv[1:]
