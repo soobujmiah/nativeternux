@@ -19,6 +19,12 @@ class ManagementCenterReplayGuestUiTests(unittest.TestCase):
         self.assertIn('g_strcmp0(request->action, "inspect") == 0', SOURCE)
         self.assertIn('g_strcmp0(request->resource_id, c->selected_resource_id) != 0', SOURCE)
 
+    def test_gtk_test_attach_requires_a_verified_session_id(self):
+        self.assertIn('"--test-attach-session"', SOURCE)
+        self.assertIn('"^proot-[0-9a-f]{32}$"', SOURCE)
+        self.assertIn('"Ternuxx GTK handoff test" : "Ternuxx Management Center"', SOURCE)
+        self.assertIn('test_attach ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS', SOURCE)
+
     def test_single_replay_action_keeps_a_visible_action_pane(self):
         self.assertIn('gtk_widget_set_visible(c->proot_guest_button, proot_apps || replay_guests);', SOURCE)
         self.assertIn('gtk_widget_set_visible(c->replay_guest_actions, proot_apps || replay_guests);', SOURCE)

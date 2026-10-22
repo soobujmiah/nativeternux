@@ -25,6 +25,7 @@ import subprocess
 import shlex
 import sys
 import tempfile
+import hashlib
 import termios
 import time
 
@@ -189,11 +190,141 @@ def _marker_command(marker: str) -> str:
     encoded = base64.b64encode(marker.encode()).decode()
     return "printf " + shlex.quote("%s\n") + ' "$(printf %s ' + encoded + ' | base64 -d)"'
 
+def _gtk_vte_handoff(env: dict[str, str], session_id: str, guest: Path, display: str,
+                     private: Path, screenshot_destination: Path | None) -> dict[str, str]:
+    require(re.fullmatch(r":[0-9]{1,2}", display) is not None,
+            "GTK display must be an explicit X11 display number")
+    prefix = Path(env["PREFIX"])
+    socket = prefix / "tmp" / ".X11-unix" / ("X" + display[1:])
+    require(socket.is_socket(), "the requested Native X11 display socket is unavailable")
+    launcher = prefix / "bin" / "tx-management-center"
+    require(launcher.is_file() and os.access(launcher, os.X_OK),
+            "installed Native GTK management launcher is unavailable")
+    xdotool = shutil.which("xdotool")
+    scrot = shutil.which("scrot")
+    require(xdotool is not None and scrot is not None,
+            "GTK/VTE live review requires the already-installed xdotool and scrot tools")
+    gtk_env = dict(env, DISPLAY=display)
+    app_log_path = private / "gtk-management-center.stderr"
+    app_log = app_log_path.open("w", encoding="utf-8")
+    app_log_path.chmod(0o600)
+    app = subprocess.Popen([str(launcher), "--test-attach-session", session_id],
+        cwd=ROOT, env=gtk_env, stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL, stderr=app_log, start_new_session=True)
+    terminal_window = None
+    screenshot = private / "gtk-vte-terminal.png"
+    marker = "GTK_VTE_HANDOFF_" + os.urandom(8).hex()
+    try:
+        deadline = time.monotonic() + 20
+        while time.monotonic() < deadline:
+            result = subprocess.run([xdotool, "search", "--onlyvisible", "--name",
+                "^Ternuxx Debian terminal$"], env=gtk_env, capture_output=True,
+                text=True, timeout=3, check=False)
+            windows = [line for line in result.stdout.splitlines() if line.isdecimal()]
+            if windows:
+                terminal_window = windows[-1]
+                break
+            if app.poll() is not None:
+                raise RuntimeError("GTK test instance exited before opening its VTE terminal")
+            time.sleep(0.1)
+        require(terminal_window is not None, "GTK did not open the expected VTE terminal window")
+        subprocess.run([xdotool, "windowactivate", "--sync", terminal_window],
+            env=gtk_env, check=True, timeout=5)
+        time.sleep(0.5)
+        subprocess.run([xdotool, "type", "--clearmodifiers", "--delay", "1",
+            _marker_command(marker)], env=gtk_env, check=True, timeout=12)
+        subprocess.run([xdotool, "key", "--clearmodifiers", "Return"],
+            env=gtk_env, check=True, timeout=5)
+        time.sleep(0.4)
+        subprocess.run([xdotool, "type", "--clearmodifiers", "--delay", "1",
+            "printf 'GTK_VTE_SIZE '; stty size"], env=gtk_env, check=True, timeout=12)
+        subprocess.run([xdotool, "key", "--clearmodifiers", "Return"],
+            env=gtk_env, check=True, timeout=5)
+        time.sleep(0.6)
+        subprocess.run([scrot, "--window", terminal_window, "--silent", "--overwrite",
+            str(screenshot)], env=gtk_env, check=True, timeout=10)
+        require(screenshot.is_file() and screenshot.stat().st_size > 0,
+                "GTK/VTE screenshot capture did not produce an image")
+        screenshot_hash = hashlib.sha256(screenshot.read_bytes()).hexdigest()
+        if screenshot_destination is not None:
+            require(screenshot_destination.is_relative_to(ROOT),
+                    "GTK/VTE screenshot destination must be inside the repository")
+            require(not screenshot_destination.exists(),
+                    "refusing to overwrite an existing GTK/VTE evidence image")
+            screenshot_destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(screenshot, screenshot_destination)
+        subprocess.run([xdotool, "key", "--clearmodifiers", "ctrl+bracketright"],
+            env=gtk_env, check=True, timeout=5)
+        deadline = time.monotonic() + 12
+        while time.monotonic() < deadline:
+            result = subprocess.run([xdotool, "search", "--onlyvisible", "--name",
+                "^Ternuxx Debian terminal$"], env=gtk_env, capture_output=True,
+                text=True, timeout=3, check=False)
+            if terminal_window not in result.stdout.splitlines():
+                break
+            time.sleep(0.1)
+        else:
+            raise RuntimeError("Ctrl-] did not detach and close the GTK/VTE terminal window")
+        current = _verified_session(Path(env["TERNUXX_STATE_DIR"]), guest)
+        require(current.get("session_id") == session_id,
+                "GTK/VTE detach changed or lost the managed replay session")
+        return {"marker": marker, "screenshot_sha256": screenshot_hash}
+    finally:
+        # Close only the test instance and its named test window; keep the
+        # owner's existing Management Center and Native desktop untouched.
+        if terminal_window is not None:
+            subprocess.run([xdotool, "windowclose", terminal_window],
+                env=gtk_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                timeout=3, check=False)
+        result = subprocess.run([xdotool, "search", "--onlyvisible", "--name",
+            "^Ternuxx GTK handoff test$"], env=gtk_env, capture_output=True,
+            text=True, timeout=3, check=False)
+        for window in result.stdout.splitlines():
+            if window.isdecimal():
+                subprocess.run([xdotool, "windowclose", window], env=gtk_env,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    timeout=3, check=False)
+        if app.poll() is None:
+            app.terminate()
+            try:
+                app.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                app.kill()
+                app.wait(timeout=3)
+        app_log.close()
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--alias", required=True,
                         help="exact receipt-verified ternuxx-replay-NAME target")
+    parser.add_argument("--gtk-display",
+                        help="also attach the same session through installed GTK/VTE on this explicit X11 display")
+    parser.add_argument("--gtk-screenshot",
+                        help="save a focused VTE screenshot under the repository for visual evidence")
     args = parser.parse_args(argv)
+    if args.gtk_screenshot and not args.gtk_display:
+        parser.error("--gtk-screenshot requires --gtk-display")
+    screenshot_destination = (ROOT / args.gtk_screenshot).resolve() if args.gtk_screenshot else None
+    if screenshot_destination is not None and not screenshot_destination.is_relative_to(ROOT):
+        parser.error("--gtk-screenshot must stay inside the repository")
+    try:
+        import pyte  # noqa: F401
+    except ImportError:
+        parser.error("install optional checker dependency pyte==0.8.2 before starting a replay broker")
+    if args.gtk_display:
+        if not re.fullmatch(r":[0-9]{1,2}", args.gtk_display):
+            parser.error("--gtk-display must be an explicit X11 display number")
+        prefix_for_gtk = Path(os.environ.get("PREFIX", ""))
+        display_socket = prefix_for_gtk / "tmp" / ".X11-unix" / ("X" + args.gtk_display[1:])
+        if not display_socket.is_socket():
+            parser.error("the requested Native X11 display socket is unavailable")
+        gtk_launcher = prefix_for_gtk / "bin" / "tx-management-center"
+        if not gtk_launcher.is_file() or not os.access(gtk_launcher, os.X_OK):
+            parser.error("installed Native GTK management launcher is unavailable")
+        if shutil.which("xdotool") is None or shutil.which("scrot") is None:
+            parser.error("GTK/VTE live review requires the installed xdotool and scrot tools")
+        if screenshot_destination is not None and screenshot_destination.exists():
+            parser.error("refusing to overwrite an existing GTK/VTE evidence image")
     if not re.fullmatch(r"ternuxx-replay-[A-Za-z0-9][A-Za-z0-9_-]{0,47}", args.alias):
         parser.error("alias must be a simple ternuxx-replay-NAME identifier")
     prefix = os.environ.get("PREFIX", "")
@@ -329,6 +460,10 @@ def main(argv: list[str] | None = None) -> int:
         session_after = _verified_session(private, guest)
         require(session_after.get("session_id") == session_id,
                 "TUI handoff changed the managed session identity")
+        gtk_result = None
+        if args.gtk_display:
+            gtk_result = _gtk_vte_handoff(env, session_id, guest, args.gtk_display,
+                                           private, screenshot_destination)
         _close_exact(client, session_id)
         session_records = proot_sessions.list_sessions(private)
         stopped = next((item for item in session_records if item.get("session_id") == session_id), None)
@@ -346,7 +481,10 @@ def main(argv: list[str] | None = None) -> int:
             "rootfs_identity_verified": True, "same_session_id": session_id,
             "client_handoff": ["CLI start/I-O/resize/detach",
                 "authenticated Web attach/I-O/resize/detach",
-                "TUI attach/I-O/resize/detach"],
+                "TUI attach/I-O/resize/detach"] +
+                (["installed GTK/VTE attach/I-O/resize/detach"] if gtk_result else []),
+            "gtk_vte_marker": gtk_result.get("marker") if gtk_result else None,
+            "gtk_vte_screenshot_sha256": gtk_result.get("screenshot_sha256") if gtk_result else None,
             "shared_inventory": ["GTK picker bridge"],
             "exact_close": "stopped and released", "default_debian_preserved": True,
             "private_broker_state_removed": True}, sort_keys=True))

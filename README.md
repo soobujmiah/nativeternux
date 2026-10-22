@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Exact replay-guest retire/restore shares typed Native management operations across CLI, authenticated Web, TUI and installed GTK. Live CLI and real authenticated loopback HTTP cycles preserved exact guest identity and default Debian; GTK preview/confirmation/cancel and GTK selection-result response binding were reviewed on the installed Native app. GTK apply, controlled race injection, browser-rendered controls and remaining P4 provider/terminal gates remain open.
+Exact replay-guest retire/restore shares typed Native operations across CLI, authenticated Web, TUI and GTK. Live replay guest identity/default Debian preservation is verified. One same-session CLI → authenticated Web API → TUI → installed GTK/VTE I/O/resize/detach/close run now passes. GTK apply, browser-rendered controls and remaining P4 provider/configuration gates remain open.
 
-**Next action:** Complete GTK/VTE same-session attach and remaining provider routes without touching the owner's active PRoot; keep browser-rendered controls and GTK apply explicitly unqualified until exercised.
+**Next action:** Complete remaining P4 provider/configuration acceptance without touching the owner's active PRoot; exercise GTK guest lifecycle apply, browser-rendered controls, and remaining reproducibility gates.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

@@ -10,6 +10,7 @@ typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *n
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
 typedef struct { Center *center; gchar **argv; gchar *working_directory; } TerminalSpawn;
 static Center *app_center;
+static const gchar *test_attach_session_id;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5);
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact);
@@ -1313,7 +1314,9 @@ static void save_monitor(GtkButton *button, gpointer data) {
 static gboolean active(GtkApplication *app, gpointer user_data) {
     (void)user_data; Center *c=g_new0(Center,1); app_center=c;
     c->categories=g_ptr_array_new_with_free_func(g_free); c->resources=g_ptr_array_new_with_free_func(resource_free);
-    c->window=gtk_application_window_new(app); gtk_window_set_title(GTK_WINDOW(c->window),"Ternuxx Management Center");
+    c->window=gtk_application_window_new(app);
+    gtk_window_set_title(GTK_WINDOW(c->window), test_attach_session_id
+        ? "Ternuxx GTK handoff test" : "Ternuxx Management Center");
     gtk_window_set_default_size(GTK_WINDOW(c->window),720,980);
     GtkCssProvider *theme=gtk_css_provider_new();
     gtk_css_provider_load_from_string(theme,"window{background:#0c1511;color:#e6f1e9;} list,row{background:#111e18;color:#e6f1e9;} list row:selected{background:#245638;} button{background:#17271f;color:#e6f1e9;border:1px solid #2b4034;border-radius:9px;padding:8px;} button:hover{border-color:#62d58a;} label.dim-label{color:#9eb2a3;} textview,textview text{background-color:#111e18;color:#e6f1e9;}");
@@ -1338,7 +1341,9 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
     g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(c->proot_sessions_button,"clicked",G_CALLBACK(show_proot_sessions),c); g_signal_connect(c->proot_probe_button,"clicked",G_CALLBACK(start_proot_probe),c); g_signal_connect(c->proot_terminal_button,"clicked",G_CALLBACK(open_interactive_terminal),c); g_signal_connect(c->proot_recovery_button,"clicked",G_CALLBACK(proot_recovery_clicked),c); g_signal_connect(c->proot_stop_button,"clicked",G_CALLBACK(stop_proot_session),c); g_signal_connect(c->proot_guest_button,"clicked",G_CALLBACK(manage_replay_guest),c); g_signal_connect(c->proot_confirm_button,"clicked",G_CALLBACK(proot_confirm_clicked),c); g_signal_connect(c->proot_cancel_button,"clicked",G_CALLBACK(proot_cancel_clicked),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
-    load_catalog(c); gtk_window_present(GTK_WINDOW(c->window)); return TRUE;
+    load_catalog(c); gtk_window_present(GTK_WINDOW(c->window));
+    if (test_attach_session_id) spawn_interactive_terminal(c, test_attach_session_id);
+    return TRUE;
 }
 int main(int argc, char **argv) {
     if (argc == 2 && g_strcmp0(argv[1], "--version") == 0) { g_print("Ternuxx Management Center 0.1\n"); return 0; }
@@ -1347,6 +1352,19 @@ int main(int argc, char **argv) {
                 gtk_get_major_version(), gtk_get_minor_version(), gtk_get_micro_version(),
                 vte_get_major_version(), vte_get_minor_version(), vte_get_micro_version()); return 0;
     }
-    GtkApplication *app=gtk_application_new("dev.ternuxx.management-center",G_APPLICATION_DEFAULT_FLAGS);
-    g_signal_connect(app,"activate",G_CALLBACK(active),NULL); int status=g_application_run(G_APPLICATION(app),argc,argv); g_object_unref(app); return status;
+    gboolean test_attach = argc == 3 && g_strcmp0(argv[1], "--test-attach-session") == 0;
+    if (test_attach) {
+        if (!g_regex_match_simple("^proot-[0-9a-f]{32}$", argv[2], 0, 0)) {
+            g_printerr("A verified managed terminal session ID is required.\n");
+            return 2;
+        }
+        test_attach_session_id = argv[2];
+    }
+    GtkApplication *app=gtk_application_new(
+        test_attach ? "dev.ternuxx.management-center.attach-test" : "dev.ternuxx.management-center",
+        test_attach ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(app,"activate",G_CALLBACK(active),NULL);
+    int run_argc = test_attach ? 1 : argc;
+    int status=g_application_run(G_APPLICATION(app),run_argc,argv);
+    g_object_unref(app); return status;
 }
