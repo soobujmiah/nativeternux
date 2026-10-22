@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Exact replay-guest retire/restore now shares typed Native management operations across CLI, authenticated Web, TUI and installed GTK; the live CLI cycle preserved exact guest identity. Web and GTK interactions and the remaining P4 provider/terminal gates remain open.
+Exact replay-guest retire/restore shares typed Native management operations across CLI, authenticated Web, TUI and installed GTK. Live CLI and real authenticated loopback HTTP cycles preserved exact guest identity and default Debian; GTK dialog interaction, browser-rendered controls and remaining P4 provider/terminal gates remain open.
 
-**Next action:** Verify authenticated Web preview/apply authorization and review the GTK replay-guest dialog; then complete GTK/VTE same-session attach and remaining provider routes without touching the owner’s active PRoot.
+**Next action:** Review and exercise the installed GTK replay-guest dialog, then complete GTK/VTE same-session attach and remaining provider routes without touching the owner's active PRoot.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

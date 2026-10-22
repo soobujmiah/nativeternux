@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Exact replay-guest retire/restore now shares typed Native management operations across CLI, authenticated Web, TUI and installed GTK; the live CLI cycle preserved exact guest identity. Web and GTK interactions and the remaining P4 provider/terminal gates remain open.
+Exact replay-guest retire/restore shares typed Native management operations across CLI, authenticated Web, TUI and installed GTK. Live CLI and real authenticated loopback HTTP cycles preserved exact guest identity and default Debian; GTK dialog interaction, browser-rendered controls and remaining P4 provider/terminal gates remain open.
 
-**Next action:** Verify authenticated Web preview/apply authorization and review the GTK replay-guest dialog; then complete GTK/VTE same-session attach and remaining provider routes without touching the owner’s active PRoot.
+**Next action:** Review and exercise the installed GTK replay-guest dialog, then complete GTK/VTE same-session attach and remaining provider routes without touching the owner's active PRoot.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -104,6 +104,7 @@ Evidence:
 - [docs/evidence/2026-10-22-ssh-disposable-auth-qualification.md](evidence/2026-10-22-ssh-disposable-auth-qualification.md)
 - [docs/evidence/2026-10-22-cross-client-terminal-handoff.md](evidence/2026-10-22-cross-client-terminal-handoff.md)
 - [docs/evidence/2026-10-22-replay-guest-retirement.md](evidence/2026-10-22-replay-guest-retirement.md)
+- [docs/evidence/2026-10-22-web-replay-guest-retirement.md](evidence/2026-10-22-web-replay-guest-retirement.md)
 
 ## P5 — Distro and display compatibility profiles
 
