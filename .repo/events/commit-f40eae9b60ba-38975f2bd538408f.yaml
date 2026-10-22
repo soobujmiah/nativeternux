@@ -1,0 +1,7 @@
+event_id: commit-f40eae9b60ba-38975f2bd538408f
+repository: soobujmiah/ternuxx
+commit: f40eae9b60ba47aa67214290a2aae9b52bfb56f0
+kind: commit
+occurred_at: '2026-10-22T08:35:51Z'
+status: completed
+summary: 'docs(ssh): document managed restart coverage'
