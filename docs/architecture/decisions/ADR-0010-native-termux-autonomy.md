@@ -1,6 +1,6 @@
 # ADR-0010: Native Termux autonomy and bounded PRoot integration
 
-- **Status:** Accepted owner requirement; implementation and acceptance tests pending
+- **Status:** Accepted owner requirement; current implementation/qualification tracked by the capability matrix and phase evidence
 - **Date:** 2026-10-17
 - **Decision owner:** Project owner
 
@@ -50,4 +50,6 @@ Each test must state whether it is a mock, host integration, or owner-operated p
 
 ## Implementation status
 
-Design only. No native service, boot orchestrator, SSH bridge, checkpoint manager, wake-lock manager, or acceptance test is implemented or qualified by this decision. See [unified workstation architecture](../UNIFIED-WORKSTATION.md), [operations](../../OPERATIONS.md), and [hybrid integration](../../HYBRID-INTEGRATION.md).
+This ADR defines requirements and does not itself qualify a runtime or acceptance test. Native services, boot/continuity, SSH and Wake Lock modules now exist. Current coverage and limits are in [the capability matrix](../CAPABILITY-MATRIX.md), [P3 exit evidence](../../evidence/2026-10-22-p3-rb08-postboot-exit-audit.md), and [the active audit](../../audit/REPOSITORY-AUDIT.md).
+
+The owner's 2026-10-22 phase clarification removed legacy launcher compatibility as a P4 acceptance gate; it did not authorize destroying those files or stopping the working guest. Native no-PRoot runtime evidence and the current installed modules' next cold-boot observation remain distinct outstanding checks; do not stop the active Codex guest to manufacture them.

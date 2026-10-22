@@ -520,7 +520,7 @@ The complete Native Termux fixture suite passed **273/273** in 41.229 seconds. T
 
 ## Native Doctor recheck — 2026-10-18 08:19 UTC
 
-Doctor returned `overall=warning`, `read_only=true`, 14 pass / 15 info / 1 warning / 0 errors. The warning remains the separate native SSH configuration with wildcard bind and password authentication; process ownership and external reachability are unknown. ADB responds only to the bounded local `host:version` probe (0x0029); device authorization and Shizuku readiness remain unknown. Debian inventory still does not establish Ternux guest ownership. No service, package, boot, desktop, Android setting, network, or PRoot state was changed. Evidence: [sanitized native Doctor recheck](2026-10-18-native-doctor-recheck-0819.json).
+Doctor returned `overall=warning`, `read_only=true`, 14 pass / 15 info / 1 warning / 0 errors. The warning remains the separate native SSH configuration with wildcard bind and password authentication; process ownership and external reachability are unknown. ADB responds only to the bounded local `host:version` probe (0x0029); device authorization and Shizuku readiness remain unknown. Debian inventory still does not establish Ternux guest ownership. No service, package, boot, desktop, Android setting, network, or PRoot state was changed. Evidence: [sanitized native Doctor recheck](2026-10-18-p3-native-doctor-recheck-0819.json).
 
 
 ## Existing guest read-only verification — 2026-10-18 08:23 UTC

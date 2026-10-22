@@ -1,0 +1,2876 @@
+{
+  "schema_version": 1,
+  "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
+  "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
+  "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
+  "document_count": 358,
+  "read_count": 30,
+  "reading_complete": false,
+  "broken_local_links": [],
+  "documents": [
+    {
+      "path": ".github/workflows/repo-contract.yml",
+      "kind": "structured",
+      "sha256": "2b60ab1bc749a822c2f8007f7a93dd84b1b2579511d47cebb97baffe20768389",
+      "lines": 55,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": ".github/workflows/repo-knowledge-sync.yml",
+      "kind": "structured",
+      "sha256": "25729d45c2a525c053e4040e961bf50219d156f4c83138feae0858a64c0139c8",
+      "lines": 89,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "AI_ASSISTANT.md",
+      "kind": "narrative",
+      "sha256": "c483d5020116bf828e834110fd7ad2710e32ca5b301aa553058b7bbc9d837f91",
+      "lines": 66,
+      "read_status": "read",
+      "read_sha256": "c483d5020116bf828e834110fd7ad2710e32ca5b301aa553058b7bbc9d837f91"
+    },
+    {
+      "path": "CURRENT_STATE.md",
+      "kind": "narrative",
+      "sha256": "be6fe4a4994cb23590e5ddeaa7c9b347e750952dcb39533bf84040de6a11b6c3",
+      "lines": 35,
+      "read_status": "read",
+      "read_sha256": "be6fe4a4994cb23590e5ddeaa7c9b347e750952dcb39533bf84040de6a11b6c3"
+    },
+    {
+      "path": "PROJECT_CLASSIFICATION.yaml",
+      "kind": "structured",
+      "sha256": "0a958ab4224d2924da40ae490b9abeb401dc32e728b0bb76bd8e39e077000e32",
+      "lines": 54,
+      "read_status": "read",
+      "read_sha256": "0a958ab4224d2924da40ae490b9abeb401dc32e728b0bb76bd8e39e077000e32"
+    },
+    {
+      "path": "PROJECT_MANIFEST.yaml",
+      "kind": "structured",
+      "sha256": "c91a44061af13c1292c6ef7bdcb289627e4b05b74d5869839c2f2dd81913d4d8",
+      "lines": 75,
+      "read_status": "read",
+      "read_sha256": "c91a44061af13c1292c6ef7bdcb289627e4b05b74d5869839c2f2dd81913d4d8"
+    },
+    {
+      "path": "README.md",
+      "kind": "narrative",
+      "sha256": "2e57e6e45aa85c67ed2b6ba30df8a7c07cafe4a6452ebed02f9e7995a5b51fee",
+      "lines": 82,
+      "read_status": "read",
+      "read_sha256": "2e57e6e45aa85c67ed2b6ba30df8a7c07cafe4a6452ebed02f9e7995a5b51fee"
+    },
+    {
+      "path": "SECURITY.md",
+      "kind": "narrative",
+      "sha256": "dbefaabbb10cb8187816a809b75223118b0061f650f22269ef6d1ea80d4c3e6e",
+      "lines": 57,
+      "read_status": "read",
+      "read_sha256": "dbefaabbb10cb8187816a809b75223118b0061f650f22269ef6d1ea80d4c3e6e"
+    },
+    {
+      "path": "SKB_KNOWLEDGE_SYNC.md",
+      "kind": "narrative",
+      "sha256": "4bdb2de63df2521b52489db86a6beacd27f2dcd6df2805e6a15067f5659afd9d",
+      "lines": 16,
+      "read_status": "read",
+      "read_sha256": "4bdb2de63df2521b52489db86a6beacd27f2dcd6df2805e6a15067f5659afd9d"
+    },
+    {
+      "path": "bn/README.md",
+      "kind": "narrative",
+      "sha256": "ccd002ad134dc819475e5b6fde52243551d6c63a71cf0c3432c8e7e67409074f",
+      "lines": 34,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "config/graphics/native-kgsl.json",
+      "kind": "structured",
+      "sha256": "4e2a66cf3d06a38918eadd5c2be42f48f795303e1293a1f789c53e9eee3d1f99",
+      "lines": 72,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "config/proot/debian-trixie.json",
+      "kind": "structured",
+      "sha256": "7b83c7d070dc23caf2eefc6ef5d6af37481219e3c531b6d5c8c587a6a619ae11",
+      "lines": 150,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "kind": "narrative",
+      "sha256": "ee4006c74aa08205cd0038913dcb85efafc492d9ca4876b2115cf70ac85f5b46",
+      "lines": 43,
+      "read_status": "read",
+      "read_sha256": "ee4006c74aa08205cd0038913dcb85efafc492d9ca4876b2115cf70ac85f5b46"
+    },
+    {
+      "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
+      "kind": "narrative",
+      "sha256": "292d4dd2049c52684c82fcad7e8ce681b1748638f4974c274bf02f42f41feb5e",
+      "lines": 35,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/HYBRID-INTEGRATION.md",
+      "kind": "narrative",
+      "sha256": "b2e4bffecae694466170b3c0fb0d405009c84961e003fe5870390449b00cbe54",
+      "lines": 101,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/INSTALLATION.md",
+      "kind": "narrative",
+      "sha256": "6802dddf9cec72ec90c09891febc5aea03391c558ad84db8ff7e0a35fee30836",
+      "lines": 70,
+      "read_status": "read",
+      "read_sha256": "6802dddf9cec72ec90c09891febc5aea03391c558ad84db8ff7e0a35fee30836"
+    },
+    {
+      "path": "docs/KNOWLEDGE-SYNC.md",
+      "kind": "narrative",
+      "sha256": "ccea0d564df8744abc272ac6b05ee63b31a8c2ebfb23c20a08a1b3264875734a",
+      "lines": 55,
+      "read_status": "read",
+      "read_sha256": "ccea0d564df8744abc272ac6b05ee63b31a8c2ebfb23c20a08a1b3264875734a"
+    },
+    {
+      "path": "docs/OPERATIONS.md",
+      "kind": "narrative",
+      "sha256": "326133ffa0f2a8bf3fec7858855389622f68e39855cfcedd9b0096a40ed6abd2",
+      "lines": 189,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/OPTIMIZATION.md",
+      "kind": "narrative",
+      "sha256": "3a73d06060072ad5ee6b6a353b30ef423bdae4b37d1bef1781ea553929923ad7",
+      "lines": 51,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/PHASE-STATUS.md",
+      "kind": "narrative",
+      "sha256": "debc6f9256ce0e795cf31c39bfb7ce5b0449cdce6f086907d4a1b449e84efa35",
+      "lines": 150,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/PRODUCT-VISION.md",
+      "kind": "narrative",
+      "sha256": "9407cc4d484d5c519d06b29b3bd781a4597126d5ce4d2d4674c9c5df266bd06f",
+      "lines": 15,
+      "read_status": "read",
+      "read_sha256": "9407cc4d484d5c519d06b29b3bd781a4597126d5ce4d2d4674c9c5df266bd06f"
+    },
+    {
+      "path": "docs/PROOT-GPU.md",
+      "kind": "narrative",
+      "sha256": "400747fc7709be2b6aeeb2dba1f4cc284b10f23b925d904fb0df8dacaa997e9d",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/PROOT-GUI-DISPLAY0.md",
+      "kind": "narrative",
+      "sha256": "3bba0acb734a3c0b6f15caeb4f0ea51236fa0af0f5fc1d96491d4e480a59becc",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/PROOT-SHARED-X11.md",
+      "kind": "narrative",
+      "sha256": "c36e30dcf9d3999141c94763553016fa50e3db00ac3c5c728d6592a0776fe717",
+      "lines": 108,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/RESEARCH.md",
+      "kind": "narrative",
+      "sha256": "29b8ec19e8f007de7affb7732364352244c95b307069e0cdfd5957aa457d9a88",
+      "lines": 329,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/ROADMAP.md",
+      "kind": "narrative",
+      "sha256": "eb1c28fb49375df4935e92a77a46ea6103193019890ce962015c6ef6db2204e4",
+      "lines": 311,
+      "read_status": "read",
+      "read_sha256": "eb1c28fb49375df4935e92a77a46ea6103193019890ce962015c6ef6db2204e4"
+    },
+    {
+      "path": "docs/SOFTWARE-CATALOG.md",
+      "kind": "narrative",
+      "sha256": "fb73adc5ec33eccb6f50e90d426948e77e5efa90e6f2dd77363949b0ee6642d5",
+      "lines": 107,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/WINE-NATIVE.md",
+      "kind": "narrative",
+      "sha256": "0b3f38af6ce5f9157641af4ed971d463d1d20ec536952e0a11768f9447aadf3a",
+      "lines": 55,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/WORKSTATION-EXTENSIONS.md",
+      "kind": "narrative",
+      "sha256": "2da7ba5ea368a60071915d3518a13fc578514c23868ae347464b3e4e34f1b238",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/CAPABILITY-MATRIX.md",
+      "kind": "narrative",
+      "sha256": "1ce054b23c179645a32aa7b9a16a378020e8a127d49903cf47b0fce64be251f7",
+      "lines": 24,
+      "read_status": "read",
+      "read_sha256": "1ce054b23c179645a32aa7b9a16a378020e8a127d49903cf47b0fce64be251f7"
+    },
+    {
+      "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
+      "kind": "narrative",
+      "sha256": "6be35d82ea73cb97096524cb2437f84957e0a1a3c5d64fc72ef17444bdf2ac8f",
+      "lines": 111,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/CRON-JOBS.md",
+      "kind": "narrative",
+      "sha256": "7094dbe34a93d0416c496c2d573bfb1845242c74175b2560f94e03be2a444886",
+      "lines": 126,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/GUI-MONITORING-POLICY.md",
+      "kind": "narrative",
+      "sha256": "9501537458596494b228f6697a5e3f400165ee8de2df9336a9c8ad65c6cbcc0a",
+      "lines": 28,
+      "read_status": "read",
+      "read_sha256": "9501537458596494b228f6697a5e3f400165ee8de2df9336a9c8ad65c6cbcc0a"
+    },
+    {
+      "path": "docs/architecture/GUI-SESSION-LIFECYCLE.md",
+      "kind": "narrative",
+      "sha256": "bd0bf155e84b0d07612c63083081937477abeef72b7fe5a93ad7a6a628d9b12d",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/HERMES-PROVIDER.md",
+      "kind": "narrative",
+      "sha256": "c57754829577b2a217f25cec317f5546941961368c8b74e7f2786fb56da699b7",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/INTERACTIVE-PROOT-TERMINALS.md",
+      "kind": "narrative",
+      "sha256": "4e69a6af114e5c92257a1d60c82d7c57cb46e960615d67f97d75248566067659",
+      "lines": 35,
+      "read_status": "read",
+      "read_sha256": "4e69a6af114e5c92257a1d60c82d7c57cb46e960615d67f97d75248566067659"
+    },
+    {
+      "path": "docs/architecture/MANAGEMENT-API.md",
+      "kind": "narrative",
+      "sha256": "9d734a43a8e88af5585e30d0e838d803ed19fa5a31707a82162f09ab6678e69a",
+      "lines": 229,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/NATIVE-GRAPHICS-AUDIO.md",
+      "kind": "narrative",
+      "sha256": "5f04ab97c6811ce79e2dd3fe06d1fa71f65de06018db8ffdc465d9f62f39b9a0",
+      "lines": 58,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/PROOT-SESSIONS.md",
+      "kind": "narrative",
+      "sha256": "88035b9fcbd9e711a94d082731a56ec2fbd6b549860dfaf7444382a5ee0245ba",
+      "lines": 56,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/SHARED-MANAGEMENT-PLAN.md",
+      "kind": "narrative",
+      "sha256": "dde4a759bd9c0bbd85aba61a2e023fa01b3fbd04970e1d834bddfc3830c72f98",
+      "lines": 69,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/SSH-LIFECYCLE.md",
+      "kind": "narrative",
+      "sha256": "97b173a249eab2d0dfc1e91dca4fe519c240caf600cd9c22e19094aa50ac51d4",
+      "lines": 178,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/UNIFIED-WORKSTATION.md",
+      "kind": "narrative",
+      "sha256": "3a6d8fad1c458a27ef3646202a7daf4346836246266117c5e7bde490ab0bef71",
+      "lines": 252,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0001-native-proot-providers.md",
+      "kind": "narrative",
+      "sha256": "b71e862f4f88e44390182866f51462233a563d65970c7c7af0e52c6f204dd1c3",
+      "lines": 40,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0002-workload-verified-acceleration.md",
+      "kind": "narrative",
+      "sha256": "c3d76a4207c43d943c794ca294888f9ffb9d178e31cdbf00db1ef9c20d98d7d7",
+      "lines": 37,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0003-deterministic-state-and-skb-return.md",
+      "kind": "narrative",
+      "sha256": "cd32b552375d0e1e0ce134d77380803f83365c02f21145742ff5a38df18cab28",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0004-three-interfaces-shared-management.md",
+      "kind": "narrative",
+      "sha256": "0930b26f2d8082e1c8a37268bb8942612e4138d626cb01f541b52495c3a8136d",
+      "lines": 56,
+      "read_status": "read",
+      "read_sha256": "0930b26f2d8082e1c8a37268bb8942612e4138d626cb01f541b52495c3a8136d"
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0005-capability-permission-and-task-model.md",
+      "kind": "narrative",
+      "sha256": "7fbeebf6fcbdeaab68b5588ad0f3bbdd97138e303e1a79d8333f8ec7633aa1b6",
+      "lines": 65,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0006-adapt-existing-ternux-provider.md",
+      "kind": "narrative",
+      "sha256": "b16ca8e0ec905c85edcedbfcb3d1e9324dbc3adc8c11783c6a62201680b1b99d",
+      "lines": 55,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md",
+      "kind": "narrative",
+      "sha256": "9217e37efdc380b919f10dc16c9a64e31a1a121404e4958459acad8654f14c2e",
+      "lines": 96,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md",
+      "kind": "narrative",
+      "sha256": "219f328bbaf9d0f19565d092950bc14c9b581ce513772bed1eadbcab63a36842",
+      "lines": 58,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0009-provider-scoped-optional-software.md",
+      "kind": "narrative",
+      "sha256": "7f403947e05a2b0887426f83d8cdd84dbcbe6eb24be3cad522d5d7b43cd0024f",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0010-native-termux-autonomy.md",
+      "kind": "narrative",
+      "sha256": "60dd079997b0e75e59a1ec10e44774a1d2e657a95a6309036d5339806b3b2458",
+      "lines": 55,
+      "read_status": "read",
+      "read_sha256": "60dd079997b0e75e59a1ec10e44774a1d2e657a95a6309036d5339806b3b2458"
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0011-unified-ssh-lifecycle.md",
+      "kind": "narrative",
+      "sha256": "8a3865a7fe7b27de8093041d8f626b0e49b7d81662b779092ab36463ecc40e63",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0012-native-owned-shared-dependencies.md",
+      "kind": "narrative",
+      "sha256": "e7fd2054cb7e065a926085f33723352fac73d9455801ed0d4c451e4567817a2f",
+      "lines": 84,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0013-owner-controlled-remote-access.md",
+      "kind": "narrative",
+      "sha256": "c4ce6da50eaed21e7460cf6fbb86ba38123a84cc8695fd5c206821f509c49f38",
+      "lines": 117,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0014-proot-adb-and-management-tcp.md",
+      "kind": "narrative",
+      "sha256": "5d39366bacf5918a284aa634daff43286c6ded71e1eb20011d4e617cb1ae9945",
+      "lines": 210,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0015-ternuxx-owned-existing-proot.md",
+      "kind": "narrative",
+      "sha256": "bc72c28ee2ca29c3619ccf45ee5371bc0eeacd2486a3eca93b40cddd5a806193",
+      "lines": 34,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/history/2026-10-22-capability-matrix.md",
+      "kind": "narrative",
+      "sha256": "e6163beada6e1a3d5216b0c001209342dde64fe4c7752b19dff8dd218f429b19",
+      "lines": 219,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/audit/REPOSITORY-AUDIT.md",
+      "kind": "narrative",
+      "sha256": "722ffd068ef25fd36fd52c4ff9d99c01809090d54468f80892230a14d8967265",
+      "lines": 58,
+      "read_status": "read",
+      "read_sha256": "722ffd068ef25fd36fd52c4ff9d99c01809090d54468f80892230a14d8967265"
+    },
+    {
+      "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
+      "kind": "structured",
+      "sha256": "dd718aaa1132fef897ebe15e2d23e2bd85330fa00f81c8c9afc2f8b94b22e180",
+      "lines": 166,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-17-native-continuation.json",
+      "kind": "structured",
+      "sha256": "725bf23b6e8f8b998a1e7098a069eb35adfea2986e98595dcbf0daf999b903a4",
+      "lines": 79,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-17-native-management-slice.json",
+      "kind": "structured",
+      "sha256": "bd474aa7f1f1144b3dba6769dd37c83fab64205b1a143feaa0e7a28803c3df3e",
+      "lines": 144,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-17-reboot-recovery-baseline.json",
+      "kind": "structured",
+      "sha256": "49bab3c9fe3b672a62eea2e52cb30399b79b52b6dc9f26dd4cef37f45b3f3a7f",
+      "lines": 337,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-17-reboot-recovery-implementation.json",
+      "kind": "structured",
+      "sha256": "98b41647bfaa0f4ad2e15fd8df1286a8ff3065aa3a16d1b5341db1981f76edd7",
+      "lines": 235,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-8023-lifecycle-qualification.md",
+      "kind": "narrative",
+      "sha256": "0da9c65409f2fccaa8ad60d74826d819eca2058639ea6119527eb9c612f9fb73",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-8023-reconciliation.md",
+      "kind": "narrative",
+      "sha256": "698016b2d941e662037b823b52813cadf6569a6df7bc4d552afd4c47c46736b7",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-boot-profile-recovery.json",
+      "kind": "structured",
+      "sha256": "96e652633e0d2a3c69eb817504f0a1635cd9c598bcbd8c2af966678a731d77b7",
+      "lines": 70,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-cli-entrypoint-state-reconciliation.md",
+      "kind": "narrative",
+      "sha256": "b7ad23ba02465fc940aed37f3997444f302945c28a125fe6c46a3eafa8b96ead",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-desktop-session-recovery.json",
+      "kind": "structured",
+      "sha256": "216a91386b3868ea75533c2d546fca32ec6f7c9bfdfb69d24d8344cb4df7142d",
+      "lines": 61,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-existing-workstation-baseline.md",
+      "kind": "narrative",
+      "sha256": "af1aad42c95910e8903cebae94eb4ff5482319cacc4a18c9d12c4a3955c6d0be",
+      "lines": 59,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-live-p3-state.json",
+      "kind": "structured",
+      "sha256": "ef9e1e65a8d1b7096a4e575018b0ddb3bdb34f78adcf5eb3d716df0992adcad2",
+      "lines": 65,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-live-session-state-reconciliation.json",
+      "kind": "structured",
+      "sha256": "167a00084731b7721da91b8d5602503f70afd8df9fad85cbfbfcf0a9cd6d63d8",
+      "lines": 90,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-managed-ssh-definition-identity.json",
+      "kind": "structured",
+      "sha256": "75c1f6dc90ef291b3d933c079a371ad6999f81e0084d2d287d39399dcadf7e8c",
+      "lines": 66,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-native-ssh-banner-probe.json",
+      "kind": "structured",
+      "sha256": "5210e0150fc238f02bc30c9c7dd64caaccdc658587979aff7980d1186c41a7be",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-native-ssh-service-control.json",
+      "kind": "structured",
+      "sha256": "a236fabdfeba208906054b4385f4660502b4b534ad66693b4f646eab6529381d",
+      "lines": 77,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-native-termux-repo-audit-0936.json",
+      "kind": "structured",
+      "sha256": "9a4ea566f89202fe5a8b7b1adf6b3c36b4349e3f5d8c55094f5c362f0835ad59",
+      "lines": 2371,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-native-vlc-install-preview-0612.json",
+      "kind": "structured",
+      "sha256": "ec1dc54e4956392f9c7f92764ab3f0fe45cfc8da987254bf436c1b4ee5a4d355",
+      "lines": 669,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p0-audit-fixes.md",
+      "kind": "narrative",
+      "sha256": "1e2ee567b9c1700fd3cc17e7d4f0df5dbf74f32def2bdcf1b70771ef180bd9b3",
+      "lines": 47,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-current-gate-recheck-0214.json",
+      "kind": "structured",
+      "sha256": "35e2d7f87eb49ee6ece2bb920b161042170f47093f7c9923199dd48bd3fa421b",
+      "lines": 614,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-current-gate-recheck-0233.json",
+      "kind": "structured",
+      "sha256": "0031881cdfdac0e3e89167ac606fddabb0947560b36c081f2fdc0e2db7b0f225",
+      "lines": 678,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-installed-package-closure-audit.json",
+      "kind": "structured",
+      "sha256": "7b687db47fe57036a62dd0f4c3cbcfa40427cc996204efb599bc0a4475f9dfc9",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-installer-current-noop-0610.json",
+      "kind": "structured",
+      "sha256": "cb52fbd9e0adf7ca9d4daec9fbfe7bfc0d7b0b2284c227be834bb8360e9c73a9",
+      "lines": 18,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-native-closure-recheck-0816.json",
+      "kind": "structured",
+      "sha256": "f270590b6f01b497c0be806bfde81038e3047b2e5e315484b504e9e874c9b1e2",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-p3-current-session-recheck.json",
+      "kind": "structured",
+      "sha256": "59b978f16b241527b2b9d0bd67754bed7c17c1be0e9573ac1e146e689510631a",
+      "lines": 598,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-package-closure-current-recheck.json",
+      "kind": "structured",
+      "sha256": "efd61e6a7dfce0d55fa4ebd1889895b08af3db980348d13b641d6658ad2bf7ca",
+      "lines": 563,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-package-closure-followup.json",
+      "kind": "structured",
+      "sha256": "5d23522668f78f7edcf826d0741a9957f315865254b8668f2a3c6ddc2ee87893",
+      "lines": 671,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-package-closure-latest-recheck.json",
+      "kind": "structured",
+      "sha256": "a83b3e729dcba045216678ac77e366c055fe40f74eb3b76b9204dc340fca2dcc",
+      "lines": 564,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-package-closure-recheck-0610.json",
+      "kind": "structured",
+      "sha256": "cbc8c48b39b12bf4ae05dedb0f96f3fe48cfb0d45f0ecce01c0a215d7123bba9",
+      "lines": 481,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p2-regression-recheck-0545.json",
+      "kind": "structured",
+      "sha256": "5edf3414f54b6b655881b2b2ab41f107018a2db4108becec1d2d2a7d38328e29",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-adb-doctor-integration-0701.json",
+      "kind": "structured",
+      "sha256": "ef7399c134f126e6791eb705849130b22f5c24528f341a764a251870d552d971",
+      "lines": 53,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-adb-live-recheck-0656.json",
+      "kind": "structured",
+      "sha256": "8fed6213931d28720be510578b9238205960d9bcc33296637441d93664fbbaad",
+      "lines": 55,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-adb-shizuku-dependency-review.json",
+      "kind": "structured",
+      "sha256": "3d61f6c28d4b8f93911f04f25b030894f037902b59e0a6a916e9569ec3f685dc",
+      "lines": 51,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-android-addon-state-0650.json",
+      "kind": "structured",
+      "sha256": "c38250665e1182cc5a4458f1d73a7e1451e99b39cac5454c9cddb7a9b1d34552",
+      "lines": 44,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-android-listener-bind-observation.json",
+      "kind": "structured",
+      "sha256": "29f894efa0ecd1e0eb1a3b12778fdd01763b9ccd51c043cdc25df002d5816af8",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-activity-request.json",
+      "kind": "structured",
+      "sha256": "d77ff91b331326e95d5bf38c7da058890c7ec46c3090730726b323f0d2dbe4ea",
+      "lines": 25,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-diagnostic-implementation-0643.json",
+      "kind": "structured",
+      "sha256": "ac24f1d073700ea4427d30a899f256cfd098260e89d1eee1765d1a69fc96904c",
+      "lines": 74,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-log-delivery-recheck-0554.json",
+      "kind": "structured",
+      "sha256": "3aeab98e5fe8cd6357b326e6bbaf3ac5fdd085fa6516cd78ec6387154bb6476f",
+      "lines": 441,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-profile-choice-check.json",
+      "kind": "structured",
+      "sha256": "1e1e6842c81a6237990b44a3cc3052a7b8d907a6cb6698357a8dc14ad1158c9e",
+      "lines": 32,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-profile-gate.json",
+      "kind": "structured",
+      "sha256": "aaaedb9dbfe339ecc39648ec3a4f98db04437ef0e147922b0f5ab13fd4da3fb5",
+      "lines": 71,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-profile-preview-0200.json",
+      "kind": "structured",
+      "sha256": "cf1051a8bf18e849352c4a81194dca2614ca542484b517481877a4e9182ea6a9",
+      "lines": 61,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-profile-preview-recheck.json",
+      "kind": "structured",
+      "sha256": "45a283ee448afafc811d95e09ef02a9801a10ef3a0cae75bd102503262fd7eea",
+      "lines": 172,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-boot-receiver-enabled-0640.json",
+      "kind": "structured",
+      "sha256": "fceeddd384a76159ad59cbdd8e292feda4d19f7357a477df27804ce1b8858ca6",
+      "lines": 45,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-continuation-0231.json",
+      "kind": "structured",
+      "sha256": "6b74becff15db063646e3bfec9a12c2c8b556f50cbfe4db469fd2d4ced95adbe",
+      "lines": 91,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-continuation-focused-tests-0543.json",
+      "kind": "structured",
+      "sha256": "256c145e47b5a81d5525f5334768c07ce7799abed927145323bb9c3620f5dfbf",
+      "lines": 38,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-continuation-tests.json",
+      "kind": "structured",
+      "sha256": "8019d18e597f8c27b8d3b0e45e230ea30998ccea4b85bc9811e0a10edd41ffd9",
+      "lines": 25,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-current-doctor-recheck.json",
+      "kind": "structured",
+      "sha256": "6f2162b7a98519d629cae606f0be79545e27fc7b8306e91fccef20108c519f4d",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-current-gate-recheck-0632.json",
+      "kind": "structured",
+      "sha256": "d81d9f544a495dfb4b435da819b2f8b80c5a48891badc97ddc227332095a56f1",
+      "lines": 110,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-current-readonly-gate-latest.json",
+      "kind": "structured",
+      "sha256": "b63f6f7cfde40b963a6d72bde16203823da485d9a575a6267777e1b4d53c6bc2",
+      "lines": 157,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-current-readonly-gate-recheck.json",
+      "kind": "structured",
+      "sha256": "4545a1bba3228677c7d7814f2bbf7213f36672a37dc0f4f0d94d0994dff28362",
+      "lines": 35,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-current-readonly-gate-snapshot.json",
+      "kind": "structured",
+      "sha256": "4a5376ad2e97019ab5b8afb1d82b7d007e3d1406c4bb9d6e81e6ef7ca87bbff8",
+      "lines": 478,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-display-process-diagnostic-0206.json",
+      "kind": "structured",
+      "sha256": "39c4f8ca1bd5f9c0e640f4f99607bf1364ece5ec21648ae0f6524a7a11a9c8f5",
+      "lines": 82,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-doctor-remote-recheck-0544.json",
+      "kind": "structured",
+      "sha256": "b1f59e1d218016ccd87181b87876f2ad4f2509d3bb929cbf229dda6436b0522a",
+      "lines": 280,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-exit-gate-audit.md",
+      "kind": "narrative",
+      "sha256": "b7541144e004b4d3692b01443e34f333da6e5f6a3f53d28051bf9c90a4cec00c",
+      "lines": 278,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-full-suite-recheck-0602.json",
+      "kind": "structured",
+      "sha256": "c5986bc2ce011823ca5c8ce3572bfa18a624bae793bf55f73f7e67fce3b04274",
+      "lines": 21,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-live-current-gates-0603.json",
+      "kind": "structured",
+      "sha256": "5cafd3b45dc1321a4e6d225f6fe18c873cf8a9aafa0e2ee8eba4a55dde2d9f07",
+      "lines": 63,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-live-followup-0158.json",
+      "kind": "structured",
+      "sha256": "cd62bc6ccb60abb99cbeb1df4b8569b66d7686e5d779f35ccddc662070258d2d",
+      "lines": 69,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-managed-8023-reboot-observer-resolver.json",
+      "kind": "structured",
+      "sha256": "ce6a69029a4a188de3999a9427c35d0e19e81abaf44d3a1460e5c4b89df6b3d9",
+      "lines": 67,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-managed-8023-suite-recheck-0829.json",
+      "kind": "structured",
+      "sha256": "40fc746aecc60f8fee77d21a939cad6ed19d13317ffc9e1b11de1a3ae8615a43",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-managed-ssh-boot-static-inspection-0212.json",
+      "kind": "structured",
+      "sha256": "aa6e68aed0678c0272b504af68d658e52413b4eb954aa6a78f283dc5a3b1ecf9",
+      "lines": 53,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-managed-ssh-current-boot-timing-0219.json",
+      "kind": "structured",
+      "sha256": "f6e1f49faf699e006f2d47cab4bf864bfa47c10d88aea71970058c0d491d40a3",
+      "lines": 74,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-authorization-policy.json",
+      "kind": "structured",
+      "sha256": "f20567472a41a063c239bc66146963734f1371ed7da2597315d5fe22c301d66d",
+      "lines": 37,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-http-adapter.json",
+      "kind": "structured",
+      "sha256": "3f9f349ca5f2df430d181c054f067ab72ea976fdabfbcd2bb4e13489d522f7e7",
+      "lines": 40,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-http-runtime.json",
+      "kind": "structured",
+      "sha256": "d5b1e1d7dd528f0a9a440b7784e89a9620b7bc65a6a13fe4dece128198572a8a",
+      "lines": 38,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-http-server.json",
+      "kind": "structured",
+      "sha256": "ba2adb35d4cb8877a90cbe80311bf03cb4822e6c64144bbd52cb47786505215c",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-readiness-0809.json",
+      "kind": "structured",
+      "sha256": "b368f38bb023a04f4f9fdb5227d03bbe2d772ca3633e4ea291cba88fd6d41742",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-request-store.json",
+      "kind": "structured",
+      "sha256": "c6a133dd4a910c89ef43b1b8c093ebe2f3649becef51a6c70112473137f196d4",
+      "lines": 53,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-sessions.json",
+      "kind": "structured",
+      "sha256": "93c2fb7bd9376a06a844f285a29be59ac68b08afab68a682c2bad34b84e50c43",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-management-transport-guards.json",
+      "kind": "structured",
+      "sha256": "909796995388b78887aa77a4d3fadc84ef6d6a3b13741da5ea4300dd2c7f66e9",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-native-display-1-stale-recovery.json",
+      "kind": "structured",
+      "sha256": "94bcf0c21e7301ecd7c190656d93ce8b4dd087197e2e925ece045b7937d18ae5",
+      "lines": 66,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-native-doctor-recheck-0819.json",
+      "kind": "structured",
+      "sha256": "eec370143b0dfa2bc292766febdf0f4bc015aa8c530651266e8c7592d162de5f",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-native-manager-activity-live-check.json",
+      "kind": "structured",
+      "sha256": "59a0cb949ef639ec627bb7f5d591013c48ddc6494479d2b4a690f5e106c4e5a3",
+      "lines": 52,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-native-mp3-playback-check-0610.json",
+      "kind": "structured",
+      "sha256": "abcf6c3256d3c374f716dbe89ecae21d682db7bf6a55c5a20dfab7eb72c7617d",
+      "lines": 24,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-native-ssh-8022-inspection.json",
+      "kind": "structured",
+      "sha256": "d62d69b6bfa7e7b928606db04ac6d4c554757a35fea39291d92ece955a88d93d",
+      "lines": 37,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-native-suite-recheck-0817.json",
+      "kind": "structured",
+      "sha256": "c1dc39464c5e597b079537501c64f2d08f46343c71d40d87671568312ce8604b",
+      "lines": 47,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-native-termux-am-wrapper-retry.json",
+      "kind": "structured",
+      "sha256": "49389b0291d1d0788686a2425eec40d1a57329dcf2269c5122be251fa27e5cf5",
+      "lines": 35,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-offhome-tailscale-candidate-review.md",
+      "kind": "narrative",
+      "sha256": "8f17f4dcd8c54c77ae35cb433c9c31a5de31c3be3aa2d0d850568edf165db8a9",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-p2-native-recheck-0757.json",
+      "kind": "structured",
+      "sha256": "c6079d525c1b4461375a2b87ab31a446406dd90b9053c4fcb47c88e400d99d27",
+      "lines": 89,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-pactl-endpoint-status.json",
+      "kind": "structured",
+      "sha256": "5ba5eae493e6514ef0d39704bc539d7fd9d2694aeaae1f3557ced3d372160b47",
+      "lines": 71,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-private-access-live-recheck-0217.json",
+      "kind": "structured",
+      "sha256": "39111d7c627ebe7c2e9ab5e743b8f24ee72cd18ddfbde7aa71c99e2287b02d63",
+      "lines": 73,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-private-remote-policy-tests.json",
+      "kind": "structured",
+      "sha256": "bb73436f42e65ccea05f7999d0b9a3696ad3654998d06d68c68bb12b5b1e309a",
+      "lines": 51,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-proot-isolation-verification.json",
+      "kind": "structured",
+      "sha256": "b336da206e16c4dcc1e93f61d68461e379c1863086936ba51b65538425e1e532",
+      "lines": 46,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-rb04-postboot-review.json",
+      "kind": "structured",
+      "sha256": "12bf6d1a9ec20b913ff45a8a304ba2fe4305077a000c65c7953c6f24ed0e6b36",
+      "lines": 113,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-rb06-postboot-review.json",
+      "kind": "structured",
+      "sha256": "31d9a404b092b0807bf0d8e2c27c1d23681623f2dffd55cb855209e4fffab3fb",
+      "lines": 106,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-reboot-checkpoint-compatibility-tests.json",
+      "kind": "structured",
+      "sha256": "6d769021f3b08e6cff9df466b2325520085e8f17cb07b3768e5683c1a5576420",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-reboot-gate-review-0546.json",
+      "kind": "structured",
+      "sha256": "fa675923117ab81dfa43f9115a7bc41f2a636298dea1e26bae381740d303872a",
+      "lines": 68,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-reboot-observer-managed-service-tests.json",
+      "kind": "structured",
+      "sha256": "26e5954fd55f325cacbc7a38160bef36299bbc323dce4524307cb586ac608b7c",
+      "lines": 29,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-reboot-observer-regression-recheck-0555.json",
+      "kind": "structured",
+      "sha256": "2602d220292541595397c172ef7d4659f428047214342cd911f1b05abfea85b2",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-reboot-rb04-prepared.json",
+      "kind": "structured",
+      "sha256": "ca903cf690a8fd45f30510ffa6926c8efcb52154881b87bd19ac12e3be2e08cd",
+      "lines": 87,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-reboot-rb05-prepared.json",
+      "kind": "structured",
+      "sha256": "2c4e9bb9d12cda45a3aa07e7c4e78bf514625065564694f55f24d185c9b1af95",
+      "lines": 126,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-reboot-rb06-prepared.json",
+      "kind": "structured",
+      "sha256": "2be5d3844aa3e2c2cf8d6092c97ed683073c2f0719c8328a0ab65a205db6700d",
+      "lines": 123,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-recovery-focused-recheck-0825.json",
+      "kind": "structured",
+      "sha256": "ea9b1e73dc3206b07034f357b3371771afe187cd2e677ccba29e5a9a694ed31c",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-recovery-post-suite-state.json",
+      "kind": "structured",
+      "sha256": "90a6a91717e84458d9ceed5a2d5a359862ede4d6701b0224c2a470c6ee779474",
+      "lines": 626,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-remote-access-current-recheck-0238.json",
+      "kind": "structured",
+      "sha256": "7286c907fe8db7e955628f139de0e39cb5cc2d0cad9d3276066b549e1dae3935",
+      "lines": 46,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-repo-test-recheck-0800.json",
+      "kind": "structured",
+      "sha256": "a1b3ec06a3b6751282929f8c4d8957d23b7b37bb6fef59b4ef9e985b5d607d86",
+      "lines": 17,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-repository-audit-recheck-0814.json",
+      "kind": "structured",
+      "sha256": "8f32c39432ee1c7a74f7d1de56552847f604b8bed4b568a17fb8b3ce526b992e",
+      "lines": 48,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-service-owner-correlation.json",
+      "kind": "structured",
+      "sha256": "6a772b618581db667ba8183749a35cff0ed28054f0ea89aaa25d8e655b99da63",
+      "lines": 24,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-shizuku-capability-disclosure.json",
+      "kind": "structured",
+      "sha256": "c270435f4fbd288200544b44a4edcc7666f9842bc7f3b741627f51d4a40ae053",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-shizuku-capability-tests.json",
+      "kind": "structured",
+      "sha256": "f02d1549a577e05eef305dee8e9960c962f851d816c4f734358414708fcee220",
+      "lines": 32,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-shizuku-package-metadata-0224.json",
+      "kind": "structured",
+      "sha256": "d464e1f9fcc5886f3dc3e72573e8dc9fca72bcfa447c90cf67d4ab88902983c6",
+      "lines": 69,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-shizuku-process-signal.json",
+      "kind": "structured",
+      "sha256": "ace09d4b63c0e8c368e736fd2fcd1d61e85adafc3ca74c5dc25fc19037a52277",
+      "lines": 34,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-shizuku-runtime-recheck-0610.json",
+      "kind": "structured",
+      "sha256": "a45d65af20e3dd86d04c4ee2030a7fa6cd05c991493363759cf4c516a72df8f4",
+      "lines": 24,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ssh-bind-policy-doctor.json",
+      "kind": "structured",
+      "sha256": "e56e21fa917817413e14c7895057ec19e47e84c106760ba85dedee5ce521813c",
+      "lines": 45,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ssh-current-session-recheck.json",
+      "kind": "structured",
+      "sha256": "1994ab2666182f51ee8c78188c9cb02816e9eb54412e3392be5ab52481a885b0",
+      "lines": 130,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ssh-inspect-recheck-0649.json",
+      "kind": "structured",
+      "sha256": "059b469201c7779d8d518b95ba8bccd92ffed4acf67fa238302e294a1fcca3c5",
+      "lines": 33,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ssh-listener-ownership-recheck.json",
+      "kind": "structured",
+      "sha256": "4bb610ffac36f9970cb3aa53d68ecbd34b1bd2ad7316ef3424183ea8c20e0205",
+      "lines": 54,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ssh-ownership-alternative-probes-0215.json",
+      "kind": "structured",
+      "sha256": "2406b9a0b973c835705cb0fef48bf306fa8fd97d45e5c925d95c1ab33ab11d88",
+      "lines": 60,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ssh-startup-timing-live-0223.json",
+      "kind": "structured",
+      "sha256": "7f330b500ea8d53fc4fe943110b93beb8f5e218d9be653f7a7e6a745d87d4e1a",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ssh-unprivileged-listener-probes-0609.json",
+      "kind": "structured",
+      "sha256": "acf0b14a2f7d8dce27579b98415ffcb8a1dfe0ca08ac048e420e04baaf9fe173",
+      "lines": 35,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-audio-command-surface-0610.json",
+      "kind": "structured",
+      "sha256": "940e06f60481494afed5a8fe22dea2e91df51eba2ebc514a322ce807887ce035",
+      "lines": 35,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-audio-repeatability.json",
+      "kind": "structured",
+      "sha256": "a11d4acef3b09c8bfbd0870907f5622d1d3684d6b2ab94f9518b82d7abc76052",
+      "lines": 559,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-guest-handoff-0235.json",
+      "kind": "structured",
+      "sha256": "7f1037b4a9470af77fa1461a51bea5dc683dfa385a71f75e2f5ef7aa4bf92e6c",
+      "lines": 69,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-guest-handoff.json",
+      "kind": "structured",
+      "sha256": "1d7e22305a756353f4d4c923dfd92f1e349df3a8d260e5f508532e0fb83e919c",
+      "lines": 95,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-guest-repeatability-recheck.json",
+      "kind": "structured",
+      "sha256": "66123a9ab27e239f460d0d22f50fa3ccdf43a6b3dab0906ee417eccbf7cca4ef",
+      "lines": 206,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-guest-verify-recheck-0823.json",
+      "kind": "structured",
+      "sha256": "4ada62c6f00bab6a514469bfa264a61275600cd3a23d840ae980e50718ba08a6",
+      "lines": 69,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-profile-source-implementation-0536.json",
+      "kind": "structured",
+      "sha256": "0c4c59dd5b7b851198a049a252be9b6ff4f3b95909cd60fcb1d39463223be000",
+      "lines": 84,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-provider-contract-recheck-0821.json",
+      "kind": "structured",
+      "sha256": "3e5a5953f6e277c8698cb49ca5344cee7534912d98def0b5b9e65bbd09318684",
+      "lines": 77,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-ternux-x11-presence-correlation-0202.json",
+      "kind": "structured",
+      "sha256": "740d0c0dc6bd6ba122c18bef67cedc194d269e8c26d440b2231d101201aed47d",
+      "lines": 45,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-x11-activity-retry.json",
+      "kind": "structured",
+      "sha256": "b432b3a38df9119fce1857606a725cd2b64b6db5b9aa3b53723ed386a33567f9",
+      "lines": 73,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p3-x11-adb-availability.json",
+      "kind": "structured",
+      "sha256": "8427ded66e6b702e7bc3b8bb66c37a82960dee6121b3fe4f4b1fe1176111e73b",
+      "lines": 34,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p4-installed-cli-identity-0636.json",
+      "kind": "structured",
+      "sha256": "4e747799c44081ba2e159da060ac2318d1f8713fc5606485b4a14af566642504",
+      "lines": 18,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p4-installed-ternux-interface-recheck-0600.json",
+      "kind": "structured",
+      "sha256": "8080c3b29ef32c63e86f3df5731fa826c2d6e4f3bb53f7b96a2715bac696c1fc",
+      "lines": 49,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p4-installed-ternux-interface-recheck.md",
+      "kind": "narrative",
+      "sha256": "3d2238f4733fd23cfc30e1d323467b6da1f1396762838d430b08802f6d79714a",
+      "lines": 5,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-p4-ternux-profile-discovery-recheck.json",
+      "kind": "structured",
+      "sha256": "82aa59da903c3f7b63429c61751c4ff5e88b5d2c29de8fcd6b013283354ff073",
+      "lines": 149,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-post-suite-readonly-state.json",
+      "kind": "structured",
+      "sha256": "aa99db2c6a9579746cba3a79913f42b39bb627847c287c669e4e5464612f211e",
+      "lines": 58,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-postboot-native-ssh-verification.json",
+      "kind": "structured",
+      "sha256": "00c135c5f9808520c43748a99942d1477a785fbc656a6651dd11748d2f4e0d34",
+      "lines": 81,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-proot-inventory-api.json",
+      "kind": "structured",
+      "sha256": "670bfd08e6e793194ca1a6eef6bd02fdec504822566f5e5fe78cdcdb5f67a03c",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-repository-dirty-manifest-0801.json",
+      "kind": "structured",
+      "sha256": "5baa71e4864cd4686c3a9647d8eb165089fc7e692b865f2c023448bf5e343f30",
+      "lines": 1929,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-repository-dirty-manifest-0814.json",
+      "kind": "structured",
+      "sha256": "f8388d637c6319f1dc21c5b7f6aaa34e23e04a9cb318106ebdd01e2367cc3c93",
+      "lines": 1944,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-repository-phase-scope-audit.md",
+      "kind": "narrative",
+      "sha256": "a2792e4f9b74270e02e1e3be83226e2ba52c0b429a0210c0043c58412649f5a8",
+      "lines": 161,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-service-journal-recovery.json",
+      "kind": "structured",
+      "sha256": "582c351f322d97d80d62a963df2a87116bf1b0204d49258800954de756f51300",
+      "lines": 79,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-shared-management-repo-audit.md",
+      "kind": "narrative",
+      "sha256": "7b90f0f7a8220bc4b346dbb966beaa16b9c638634efda7dcc7df9e668a498784",
+      "lines": 59,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-18-ternux-session-app-handoff.md",
+      "kind": "narrative",
+      "sha256": "db4eaa562358019f31d64e7e3d1087ad1b833de3a1c9e74db9c4eb3dbe2006be",
+      "lines": 48,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-cron-ledger-executor-core.md",
+      "kind": "narrative",
+      "sha256": "17a38ea499b96a75923f3964a5b40fbe96c4013a0cd0d23f939625928086dcee",
+      "lines": 46,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-cron-runtime-proot-probe.md",
+      "kind": "narrative",
+      "sha256": "07cf4d3a9e61c85e0ed73ff3db1c90bab6d5d7e8833763bcf4440c66a34e3907",
+      "lines": 82,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-cron-scheduler-lease-proot-gate.md",
+      "kind": "narrative",
+      "sha256": "ed1c9b452b6bb6fea31f36ec6acb836e7961712fe089d0bc6bddf5f0df3de146",
+      "lines": 53,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-full-repo-audit-followup.md",
+      "kind": "narrative",
+      "sha256": "73d2b36d429ca0fca7f67d0aa3f30cf81fce384a139ac9628d62708371b7583b",
+      "lines": 25,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-gui-session-recovery.md",
+      "kind": "narrative",
+      "sha256": "ae8d907d75ca2411977d886efa5df54df4feb6d8df247e0de6a007b9465d521f",
+      "lines": 64,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-hermes-readonly-provider.md",
+      "kind": "narrative",
+      "sha256": "a930fe69f7f8854e776ce71a5a90003a32d46b7b876d52c92fcee8306a50274f",
+      "lines": 48,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-independent-runtime-clipboard-branding.md",
+      "kind": "narrative",
+      "sha256": "0e7e80b0ac02fc3176c71e6768ad3bf78c1cfc995dbccd6f578aa81b159c117b",
+      "lines": 42,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-launcher-tui-web-followup.md",
+      "kind": "narrative",
+      "sha256": "22d454e4d08f55546622096cd364a03da8dbabef5746651ec595d902e5b518af",
+      "lines": 57,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-management-center-client-implementation.md",
+      "kind": "narrative",
+      "sha256": "d7364fedcd566c1b0ea3b9749053edf51f35297987ce5610ec8d7a244aab1467",
+      "lines": 70,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-management-center-history.md",
+      "kind": "narrative",
+      "sha256": "7676738e6c5bf4f056aceb668458299f0aa00bb2bde542fa5a034f8e28024648",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-management-center-ssh-parity.md",
+      "kind": "narrative",
+      "sha256": "bd4dc5e6829e5833f4b801e126a5ca4cb5bc05e3376b62799f4504ef8da1cef9",
+      "lines": 63,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-mng-cron-foundation.md",
+      "kind": "narrative",
+      "sha256": "663a2d6402b3b9f86e403de86515c8c0be3f153aa4c228190956bd06202c16e0",
+      "lines": 46,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-boot-profile-identity.md",
+      "kind": "narrative",
+      "sha256": "0aeb76e13bb22f3f9690de89cb7b53309a3b3f66479b2b15b4cdeca6688b9fdc",
+      "lines": 26,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-boot-profile-preview-parity.md",
+      "kind": "narrative",
+      "sha256": "07ccfaf9ba46a325b27cc67ae1ac2c07d719fab3ec6f12070ccce875de906db6",
+      "lines": 16,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-display-proot-full-gui.md",
+      "kind": "narrative",
+      "sha256": "a02310ec4ee63da1ed92eff4b41fcd4b331a482592984df3dfa559c6fc58288c",
+      "lines": 33,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md",
+      "kind": "narrative",
+      "sha256": "e4b8efe9cb5b21133386e3d8a7c10c688126b72f612311721534a80b1627926b",
+      "lines": 77,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-runit-status-diagnostics.md",
+      "kind": "narrative",
+      "sha256": "b9fa5bc73d4f618a6e12d154009f18c1783448d3f35a4d300f90e0a03e0ba06b",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-source-cli-entrypoint.md",
+      "kind": "narrative",
+      "sha256": "f9c66b546d435376265e0d1c538e44f6e2133f9f0f53b3278aa626c3b18ea197",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-ui-management-audit.md",
+      "kind": "narrative",
+      "sha256": "75d2bc18b74ce7709864f78181178ba68c30dce45092104594319471267f2099",
+      "lines": 80,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-native-x11-activity-fallback-tests.md",
+      "kind": "narrative",
+      "sha256": "afc2b2e0813869dd27f79a6d11266d0301418b1e9de768b26ead549c2bdb6c07",
+      "lines": 20,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-noncontract-cli-shortcut-removal.md",
+      "kind": "narrative",
+      "sha256": "25bed8ca3013c17b3d5bf8ceb88ed20b93e47731b8abd7c094eed26a9e110e8e",
+      "lines": 34,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-p3-doctor-shizuku-identity-recheck.json",
+      "kind": "structured",
+      "sha256": "a6d295589def0af546cf7b66029d757b2ad0804c9572f4a3291b9468fb4da090",
+      "lines": 45,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-p3-proot-process-inventory-native.json",
+      "kind": "structured",
+      "sha256": "6a6457fc8161254dcf36899c6318c2d223742f392895962a4f967369f32988e7",
+      "lines": 47,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-proot-process-inventory.md",
+      "kind": "narrative",
+      "sha256": "52454db46493254adb4b9a56d23f7156c314753ca26bd27c2cb5728a40d9edf6",
+      "lines": 11,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-termux-boot-cron-integration.md",
+      "kind": "narrative",
+      "sha256": "5c9ffe2636534b3b984cd8714d35019c2f1a2f168c7e2fc1cf2cddf39120f67d",
+      "lines": 52,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-timezone-foundation.md",
+      "kind": "narrative",
+      "sha256": "78c57d651e0b3f829be32e58d39e8b76dbd993e0df61f5982235ba0391b9d402",
+      "lines": 49,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-tui-guided-proot-launch.md",
+      "kind": "narrative",
+      "sha256": "6ea318f6f9018edb2251916d02eaeba2dead0e4ed6e46ebc3fe5beb858b84352",
+      "lines": 18,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-19-tx-web-tui-cli.md",
+      "kind": "narrative",
+      "sha256": "4fa20c1c62681e293982b576aaa4a40ae434e5f2d9ca15aefd52e17267c1688f",
+      "lines": 21,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-a-z-audit-followup.md",
+      "kind": "narrative",
+      "sha256": "46cb172510a535f388898ab977fb8229efbe13b10b863c6914c701aa1c8d9b6a",
+      "lines": 49,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-cron-history-client-parity.md",
+      "kind": "narrative",
+      "sha256": "bc92b31ea6d1219d45e8cc3e6632ae415da882bdf540fd103577657c12dedf73",
+      "lines": 42,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-full-repository-audit.md",
+      "kind": "narrative",
+      "sha256": "ebc3dd6c9ffd80379069ca7515a2c1c66933692c2be681ec1fbd72cd107cddfa",
+      "lines": 428,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-graphics-live-recheck.md",
+      "kind": "narrative",
+      "sha256": "c003cd39eab255d8a769577948c53d7abbedb87b3f995f591d821ee1cf19d009",
+      "lines": 48,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-gtk-proot-app-action.md",
+      "kind": "narrative",
+      "sha256": "14a360e498a62df4e6477210ff40e618f72c567dac65b81118ac3194810319ab",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-interactive-workstation-followup.md",
+      "kind": "narrative",
+      "sha256": "3fee0a0a58474c1f13e2c08e7b469ada740ea51fbd9b28c18013177a4f3cd656",
+      "lines": 56,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-management-client-parity-audit.md",
+      "kind": "narrative",
+      "sha256": "8cfac276efcb4010f657ffe7027bfd1dff1fe41ec9e99ab577f02830c0a8f3d4",
+      "lines": 105,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-native-continuation-audit.md",
+      "kind": "narrative",
+      "sha256": "df7f897c8debe21091a6a2429eee70ad17b7677eccfbd8ff57c898dec3679c79",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-native-gles-draw.md",
+      "kind": "narrative",
+      "sha256": "78b1ef4c5b90deacf0cac66a423d16b0f5ed481e4acc0a7c59aaa84c62910ef1",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-native-kgsl-session-selection.md",
+      "kind": "narrative",
+      "sha256": "60fd05603b36022b9afbb5be4fa7d62d45f66df3ec54a107a41364ecee3400c7",
+      "lines": 30,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-native-offscreen-glmark2.md",
+      "kind": "narrative",
+      "sha256": "4e36d6d78b24b85a8440834f999b0f8c1b52661cd4009dc4c9897700ebc1ab9c",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-native-vulkan-draw.md",
+      "kind": "narrative",
+      "sha256": "ea0ef4c1df6cb1f180f9007940e1509fbbc3ecf407fe45742023cc36b9ec55d4",
+      "lines": 19,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-p3-gtk-proot-shortcut-list.md",
+      "kind": "narrative",
+      "sha256": "2f80bcb0e917be7dd7570b47e11f4bdc3e4689d7534973bae04f506408af6072",
+      "lines": 19,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-p3-owner-visual-and-boot-cron-recheck.md",
+      "kind": "narrative",
+      "sha256": "b8204d1738c4d8dbc9bddf833e5018d7df496a919510d08ccf14fc6c426afbe7",
+      "lines": 30,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-p3-tty-fixture-audit.md",
+      "kind": "narrative",
+      "sha256": "a1e10f0026563f9f8860bf2dc502839ca939cb0f01818cdc5324cfa55fcb5756",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-phase-roadmap-audit.md",
+      "kind": "narrative",
+      "sha256": "c534307ecbee3ffc2d2f0054d8908e25c603de9a82b5de0195d85e3b713c8957",
+      "lines": 65,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-post-audit-remediation.md",
+      "kind": "narrative",
+      "sha256": "db118cce834d656c63fa507357f760f1a594a4f51a6b51493eb640d48f1d6a5a",
+      "lines": 110,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-proot-fresh-reproducibility.md",
+      "kind": "narrative",
+      "sha256": "c633393260c9a9eeb3ca4901e7cc35bb345131318e157490f4ff290f6a277392",
+      "lines": 33,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-proot-full-gui.md",
+      "kind": "narrative",
+      "sha256": "4f5b62863c99b67e85c6af885faf1084b984de9feb90a5a4da7d42f93452662c",
+      "lines": 93,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-proot-lifecycle.md",
+      "kind": "narrative",
+      "sha256": "9fafc5fa53dabd43ac4cf424c2398d09badbe91c1123971494b76e6ce82bf8e4",
+      "lines": 55,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-proot-shortcut-client-parity.md",
+      "kind": "narrative",
+      "sha256": "731f37e8d9f0aa6e44310d3b227ae6ae9467e01bb075b129caa85b9c3a2edb8a",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-repository-reproducibility-audit.md",
+      "kind": "narrative",
+      "sha256": "f6085d8a0c45e719201780a35e9b18007c56dd486aa7bffe8db07cbd898e1622",
+      "lines": 61,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-shared-graphics-manager.md",
+      "kind": "narrative",
+      "sha256": "c5df8ee06c0fff6eaa3857ae792139def273e45336278aeb4f4e4889467ce34e",
+      "lines": 49,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-ternuxx-proot-consolidation.md",
+      "kind": "narrative",
+      "sha256": "f02f9848155567989076871deeacc9dc996091e065832ccd857b3047859ad190",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-timezone-client-slice.md",
+      "kind": "narrative",
+      "sha256": "9e128f15ad4ea840a70c2b1f726def744ea4dc831c6da1450bbfd632ec6b475f",
+      "lines": 40,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-web-proot-app-action.md",
+      "kind": "narrative",
+      "sha256": "2f3ff5814c1d50eccde253cfce9ab73df9f4ecc604c717a3d7fb6feab4202889",
+      "lines": 35,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-workstation-qualification-execution-plan.md",
+      "kind": "narrative",
+      "sha256": "e4e8322d3b1a453fc8c51486400622f0841093f06a1eae11dfc0edc51f11c1b9",
+      "lines": 232,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-20-workstation-qualification-execution.md",
+      "kind": "narrative",
+      "sha256": "1a7a663b65a48c93dbbf0712a07bec1cfb58fd8a8a4ec900942761ce8561d1de",
+      "lines": 401,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-boot-helper-reconciliation.md",
+      "kind": "narrative",
+      "sha256": "c8a75dffd87d4c35ec1d3891fbfbd024d35a662c9891545e9b881f21d79fb82e",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-cron-mutation-client-parity.md",
+      "kind": "narrative",
+      "sha256": "aa061b1fedfa97693635cc67112ada5d9fc44322c592ac5243dd1464ebdd8329",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-before-p4-owner-decision.md",
+      "kind": "narrative",
+      "sha256": "925bf85d50e5fd4c189e726ea4a5afd0dd3535c0c08801da1cb48328eaf04597",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-cron-boot-concurrency.md",
+      "kind": "narrative",
+      "sha256": "024803dc48a601675792e1a599188c78c6ce1707829cbd72ff2ad00bcb994d66",
+      "lines": 38,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-cron-boot-entrypoint-fix.md",
+      "kind": "narrative",
+      "sha256": "ea8844a5d771fb6f90e80cfe994881941049f9e1fd2f780071294d3132ceaf9f",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-gate-review-followup.md",
+      "kind": "narrative",
+      "sha256": "d723a805b0b012f3527220615d48cb5242db70b833cf1eb959b28c9f19fc28ba",
+      "lines": 47,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-interactive-client-boundary-proposal.md",
+      "kind": "narrative",
+      "sha256": "4c0212dfc05e1552d9ddfe531fce0bcc42dbb44d1731a16255662296be9b5605",
+      "lines": 12,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-interactive-terminal-contract-reconciliation.md",
+      "kind": "narrative",
+      "sha256": "d38c1838e0815fbdfb5dee126a6ec98d56072b3b32585145089f34406c2819cb",
+      "lines": 35,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-managed-8023-readonly-recheck.md",
+      "kind": "narrative",
+      "sha256": "e27cf0287580cf094f98988293af5f3599cea52166b82c991c5edc39c7bfb2f9",
+      "lines": 16,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-managed-logs.md",
+      "kind": "narrative",
+      "sha256": "2520704a0106d0553256da701be876031c4dcf24d5feb530808807d53b47d35d",
+      "lines": 30,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-managed-ssh-process-identity.md",
+      "kind": "narrative",
+      "sha256": "afcc1a6e3d3f8a18c0588bca057391dd03ba4986379b9bdc77625109fd882302",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-native-readonly-recheck.md",
+      "kind": "narrative",
+      "sha256": "65bea22dd5112724c638dbc1f890073b70aa0c2ee957dcd87c6a79522781674b",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-pre-reboot-rb07-checkpoint.md",
+      "kind": "narrative",
+      "sha256": "d90c0c94704f6522c9ca26772aa027d70053598122fd7d1afabd3927a98f3ca0",
+      "lines": 66,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-pre-reboot-rb08-checkpoint.md",
+      "kind": "narrative",
+      "sha256": "afa4349917d5bf184bfe8269614558f72e52680df7897fa96b71edf5f7a064c1",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-proot-tty-contract-audit.md",
+      "kind": "narrative",
+      "sha256": "3303c7a8129ca348104f513cc3debbebe1a9f6551e44a3f240014267ff9736ba",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-session-client-implementation.md",
+      "kind": "narrative",
+      "sha256": "76b852113a32425212bce0733009acffdc4f1b708bcda19225e5b37469407e01",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-session-client-parity-audit.md",
+      "kind": "narrative",
+      "sha256": "163937e332037b4b4b601b1d987f7657bc915f39bade8c98f47bdc49efd74f88",
+      "lines": 25,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-ssh-netlink-fallback.md",
+      "kind": "narrative",
+      "sha256": "19049c53e2e39cd84ca108127a53c7826a245dee28e2e0d82b60d469735e83a1",
+      "lines": 37,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-tui-interactive-login-followup.md",
+      "kind": "narrative",
+      "sha256": "554b271b3c2c976a41ca4b51400cfcda042d6a7f311f7b48285139308a58a387",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-21-p3-worktree-review.md",
+      "kind": "narrative",
+      "sha256": "1a92adb878daa2a3cb9273845ab8d3b69e442667c00da64555296c2b2cae14ec",
+      "lines": 37,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-22-canonical-name-and-broker-audit.md",
+      "kind": "narrative",
+      "sha256": "88c39e740ce6a5dc8bb5bfc91d9a80fe350aa3134eb9852cf80fc6c17e215764",
+      "lines": 25,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-22-management-ui-readability-and-tui-actions.md",
+      "kind": "narrative",
+      "sha256": "5fa2225116b2f8cd5e418fdb432af15d469c710e57d1baf895866770e7baa2b2",
+      "lines": 59,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-22-native-selected-deployment-parity.json",
+      "kind": "structured",
+      "sha256": "8bf7f0a2e22d690367d237f8339078a1535e3a316ce4a28b09279628be3cd127",
+      "lines": 74,
+      "read_status": "read",
+      "read_sha256": "8bf7f0a2e22d690367d237f8339078a1535e3a316ce4a28b09279628be3cd127"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-native-ui-and-audit-remediation.md",
+      "kind": "narrative",
+      "sha256": "8cfadedef40d9ca0913e570833ad9ad8c9d92975cd8337443a9385ba8970847b",
+      "lines": 38,
+      "read_status": "read",
+      "read_sha256": "8cfadedef40d9ca0913e570833ad9ad8c9d92975cd8337443a9385ba8970847b"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-p0-p4-phase-audit.md",
+      "kind": "narrative",
+      "sha256": "05beea580a6144b2ca9166dc14093f9d78dda051ee2e22a20a42610a73c7fdf9",
+      "lines": 71,
+      "read_status": "read",
+      "read_sha256": "05beea580a6144b2ca9166dc14093f9d78dda051ee2e22a20a42610a73c7fdf9"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-p3-rb08-postboot-exit-audit.md",
+      "kind": "narrative",
+      "sha256": "aa846056d0f8868728e6d157809716cc9b407c3386673c5eb9a4e64f503db506",
+      "lines": 56,
+      "read_status": "read",
+      "read_sha256": "aa846056d0f8868728e6d157809716cc9b407c3386673c5eb9a4e64f503db506"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-p4-legacy-cli-and-runtime-recheck.md",
+      "kind": "narrative",
+      "sha256": "7a7a8de991879cd01406d7774e67d4070f7f58f0f8418f532a4d7c006eb9d98d",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md",
+      "kind": "narrative",
+      "sha256": "d50bb3bfba276d7a988f1df08ee583a3ec860e00556d7c9a7b2f23b1ff06f4f8",
+      "lines": 32,
+      "read_status": "read",
+      "read_sha256": "d50bb3bfba276d7a988f1df08ee583a3ec860e00556d7c9a7b2f23b1ff06f4f8"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",
+      "kind": "narrative",
+      "sha256": "cbfd68cd20af66c487d94b62ada874ecf239bb1472f354152eadc91c4c65a8a0",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-22-web-browser-selection.md",
+      "kind": "narrative",
+      "sha256": "6cbda2e7982bccc53cda11749e6f81f3afd6a612c6246b70407ba171693f5ae7",
+      "lines": 23,
+      "read_status": "read",
+      "read_sha256": "6cbda2e7982bccc53cda11749e6f81f3afd6a612c6246b70407ba171693f5ae7"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-web-ui-browser-check.json",
+      "kind": "structured",
+      "sha256": "4ef13828c14b4e54a5687b03bad952c58d1475b2f2c54957d6e2c275fb7ef053",
+      "lines": 54,
+      "read_status": "read",
+      "read_sha256": "4ef13828c14b4e54a5687b03bad952c58d1475b2f2c54957d6e2c275fb7ef053"
+    },
+    {
+      "path": "docs/evidence/P0-foundation.md",
+      "kind": "narrative",
+      "sha256": "ff55b2aa3b0096dc0d44cc2223a8c47f29eac36d9efab6290882c00d635cfbd4",
+      "lines": 29,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/P1-compatibility-research.md",
+      "kind": "narrative",
+      "sha256": "abffb540fa387081176d039748edb3ca8eb81e4adafb79bd766357e2e504401c",
+      "lines": 37,
+      "read_status": "read",
+      "read_sha256": "abffb540fa387081176d039748edb3ca8eb81e4adafb79bd766357e2e504401c"
+    },
+    {
+      "path": "docs/evidence/P2-lifecycle-progress.md",
+      "kind": "narrative",
+      "sha256": "f2b3f13ca2ae5c70892bf34922ce1567a7b762aaf076720e2b84f79189ea07c9",
+      "lines": 141,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/P2-live-installer-preview-validation-2026-10-18.json",
+      "kind": "structured",
+      "sha256": "dc598c1b8922305183ac4038d22ce4b0cd8fe791ef1d310643fc326e3f3a4055",
+      "lines": 42,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/P2-phase-completion-2026-10-18.md",
+      "kind": "narrative",
+      "sha256": "89c0e82d96461da676e511a91d4bc3d54860a94a0a6cbe4a5ca4c1ce6430242c",
+      "lines": 94,
+      "read_status": "read",
+      "read_sha256": "89c0e82d96461da676e511a91d4bc3d54860a94a0a6cbe4a5ca4c1ce6430242c"
+    },
+    {
+      "path": "docs/evidence/P2-termux-xfce-install-transaction-2026-10-18.json",
+      "kind": "structured",
+      "sha256": "8b8ec780d3c5174666d370391ca2c9ca24d9d5bbd590a7fd2caeed5fad8be6d5",
+      "lines": 568,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/P3-doctor-progress.md",
+      "kind": "narrative",
+      "sha256": "24e55d05ea39946af2a787a68ad96fddab621feee92349d1bd24b1c4062f6101",
+      "lines": 574,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
+      "kind": "narrative",
+      "sha256": "add7ac51dbf41bc671461b0217ca0aea7dd13381aedad5cee6291078d4e7b51b",
+      "lines": 32,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
+      "kind": "narrative",
+      "sha256": "c26307a226b54e2a0695d4d88c234217fc599ab663ed8ee522afac80eb346460",
+      "lines": 94,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/PHASE-0-MASTER-AUDIT.md",
+      "kind": "narrative",
+      "sha256": "b2d9a370def8fa832a6d6eb44d0537b88f86698a3d8162c9ff9452be68af7da0",
+      "lines": 205,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/PHASE-COMPLETION-TEMPLATE.md",
+      "kind": "narrative",
+      "sha256": "8a224db5de8a842b17d2cd2ab670355bb05ceffe5cd8f7fae3d779fe42d57a7c",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/handoff/2026-10-22-current-state-history.md",
+      "kind": "narrative",
+      "sha256": "3c84c65bf0de3ac13459bc0004701e34cb2a5d4368d6dd28a67b4809fca1db76",
+      "lines": 841,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/DECISIONS-AND-PLAN.md",
+      "kind": "narrative",
+      "sha256": "63ad7378d2ce7a61d47c65b436c4f82acd582f280bd38eadd14aa5e4068a794a",
+      "lines": 60,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/LEGAL-IP.md",
+      "kind": "narrative",
+      "sha256": "3c2bc1b266a2df82cc017d983f65b249342b5f9b6ac75535e92f68ef033c6fab",
+      "lines": 58,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/PREMIUM-DISTRIBUTION.md",
+      "kind": "narrative",
+      "sha256": "39a8e1016b8969cffa850840721dc8f808f5f4bf1e72475df0804fd1843f04fe",
+      "lines": 103,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/PRODUCT-MARKET-COMMERCIAL.md",
+      "kind": "narrative",
+      "sha256": "942eb9901a1ebe90b639f6e063ed2c8d47107ddb3ed701398f6d29d344606808",
+      "lines": 101,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/PROJECT-IDENTITY.md",
+      "kind": "narrative",
+      "sha256": "7a58042717b8938ce7d21b23575f8059cfd8129d934d0691cba496e1b051d7f7",
+      "lines": 10,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/README.md",
+      "kind": "narrative",
+      "sha256": "e1cbf4f38d521c375394c524e3ca246fcbb44fa38650f703079830156dc1017b",
+      "lines": 60,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/REPOSITORY-AUDIT.md",
+      "kind": "narrative",
+      "sha256": "e0692666fc901034d080c958ed3412f6d6b4402ff4809a47844a37a6698fd44f",
+      "lines": 55,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/THREAT-MODEL.md",
+      "kind": "narrative",
+      "sha256": "26c87ecdea2528dfa39500e3db9572be05130d861d6654c6ad661b023847e8a4",
+      "lines": 86,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/WEBSITE-SEO-OPERATIONS.md",
+      "kind": "narrative",
+      "sha256": "d55b63cbbd1471e35139b7610c7c855a1b8e39ba48dc024500e546a41910b4e1",
+      "lines": 117,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/8023-deployment-and-lifecycle.md",
+      "kind": "narrative",
+      "sha256": "75c5bbfa97adeea8273256e67049b0f9f824836601d0b9533162880163492038",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/BENCHMARK-METHODOLOGY.md",
+      "kind": "narrative",
+      "sha256": "1d230b129b9a88268392f0716d4c08299dea8dfd46edc40194650966cea7d01b",
+      "lines": 51,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/CPU-BASELINE.md",
+      "kind": "narrative",
+      "sha256": "55fb6058f9c9fe88a6720aa27beec1db5921b028c0cdf9acd970c368299ef3e1",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/DEVICE-COMPATIBILITY.md",
+      "kind": "narrative",
+      "sha256": "4e3526639bd99c16890fab0c2bd70f680a78e6a43eb6f7365cb551f88f443e90",
+      "lines": 32,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/FEATURE-MATRIX.yaml",
+      "kind": "structured",
+      "sha256": "f4bb6849d4c56c2f12c09da6a25ca0ac49f7a672370fc101fcf808cb25ba72f2",
+      "lines": 743,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/GPU-ACCELERATION.md",
+      "kind": "narrative",
+      "sha256": "c74570a3191bc7f8b4f2313d333ae4a30b2836cb22cc7436aac720f9729f611e",
+      "lines": 52,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/KNOWN-LIMITATIONS.md",
+      "kind": "narrative",
+      "sha256": "02e1fcedd2fa734a1aa646fbe5f7b1d10cb7b08409b2fdb3c2a3f73ae2bcfe78",
+      "lines": 16,
+      "read_status": "read",
+      "read_sha256": "02e1fcedd2fa734a1aa646fbe5f7b1d10cb7b08409b2fdb3c2a3f73ae2bcfe78"
+    },
+    {
+      "path": "docs/testing/NPU-ACCELERATION.md",
+      "kind": "narrative",
+      "sha256": "08debdd49aad8811eb72b9a0a2d5b2f8e166b1e7bee5f4aca1ecc45a9cc66ce9",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/README.md",
+      "kind": "narrative",
+      "sha256": "3f10821c3e3f09f4dbb03c518c1f499073709f693d9c6c0d6fab524e65746b38",
+      "lines": 45,
+      "read_status": "read",
+      "read_sha256": "3f10821c3e3f09f4dbb03c518c1f499073709f693d9c6c0d6fab524e65746b38"
+    },
+    {
+      "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",
+      "kind": "narrative",
+      "sha256": "51efddc295803adfb90bd165c3c551995260dce31e1428d2343dc22b68e1b7f8",
+      "lines": 227,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/reports/README.md",
+      "kind": "narrative",
+      "sha256": "a3320d166a250f98b4fa4f5d15754288b64e66402885483ed326caeca66c8457",
+      "lines": 5,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/reports/REPORT-TEMPLATE.md",
+      "kind": "narrative",
+      "sha256": "11f9ebf40a1cfbc7c5187720e65060610c80a2fe8074cbd279d66af1e3e415b5",
+      "lines": 64,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "project/phase-state.json",
+      "kind": "structured",
+      "sha256": "fe01a1f859e9204b04945743707fa85510bd3c5a1fe7a4ab81f7c0d17813639a",
+      "lines": 165,
+      "read_status": "read",
+      "read_sha256": "fe01a1f859e9204b04945743707fa85510bd3c5a1fe7a4ab81f7c0d17813639a"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "kind": "narrative",
+      "sha256": "b4603b9468ade4d639d2c6f73b89d50e1fa5d227c73ab15be0382cca478513e6",
+      "lines": 1,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/adb-server-diagnostics.schema.json",
+      "kind": "structured",
+      "sha256": "d3cdf411024cb9add528b923420a4a6ee564e0608c77e9fa0346700228c803da",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/backup-create-recovery.schema.json",
+      "kind": "structured",
+      "sha256": "3601cb6aa84faf2bd6179903db1e0a017d26cc75f3d60856a742c82b63b07290",
+      "lines": 38,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/boot-profile-action.schema.json",
+      "kind": "structured",
+      "sha256": "e846ee418e133f558e0c2c7245e7b6107450e3b70fcf5479e5ccba3d3983b07c",
+      "lines": 217,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/boot-profile-preview.schema.json",
+      "kind": "structured",
+      "sha256": "ac9dcc93e4e01d4e6b814ab13212e953f4e3b3a3ad5b95d665a15ba33021000f",
+      "lines": 117,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/boot-profile-recovery.schema.json",
+      "kind": "structured",
+      "sha256": "5230045bb9cff70bf0a0e6d11eff3a59421a0950d38318ff5fd49788156164bd",
+      "lines": 45,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/boot-profile.schema.json",
+      "kind": "structured",
+      "sha256": "507a9ad636ffe8bbd04a19d77d2c053566dd53527d4238ab308a7c265665c441",
+      "lines": 14,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/config-backup.schema.json",
+      "kind": "structured",
+      "sha256": "297f186010dc42485a86d1d36af6dffc074081567316b87c2fa794b3472f6fda",
+      "lines": 87,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/continuity-checkpoint.schema.json",
+      "kind": "structured",
+      "sha256": "9c1ed09936fc96c6732a63045fcd760a4bbefea77ecdc948e90e0d9a47664120",
+      "lines": 37,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/cron-execution-v1.schema.json",
+      "kind": "structured",
+      "sha256": "8585b6d4c288d92918bf7dc79b2497bd425ec136bf2bbf05aa0473be7f3a0de6",
+      "lines": 150,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/cron-job-v1.schema.json",
+      "kind": "structured",
+      "sha256": "cdbd5910ad8e78a7867348b77da046d456735e3226924c6ec8ea015194c4488a",
+      "lines": 143,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/desktop-session-recovery.schema.json",
+      "kind": "structured",
+      "sha256": "f7509cf5ce968ed93fd6833f80b41eb141579c4ac7b0d1bace8d55daa12ede07",
+      "lines": 38,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/doctor-report.schema.json",
+      "kind": "structured",
+      "sha256": "ea52826dfd212f800d989a009e1cdb9d204863d54cc06acfe3157361e98f36f6",
+      "lines": 52,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/gui-monitoring-policy.schema.json",
+      "kind": "structured",
+      "sha256": "8fd43b31c68e9e81d8c5517203bda415dc67e2e0ca716a0681032db42b1dcd4b",
+      "lines": 70,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/install-package-preview.schema.json",
+      "kind": "structured",
+      "sha256": "1d79a719d4b81087d43bed95260a0459a45362b900421271dfc8dd0d2194e70b",
+      "lines": 14,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/launch-registry.schema.json",
+      "kind": "structured",
+      "sha256": "139adc45371dae076ccb168853b2405b8f2f2c556090703e9a27a6af90a0a4ae",
+      "lines": 179,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/management-catalog.schema.json",
+      "kind": "structured",
+      "sha256": "f38853fbe1d3ef1663855df91bde0111018441155e62c10b7d4feef0fee6b1b9",
+      "lines": 355,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/native-ssh-config.schema.json",
+      "kind": "structured",
+      "sha256": "50f6a3fbd90bbe5b223793de4e837a2d3fac5a3e2ae2f5ece01222fe3331b972",
+      "lines": 106,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/native-ssh-diagnostic-report.schema.json",
+      "kind": "structured",
+      "sha256": "d39b20dd01908356672175fb94d63227f887717bb9a347975c7a8d7d4840ea10",
+      "lines": 266,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/native-ssh-service-action.schema.json",
+      "kind": "structured",
+      "sha256": "361b0171c0a1c8798efb45eb66f9f3c4888a14bc8f194a96dac9efea80bcf64f",
+      "lines": 44,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/native-ssh-service-recovery.schema.json",
+      "kind": "structured",
+      "sha256": "a6073f1097ba4ea9149e2a6d6bbe35e9e441de8b2be66be4626473c069af6784",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/native-ssh-service-state.schema.json",
+      "kind": "structured",
+      "sha256": "b0221e0d8bd3ea5b54c4c071f4d31f707d3c5a2982b6b1d96cf099cc3c370908",
+      "lines": 69,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/operation-journal.schema.json",
+      "kind": "structured",
+      "sha256": "90812f5afe38f0c93886f7c5943f977f080fb058876741907a93b8aec416fb7a",
+      "lines": 86,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/optional-software-catalog.schema.json",
+      "kind": "structured",
+      "sha256": "422db75bbf2548e4ddcf4d1dfc409728a99fd631f6acb01be79eb22aecb5969e",
+      "lines": 86,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/profile-restore-recovery.schema.json",
+      "kind": "structured",
+      "sha256": "464b0d1e8056f4b9f5b4fdf0afcf4dc6f6e223d78810e976a2d1ce97327637a1",
+      "lines": 43,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/project-event.schema.json",
+      "kind": "structured",
+      "sha256": "81a64db158529504677033212f9d69f3a11b5d17c8b93106de8f8f469b68ce8c",
+      "lines": 180,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/project-registry.schema.json",
+      "kind": "structured",
+      "sha256": "8506e8f72c0e92acf7130e91086f25e0cc76d4d16f4d0385a2b581f383bb3cd6",
+      "lines": 548,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/proot-distribution-inventory.schema.json",
+      "kind": "structured",
+      "sha256": "4bbce10cb723f9f11c441c86d3c56b29c04fa896b74b740ddb8e4d6c399f7897",
+      "lines": 53,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/proot-guest-diagnostics.schema.json",
+      "kind": "structured",
+      "sha256": "1714902174e721c77df62c0cb4e8edda017b5c23055236780d2ca06a59a8f0f7",
+      "lines": 275,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/proot-session-registry.schema.json",
+      "kind": "structured",
+      "sha256": "790c251b453c17171687f5ce9278edef196be17b764513e5a6312c176a8a20ab",
+      "lines": 198,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/proot-x11-shortcuts.schema.json",
+      "kind": "structured",
+      "sha256": "3e3cfd884fd924c2124c8024c625a3fd643e6ff4af245b51c0c1c6ec059dea49",
+      "lines": 72,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/reboot-test-checkpoint.schema.json",
+      "kind": "structured",
+      "sha256": "60f4cd40cf68ca06f5fb41dc0f9db4439efa548363c22d73ba0dfb67390ef9c1",
+      "lines": 559,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/remote-access-config.schema.json",
+      "kind": "structured",
+      "sha256": "c8cc9a91d65795d2657ef7bbb4776a9384f78bc16f1f0fd3eb980535469f1245",
+      "lines": 72,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/remote-access-policy-preview.schema.json",
+      "kind": "structured",
+      "sha256": "96e75eca642e738c39c5b8760d880fe61a667ce27f03337aa86346afb9dd0cbc",
+      "lines": 39,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/shell-profile.schema.json",
+      "kind": "structured",
+      "sha256": "5b63d670e1cdfb1d4d4efb81183f1df94c7220a89731d02d7f5d9cbca01d5159",
+      "lines": 59,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/shell-settings.schema.json",
+      "kind": "structured",
+      "sha256": "1778283b941e45fcad8c20f0c62945eaefcbde736e22c15dd741fcd742fa3aae",
+      "lines": 26,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/termux-boot-cron.schema.json",
+      "kind": "structured",
+      "sha256": "92d27b499a99442b407874158b7d967b0159ac92dbe9a23223fc4872ae7b3473",
+      "lines": 25,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/termux-boot-diagnostics.schema.json",
+      "kind": "structured",
+      "sha256": "50c668b433c51b52c91b9f4077ae954908b3cfb6c31193f15ebf3c19e4ef1dd3",
+      "lines": 95,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/ternux-guest-diagnostics.schema.json",
+      "kind": "structured",
+      "sha256": "a92378c4377c56d868b74d9c7c97a1fb7d2e5b760ee057eb459128f7548556ce",
+      "lines": 332,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/timezone-config-v1.schema.json",
+      "kind": "structured",
+      "sha256": "3be1d07d3803c7c595501517ee095df8f559d50d041e9bb6d2fff9ca5d40af37",
+      "lines": 34,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/verification-evidence.schema.json",
+      "kind": "structured",
+      "sha256": "516f756e51912ba46a4d469a8ec76a7286ae5a12c90028cc1c79623bd0a78357",
+      "lines": 48,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/wakelock-owner-state.schema.json",
+      "kind": "structured",
+      "sha256": "ac077bce0282361da7b582ed7f2bf3e86971aab9104352d3cbe00b1f65d0aa21",
+      "lines": 29,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "schemas/wakelock-status.schema.json",
+      "kind": "structured",
+      "sha256": "53f8be0001d1ceeb634d1e6bac94a27b868408e6f89a9467ad5379f063b7c885",
+      "lines": 99,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "tests/fixtures/ssh/README.md",
+      "kind": "narrative",
+      "sha256": "c49951a07b4b3960f455fc0d113e7a36ccdc45bab923baa9166447e5028ec693",
+      "lines": 26,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "tools/repo_knowledge/README.md",
+      "kind": "narrative",
+      "sha256": "fd131d4e5a6c60a6b18d33b8973e071e300c27c44abe434314eb9ab017bf4009",
+      "lines": 61,
+      "read_status": "pending",
+      "read_sha256": null
+    }
+  ]
+}

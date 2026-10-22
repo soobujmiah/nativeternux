@@ -9,10 +9,8 @@ This project is authorized for internal, evidence-reviewed knowledge return to `
 
 ## Privacy and readiness
 
-This repository is owner-reported private and SKB membership is restricted to internal projection. Do not publish its device-specific evidence or status. Membership eligibility and participation approval are recorded; the canonical readiness validator returned READY. Ternuxx's first state-contract and status-sync workflows passed on `735c1aa`, with build/test honestly unknown. Registry registration and first central App-backed pull are next. Repository instructions never supply credentials; agents must verify authenticated identity/access independently.
+GitHub repository metadata reports this repository public (verified 2026-10-22). Private keys, credentials, runtime state and personal payloads remain excluded from publication and SKB return. This pointer does not certify central registry membership or a successful App-backed pull; verify those through SKB's canonical registry and receipts instead of treating earlier onboarding notes as current state.
 
 The local workflow and source boundaries are described in [Documentation, status, and SKB knowledge return](docs/KNOWLEDGE-SYNC.md). SKB is the authority for its protocol; this pointer does not copy or override that policy.
 
-For central mechanical sync, the SKB Registry Reader App must be configured for this repository with read-only Contents access. The owner confirmed the selection was updated. The latest successful receipt's minted-token scope predates Ternuxx registration, so a pull after registration is the required effective-access verification. Do not add cross-repository credentials to this project.
-
-Reference review found `ternux` in the receipt's selected repository list. Its locally inspected workflow revision had an optional cross-repository dispatch secret; Ternuxx intentionally omits that legacy pattern and relies on SKB's scheduled/manual pull under the current policy.
+Central mechanical synchronization uses the separately authorized SKB Registry Reader App with read-only Contents access. Effective access and the latest receipt must be verified in SKB. This project receives no cross-repository write credential.

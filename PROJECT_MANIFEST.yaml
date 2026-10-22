@@ -63,17 +63,11 @@ ai:
   source_of_truth: "GitHub"
 
 status:
-  phase: "P3 — Doctor, management, and recovery"
-  next_milestone: "Close P3 ownership, adapter, recovery, and boot qualification gates in roadmap order; keep PRoot/hybrid profiles fail-closed until ownership is verified"
+  phase: "Canonical phase status: project/phase-state.json"
+  next_milestone: "Follow the active next_action in project/phase-state.json and full owner audit in docs/audit/REPOSITORY-AUDIT.md"
   known_unknowns:
-    - "The original XFCE install's full pre-consent console capture is unavailable; a later target-native preview/apply-argument revalidation is recorded without package mutation"
-    - "The PRoot ownership adapter and listener-to-service correlation are not implemented; installed distro and managed SSH configuration do not prove session/socket ownership"
-    - "RB03 boot observer recorded the changed boot, but automated verification is partial because it did not capture sshd/service health; current postboot Doctor and service observations are separate evidence"
-    - "Native boot-profile apply, cold-boot desktop visibility, and recovery beyond the boot-profile allowlist remain unqualified"
-    - "The live PRoot renderer was checked through Debian on display :1; the existing Ternux-owned :0 desktop was not qualified by that check"
-    - "Native Wine/Hangover applications and graphics paths are not tested"
-    - "Ternuxx has no integrated NPU runtime; separate Ternux PRoot HTP/QNN experiments are external and not release-qualified"
-    - "SKB registry entry and first App-backed pull remain outstanding; owner confirms Reader App selection is updated, pending effective-access verification"
+    - "Current qualification limits: docs/testing/KNOWN-LIMITATIONS.md"
+    - "Source/live parity, all-document review and reproducibility: docs/audit/REPOSITORY-AUDIT.md"
   deferred_scope:
     - "Any future device mutation outside the exact owner-authorized operation"
     - "Ternux rootfs cleanup/minimization or launcher modification"

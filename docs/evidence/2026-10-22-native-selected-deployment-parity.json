@@ -1,0 +1,74 @@
+{
+  "read_only": true,
+  "scope": "selected Native deployment targets; not a complete installed inventory",
+  "targets": [
+    {
+      "source": "scripts/tx-installed",
+      "installed": true,
+      "source_sha256": "a8735006203922cb7d7ab885e7fa1b85ca8608282de79d427d12a21a2511c401",
+      "installed_sha256": "a8735006203922cb7d7ab885e7fa1b85ca8608282de79d427d12a21a2511c401",
+      "mode": "0o755",
+      "matches": true
+    },
+    {
+      "source": "scripts/termux-boot/00-ternuxx-services",
+      "installed": true,
+      "source_sha256": "7dfdd79e1add71e2d26a4fa9cd7dbd8c16f88d69ddf39ba2a3a85f1f1cedd36a",
+      "installed_sha256": "7dfdd79e1add71e2d26a4fa9cd7dbd8c16f88d69ddf39ba2a3a85f1f1cedd36a",
+      "mode": "0o700",
+      "matches": true
+    },
+    {
+      "source": "scripts/termux-boot/ternuxx-recovery",
+      "installed": true,
+      "source_sha256": "fdb974fec7e8e026d7b4f8ba305eb54dd8a95e82bda01eac42c9a81de8fba896",
+      "installed_sha256": "fdb974fec7e8e026d7b4f8ba305eb54dd8a95e82bda01eac42c9a81de8fba896",
+      "mode": "0o700",
+      "matches": true
+    },
+    {
+      "source": "scripts/termux-services/ternuxx-sshd/run",
+      "installed": true,
+      "source_sha256": "1e45a818d1d5c4b9d74eddb46ee57b3e74412915e63fadacfb609c25301b9237",
+      "installed_sha256": "1e45a818d1d5c4b9d74eddb46ee57b3e74412915e63fadacfb609c25301b9237",
+      "mode": "0o700",
+      "matches": true
+    },
+    {
+      "source": "scripts/termux-services/ternuxx-terminal-broker/run",
+      "installed": true,
+      "source_sha256": "cd6a3f107bad6bb434ca6770ac3f28de8386b8afa582f45809d7c45855881eb4",
+      "installed_sha256": "cd6a3f107bad6bb434ca6770ac3f28de8386b8afa582f45809d7c45855881eb4",
+      "mode": "0o755",
+      "matches": true
+    },
+    {
+      "source": "scripts/termux-services/ternuxx-gui-monitor/run",
+      "installed": false
+    },
+    {
+      "source": "lib/reboot_recovery.py",
+      "installed": true,
+      "source_sha256": "6e7fdb678966e1ae4fa5f871b2c251dbc66be8710a9f3421118c61f7de56dfe3",
+      "installed_sha256": "6e7fdb678966e1ae4fa5f871b2c251dbc66be8710a9f3421118c61f7de56dfe3",
+      "mode": "0o600",
+      "matches": true
+    },
+    {
+      "source": "lib/ssh_diagnostics.py",
+      "installed": true,
+      "source_sha256": "e012e70aa865344f522970fe36b1be34eaa9f48b9508ffeb21e07d8eba61f48a",
+      "installed_sha256": "e012e70aa865344f522970fe36b1be34eaa9f48b9508ffeb21e07d8eba61f48a",
+      "mode": "0o600",
+      "matches": true
+    },
+    {
+      "source": "lib/continuity.py",
+      "installed": true,
+      "source_sha256": "1e4118766bac840eccad578506f18759db1ab877f29f62d66947f6a4e7d37843",
+      "installed_sha256": "1e4118766bac840eccad578506f18759db1ab877f29f62d66947f6a4e7d37843",
+      "mode": "0o600",
+      "matches": true
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Documentation, status, and SKB knowledge return
 
-Ternuxx uses three related records, each with one owner. This keeps product decisions, phase progress, and Git/CI facts from drifting or overwriting one another.
+Ternuxx uses related records, each with one owner. This keeps product decisions, phase progress, and Git/CI facts from drifting or overwriting one another.
 
 ## Sources of truth
 
@@ -11,7 +11,7 @@ Ternuxx uses three related records, each with one owner. This keeps product deci
 | Commit, branch, version, CI build/test results, synchronization events | `.repo/project.yaml`, `.repo/events/`, `.repo/STATUS.md` | SKB `tools/repo_knowledge` only; never hand-write these facts |
 | Cross-project durable owner knowledge | Canonical SKB topic/project files | Session-level knowledge return under SKB's [knowledge-return protocol](https://github.com/soobujmiah/skb/blob/main/governance/KNOWLEDGE_RETURN_PROTOCOL.md); never copy ordinary commits or transient logs |
 
-`docs/PHASE-STATUS.md` is the human-readable milestone view. `.repo/STATUS.md` is deterministic repository state. They answer different questions and must not be merged into a second generated status document. `docs/HANDOFF.md` (when introduced) is the concise narrative about decisions, evidence, known defects, and next work; it must link to generated status instead of copying its SHAs or CI result.
+`docs/PHASE-STATUS.md` is the human-readable milestone view. `.repo/STATUS.md` is deterministic repository state. They answer different questions and must not be merged into a second generated status document. `CURRENT_STATE.md` is the concise narrative about decisions, evidence, known defects, and next work; it must link to generated status instead of copying its SHAs or CI result.
 
 ## Automatic repository status
 
@@ -37,15 +37,11 @@ Mechanical synchronization and human knowledge return are separate:
 - If an item is uncertain or conflicts with existing SKB knowledge, record it for review instead of replacing canonical facts. Never sync credentials, personal payloads, transient logs, source mirrors, or ordinary implementation details.
 - Membership eligibility, data classification, owner approval, readiness validation, and explicit registry registration must happen before deterministic registry participation. A request to return useful knowledge does not authorize publishing a private repo's contents publicly.
 
-Ternuxx CI has generated and committed `.repo/` state with `build/test: unknown` and `sync: ok` for `735c1aa`. The SKB onboarding validator returned `READY`; the owner has confirmed the SKB Registry Reader installation was updated. Registration and the first central pull are the remaining sync steps. The SKB checkout remote was verified as `soobujmiah/skb` on 2026-10-17.
+Current CI results are linked from generated repository status. Central registry membership and App-backed pull success must be checked against SKB's current registry and receipts; older onboarding observations are not current access proof. GitHub metadata reports Ternuxx public, but secrets and private runtime/personal payloads are excluded from all returns.
 
-### Required GitHub App step for SKB's central pull
+### Central pull boundary
 
-There is no SKB App package, secret, or cross-repository credential to install in Ternuxx. Its project-side Actions workflow does **not** need the SKB GitHub App: it writes only to Ternuxx with its same-repository `GITHUB_TOKEN`. The separate SKB registry pull needs the account-installed, read-only **SKB Registry Reader** App to include this private repository in its selected-repository list. The latest successful authorization receipt (2026-10-17) shows the *minted token scope* derived from the registry; because Ternuxx was not registered then, its absence from that list does not establish whether the App installation included it. The owner has now confirmed the App was updated; the first pull after registration will verify effective access.
-
-After readiness and App selection are confirmed, register the repository through SKB's prescribed registry command and verify a real pull. Keep the App's repository selection limited to approved participants and `Contents: read` (Metadata is implicit). Do not broaden it to all repositories or add an SKB credential to Ternuxx. App installation changes are owner-side actions under SKB policy; project code or an agent cannot perform them.
-
-The inspected local Ternux checkout (`38a5217`, branch `codex/license-terms-review-20261016`) has an optional `SKB_DISPATCH_TOKEN` path in its repository workflow. That older project-side dispatch pattern is not copied here: the current SKB policy says participant repos must not hold an SKB write/dispatch credential. SKB's registry workflow already has a daily schedule and a manual run option, so central status can be pulled without adding cross-repository secrets to Ternuxx.
+No SKB credential is installed in Ternuxx. Project Actions writes only this repository using its same-repository token. A separately authorized read-only SKB Registry Reader App performs central pulls for explicitly registered participants. Verify membership, effective access and the resulting receipt in SKB. Never add a participant-held cross-repository write/dispatch credential or broaden App selection as an implementation shortcut.
 
 ## Session close
 

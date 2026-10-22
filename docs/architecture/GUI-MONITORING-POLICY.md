@@ -4,12 +4,12 @@ The Linux Termux:X11/XFCE session and the Android Termux:X11 Activity are separa
 
 ## Shared policy
 
-The policy is managed through the same API used by CLI, TUI, and Web UI:
+The policy is managed through the same API used by CLI, TUI, Web UI, and GTK:
 
 - `desktop.monitor.status` is read-only.
-- `desktop.monitor.configure` updates policy through the CLI, TUI operation runner, or Web form.
+- `desktop.monitor.configure` updates policy through the CLI, guided TUI/GTK controls, or Web form.
 - CLI: `tx gui monitor status|enable|disable|configure`.
-- Web UI has a separate monitor panel. Its browser capability is restricted to `desktop.monitor.manage`; it cannot start or stop the desktop, SSH, or PRoot services.
+- Web UI has a separate monitor panel. The form uses the desktop.monitor.manage capability. Other Web resource actions have their own separately scoped permissions; the full current client boundary is in the capability matrix.
 
 Schema version 1 lives at `$TERNUXX_STATE_DIR/gui-monitoring.json`, in the private Ternuxx state directory. Updates use a same-directory temporary file, fsync, atomic replace, a private mode-0700 lock directory, and mode 0600. Symlinks, foreign owners, broad permissions, malformed schemas, and intervals outside 30 seconds through 24 hours are rejected. Accepted units are seconds, minutes, and hours; storage normalizes them to seconds.
 

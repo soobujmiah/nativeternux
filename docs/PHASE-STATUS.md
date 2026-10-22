@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Preview-first Native broker service and CLI/TUI/Web/GTK terminal paths are implemented; authenticated Web was visually reviewed and exposed a responsive layout fix, but post-fix visual login and disposable managed guest attach remain unqualified.
+Native broker and four terminal client paths exist. Real Firefox authenticated UI, responsive layout, stable actions and terminal dialog are verified without starting a guest; disposable managed guest replay and full interactive attach remain open.
 
-**Next action:** Repeat authenticated Firefox visual review of the patched Web UI, then verify full managed interactive attach across CLI, TUI, Web, and GTK using a disposable Ternuxx guest; keep the existing tx db guest untouched.
+**Next action:** Implement a separately guarded disposable guest replay and qualify managed terminal start/attach/I-O/resize/detach/exact close across CLI, TUI, Web and GTK; preserve the active Codex guest and Native Termux. Continue the full repository audit from docs/audit/REPOSITORY-AUDIT.md.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -88,6 +88,7 @@ Evidence:
 - [docs/evidence/2026-10-22-canonical-name-and-broker-audit.md](evidence/2026-10-22-canonical-name-and-broker-audit.md)
 - [docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md](evidence/2026-10-22-p4-terminal-client-and-gui-review.md)
 - [docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md](evidence/2026-10-22-p4-persistent-broker-web-terminal.md)
+- [docs/evidence/2026-10-22-native-ui-and-audit-remediation.md](evidence/2026-10-22-native-ui-and-audit-remediation.md)
 
 ## P5 — Distro and display compatibility profiles
 

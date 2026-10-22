@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Repeat authenticated Firefox visual review of the patched Web UI, then verify full managed interactive attach across CLI, TUI, Web, and GTK using a disposable Ternuxx guest; keep the existing tx db guest untouched.
+**Next action:** Implement a separately guarded disposable guest replay and qualify managed terminal start/attach/I-O/resize/detach/exact close across CLI, TUI, Web and GTK; preserve the active Codex guest and Native Termux. Continue the full repository audit from docs/audit/REPOSITORY-AUDIT.md.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

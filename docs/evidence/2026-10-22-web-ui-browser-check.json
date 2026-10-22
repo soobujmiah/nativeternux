@@ -1,0 +1,54 @@
+{
+  "ok": true,
+  "browser": "153.4.0",
+  "mode": "headless",
+  "viewports": [
+    {
+      "width": 390,
+      "height": 914,
+      "overflow": false,
+      "actionTop": 918.1500244140625,
+      "quickBar": "flex",
+      "requested_width": 390
+    },
+    {
+      "width": 752,
+      "height": 914,
+      "overflow": false,
+      "actionTop": 822.3499755859375,
+      "quickBar": "flex",
+      "requested_width": 752
+    },
+    {
+      "width": 1440,
+      "height": 914,
+      "overflow": false,
+      "actionTop": 164.75,
+      "quickBar": "none",
+      "requested_width": 1440
+    }
+  ],
+  "operations": [
+    "management.catalog",
+    "proot.sessions.list"
+  ],
+  "guest_session_started": false,
+  "isolated_profile": true,
+  "checks": [
+    "unauthenticated-hidden-state",
+    "bootstrap-cleared",
+    "catalog-order",
+    "resource-search",
+    "horizontal-overflow",
+    "stable-actions",
+    "late-response-resource-binding",
+    "8022-inspection-only",
+    "wakelock-status-control",
+    "terminal-renderer-no-guest-start"
+  ],
+  "source_sha256": {
+    "lib/management_web_ui.html": "de0b799df319baea06c780986b8668834634881def991c8a43517b0ffd280452",
+    "lib/management_http_runtime.py": "c0b4a82cdee8a2e051eaaf29cdd3b65c2533c8f6dd989b1ada14efcee2cf8661",
+    "lib/management_catalog.py": "acab54a016a14da154154d79f57e6188af70a10c1630d18c5f3dad16e004d476"
+  }
+}

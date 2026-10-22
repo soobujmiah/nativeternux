@@ -6,7 +6,7 @@ Ternuxx manages local desktop processes, optional network listeners, Android-fac
 
 The tool may inspect Termux package metadata, its own session state, process metadata needed to validate ownership, and explicitly selected files. It must not scan `/sdcard`, `/storage/emulated/0`, or other shared storage by default. User file handoff must name exact paths and actions. SSH private keys, passwords, tokens, app payloads, and unredacted private logs must never be copied to documentation, SKB, or diagnostic output.
 
-Ternuxx state and backups remain under Ternuxx-owned paths. Before reset/restore/removal, show exact affected paths and preserve user data by default. Never delete, minimize, upgrade, or repair the independent Ternux rootfs/launcher.
+Ternuxx state and backups remain under Ternuxx-owned paths. Before reset/restore/removal, show exact affected paths and preserve user data by default. Never reset, replace, broadly prune, or mutate unselected data in the existing guest/launcher. An explicitly authorized targeted configuration change needs preserved pre-state, exact scope, and a recovery path.
 
 ## Service security
 
@@ -32,8 +32,10 @@ Report suspected vulnerabilities privately through the repository owner's existi
 
 ## Current limits
 
-No public release, supported device matrix, implemented remote service management, NPU path, or broad app compatibility is claimed. See [research](docs/RESEARCH.md), [operations](docs/OPERATIONS.md), [security decisions](docs/architecture/decisions/), and [current status](CURRENT_STATE.md).
+Local managed SSH/service operations exist with scoped ownership and plans. No supported public release, broad off-device service management, NPU runtime, or general app compatibility is qualified. See [research](docs/RESEARCH.md), [operations](docs/OPERATIONS.md), [security decisions](docs/architecture/decisions/), and [current status](CURRENT_STATE.md).
 
+
+The following are dated observations, not a live status authority. Recheck the current Native service before relying on bind/authentication/process facts.
 
 ### 2026-10-18 managed SSH observation
 

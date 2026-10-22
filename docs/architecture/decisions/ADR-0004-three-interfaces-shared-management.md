@@ -19,7 +19,7 @@ Create one shared management layer as the authority for configuration, capabilit
 - Automation uses named application-service operations, never a separate unrestricted shell path.
 - All interfaces use the same schemas, capability registry, authorization rules, operation IDs and evidence records.
 
-The CLI management service, versioned local API, loopback HTTP server, authorization/session primitives, and read-only foreground runtime now exist. The TUI provides service-backed views and an allowlisted typed operation runner with explicit mutation confirmation. The Web client provides authenticated, loopback-only read-only views and uses a one-time bootstrap secret displayed in the terminal. HTTP mutation dispatch remains disabled. General Graphical management is not implemented; the PRoot shortcut manager remains a task-specific X11 dialog. Full operation parity and a browser bootstrap that avoids terminal secret delivery remain open. See [shared management implementation plan](../SHARED-MANAGEMENT-PLAN.md) for current gaps.
+Implementation is incremental. CLI, TUI, the authenticated loopback Web client, and Native GTK now exist, with scoped writes and different per-client coverage. This decision defines the common service boundary; current implementation and remaining controls belong to [the capability matrix](../CAPABILITY-MATRIX.md), [management API](../MANAGEMENT-API.md), and [current handoff](../../../CURRENT_STATE.md). Historical decision-time implementation notes are not current availability claims.
 
 ## Alternatives considered
 
@@ -53,4 +53,4 @@ The CLI management service, versioned local API, loopback HTTP server, authoriza
 - [Master Phase 0 audit](../../evidence/PHASE-0-MASTER-AUDIT.md)
 - [Unified workstation proposal](../UNIFIED-WORKSTATION.md)
 - [Management API proposal](../MANAGEMENT-API.md)
-- Current source: `bin/ternuxx`, `lib/desktop.sh`, `lib/phases.sh`; no API/UI implementation exists.
+- Current source locations: `bin/tx`, `lib/management_service.py`, and the client modules linked by the capability matrix.
