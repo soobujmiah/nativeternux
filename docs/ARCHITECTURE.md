@@ -26,7 +26,7 @@ Route implementations include standalone Debian GUI `:0`, selected apps on Nativ
 
 ## Interactive terminal broker
 
-The optional Native broker owns fixed-profile PTYs through a private same-UID Unix socket. Attachments are generation-bound with one writer, bounded I/O, short-lived Web tickets, and fresh start/close plans. CLI, TUI, Web/xterm.js, and GTK/VTE lifecycles and one sequential cross-client handoff have passed on a disposable replay guest. Exact replay-guest retirement and restoration passed through CLI, authenticated Web API, and installed GTK; browser-rendered Web controls and broader provider/configuration and reproducibility acceptance remain open. See [interactive terminals](architecture/INTERACTIVE-PROOT-TERMINALS.md).
+The optional Native broker owns fixed-profile PTYs through a private same-UID Unix socket. Attachments are generation-bound with one writer, bounded I/O, short-lived Web tickets, and fresh start/close plans. CLI, TUI, Web/xterm.js, and GTK/VTE lifecycles and one sequential cross-client handoff have passed on a disposable replay guest. Exact replay-guest retirement and restoration passed through CLI, authenticated Web API, and installed GTK; visible Firefox Web acceptance now passes for the authenticated catalog, search, status controls, terminal rendering, action layout and responsive viewports; full mutation/client parity and broader provider/configuration and reproducibility acceptance remain open. See [visible Web acceptance](evidence/2026-10-22-web-ui-visible-acceptance.json). See [interactive terminals](architecture/INTERACTIVE-PROOT-TERMINALS.md).
 
 ## Host integrations and recovery
 
