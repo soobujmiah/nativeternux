@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 368,
-  "read_count": 45,
+  "document_count": 371,
+  "read_count": 52,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -13,16 +13,16 @@
       "kind": "structured",
       "sha256": "2b60ab1bc749a822c2f8007f7a93dd84b1b2579511d47cebb97baffe20768389",
       "lines": 55,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "2b60ab1bc749a822c2f8007f7a93dd84b1b2579511d47cebb97baffe20768389"
     },
     {
       "path": ".github/workflows/repo-knowledge-sync.yml",
       "kind": "structured",
       "sha256": "25729d45c2a525c053e4040e961bf50219d156f4c83138feae0858a64c0139c8",
       "lines": 89,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "25729d45c2a525c053e4040e961bf50219d156f4c83138feae0858a64c0139c8"
     },
     {
       "path": "AI_ASSISTANT.md",
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "d1331226230d37b219b247d6bd391c2664fadd9d46a2d218f79bb48c24c4cc28",
+      "sha256": "883ab006668910b09087038244872fa2d172d07359babd7a69b0b24fa4193049",
       "lines": 37,
       "read_status": "read",
-      "read_sha256": "d1331226230d37b219b247d6bd391c2664fadd9d46a2d218f79bb48c24c4cc28"
+      "read_sha256": "883ab006668910b09087038244872fa2d172d07359babd7a69b0b24fa4193049"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -211,10 +211,10 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "f06d135c75224de640cc0566d5ffa29329b25ecc50be9343322f8bf992144b5c",
+      "sha256": "fff34ead2afeba045aa0689db9de83aa37c3833cb136ff7f3daf4b16fb6ed400",
       "lines": 311,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "fff34ead2afeba045aa0689db9de83aa37c3833cb136ff7f3daf4b16fb6ed400"
     },
     {
       "path": "docs/SOFTWARE-CATALOG.md",
@@ -291,10 +291,10 @@
     {
       "path": "docs/architecture/INTERACTIVE-PROOT-TERMINALS.md",
       "kind": "narrative",
-      "sha256": "4e69a6af114e5c92257a1d60c82d7c57cb46e960615d67f97d75248566067659",
-      "lines": 35,
+      "sha256": "a3be91f04cb9ceb2098af5d55321c531936ddef970dfae4b7349e554d472ecdd",
+      "lines": 49,
       "read_status": "read",
-      "read_sha256": "4e69a6af114e5c92257a1d60c82d7c57cb46e960615d67f97d75248566067659"
+      "read_sha256": "a3be91f04cb9ceb2098af5d55321c531936ddef970dfae4b7349e554d472ecdd"
     },
     {
       "path": "docs/architecture/MANAGEMENT-API.md",
@@ -315,10 +315,10 @@
     {
       "path": "docs/architecture/PROOT-SESSIONS.md",
       "kind": "narrative",
-      "sha256": "f3bcb6e3114ab8db029bccc11e3b59f62677774e875cdc9b6ddd918fe72cc8c7",
-      "lines": 56,
+      "sha256": "3bcb435966e1c521d9c500d20ba08530b8efd0a80cc74a8b2052413f2902554d",
+      "lines": 58,
       "read_status": "read",
-      "read_sha256": "f3bcb6e3114ab8db029bccc11e3b59f62677774e875cdc9b6ddd918fe72cc8c7"
+      "read_sha256": "3bcb435966e1c521d9c500d20ba08530b8efd0a80cc74a8b2052413f2902554d"
     },
     {
       "path": "docs/architecture/SHARED-MANAGEMENT-PLAN.md",
@@ -491,10 +491,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "be3dccd30d06bec7dfd2ea251693ec7a500d561867ffc277e83a0ba7ab5017d8",
-      "lines": 70,
+      "sha256": "0f0fdbe5778fa16e59ba8bc71236a59ce92b5bad51b00fa504f8f98bb6acc09e",
+      "lines": 72,
       "read_status": "read",
-      "read_sha256": "be3dccd30d06bec7dfd2ea251693ec7a500d561867ffc277e83a0ba7ab5017d8"
+      "read_sha256": "0f0fdbe5778fa16e59ba8bc71236a59ce92b5bad51b00fa504f8f98bb6acc09e"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2305,6 +2305,22 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-22-terminal-guest-regression.json",
+      "kind": "structured",
+      "sha256": "d9ce39232943291174931fb247ee19cbf3929bded455aa07d4d2270b794b1e97",
+      "lines": 30,
+      "read_status": "read",
+      "read_sha256": "d9ce39232943291174931fb247ee19cbf3929bded455aa07d4d2270b794b1e97"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-terminal-guest-selection.md",
+      "kind": "narrative",
+      "sha256": "a6986d4d891164fd67c26f4a5b18d887f37371c09ae6b20679858de90552f44a",
+      "lines": 26,
+      "read_status": "read",
+      "read_sha256": "a6986d4d891164fd67c26f4a5b18d887f37371c09ae6b20679858de90552f44a"
+    },
+    {
       "path": "docs/evidence/2026-10-22-web-browser-selection.md",
       "kind": "narrative",
       "sha256": "6cbda2e7982bccc53cda11749e6f81f3afd6a612c6246b70407ba171693f5ae7",
@@ -2459,10 +2475,10 @@
     {
       "path": "docs/readiness/README.md",
       "kind": "narrative",
-      "sha256": "e1cbf4f38d521c375394c524e3ca246fcbb44fa38650f703079830156dc1017b",
-      "lines": 60,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "d629e5348d04d710265f5df86cd9433cf7c1a41a1dbce8632c9755403e47e61d",
+      "lines": 25,
+      "read_status": "read",
+      "read_sha256": "d629e5348d04d710265f5df86cd9433cf7c1a41a1dbce8632c9755403e47e61d"
     },
     {
       "path": "docs/readiness/REPOSITORY-AUDIT.md",
@@ -2487,6 +2503,14 @@
       "lines": 117,
       "read_status": "pending",
       "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/history/2026-10-22-readiness-overview.md",
+      "kind": "narrative",
+      "sha256": "a6a55d9ebd59b26c475d532c54d4228351c239c7e0340ec847ad3269c71a4646",
+      "lines": 60,
+      "read_status": "read",
+      "read_sha256": "a6a55d9ebd59b26c475d532c54d4228351c239c7e0340ec847ad3269c71a4646"
     },
     {
       "path": "docs/testing/8023-deployment-and-lifecycle.md",

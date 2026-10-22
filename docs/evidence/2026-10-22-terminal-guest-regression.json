@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "runtime": "Native Termux through SSH 8022",
+  "suite": {
+    "command": "bash scripts/repo_test.sh",
+    "passed": 732,
+    "run": 732,
+    "seconds": 97.671
+  },
+  "source_sha256": {
+    "lib/proot_sessions.py": "c1edf9cac15d253db9e97124b3c2da84ed3870c0c53ca8db4c621354e415a9b1",
+    "lib/terminal_broker_service.py": "3b7e3d0ee89754bb2e7e006d12a767fff46ca23b42d2ed777c30dfe9c1202b5d",
+    "lib/terminal_cli.py": "af0dcee6af1491daeb4311a8889c87bde5e61c3fcd47f0a5462f4c7eb1352e30",
+    "tests/test_proot_sessions.py": "a9db7025ae5c373f331831ae550cc058bc0c2fa3ee4ded15fd0cc2e611af685d",
+    "tests/test_terminal_broker_service.py": "c35ae92765be8f993869130ab1f7bf21c886d255ae835af243758c830b4ff356",
+    "tests/test_terminal_cli.py": "b274a18be3ee1f50cb4536701f3936a341724fd9128b64fd3b9b6f1700f42751"
+  },
+  "focused": {
+    "sessions": 39,
+    "broker_assembly": 3,
+    "attachment_cleanup": 3,
+    "tui": 38
+  },
+  "pre_fix_attachment_failures_reproduced": 3,
+  "isolated_live_broker_status": true,
+  "isolated_live_broker_clean_exit": true,
+  "working_broker_signalled": false,
+  "guest_started_by_broker_checks": false,
+  "all_client_terminal_lifecycle_qualified": false
+}

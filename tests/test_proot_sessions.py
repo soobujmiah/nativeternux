@@ -53,31 +53,6 @@ class PRootSessionRegistryTests(unittest.TestCase):
             "last_verified_at": None, "last_exit_code": None, "transitions": [],
         }
 
-    def make_record(self, *, pid=1234567, process_start="old-start", state="running",
-                    profile="isolated-probe", process_group=None):
-        marker = "TERNUXX_PROOT_SESSION=" + "a" * 32
-        if process_group is None:
-            process_group = pid
-        argv = [str(self.launcher), "login", "--minimal", "debian", "--",
-                "/usr/bin/env", marker, "/bin/sleep", "300"]
-        return {
-            "schema_version": proot_sessions.SCHEMA,
-            "session_id": "proot-" + "a" * 32,
-            "profile": profile,
-            "profile_version": 1,
-            "purpose": proot_sessions.PROFILES[profile]["purpose"],
-            "mode": proot_sessions.PROFILES[profile]["mode"],
-            "rootfs": str(self.rootfs), "rootfs_device": self.rootfs.stat().st_dev,
-            "rootfs_inode": self.rootfs.stat().st_ino,
-            "launcher": str(self.launcher), "launcher_device": self.launcher.stat().st_dev,
-            "launcher_inode": self.launcher.stat().st_ino,
-            "pid": pid, "process_start": process_start, "process_group": process_group,
-            "marker": marker, "expected_argv": argv,
-            "working_directory": "guest-default", "environment_profile": "isolated-no-host-home-or-display",
-            "created_at": "2026-10-20T00:00:00+00:00", "state": state,
-            "last_verified_at": None, "last_exit_code": None, "transitions": [],
-        }
-
     def test_discovery_uses_validated_configured_rootfs_and_launcher(self):
         prefix = self.base / "prefix"
         root = prefix / "var/lib/proot-distro/containers/debian/rootfs"
@@ -86,6 +61,63 @@ class PRootSessionRegistryTests(unittest.TestCase):
             prefix=str(prefix), which=lambda _name, path=None: str(self.launcher))
         self.assertEqual(found["rootfs"], str(root))
         self.assertEqual(found["rootfs_inode"], root.stat().st_ino)
+
+    def replay_roots(self):
+        prefix = self.base / "prefix"
+        for alias in ("debian", "ternuxx-replay-test"):
+            root = prefix / "var/lib/proot-distro/containers" / alias / "rootfs"
+            (root / "usr/bin").mkdir(parents=True)
+            (root / "bin").mkdir()
+            (root / "etc").mkdir()
+            for relative in ("usr/bin/env", "bin/bash", "bin/sleep"):
+                target = root / relative
+                target.write_text("#!/bin/sh\n")
+                target.chmod(0o700)
+            (root / "etc/passwd").write_text("sbj:x:1000:1000::/home/sbj:/bin/bash\n")
+        return str(prefix)
+
+    def test_separate_alias_preview_and_login_record_use_only_selected_root(self):
+        prefix = self.replay_roots()
+        with mock.patch("shutil.which", return_value=str(self.launcher)):
+            default = proot_sessions.preview_start("debian-interactive", prefix=prefix)
+            replay = proot_sessions.preview_start("debian-interactive", prefix=prefix,
+                                                  alias="ternuxx-replay-test")
+            discovery = proot_sessions.discover_debian(prefix=prefix, alias="ternuxx-replay-test")
+        self.assertNotEqual(default["plan_id"], replay["plan_id"])
+        self.assertIn("/ternuxx-replay-test/rootfs", replay["rootfs"])
+        self.assertEqual(replay["alias"], "ternuxx-replay-test")
+        record, _token = proot_sessions._create_login_record(self.state, discovery)
+        self.assertEqual(record["expected_argv"][2], "ternuxx-replay-test")
+        self.assertEqual(record["rootfs"], replay["rootfs"])
+        proot_sessions._validate_record(record)
+
+    def test_default_plan_cannot_start_separate_alias(self):
+        prefix = self.replay_roots()
+        with mock.patch("shutil.which", return_value=str(self.launcher)):
+            default = proot_sessions.preview_start("debian-interactive", prefix=prefix)
+            with mock.patch("pty.fork") as fork:
+                with self.assertRaisesRegex(proot_sessions.SessionError, "stale"):
+                    proot_sessions.spawn_login_interactive(
+                        self.state, prefix=prefix, confirmed=True,
+                        plan_id=default["plan_id"], alias="ternuxx-replay-test")
+                fork.assert_not_called()
+        self.assertFalse((self.state / "proot").exists())
+
+    def test_alias_validation_rejects_paths_flags_and_foreign_containers(self):
+        for alias in ("../debian", "/debian", "--help", "ubuntu", "ternuxx-replay-", None):
+            with self.subTest(alias=alias):
+                with self.assertRaisesRegex(proot_sessions.SessionError, "guest alias"):
+                    proot_sessions.discover_debian(prefix=str(self.base), alias=alias)
+
+    def test_separate_alias_symlink_never_falls_back_to_default(self):
+        prefix = self.replay_roots()
+        container = Path(prefix) / "var/lib/proot-distro/containers"
+        replay = container / "ternuxx-replay-link"
+        replay.symlink_to(container / "debian", target_is_directory=True)
+        with mock.patch("shutil.which", return_value=str(self.launcher)):
+            with self.assertRaisesRegex(proot_sessions.SessionError, "symlink"):
+                proot_sessions.preview_start("debian-interactive", prefix=prefix,
+                                             alias=replay.name)
 
     def test_symlinked_rootfs_is_rejected(self):
         prefix = self.base / "prefix"

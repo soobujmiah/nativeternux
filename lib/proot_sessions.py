@@ -316,7 +316,15 @@ def _contains_sequence(argv: list[str], expected: list[str]) -> bool:
     return False
 
 
-def discover_debian(*, prefix: str, which=None) -> dict[str, object]:
+def _guest_alias(value: str) -> str:
+    if (not isinstance(value, str) or (value != "debian"
+            and not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", value))):
+        raise SessionError("guest alias must be debian or an explicit ternuxx-replay-NAME")
+    return value
+
+
+def discover_debian(*, prefix: str, which=None, alias: str = "debian") -> dict[str, object]:
+    alias = _guest_alias(alias)
     if which is None:
         import shutil
         which = shutil.which
@@ -327,14 +335,14 @@ def discover_debian(*, prefix: str, which=None) -> dict[str, object]:
     if launcher_path.is_symlink() or not os.access(launcher_path, os.X_OK):
         raise SessionError("proot-distro executable identity is unsafe")
     launcher_stat = launcher_path.stat()
-    rootfs = Path(prefix) / "var/lib/proot-distro/containers/debian/rootfs"
+    rootfs = Path(prefix) / "var/lib/proot-distro/containers" / alias / "rootfs"
     if rootfs.is_symlink() or not rootfs.is_dir():
         raise SessionError("configured Debian rootfs is unavailable or symlinked")
     resolved = rootfs.resolve(strict=True)
     if resolved != rootfs.absolute():
         raise SessionError("configured Debian rootfs path resolves through a symlink")
     root_stat = rootfs.stat()
-    return {"rootfs": str(rootfs), "rootfs_device": root_stat.st_dev, "rootfs_inode": root_stat.st_ino,
+    return {"alias": alias, "rootfs": str(rootfs), "rootfs_device": root_stat.st_dev, "rootfs_inode": root_stat.st_ino,
             "launcher": str(launcher_path), "launcher_device": launcher_stat.st_dev,
             "launcher_inode": launcher_stat.st_ino}
 
@@ -584,10 +592,10 @@ def stop_session(state_dir: str | os.PathLike[str], session_id: str, *, confirme
         lock.close()
 
 
-def profile_inventory(*, prefix: str) -> dict[str, object]:
+def profile_inventory(*, prefix: str, alias: str = "debian") -> dict[str, object]:
     """Return the fixed, validated profiles and live guest discovery evidence."""
     try:
-        found = discover_debian(prefix=prefix)
+        found = discover_debian(prefix=prefix, alias=alias)
         rootfs_state = "available"
         root_identity = {"device": found["rootfs_device"], "inode": found["rootfs_inode"]}
         launcher = found["launcher"]
@@ -625,8 +633,8 @@ def profile_inventory(*, prefix: str) -> dict[str, object]:
             "launcher": launcher, "diagnostic": diagnostic}
 
 
-def show_profile(profile: str, *, prefix: str) -> dict[str, object]:
-    inventory = profile_inventory(prefix=prefix)
+def show_profile(profile: str, *, prefix: str, alias: str = "debian") -> dict[str, object]:
+    inventory = profile_inventory(prefix=prefix, alias=alias)
     item = next((entry for entry in inventory["profiles"] if entry["id"] == profile), None)
     if item is None:
         raise SessionError("PRoot profile is unsupported")
@@ -645,15 +653,15 @@ def _start_plan(profile: str, discovery: dict[str, object]) -> str:
     return "plan-" + hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def preview_start(profile: str, *, prefix: str) -> dict[str, object]:
+def preview_start(profile: str, *, prefix: str, alias: str = "debian") -> dict[str, object]:
     if profile not in PROFILES:
         raise SessionError("PRoot profile is unsupported")
-    discovery = discover_debian(prefix=prefix)
-    detail = show_profile(profile, prefix=prefix)
+    discovery = discover_debian(prefix=prefix, alias=alias)
+    detail = show_profile(profile, prefix=prefix, alias=alias)
     if not detail["profile"]["available"]:
         raise SessionError("PRoot profile preflight failed")
     spec = PROFILES[profile]
-    return {"profile": profile, "profile_version": spec["version"], "mode": spec["mode"],
+    return {"alias": _guest_alias(alias), "profile": profile, "profile_version": spec["version"], "mode": spec["mode"],
             "purpose": spec["purpose"], "rootfs": discovery["rootfs"],
             "rootfs_identity": {"device": discovery["rootfs_device"], "inode": discovery["rootfs_inode"]},
             "launcher": discovery["launcher"], "working_directory": "guest-default",
@@ -794,7 +802,7 @@ def _create_login_record(state_dir: str | os.PathLike[str], discovery: dict[str,
                 # Stale records are retained and never adopted or signalled.
         session_id, token = "proot-" + uuid.uuid4().hex, uuid.uuid4().hex
         marker = _MARKER_PREFIX + token
-        argv = [discovery["launcher"], "login", "debian", "--shared-tmp", "--user", "sbj"]
+        argv = [discovery["launcher"], "login", _guest_alias(discovery.get("alias", "debian")), "--shared-tmp", "--user", "sbj"]
         argv.extend(_native_pulse_login_args())
         argv.extend(["--",
                 "/usr/bin/env", marker, "/bin/bash", "--login"]
@@ -918,7 +926,7 @@ def _relay_interactive_pty(master: int, child_pid: int, *, input_fd: int = 0,
 
 
 def spawn_login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, confirmed: bool,
-                           plan_id: str) -> dict[str, object]:
+                           plan_id: str, alias: str = "debian") -> dict[str, object]:
     """Start the fixed interactive profile and transfer its verified PTY master to a broker.
 
     The caller owns the returned master FD and must retain, relay, and close it.
@@ -926,10 +934,10 @@ def spawn_login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, c
     """
     if confirmed is not True or not isinstance(plan_id, str):
         raise SessionError("PRoot start requires an exact preview plan and explicit confirmation")
-    preview = preview_start("debian-interactive", prefix=prefix)
+    preview = preview_start("debian-interactive", prefix=prefix, alias=alias)
     if plan_id != preview["plan_id"]:
         raise SessionError("PRoot start preview is stale or does not match the selected profile")
-    discovery = discover_debian(prefix=prefix)
+    discovery = discover_debian(prefix=prefix, alias=alias)
     if plan_id != _start_plan("debian-interactive", discovery):
         raise SessionError("PRoot start preview is stale; rootfs or launcher identity changed")
     record, token = _create_login_record(state_dir, discovery)
@@ -943,7 +951,7 @@ def spawn_login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, c
         child_pid, master = pty.fork()
         if child_pid == 0:
             try:
-                current = discover_debian(prefix=prefix)
+                current = discover_debian(prefix=prefix, alias=alias)
                 if not _same_discovery(current, discovery):
                     os._exit(126)
                 os.execve(record["expected_argv"][0], record["expected_argv"], env)

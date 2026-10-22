@@ -12,7 +12,8 @@ import proot_sessions
 import terminal_broker
 
 
-def build_service(*, prefix: str | None = None, home: str | None = None):
+def build_service(*, prefix: str | None = None, home: str | None = None,
+                  guest_alias: str = "debian"):
     """Build the fixed-profile runtime and private local socket server."""
     prefix = prefix or os.environ.get("PREFIX", "/data/data/com.termux/files/usr")
     home = home or str(Path.home())
@@ -20,6 +21,7 @@ def build_service(*, prefix: str | None = None, home: str | None = None):
         raise terminal_broker.BrokerError("terminal broker requires Native Termux")
     state_dir = Path(os.environ.get("TERNUXX_STATE_DIR") or
                      (Path(home) / ".local/share/ternuxx")).absolute()
+    guest_alias = proot_sessions._guest_alias(guest_alias)
     registry = terminal_broker.TerminalAttachmentRegistry()
     runtime: terminal_broker.TerminalPTYRuntime
 
@@ -37,9 +39,9 @@ def build_service(*, prefix: str | None = None, home: str | None = None):
     runtime = terminal_broker.TerminalPTYRuntime(
         registry,
         preview_start=lambda: proot_sessions.preview_start(
-            "debian-interactive", prefix=prefix),
+            "debian-interactive", prefix=prefix, alias=guest_alias),
         spawn_login=lambda plan_id: proot_sessions.spawn_login_interactive(
-            state_dir, prefix=prefix, confirmed=True, plan_id=plan_id),
+            state_dir, prefix=prefix, confirmed=True, plan_id=plan_id, alias=guest_alias),
         verify_record=lambda record: proot_sessions._verified(record),
         session_members=proot_sessions._members,
         record_exit=record_exit,
@@ -67,7 +69,7 @@ def build_service(*, prefix: str | None = None, home: str | None = None):
         close_preview=lambda session_id: proot_sessions.preview_stop(state_dir, session_id),
         close_apply=close_apply,
         start_preview=lambda: proot_sessions.preview_start(
-            "debian-interactive", prefix=prefix),
+            "debian-interactive", prefix=prefix, alias=guest_alias),
         start_apply=lambda plan_id, principal: runtime.start(
             plan_id, principal, confirmed=True),
         pty_relay_status=runtime.status,
@@ -76,8 +78,8 @@ def build_service(*, prefix: str | None = None, home: str | None = None):
     return server, runtime
 
 
-def serve() -> int:
-    server, runtime = build_service()
+def serve(*, guest_alias: str = "debian") -> int:
+    server, runtime = build_service(guest_alias=guest_alias)
     stopping = threading.Event()
     def request_stop(_signum, _frame):
         stopping.set()
@@ -103,9 +105,11 @@ def serve() -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Serve the optional Ternuxx interactive terminal broker")
     parser.add_argument("action", choices=("serve",))
-    parser.parse_args(argv)
+    parser.add_argument("--guest-alias", default="debian",
+                        help="Exact guest: debian (default) or ternuxx-replay-NAME; use a separate private state directory for qualification")
+    args = parser.parse_args(argv)
     try:
-        return serve()
+        return serve(guest_alias=args.guest_alias)
     except (OSError, proot_sessions.SessionError, terminal_broker.BrokerError) as exc:
         print(f"Ternuxx terminal broker: {exc}", file=sys.stderr)
         return 1

@@ -11,8 +11,8 @@ Status: IN_PROGRESS. This tracks the complete owner request, not just the first 
 | Full source/dirty/untracked audit | Reviewed tracked source/tests/config/assets, explained dirty work, syntax/tests/security/provider-boundary review | Clean baseline inspected; current changes are audit-owned; complete module review pending |
 | P1–P3 completion is accurate | Every exit criterion mapped to dated evidence and current regression/preservation scope | Completion evidence re-read in part; no new physical reboot/no-PRoot test; full gate-by-gate revalidation pending |
 | Native installed/runtime matches repository | Installer/module/service/menu/source identity inventory and exact comparisons | All source Runit/boot definitions, tx shim, GTK source/bridge/binary and currently installed canonical recovery modules verified; profiles/config/package/driver and fresh setup inventory pending |
-| Fully reproducible supported workstation | Fresh isolated setup from checked-in manifests; exact package/driver/config provenance; rollback and preservation proof | Fixture-only fresh Debian path; disposable live replay and experimental Native driver reproduction open |
-| All-client interactive terminals | Disposable guest start/attach/I/O/resize/detach/exact close through four clients | Source paths exist; full live acceptance pending |
+| Fully reproducible supported workstation | Fresh isolated setup from checked-in manifests; exact package/driver/config provenance; rollback and preservation proof | Guarded separate Debian image installed and package provisioning live; completion/preservation, rollback and experimental Native driver reproduction remain open |
+| All-client interactive terminals | Disposable guest start/attach/I/O/resize/detach/exact close through four clients | Source paths and separate-guest production broker selection exist; full live acceptance pending |
 | Current docs without conflicting duplicate status | One source for phase, CI, coverage and handoff; historical evidence dated; links checked | Root handoff/architecture/testing/manifest reconciled; remaining docs/ADRs/structured matrices pending |
 | Stable tested and synchronized implementation | Relevant Native tests/browser/GUI evidence, installed parity, reviewed commit and push/CI | First remediation verified; whole objective not complete |
 
@@ -57,6 +57,8 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A24 | Refused unowned fresh destination could become resumable after the failure handler wrote an ownership-like journal | Reproduced, fixed and regression-covered; failed-stage resume now requires exact verified rootfs/container identity |
 | A25 | Fresh setup shell AND/OR list could hide an APT failure by falling through to user creation | Reproduced with host-safe command stubs; independent fail-fast commands and conditional user creation now verified |
 | A26 | Graphics artifact staging followed member symlinks and reused a PID-named download target | Private no-follow/exclusive artifact I/O, bounded downloads and staging serialization implemented; foreign-byte/symlink preservation tested |
+
+| A27 | Ctrl+] and early CLI/TUI attach failures leaked the single writer lease, preventing subsequent attachment | Three cases reproduced before fix; unconditional exact-lease release now covers detach, initial resize failure and loss of the caller terminal without stopping the guest |
 
 ## Continuation order
 

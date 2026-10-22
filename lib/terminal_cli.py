@@ -38,30 +38,42 @@ def _dimensions() -> tuple[int,int]:
 
 def attach(session_id: str, *, client: terminal_broker.UnixBrokerClient | None = None,
            principal: str = "native-termux", lease: dict[str,object] | None = None) -> int:
-    if not sys.stdin.isatty() or not sys.stdout.isatty():
-        raise terminal_broker.BrokerError("interactive attach requires a local terminal")
-    client=client or _client()
-    if lease is None:
-        lease=_ok(client.request("terminal.attach",session_id=session_id))
-        generation=lease["generation"]
-        attachment_id=lease["attachment_id"]
-    else:
-        generation=lease["generation"]
-        attachment_id=lease["attachment_id"]
-        session_id=lease["session_id"]
+    client = client or _client()
+    try:
+        if not sys.stdin.isatty() or not sys.stdout.isatty():
+            raise terminal_broker.BrokerError("interactive attach requires a local terminal")
+        if lease is None:
+            lease = _ok(client.request("terminal.attach", session_id=session_id))
+        return _relay_attachment(client, lease)
+    finally:
+        # A start response may already hold the writer before the local TTY
+        # disappears. Release every acquired lease, including explicit detach
+        # and setup failures, without closing the guest session.
+        if lease is not None:
+            try:
+                client.request("terminal.detach", session_id=lease["session_id"],
+                               generation=lease["generation"],
+                               attachment_id=lease["attachment_id"])
+            except (OSError, terminal_broker.BrokerError):
+                pass
+
+
+def _relay_attachment(client, lease) -> int:
+    session_id = lease["session_id"]
+    generation = lease["generation"]
+    attachment_id = lease["attachment_id"]
     columns,rows=_dimensions()
-    client.request("terminal.resize",session_id=session_id,generation=generation,
-                   attachment_id=attachment_id,args={"columns":columns,"rows":rows})
+    _ok(client.request("terminal.resize",session_id=session_id,generation=generation,
+                   attachment_id=attachment_id,args={"columns":columns,"rows":rows}))
     old=termios.tcgetattr(sys.stdin.fileno())
     previous_handlers={}
     def interrupted(signum, _frame):
         raise InterruptedError(f"terminal client interrupted by signal {signum}")
-    for sig in (signal.SIGHUP,signal.SIGTERM):
-        previous_handlers[sig]=signal.signal(sig,interrupted)
     cursor=0
     last_size=(columns,rows)
-    detached=False
     try:
+        for sig in (signal.SIGHUP,signal.SIGTERM):
+            previous_handlers[sig]=signal.signal(sig,interrupted)
         tty.setraw(sys.stdin.fileno())
         while True:
             readable,_,_=select.select([sys.stdin.fileno()],[],[],0.04)
@@ -73,7 +85,6 @@ def attach(session_id: str, *, client: terminal_broker.UnixBrokerClient | None =
                     if before:
                         client.request("terminal.input",session_id=session_id,generation=generation,
                             attachment_id=attachment_id,args={"data_base64":base64.b64encode(before).decode("ascii")})
-                    detached=True
                     break
                 client.request("terminal.input",session_id=session_id,generation=generation,
                     attachment_id=attachment_id,args={"data_base64":base64.b64encode(data).decode("ascii")})
@@ -97,14 +108,11 @@ def attach(session_id: str, *, client: terminal_broker.UnixBrokerClient | None =
                 cursor=int(response["next_sequence"])
         return 0
     finally:
-        termios.tcsetattr(sys.stdin.fileno(),termios.TCSADRAIN,old)
-        for sig,handler in previous_handlers.items(): signal.signal(sig,handler)
-        if not detached:
-            try:
-                client.request("terminal.detach",session_id=session_id,generation=generation,
-                               attachment_id=attachment_id)
-            except terminal_broker.BrokerError:
-                pass
+        try:
+            termios.tcsetattr(sys.stdin.fileno(),termios.TCSADRAIN,old)
+        finally:
+            for sig,handler in previous_handlers.items():
+                signal.signal(sig,handler)
 
 
 def run(argv: list[str] | None=None) -> int:
