@@ -30,6 +30,12 @@ def native_env(home: str) -> dict[str, str]:
 
 
 class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
+    def test_web_ssh_help_matches_publickey_only_service_policy(self) -> None:
+        ui = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
+        self.assertIn("public-key login only", ui)
+        self.assertIn("password login is disabled", ui)
+        self.assertNotIn("Keep password recovery", ui)
+
     def test_web_resource_detail_uses_actions_instead_of_duplicate_capability_lists(self) -> None:
         ui = (ROOT / "lib" / "management_web_ui.html").read_text()
         self.assertIn('id="resource-actions"', ui)

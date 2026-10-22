@@ -271,6 +271,7 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertIn("start SSH 8023 (preview)", managed_actions)
         self.assertIn("stop SSH 8023 (preview)", managed_actions)
         self.assertIn("restart SSH 8023 (preview)", managed_actions)
+        self.assertIn("public-key login only; password login is disabled", managed_actions)
         self.assertFalse(any("start" in item or "stop" in item for item in manual_actions))
         self.assertTrue(any("status" in item for item in manual_actions))
 

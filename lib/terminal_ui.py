@@ -441,7 +441,7 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)"),
                                             ("ssh.service.restart", "restart SSH 8023 (preview)")) if op in operations)
-        labels.append("inspect 8023 login methods; preserve password recovery")
+        labels.append("public-key login only; password login is disabled")
     elif resource_id == "native.wakelock":
         labels.append("inspect Ternuxx-owned Wake Lock leases")
         if {"wakelock.acquire", "wakelock.release"} <= operations:
