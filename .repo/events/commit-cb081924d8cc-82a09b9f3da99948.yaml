@@ -1,0 +1,7 @@
+event_id: commit-cb081924d8cc-82a09b9f3da99948
+repository: soobujmiah/ternuxx
+commit: cb081924d8cc515091683772a30d4b51807802dc
+kind: commit
+occurred_at: '2026-10-22T00:28:13Z'
+status: completed
+summary: 'fix(services): safely register and verify Native GUI monitor'
