@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "2d73fe5a0f15eeb4c13d7fcd43d3101b0a6682d2ce4d514e939225b5b6ff3c20",
+      "sha256": "ea45aac4d55aef76acb9633fa0141ca791e7bd5965dbdf8b6f9bffd509b403c0",
       "lines": 53,
       "read_status": "read",
-      "read_sha256": "2d73fe5a0f15eeb4c13d7fcd43d3101b0a6682d2ce4d514e939225b5b6ff3c20"
+      "read_sha256": "ea45aac4d55aef76acb9633fa0141ca791e7bd5965dbdf8b6f9bffd509b403c0"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -2387,10 +2387,10 @@
     {
       "path": "docs/evidence/2026-10-22-native-optional-proot-failure-injection.md",
       "kind": "narrative",
-      "sha256": "b98544556cb94510870e1121149bafbff3c9eda39aaf1d45e0658acd850b7ae8",
+      "sha256": "f045b1fdc3257a06ad47904c38d48dfab92682805ad010db3e93b2570db9d6d7",
       "lines": 56,
       "read_status": "read",
-      "read_sha256": "b98544556cb94510870e1121149bafbff3c9eda39aaf1d45e0658acd850b7ae8"
+      "read_sha256": "f045b1fdc3257a06ad47904c38d48dfab92682805ad010db3e93b2570db9d6d7"
     },
     {
       "path": "docs/evidence/2026-10-22-native-selected-deployment-parity.json",

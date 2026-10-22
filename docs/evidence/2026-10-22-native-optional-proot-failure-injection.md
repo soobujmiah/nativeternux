@@ -53,4 +53,4 @@ This does **not** simulate an actually absent `proot-distro` executable at runti
 - Source/runner: `tools/check_native_proot_independence.py`.
 - Fixture regression: `tests/test_proot_diagnostics.py`.
 
-The first GitHub Repository State Contract run for the preceding commit failed the same receipt-fixture test under its default umask. Explicit private directory modes fixed that portability defect. A new GitHub run after pushing this change is still pending.
+The first GitHub Repository State Contract run for the preceding commit failed the same receipt-fixture test under its default umask. Explicit private directory modes fixed that portability defect. On commit aafb98d, GitHub Repository State Contract run 39817026853 and Repository Knowledge Sync run 39817026866 both passed. The docs-only follow-up that records these results will receive its own CI run.
