@@ -1,0 +1,7 @@
+event_id: commit-05edb44bc890-8c3a786824b4d510
+repository: soobujmiah/ternuxx
+commit: 05edb44bc890cf3d4f6602c66d6f7143d44869a8
+kind: commit
+occurred_at: '2026-10-22T05:24:57Z'
+status: completed
+summary: 'fix(proot): guard separate fresh targets and verified setup resume'
