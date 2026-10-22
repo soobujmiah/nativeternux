@@ -177,7 +177,7 @@ the server stops without revealing it; use --show-secret-on-clipboard-failure
 for the explicit private-terminal fallback. Browser access uses the shared
 management service with scoped reads and narrow confirmed actions: Native
 desktop lifecycle, graphics status/verification and Native backend selection,
-GUI Activity-monitoring policy, managed SSH 8023 start/stop, named PRoot app
+GUI Activity-monitoring policy, managed SSH 8023 start/stop/restart, named PRoot app
 launch with per-app confirmation, previewed single PRoot shortcut changes, and
 Cron status/job/history reads, PRoot session/recovery reads, and preview-confirmed
 fixed 300-second isolated probes with exact verified-owned stop. Browser clients
@@ -374,7 +374,7 @@ EOF
       ;;
     ssh)
       cat <<'EOF'
-tx ssh inspect/start/stop - Native SSH diagnostics and fixed Runit service control
+tx ssh inspect/start/stop/restart - Native SSH diagnostics and fixed Runit service control
 
   tx ssh inspect
   tx proot status # Inventory installed guests without entering them
@@ -382,6 +382,8 @@ tx ssh inspect/start/stop - Native SSH diagnostics and fixed Runit service contr
   tx ssh start --yes --plan-id <id>    # apply exact preview
   tx ssh stop                          # read-only preview
   tx ssh stop --yes --plan-id <id>     # apply exact preview
+  tx ssh restart                       # preview; warns that 8023 clients may disconnect
+  tx ssh restart --yes --plan-id <id>  # apply exact preview
 
 Reports whether OpenSSH/configuration is present, whether sshd accepts the
 current config, allowlisted effective authentication/bind policy, observed

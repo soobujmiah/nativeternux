@@ -284,9 +284,9 @@ def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]
     if resource.get("id") != "network.ssh.managed-8023":
         return {"ok": False, "error": {"code": "externally_managed_resource"}}
     action = _choose(screen, "Managed SSH · port 8023", [(name, f"{name.title()} SSH service")
-                      for name in ("start", "stop")
+                      for name in ("start", "stop", "restart")
                       if f"ssh.service.{name}" in resource.get("supported_operations", [])])
-    operation = {"start": "ssh.service.start", "stop": "ssh.service.stop"}.get(action)
+    operation = {"start": "ssh.service.start", "stop": "ssh.service.stop", "restart": "ssh.service.restart"}.get(action)
     if not operation or operation not in resource.get("supported_operations", []):
         return {"ok": False, "error": {"code": "action_unavailable"}}
     preview = _call(operation, {"confirmed": False, "plan_id": None})
@@ -439,7 +439,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         labels.append("inspect, start attached login, or manage bounded PRoot sessions")
     elif resource_id == "network.ssh.managed-8023":
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
-                                            ("ssh.service.stop", "stop SSH 8023 (preview)")) if op in operations)
+                                            ("ssh.service.stop", "stop SSH 8023 (preview)"),
+                                            ("ssh.service.restart", "restart SSH 8023 (preview)")) if op in operations)
         labels.append("inspect 8023 login methods; preserve password recovery")
     elif resource_id == "native.wakelock":
         labels.append("inspect Ternuxx-owned Wake Lock leases")

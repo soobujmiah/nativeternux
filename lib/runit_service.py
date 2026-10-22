@@ -51,8 +51,9 @@ def _status(
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> str:
     manager = _manager(prefix)
+    service_dir = prefix / "var/service" / SERVICE_ID
     try:
-        result = runner([str(manager), "status", SERVICE_ID], capture_output=True, text=True,
+        result = runner([str(manager), "status", str(service_dir)], capture_output=True, text=True,
                         timeout=3, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise ServiceActionError("Termux Runit status is unavailable") from exc
@@ -60,10 +61,14 @@ def _status(
     if not lines:
         raise ServiceActionError("Termux Runit returned an unknown service state")
     line = lines[0].strip()
-    if line.startswith(f"run: {SERVICE_ID}:"):
-        return "running"
-    if line.startswith(f"down: {SERVICE_ID}:"):
-        return "stopped"
+    # Termux runit versions report either the fixed unit ID or its absolute
+    # service-directory path. Accept only these exact identities.
+    service_names = {SERVICE_ID, str(service_dir)}
+    for name in service_names:
+        if line.startswith(f"run: {name}:"):
+            return "running"
+        if line.startswith(f"down: {name}:"):
+            return "stopped"
     raise ServiceActionError("Termux Runit returned an unknown service state")
 
 
@@ -74,15 +79,15 @@ def _snapshot(
     source: str | os.PathLike[str] | None = None,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> dict[str, object]:
-    if action not in {"start", "stop"}:
-        raise ServiceActionError("SSH service action must be start or stop")
+    if action not in {"start", "stop", "restart"}:
+        raise ServiceActionError("SSH service action must be start, stop, or restart")
     prefix_path = Path(prefix)
     identity = ssh_diagnostics._managed_service_definition_identity(prefix_path, _source_path(source))
     if identity.get("status") != "verified":
         raise ServiceActionError("Fixed Ternuxx service definition ownership is not verified")
     manager = _manager(prefix_path)
     current = _status(prefix_path, runner=runner)
-    target = "running" if action == "start" else "stopped"
+    target = "stopped" if action == "stop" else "running"
     core = {
         "service_id": SERVICE_ID,
         "action": action,
@@ -94,15 +99,21 @@ def _snapshot(
         "manager_sha256": _manager_sha256(manager),
     }
     plan_id = hashlib.sha256(json.dumps(core, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    changed = current != target
+    # Restart is an explicit operation even if the current state is running.
+    changed = action == "restart" or current != target
+    if action == "restart":
+        impact = "Restarts only the fixed Ternuxx Runit unit; active SSH clients on 127.0.0.1:8023 may disconnect. Port 8022 is excluded."
+    elif action == "stop":
+        impact = "Stops only the fixed Ternuxx Runit unit; clients connected to its managed SSH port may disconnect."
+    else:
+        impact = "Starts only the fixed Ternuxx Runit unit; it does not change SSH configuration."
     return {
         **core,
         "plan_id": plan_id if changed else None,
         "requires_confirmation": changed,
         "changed": False,
         "read_only": True,
-        "impact": ("Stops only the fixed Ternuxx Runit unit; clients connected to its managed SSH port may disconnect."
-                   if action == "stop" else "Starts only the fixed Ternuxx Runit unit; it does not change SSH configuration."),
+        "impact": impact,
     }
 
 
@@ -137,23 +148,25 @@ def apply(
     if not isinstance(plan_id, str) or not current_plan["requires_confirmation"] or plan_id != current_plan["plan_id"]:
         raise ServiceActionError("Service plan changed or the exact plan ID is missing")
     prefix_path = Path(prefix)
-    operation_kind = "service.start" if action == "start" else "service.stop"
+    operation_kind = f"service.{action}"
     operation_id = operation_journal.begin(
         str(state_dir), operation_kind,
         f"{action} fixed {SERVICE_ID} unit",
         home_dir=home,
     )
-    command = "up" if action == "start" else "down"
+    commands = (("down", "up") if action == "restart" else
+                (("up",) if action == "start" else ("down",)))
     operation_status = "needs_recovery"
     final_status = "unknown"
     try:
         manager = _manager(prefix_path)
-        try:
-            runner([str(manager), command, SERVICE_ID], capture_output=True, text=True,
-                   timeout=8, check=False)
-        except (OSError, subprocess.TimeoutExpired):
-            raise ServiceActionError("Runit action timed out or could not run")
-        target = "running" if action == "start" else "stopped"
+        for command in commands:
+            try:
+                runner([str(manager), command, str(prefix_path / "var/service" / SERVICE_ID)],
+                       capture_output=True, text=True, timeout=8, check=False)
+            except (OSError, subprocess.TimeoutExpired):
+                raise ServiceActionError("Runit action timed out or could not run")
+        target = "stopped" if action == "stop" else "running"
         deadline = monotonic() + 5.0
         while True:
             try:

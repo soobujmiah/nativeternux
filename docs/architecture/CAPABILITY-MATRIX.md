@@ -10,7 +10,7 @@ This is a source/evidence overview, not proof that every action is live-qualifie
 | Web | Authenticated local console; scoped desktop/graphics/monitoring/8023/apps/shortcuts/Cron actions; history/logs and actual separate-guest terminal lifecycle | Credentials, per-service boot/Wake Lock policy, broader configuration/scheduler/recovery writes |
 | GTK | Native GTK4/VTE resource console, typed bridge, app entry and supported dialogs | Source/bridge/binary identity verified after rebuild; GTK start/attach/resize/detach/close passed on the separate guest; cross-client continuity and broader action parity remain open |
 | Navigation/actions | Shared category order; numbered lists; Web details scroll independently from actions; real mobile quick controls | Further GTK/TUI interaction refinement |
-| Managed SSH 8023 | Native service/config diagnostics and preview-confirmed lifecycle/deployment paths | Key generation/enrollment/removal, password/recovery, and per-SSH boot policy across clients |
+| Managed SSH 8023 | Native diagnostics, preview-confirmed start/stop/restart/deployment in shared CLI/TUI/Web/GTK contracts | Key generation/enrollment/removal, password/recovery, and per-SSH boot policy across clients |
 | Development SSH 8022 | Externally managed inspection | No product lifecycle/auth mutation; preserve this channel |
 | Boot/Wake Lock | Native helpers/profiles, owner-scoped leases, diagnostics, selected CLI/TUI controls | Uniform service policies/client controls and next-boot observation of current recovery modules |
 | Cron | Persistent definitions, previewed mutations/history across clients; CLI/TUI scheduler controls | Web/GTK scheduler lifecycle, retry/cancellation/non-skip delivery and production recovery |

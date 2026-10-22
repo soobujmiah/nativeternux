@@ -76,18 +76,18 @@ class ManagementSessionTests(unittest.TestCase):
         self.assertTrue(authority.authorize_request(
             read_only.bearer_token, "ssh.inspect").allowed)
         denied = authority.authorize_request(
-            read_only.bearer_token, "ssh.service.stop", csrf_token=read_only.csrf_token)
+            read_only.bearer_token, "ssh.service.restart", csrf_token=read_only.csrf_token)
         self.assertEqual(denied.reason, "scope_denied")
 
         control = self.make_authority()
         scoped = self.issue(control, {"ssh.managed.lifecycle"})
         self.assertEqual(control.authorize_request(
-            scoped.bearer_token, "ssh.service.stop").reason, "csrf_rejected")
+            scoped.bearer_token, "ssh.service.restart").reason, "csrf_rejected")
         self.assertEqual(control.authorize_request(
-            scoped.bearer_token, "ssh.service.stop", csrf_token="wrong").reason,
+            scoped.bearer_token, "ssh.service.restart", csrf_token="wrong").reason,
             "csrf_rejected")
         self.assertTrue(control.authorize_request(
-            scoped.bearer_token, "ssh.service.stop", csrf_token=scoped.csrf_token).allowed)
+            scoped.bearer_token, "ssh.service.restart", csrf_token=scoped.csrf_token).allowed)
         other = self.make_authority(grants={"services.manage"})
         services_only = self.issue(other, {"services.manage"})
         self.assertEqual(other.authorize_request(

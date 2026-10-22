@@ -270,6 +270,7 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         manual_actions = terminal_ui._available_action_labels(manual)
         self.assertIn("start SSH 8023 (preview)", managed_actions)
         self.assertIn("stop SSH 8023 (preview)", managed_actions)
+        self.assertIn("restart SSH 8023 (preview)", managed_actions)
         self.assertFalse(any("start" in item or "stop" in item for item in manual_actions))
         self.assertTrue(any("status" in item for item in manual_actions))
 
@@ -384,13 +385,13 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         preview = {"ok": True, "data": {"requires_confirmation": True,
                    "plan_id": "a" * 64, "impact": "Stops only ternuxx-sshd."}}
         result = {"ok": True, "data": {"status": "stopped"}}
-        with mock.patch.object(terminal_ui, "_choose", return_value="stop"), \
+        with mock.patch.object(terminal_ui, "_choose", return_value="restart"), \
              mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
              mock.patch.object(terminal_ui, "_call", side_effect=[preview, result]) as dispatch:
             self.assertIs(terminal_ui._managed_ssh_action(object(), resource), result)
         self.assertEqual(dispatch.call_args_list, [
-            mock.call("ssh.service.stop", {"confirmed": False, "plan_id": None}),
-            mock.call("ssh.service.stop", {"confirmed": True, "plan_id": "a" * 64}),
+            mock.call("ssh.service.restart", {"confirmed": False, "plan_id": None}),
+            mock.call("ssh.service.restart", {"confirmed": True, "plan_id": "a" * 64}),
         ])
 
     def test_managed_ssh_cancel_does_not_apply_and_manual_8022_stays_read_only(self) -> None:

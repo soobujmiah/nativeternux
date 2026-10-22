@@ -34,11 +34,11 @@ def _snapshot(
         raise ServiceRecoveryError("Operation record is unavailable or unsafe") from exc
     kind = record.get("kind")
     status_value = record.get("status")
-    initial_status = "starting" if kind == "service.start" else "stopping"
-    if (kind not in {"service.start", "service.stop"}
+    initial_status = "stopping" if kind == "service.stop" else "starting"
+    if (kind not in {"service.start", "service.stop", "service.restart"}
             or status_value not in {"needs_recovery", initial_status}):
         raise ServiceRecoveryError("Only an interrupted native SSH service action can be resolved")
-    action = "start" if kind == "service.start" else "stop"
+    action = "stop" if kind == "service.stop" else "start"
     status = runit_service.preview(action, prefix=prefix, source=source, runner=runner)
     target = "running" if action == "start" else "stopped"
     result = "complete" if status["current_status"] == target else "failed"

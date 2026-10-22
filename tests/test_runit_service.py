@@ -16,16 +16,17 @@ import operation_journal  # noqa: E402
 
 
 class FakeRunit:
-    def __init__(self, state: str = "stopped", *, fail_action: bool = False):
+    def __init__(self, state: str = "stopped", *, fail_action: bool = False, status_path: str | None = None):
         self.state = state
         self.calls: list[list[str]] = []
         self.fail_action = fail_action
+        self.status_path = status_path or "ternuxx-sshd"
 
     def __call__(self, args: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
         self.calls.append(args)
         if args[1] == "status":
             prefix = "run" if self.state == "running" else "down"
-            return subprocess.CompletedProcess(args, 0, f"{prefix}: ternuxx-sshd: fixture\n", "")
+            return subprocess.CompletedProcess(args, 0, f"{prefix}: {self.status_path}: fixture\n", "")
         if self.fail_action:
             raise subprocess.TimeoutExpired(args, 8)
         self.state = "running" if args[1] == "up" else "stopped"
@@ -91,7 +92,7 @@ class RunitServiceTests(unittest.TestCase):
         self.assertEqual(result["status"], "running")
         self.assertEqual(result["service_id"], "ternuxx-sshd")
         actions = [call[1:] for call in self.runner.calls if call[1] in {"up", "down"}]
-        self.assertEqual(actions, [["up", "ternuxx-sshd"]])
+        self.assertEqual(actions, [["up", str(self.prefix / "var/service/ternuxx-sshd")]])
         record = operation_journal.inspect_record(str(self.state), result["operation_id"], home_dir=self.home)
         self.assertEqual(record["kind"], "service.start")
         self.assertEqual(record["status"], "complete")
@@ -105,9 +106,35 @@ class RunitServiceTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "stopped")
         self.assertEqual([call[1:] for call in self.runner.calls if call[1] in {"up", "down"}],
-                         [["down", "ternuxx-sshd"]])
+                         [["down", str(self.prefix / "var/service/ternuxx-sshd")]])
         record = operation_journal.inspect_record(str(self.state), result["operation_id"], home_dir=self.home)
         self.assertEqual(record["kind"], "service.stop")
+        self.assertEqual(record["status"], "complete")
+
+    def test_status_accepts_exact_native_absolute_service_path(self) -> None:
+        full_path = str(self.prefix / "var/service/ternuxx-sshd")
+        runner = FakeRunit("running", status_path=full_path)
+        plan = runit_service.preview("restart", prefix=self.prefix, source=self.source, runner=runner)
+        self.assertEqual(plan["current_status"], "running")
+        runner.status_path = str(self.prefix / "var/service/other-service")
+        with self.assertRaisesRegex(runit_service.ServiceActionError, "unknown service state"):
+            runit_service.preview("restart", prefix=self.prefix, source=self.source, runner=runner)
+
+    def test_restart_always_requires_confirmation_and_only_restarts_fixed_unit(self) -> None:
+        self.runner.state = "running"
+        plan = runit_service.preview("restart", prefix=self.prefix, source=self.source, runner=self.runner)
+        self.assertEqual(plan["target_status"], "running")
+        self.assertTrue(plan["requires_confirmation"])
+        self.assertIn("8022 is excluded", plan["impact"])
+        result = runit_service.apply(
+            "restart", prefix=self.prefix, home=self.home, state_dir=self.state,
+            confirmed=True, plan_id=str(plan["plan_id"]), source=self.source, runner=self.runner,
+        )
+        self.assertEqual(result["status"], "running")
+        actions = [call[1:] for call in self.runner.calls if call[1] in {"up", "down"}]
+        self.assertEqual(actions, [["down", str(self.prefix / "var/service/ternuxx-sshd")], ["up", str(self.prefix / "var/service/ternuxx-sshd")]])
+        record = operation_journal.inspect_record(str(self.state), result["operation_id"], home_dir=self.home)
+        self.assertEqual(record["kind"], "service.restart")
         self.assertEqual(record["status"], "complete")
 
     def test_plan_state_change_and_definition_mismatch_fail_before_action(self) -> None:
@@ -138,7 +165,7 @@ class RunitServiceTests(unittest.TestCase):
         no_op = runit_service.preview("start", prefix=self.prefix, source=self.source, runner=no_op_state)
         self.assertFalse(no_op["requires_confirmation"])
         self.assertIsNone(no_op["plan_id"])
-        self.assertEqual(no_op_state.calls, [[str(self.prefix / "bin/sv"), "status", "ternuxx-sshd"]])
+        self.assertEqual(no_op_state.calls, [[str(self.prefix / "bin/sv"), "status", str(self.prefix / "var/service/ternuxx-sshd")]])
         noop_result = runit_service.apply(
             "start", prefix=self.prefix, home=self.home, state_dir=self.state,
             confirmed=False, plan_id=None, source=self.source, runner=no_op_state,
@@ -161,7 +188,7 @@ class RunitServiceTests(unittest.TestCase):
         self.assertEqual(records[0]["kind"], "service.start")
         self.assertEqual(records[0]["status"], "needs_recovery")
         self.assertEqual([call[1:] for call in runner.calls if call[1] in {"up", "down"}],
-                         [["up", "ternuxx-sshd"]])
+                         [["up", str(self.prefix / "var/service/ternuxx-sshd")]])
         retry_plan = runit_service.preview("start", prefix=self.prefix, source=self.source, runner=runner)
         with self.assertRaises(RuntimeError):
             runit_service.apply(

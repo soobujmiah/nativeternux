@@ -13,7 +13,7 @@
       ],
       "properties": {
         "service_id": {"const": "ternuxx-sshd"},
-        "action": {"enum": ["start", "stop"]},
+        "action": {"enum": ["start", "stop", "restart"]},
         "current_status": {"enum": ["running", "stopped"]},
         "target_status": {"enum": ["running", "stopped"]},
         "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
@@ -33,7 +33,7 @@
       "required": ["service_id", "action", "status", "changed", "operation_id", "read_only"],
       "properties": {
         "service_id": {"const": "ternuxx-sshd"},
-        "action": {"enum": ["start", "stop"]},
+        "action": {"enum": ["start", "stop", "restart"]},
         "status": {"enum": ["running", "stopped"]},
         "changed": {"const": true},
         "operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},

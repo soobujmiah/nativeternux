@@ -132,6 +132,7 @@ OPERATION_LABELS: Final[dict[str, str]] = {
     "proot.shortcuts.apply": "Apply shortcut change",
     "ssh.service.start": "Start managed SSH",
     "ssh.service.stop": "Stop managed SSH",
+    "ssh.service.restart": "Restart managed SSH",
     "boot.profile.status": "Boot profile status",
     "boot.profile.preview": "Preview boot profile",
     "boot.cron.status": "Cron boot integration status",

@@ -3,7 +3,7 @@
 nt_cmd_ssh() {
   local action="${1:-}"; [ $# -gt 0 ] && shift
   case "$action" in
-    inspect|start|stop|deploy|deploy-rollback-preview|deploy-rollback)
+    inspect|start|stop|restart|deploy|deploy-rollback-preview|deploy-rollback)
       nt_require_termux || return 1
       nt_require_command python3 || return 1
       local format_args=()
@@ -15,7 +15,7 @@ nt_cmd_ssh() {
       python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" "${format_args[@]}" "$@"
       ;;
     *)
-      nt_fail "Supported SSH operations: inspect, start, stop, deploy, deploy-rollback-preview, deploy-rollback. For rollback use management-service rollback operations."
+      nt_fail "Supported SSH operations: inspect, start, stop, restart, deploy, deploy-rollback-preview, deploy-rollback. For rollback use management-service rollback operations."
       return 2
       ;;
   esac

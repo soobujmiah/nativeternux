@@ -111,6 +111,7 @@ OPERATIONS = {
     "remote.access.preview": {"args": {"policy"}},
     "ssh.service.start": {"args": {"confirmed", "plan_id"}},
     "ssh.service.stop": {"args": {"confirmed", "plan_id"}},
+    "ssh.service.restart": {"args": {"confirmed", "plan_id"}},
     "ssh.service.deploy": {"args": {"confirmed", "plan_id"}},
     "ssh.service.deploy.rollback.preview": {"args": {"operation_id"}},
     "ssh.service.deploy.rollback.apply": {"args": {"operation_id", "confirmed", "plan_id"}},
@@ -551,12 +552,12 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                 data = runit_deployment.apply_rollback(
                     **rollback_args, confirmed=confirmed, plan_id=plan_id,
                 )
-        elif operation in {"ssh.service.start", "ssh.service.stop"}:
+        elif operation in {"ssh.service.start", "ssh.service.stop", "ssh.service.restart"}:
             confirmed = args.get("confirmed", False)
             plan_id = args.get("plan_id")
             if type(confirmed) is not bool or (plan_id is not None and not isinstance(plan_id, str)):
                 return _error(request_id, "invalid_arguments", "service confirmation or plan ID is invalid")
-            action = "start" if operation.endswith(".start") else "stop"
+            action = operation.rsplit(".", 1)[1]
             data = runit_service.apply(
                 action, prefix=process_env["PREFIX"], home=home, state_dir=state_dir,
                 confirmed=confirmed, plan_id=plan_id,
@@ -1175,7 +1176,7 @@ def main(argv: list[str] | None = None) -> int:
         payload = {"operation_id": args.operation_id}
         if not is_preview:
             payload.update({"confirmed": True, "plan_id": args.plan_id})
-    elif args.operation in {"ssh.service.start", "ssh.service.stop", "ssh.service.deploy"}:
+    elif args.operation in {"ssh.service.start", "ssh.service.stop", "ssh.service.restart", "ssh.service.deploy"}:
         if args.yes != bool(args.plan_id):
             response = _error(request_id, "invalid_arguments", "service apply requires --yes and --plan-id from its exact preview")
             if args.json:

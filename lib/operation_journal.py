@@ -17,7 +17,7 @@ ACTIVE = {"starting", "stopping", "needs_recovery"}
 TERMINAL = {"complete", "failed"}
 JOURNAL_KINDS = frozenset({
     "desktop.start", "desktop.stop", "boot.enable", "boot.disable",
-    "service.start", "service.stop", "service.deploy", "service.deploy.rollback", "recovery.backup.create",
+    "service.start", "service.stop", "service.restart", "service.deploy", "service.deploy.rollback", "recovery.backup.create",
     "recovery.restore.apply", "recovery.restore.rollback",
 })
 
@@ -187,6 +187,7 @@ def begin(state_dir: str, kind: str, detail: str, *, home_dir: str | os.PathLike
         "boot.disable": "stopping",
         "service.start": "starting",
         "service.stop": "stopping",
+        "service.restart": "starting",
         "service.deploy": "starting",
         "service.deploy.rollback": "starting",
         "recovery.backup.create": "starting",
@@ -284,10 +285,10 @@ def resolve_service_record(
 ) -> None:
     """Resolve one needs_recovery SSH service record after an exact state review."""
     if (not operation_id.isalnum() or len(operation_id) != 32
-            or expected_kind not in {"service.start", "service.stop"}
+            or expected_kind not in {"service.start", "service.stop", "service.restart"}
             or result not in TERMINAL or observed_status not in {"running", "stopped"}):
         raise ValueError("invalid service recovery resolution")
-    target = "running" if expected_kind == "service.start" else "stopped"
+    target = "stopped" if expected_kind == "service.stop" else "running"
     if (result == "complete") != (observed_status == target):
         raise ValueError("resolution does not match the observed target state")
     root = _root(state_dir, home_dir)
@@ -298,7 +299,7 @@ def resolve_service_record(
         if [str(record.get("operation_id")) for record in active] != [operation_id]:
             raise RuntimeError("unrelated or multiple unresolved operations require separate review")
         record = _read_record(path)
-        expected_status = "starting" if expected_kind == "service.start" else "stopping"
+        expected_status = "stopping" if expected_kind == "service.stop" else "starting"
         if (record.get("operation_id") != operation_id or record.get("kind") != expected_kind
                 or record.get("status") not in {"needs_recovery", expected_status}
                 or record.get("updated_at") != expected_updated_at):

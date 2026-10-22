@@ -340,6 +340,20 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("ssh.service.start", {"confirmed": False, "plan_id": None})
         self.assertIn("P\t" + "c" * 64 + "\ttrue", output.getvalue())
 
+    def test_managed_ssh_restart_bridge_uses_shared_preview_and_apply(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
+            "plan_id": "e" * 64, "requires_confirmation": True,
+            "impact": "Restart may disconnect 8023 clients."}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["ssh-preview-restart"]), 0)
+        dispatch.assert_called_once_with("ssh.service.restart", {"confirmed": False, "plan_id": None})
+        self.assertIn("P\t" + "e" * 64 + "\ttrue", output.getvalue())
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"status": "running"}}) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["ssh-apply-restart", "confirmed", "e" * 64]), 0)
+        dispatch.assert_called_once_with("ssh.service.restart", {"confirmed": True, "plan_id": "e" * 64})
+
     def test_managed_ssh_apply_requires_exact_plan_and_confirmation(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"status": "stopped"}}) as dispatch:
             with redirect_stdout(StringIO()):

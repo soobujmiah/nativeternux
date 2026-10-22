@@ -23,6 +23,7 @@ class OperationRecoveryError(RuntimeError):
 _HANDLER_GROUP_BY_KIND = {
     "service.start": "service",
     "service.stop": "service",
+    "service.restart": "service",
     "service.deploy": "deploy",
     "service.deploy.rollback": "deploy_rollback",
     "boot.enable": "boot",

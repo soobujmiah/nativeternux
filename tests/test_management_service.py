@@ -431,6 +431,13 @@ class ManagementServiceTests(unittest.TestCase):
             self.assertTrue(response["ok"])
             self.assertEqual(response["data"], preview_data)
             action.assert_called_once()
+            with patch.object(management_service.runit_service, "apply", return_value={
+                    "action": "restart", "read_only": True, "requires_confirmation": True}) as restart:
+                response = management_service.dispatch(
+                    request("ssh.service.restart", {"confirmed": False, "plan_id": None}), env=env)
+            self.assertTrue(response["ok"])
+            restart.assert_called_once()
+            self.assertEqual(restart.call_args.args[0], "restart")
             denied = management_service.dispatch(
                 request("ssh.service.stop", {"confirmed": "false", "plan_id": None}), env=env)
             self.assertFalse(denied["ok"])

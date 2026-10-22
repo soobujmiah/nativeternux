@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 390,
-  "read_count": 77,
+  "document_count": 391,
+  "read_count": 80,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "d6a8aafc8624b03417f063f559b1c1b277d007100746d58c467d136883705d68",
-      "lines": 43,
+      "sha256": "f848150f68b87c90129b56b4a73b99d5d95ebc8cef5244aeb56cae3710387003",
+      "lines": 45,
       "read_status": "read",
-      "read_sha256": "d6a8aafc8624b03417f063f559b1c1b277d007100746d58c467d136883705d68"
+      "read_sha256": "f848150f68b87c90129b56b4a73b99d5d95ebc8cef5244aeb56cae3710387003"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "bdecad18a17cc2b30e91e5cbecc73c5b2521aaf2097279f06fbd71eca1f0c5a7",
+      "sha256": "0ea0f5e32ce10b10f25d74daeb39a6eb26b5f34cb10caf572be309b77f27f4b5",
       "lines": 82,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "0ea0f5e32ce10b10f25d74daeb39a6eb26b5f34cb10caf572be309b77f27f4b5"
     },
     {
       "path": "SECURITY.md",
@@ -147,10 +147,10 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "326133ffa0f2a8bf3fec7858855389622f68e39855cfcedd9b0096a40ed6abd2",
+      "sha256": "1637b140e2e432e16e9a95dc50bc2cb892e1067ea4f616d6e5df5b8e1d711c56",
       "lines": 189,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "1637b140e2e432e16e9a95dc50bc2cb892e1067ea4f616d6e5df5b8e1d711c56"
     },
     {
       "path": "docs/OPTIMIZATION.md",
@@ -243,10 +243,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "9c4750e4321462d001082d564fb525c7b17ffc1dfc31072d51db4678b2154f7f",
+      "sha256": "7f85f57c4732c7e8732d9e9ded03f6e269efe8c33f779b85f4dc95da701ba826",
       "lines": 25,
       "read_status": "read",
-      "read_sha256": "9c4750e4321462d001082d564fb525c7b17ffc1dfc31072d51db4678b2154f7f"
+      "read_sha256": "7f85f57c4732c7e8732d9e9ded03f6e269efe8c33f779b85f4dc95da701ba826"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -507,10 +507,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "20d7590faf37ab254db959db4ca3199b4a9f6f8bb0f6d7dae4c4ffd78fe13496",
-      "lines": 82,
+      "sha256": "f1506ec1f31532d7c73bb9a2d499a41172e458e87ef46f2012a05bcd70d4c072",
+      "lines": 84,
       "read_status": "read",
-      "read_sha256": "20d7590faf37ab254db959db4ca3199b4a9f6f8bb0f6d7dae4c4ffd78fe13496"
+      "read_sha256": "f1506ec1f31532d7c73bb9a2d499a41172e458e87ef46f2012a05bcd70d4c072"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2385,6 +2385,14 @@
       "read_sha256": "c33ce87a4edef08faa7fea9a3eaa683e5565fd86c4cd711bde09e64ddeb96c47"
     },
     {
+      "path": "docs/evidence/2026-10-22-ssh-service-restart.md",
+      "kind": "narrative",
+      "sha256": "e6b9468e81adbf7a120e8e49a3e170af89a659cfe975a5fd62c1896369791166",
+      "lines": 24,
+      "read_status": "read",
+      "read_sha256": "e6b9468e81adbf7a120e8e49a3e170af89a659cfe975a5fd62c1896369791166"
+    },
+    {
       "path": "docs/evidence/2026-10-22-terminal-close-authorization.md",
       "kind": "narrative",
       "sha256": "6ec1eda2d03e48cc2f69410364436b865fec0b0d315c0a0c41b78a353198fb35",
@@ -2659,10 +2667,10 @@
     {
       "path": "docs/testing/8023-deployment-and-lifecycle.md",
       "kind": "narrative",
-      "sha256": "75c5bbfa97adeea8273256e67049b0f9f824836601d0b9533162880163492038",
-      "lines": 31,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "324a1fb338a6b73b98845b488450c003f306f2b97d0c4c7c8369eeed895f42ed",
+      "lines": 33,
+      "read_status": "read",
+      "read_sha256": "324a1fb338a6b73b98845b488450c003f306f2b97d0c4c7c8369eeed895f42ed"
     },
     {
       "path": "docs/testing/BENCHMARK-METHODOLOGY.md",
@@ -2915,10 +2923,10 @@
     {
       "path": "schemas/native-ssh-service-action.schema.json",
       "kind": "structured",
-      "sha256": "361b0171c0a1c8798efb45eb66f9f3c4888a14bc8f194a96dac9efea80bcf64f",
+      "sha256": "4a0f1980aa33e93e260ae0aeee31829e8c0d232eeb55004730793624a19154d0",
       "lines": 44,
-      "read_status": "read",
-      "read_sha256": "361b0171c0a1c8798efb45eb66f9f3c4888a14bc8f194a96dac9efea80bcf64f"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "schemas/native-ssh-service-recovery.schema.json",

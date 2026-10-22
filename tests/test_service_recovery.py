@@ -113,6 +113,22 @@ class ServiceRecoveryTests(unittest.TestCase):
         self.assertFalse(result["service_action_performed"])
         self.assertEqual(operation_journal.inspect_record(str(self.state), operation_id, home_dir=self.home)["status"], "complete")
 
+    def test_interrupted_restart_recovery_observes_running_without_restarting(self) -> None:
+        operation_id = self.pending("service.restart")
+        runner = FakeRunit("running")
+        plan = operation_recovery.preview(operation_id, prefix=self.prefix, state_dir=self.state,
+                                          home=self.home, source=self.source, runner=runner)
+        self.assertEqual(plan["record_kind"], "service.restart")
+        self.assertEqual(plan["expected_service_status"], "running")
+        self.assertEqual(plan["resolution"], "complete")
+        result = operation_recovery.resolve(operation_id, prefix=self.prefix, state_dir=self.state,
+                                            home=self.home, confirmed=True, plan_id=str(plan["plan_id"]),
+                                            source=self.source, runner=runner)
+        self.assertFalse(result["service_action_performed"])
+        self.assertTrue(all(call[1] == "status" for call in runner.calls))
+        record = operation_journal.inspect_record(str(self.state), operation_id, home_dir=self.home)
+        self.assertEqual(record["status"], "complete")
+
     def test_journal_resolution_checks_timestamp_and_result_consistency(self) -> None:
         operation_id = self.pending("service.start")
         record = operation_journal.inspect_record(str(self.state), operation_id, home_dir=self.home)

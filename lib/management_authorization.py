@@ -76,6 +76,7 @@ OPERATION_CAPABILITIES: dict[str, str] = {
     "remote.access.preview": "remote_policy.read",
     "ssh.service.start": "ssh.managed.lifecycle",
     "ssh.service.stop": "ssh.managed.lifecycle",
+    "ssh.service.restart": "ssh.managed.lifecycle",
     "ssh.service.deploy": "services.manage",
     "ssh.service.deploy.rollback.preview": "diagnostics.read",
     "ssh.service.deploy.rollback.apply": "services.manage",

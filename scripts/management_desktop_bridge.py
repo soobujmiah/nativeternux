@@ -303,8 +303,8 @@ def main(argv: list[str]) -> int:
         result = call("recovery.status")
         print(management_presentation.format_activity_history(result))
         return 0 if result.get("ok") else 1
-    if action in {"ssh-preview-start", "ssh-preview-stop"} and len(argv) == 1:
-        operation = "ssh.service.start" if action.endswith("start") else "ssh.service.stop"
+    if action in {"ssh-preview-start", "ssh-preview-stop", "ssh-preview-restart"} and len(argv) == 1:
+        operation = "ssh.service." + action.removeprefix("ssh-preview-")
         result = call(operation, {"confirmed": False, "plan_id": None})
         if not result.get("ok"):
             print(management_presentation.format_report(result))
@@ -315,12 +315,12 @@ def main(argv: list[str]) -> int:
                   clean(data.get("impact")))
         print("\t".join(fields))
         return 0
-    if action in {"ssh-apply-start", "ssh-apply-stop"} and len(argv) == 3 and argv[1] == "confirmed":
+    if action in {"ssh-apply-start", "ssh-apply-stop", "ssh-apply-restart"} and len(argv) == 3 and argv[1] == "confirmed":
         plan_id = argv[2]
         if not re.fullmatch(r"[0-9a-f]{64}", plan_id):
             print(json.dumps({"ok": False, "error": {"code": "invalid_plan_id"}}))
             return 2
-        operation = "ssh.service.start" if action.endswith("start") else "ssh.service.stop"
+        operation = "ssh.service." + action.removeprefix("ssh-apply-")
         result = call(operation, {"confirmed": True, "plan_id": plan_id})
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
