@@ -78,7 +78,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
  function reqid(){return crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)}
  async function post(path,body,headers={}){const response=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json",...headers},body:JSON.stringify(body)});let data;try{data=await response.json()}catch{throw Error("Invalid server response")};if(!response.ok)throw Error(data.error||"Request failed");return data}
  function headers(){return {Authorization:"Bearer "+session.bearer_token,"X-Ternuxx-CSRF":session.csrf_token}}
- async function run(operation,args={}){if(!session)return;const requestResourceId=selectedResource?.id;const mutations={"graphics.provider.select":"Change the Native Termux graphics backend for future desktop starts","desktop.start":"Start the native desktop session","desktop.stop":"Stop the native desktop session and its owned children","desktop.restart":"Stop the native desktop and start it again"};if(operation==="proot.app.launch"&&!window.confirm("Launch named PRoot app "+String(args.app_id||"")+" on display "+String(args.display||"from server environment")+"? Only this catalog app will be started; no guest configuration will change."))return;if(mutations[operation]&&!window.confirm(mutations[operation]+"? Ternuxx will operate only its verified owned GUI session. Continue?"))return;notice.textContent="Working…";try{const h=headers();if(mutations[operation]||operation==="desktop.monitor.configure"||operation==="ssh.service.start"||operation==="ssh.service.stop"||operation==="ssh.service.restart"||operation==="proot.app.launch"||operation==="proot.shortcuts.apply"||operation==="proot.start"||operation==="proot.stop"||operation==="cron.jobs.mutation.preview"||operation==="cron.jobs.mutation.apply")h["Idempotency-Key"]=reqid();const result=await post("/api/v1/operations",{api_version:1,request_id:reqid(),operation,args},h);const isCatalog=operation==="management.catalog";if(isCatalog||selectedResource?.id===requestResourceId){out.textContent=isCatalog?"Catalog loaded. Select a resource to view its available actions.":JSON.stringify(result,null,2);const readable=$("#result-readable");if(readable)readable.textContent=isCatalog&&result.ok?"Loaded "+(result.data?.resources?.length||0)+" resources across "+(result.data?.categories?.length||0)+" categories.":humanReport(result);}notice.textContent=result.ok?"Updated from shared management service":"Operation failed";if(!result.ok)throw Error((result.error&&result.error.message)||result.error?.code||"Operation failed");if(operation==="management.catalog"){catalog=result.data;allResources=catalog.resources;drawCategories();drawResources()}if(operation==="desktop.monitor.status")fillMonitor(result.data);if(operation==="desktop.monitor.configure")await run("desktop.monitor.status");return result}catch(e){notice.textContent=e.message;return null}}
+ async function run(operation,args={}){if(!session)return;const requestResourceId=selectedResource?.id;const mutations={"graphics.provider.select":"Change the Native Termux graphics backend for future desktop starts","desktop.start":"Start the native desktop session","desktop.stop":"Stop the native desktop session and its owned children","desktop.restart":"Stop the native desktop and start it again"};if(operation==="proot.app.launch"&&!window.confirm("Launch named PRoot app "+String(args.app_id||"")+" on display "+String(args.display||"from server environment")+"? Only this catalog app will be started; no guest configuration will change."))return;if(mutations[operation]&&!window.confirm(mutations[operation]+"? Ternuxx will operate only its verified owned GUI session. Continue?"))return;notice.textContent="Working…";try{const h=headers();if(mutations[operation]||operation.startsWith("ssh.keys.")||operation==="desktop.monitor.configure"||operation==="ssh.service.start"||operation==="ssh.service.stop"||operation==="ssh.service.restart"||operation==="proot.app.launch"||operation==="proot.shortcuts.apply"||operation==="proot.start"||operation==="proot.stop"||operation==="cron.jobs.mutation.preview"||operation==="cron.jobs.mutation.apply")h["Idempotency-Key"]=reqid();const result=await post("/api/v1/operations",{api_version:1,request_id:reqid(),operation,args},h);const isCatalog=operation==="management.catalog";if(isCatalog||selectedResource?.id===requestResourceId){out.textContent=isCatalog?"Catalog loaded. Select a resource to view its available actions.":JSON.stringify(result,null,2);const readable=$("#result-readable");if(readable)readable.textContent=isCatalog&&result.ok?"Loaded "+(result.data?.resources?.length||0)+" resources across "+(result.data?.categories?.length||0)+" categories.":humanReport(result);}notice.textContent=result.ok?"Updated from shared management service":"Operation failed";if(!result.ok)throw Error((result.error&&result.error.message)||result.error?.code||"Operation failed");if(operation==="management.catalog"){catalog=result.data;allResources=catalog.resources;drawCategories();drawResources()}if(operation==="desktop.monitor.status")fillMonitor(result.data);if(operation==="desktop.monitor.configure")await run("desktop.monitor.status");return result}catch(e){notice.textContent=e.message;return null}}
  async function cronChange(action){
   let args, jobId;
   if(action==="create"){
@@ -104,6 +104,42 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   if(!window.confirm("Review exact Cron plan before applying:\n\n"+JSON.stringify(plan,null,2)+"\n\nApply this saved plan now?"))return;
   const applied=await run("cron.jobs.mutation.apply",{plan_id:plan.plan_id,confirmed:true});
   if(applied?.ok)await run("cron.jobs.list");
+ }
+ async function sshKeyPlan(operation,args){
+  const h=headers();h["Idempotency-Key"]=reqid();
+  const response=await post("/api/v1/operations",{api_version:1,request_id:reqid(),operation,args},h);
+  if(!response.ok)throw Error((response.error&&response.error.message)||response.error?.code||"SSH key preview failed");
+  return response.data;
+ }
+ async function enrollSshKey(){
+  const publicKey=window.prompt("Paste one SSH public key line. Private keys are never accepted.");
+  if(!publicKey)return;
+  try{
+   const preview=await sshKeyPlan("ssh.keys.add.preview",{public_key:publicKey});
+   out.textContent=JSON.stringify(preview,null,2);$("#result-readable").textContent=humanReport({ok:true,data:preview});
+   if(!preview.changed)return;
+   const message="Add this "+preview.key_type+" key ("+preview.fingerprint+") to the shared Termux account?
+
+This changes login access for both owner-managed SSH 8022 and Ternuxx SSH 8023.";
+   if(!window.confirm(message))return;
+   const result=await run("ssh.keys.add.apply",{public_key:publicKey,confirmed:true,plan_id:preview.plan_id});
+   if(result?.ok)await run("ssh.keys.list");
+  }catch(e){notice.textContent=e.message}
+ }
+ async function revokeSshKey(){
+  const fingerprint=window.prompt("Enter the SHA256 fingerprint shown in the authorized-key list.");
+  if(!fingerprint)return;
+  try{
+   const preview=await sshKeyPlan("ssh.keys.remove.preview",{fingerprint:fingerprint});
+   out.textContent=JSON.stringify(preview,null,2);$("#result-readable").textContent=humanReport({ok:true,data:preview});
+   if(!preview.changed)return;
+   const message="Remove "+preview.matching_entries+" matching authorized key record(s), fingerprint "+preview.fingerprint+"?
+
+This removes access for both owner-managed SSH 8022 and Ternuxx SSH 8023. Existing SSH sessions may stay connected.";
+   if(!window.confirm(message))return;
+   const result=await run("ssh.keys.remove.apply",{fingerprint:preview.fingerprint,confirmed:true,plan_id:preview.plan_id});
+   if(result?.ok)await run("ssh.keys.list");
+  }catch(e){notice.textContent=e.message}
  }
  async function manageSsh(operation){const label=operation.endsWith("start")?"start":operation.endsWith("stop")?"stop":"restart";notice.textContent="Checking managed SSH 8023…";const preview=await run(operation,{confirmed:false,plan_id:null});if(!preview||!preview.ok)return;const data=preview.data||{};if(!data.requires_confirmation){notice.textContent="Managed SSH 8023 is already "+(data.current_status||"in the requested state")+"; no change made.";return}if(typeof data.plan_id!=="string"){notice.textContent="The service preview did not return a valid confirmation plan.";return}const impact=String(data.impact||"Only the Ternuxx-managed SSH service on 127.0.0.1:8023 will be changed.");if(!window.confirm("Confirm "+label+" managed SSH on port 8023?\n\n"+impact+"\n\n8022 manual development SSH is excluded."))return;await run(operation,{confirmed:true,plan_id:data.plan_id})}
  function drawCategories(){
@@ -144,7 +180,12 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   const statusOp=operations.find(x=>["desktop.status","desktop.monitor.status","proot.status","ssh.inspect","native.ssh.status","boot.status","boot.profile.status","recovery.status","doctor.report","proot.shortcuts.list","cron.status","timezone.status","wakelock.status","boot.cron.status","terminal.broker.status"].includes(x));
   if(statusOp){const b=document.createElement("button");b.className="primary";b.textContent="Check live status";b.dataset.statusAction="true";b.onclick=()=>run(statusOp);actions.append(b)}
   for(const [op,label] of [["desktop.start","Start"],["desktop.stop","Stop"],["desktop.restart","Restart"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label+" desktop";b.onclick=()=>run(op);actions.append(b)}
-  if(r.id==="network.ssh.managed-8023"){if(operations.includes("ssh.keys.list")){const b=document.createElement("button");b.textContent="View shared SSH key fingerprints";b.onclick=()=>run("ssh.keys.list");actions.append(b)}for(const [op,label] of [["ssh.service.start","Start managed SSH"],["ssh.service.stop","Stop managed SSH"],["ssh.service.restart","Restart managed SSH"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label;b.onclick=()=>manageSsh(op);actions.append(b)}}
+  if(r.id==="network.ssh.managed-8023"){
+   if(operations.includes("ssh.keys.list")){const b=document.createElement("button");b.textContent="View shared SSH key fingerprints";b.onclick=()=>run("ssh.keys.list");actions.append(b)}
+   if(operations.includes("ssh.keys.add.preview")){const b=document.createElement("button");b.textContent="Enroll a public key";b.onclick=()=>enrollSshKey();actions.append(b)}
+   if(operations.includes("ssh.keys.remove.preview")){const b=document.createElement("button");b.textContent="Remove a key by fingerprint";b.onclick=()=>revokeSshKey();actions.append(b)}
+   for(const [op,label] of [["ssh.service.start","Start managed SSH"],["ssh.service.stop","Stop managed SSH"],["ssh.service.restart","Restart managed SSH"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label;b.onclick=()=>manageSsh(op);actions.append(b)}
+  }
   if(r.id==="graphics.native"||r.id==="graphics.debian"){
    const provider=r.id==="graphics.native"?"native":"debian";
    const statusButton=document.createElement("button");statusButton.textContent="Check graphics status";statusButton.dataset.statusAction="true";statusButton.onclick=()=>run("graphics.provider.status",{provider});actions.append(statusButton);
@@ -293,7 +334,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
  async function refreshLogs(){const select=$("#log-source"),note=$("#log-note");note.textContent="Checking Ternuxx log sources...";select.replaceChildren();const result=await run("management.logs.list");if(!result?.ok){note.textContent="Could not read log-source inventory.";return}for(const source of result.data?.sources||[]){const option=document.createElement("option");option.value=source.source_id;option.textContent=source.label+" - "+statusLabel(source.status);option.disabled=source.status!=="available";select.append(option)}note.textContent="Only fixed Ternuxx-owned logs are listed. The Native desktop log may include output from apps running in XFCE."}
  async function loadLog(){const source_id=$("#log-source").value,note=$("#log-note"),output=$("#log-output");if(!source_id){note.textContent="Select an available log source.";return}note.textContent="Reading bounded log tail...";output.textContent="";const result=await run("management.logs.read",{source_id,limit:300});if(!result?.ok){note.textContent="Log read failed. Check Technical API response.";return}const data=result.data||{};output.textContent=(data.lines||[]).join("\n")||"Log is empty.";note.textContent=data.status==="missing"?"Log file is not present.":"Showing "+(data.lines||[]).length+" lines"+(data.truncated?" from a bounded tail.":".")}
  function fillMonitor(data){$("#monitor-enabled").checked=!!data.enabled;$("#monitor-interval").value=data.interval_seconds||300;$("#monitor-unit").value="seconds";$("#monitor-focus").checked=!!data.focus_check;$("#monitor-launch").checked=!!data.activity_launch}
- async function connect(){const note=$("#notice");note.textContent="Connecting…";try{const result=await post("/api/v1/session",{bootstrap_secret:$("#secret").value,capabilities:["diagnostics.read","remote_policy.read","continuity.read","desktop.manage","desktop.monitor.manage","ssh.managed.lifecycle","ssh.credentials.read","graphics.manage","applications.launch","applications.shortcuts.manage","cron.manage","proot.session.manage"]});session=result.session;$("#secret").value="";$("#login").hidden=true;$("#app").hidden=false;$("#disconnect").hidden=false;await run("management.catalog")}catch(e){note.textContent=e.message}}
+ async function connect(){const note=$("#notice");note.textContent="Connecting…";try{const result=await post("/api/v1/session",{bootstrap_secret:$("#secret").value,capabilities:["diagnostics.read","remote_policy.read","continuity.read","desktop.manage","desktop.monitor.manage","ssh.managed.lifecycle","ssh.credentials.read","ssh.credentials.manage","graphics.manage","applications.launch","applications.shortcuts.manage","cron.manage","proot.session.manage"]});session=result.session;$("#secret").value="";$("#login").hidden=true;$("#app").hidden=false;$("#disconnect").hidden=false;await run("management.catalog")}catch(e){note.textContent=e.message}}
  $("#view-activity").onclick=loadActivity;
  $("#refresh-logs").onclick=refreshLogs;
  $("#load-log").onclick=loadLog;

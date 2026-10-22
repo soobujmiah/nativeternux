@@ -26,6 +26,7 @@ import reboot_recovery
 import runtime_diagnostics
 import ssh_diagnostics
 import ssh_key_inventory
+import ssh_key_manager
 import runit_service
 import runit_deployment
 import operation_recovery
@@ -81,6 +82,10 @@ OPERATIONS = {
     "doctor.report": {"args": {"graphics"}},
     "ssh.inspect": {"args": set()},
     "ssh.keys.list": {"args": set()},
+    "ssh.keys.add.preview": {"args": {"public_key", "fingerprint"}},
+    "ssh.keys.add.apply": {"args": {"public_key", "fingerprint", "confirmed", "plan_id"}},
+    "ssh.keys.remove.preview": {"args": {"fingerprint"}},
+    "ssh.keys.remove.apply": {"args": {"fingerprint", "confirmed", "plan_id"}},
     "proot.status": {"args": set()},
     "proot.profiles.list": {"args": set()},
     "proot.profiles.show": {"args": {"profile"}},
@@ -392,6 +397,31 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = remote_access_policy.preview(args["policy"]) if "policy" in args else remote_access_policy.preview()
         elif operation == "ssh.keys.list":
             data = ssh_key_inventory.list_managed_authorized_keys(home=home)
+        elif operation.startswith("ssh.keys."):
+            if operation.endswith(".preview") or operation.endswith(".apply"):
+                action = "add" if ".add." in operation else "remove"
+                if action == "add" and not isinstance(args.get("public_key"), str):
+                    return _error(request_id, "invalid_arguments", "one public key line is required for enrollment")
+                if action == "remove" and not isinstance(args.get("fingerprint"), str):
+                    return _error(request_id, "invalid_arguments", "a SHA256 key fingerprint is required")
+                if action == "add" and args.get("fingerprint") is not None and not isinstance(args.get("fingerprint"), str):
+                    return _error(request_id, "invalid_arguments", "fingerprint must be a string when supplied")
+                if operation.endswith(".apply") and (
+                        args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
+                    return _error(request_id, "confirmation_required", "key changes require an exact preview plan and explicit confirmation")
+                effective = ssh_key_inventory.list_managed_authorized_keys(home=home)
+                if effective.get("authorized_keys_path_verified") is not True:
+                    return _error(request_id, "ssh_configuration_unverified", "managed SSH authorized-key path is not verified; no changes made")
+                common = {"home": home, "uid": os.getuid(), "fingerprint": args.get("fingerprint")}
+                if action == "add":
+                    common["public_key"] = args["public_key"]
+                if operation.endswith(".preview"):
+                    data = ssh_key_manager.preview(action, **common)
+                else:
+                    data = ssh_key_manager.apply(action, **common,
+                        confirmed=args["confirmed"], plan_id=args["plan_id"])
+            else:
+                return _error(request_id, "invalid_arguments", "unsupported SSH key action")
         elif operation in {"ssh.inspect", "native.ssh.status"}:
             data = ssh_diagnostics.inspect_native(prefix=process_env["PREFIX"], home=home)
         elif operation == "proot.status":
@@ -753,6 +783,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "proot_operation_failed", str(exc))
     except proot_shortcuts.ShortcutError as exc:
         return _error(request_id, "shortcut_operation_failed", str(exc))
+    except ssh_key_manager.SshKeyMutationError as exc:
+        return _error(request_id, "ssh_key_operation_failed", str(exc))
     except config_recovery.RecoveryError as exc:
         return _error(request_id, "recovery_failed", str(exc))
     except remote_access_policy.RemoteAccessPolicyError as exc:
@@ -845,6 +877,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--job-json-stdin", action="store_true", help="read typed job/changes JSON from stdin")
     parser.add_argument("--count", type=int, default=5)
     parser.add_argument("--shortcut-action", choices=("add", "remove"))
+    parser.add_argument("--key-fingerprint")
+    parser.add_argument("--public-key-stdin", action="store_true",
+                        help="read one public authorized-key line from stdin; never pass key material as a command argument")
     parser.add_argument("--app-id")
     parser.add_argument("--desktop-id")
     parser.add_argument("--plan-id")
@@ -1413,6 +1448,38 @@ def main(argv: list[str] | None = None) -> int:
                        "confirmed": True, "plan_id": args.plan_id}
     elif args.operation in {"ssh.inspect", "ssh.keys.list"}:
         payload = {}
+    elif args.operation in {"ssh.keys.add.preview", "ssh.keys.add.apply",
+                            "ssh.keys.remove.preview", "ssh.keys.remove.apply"}:
+        is_add = ".add." in args.operation
+        is_apply = args.operation.endswith(".apply")
+        if ((not is_add and not args.key_fingerprint) or (is_add != bool(args.public_key_stdin))):
+            response = _error(request_id, "invalid_arguments",
+                              "provide --key-fingerprint and, for enrollment, --public-key-stdin")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide the key fingerprint and enrollment data via stdin.", file=sys.stderr)
+            return 1
+        public_key = None
+        if is_add:
+            public_key = sys.stdin.readline(16_386).rstrip("\r\n")
+            if not public_key or len(public_key) > 16_384 or sys.stdin.readline(1):
+                response = _error(request_id, "invalid_arguments", "stdin must contain exactly one bounded public-key line")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print("Expected one public-key line on stdin.", file=sys.stderr)
+                return 1
+        if is_apply and (not args.yes or not args.plan_id):
+            response = _error(request_id, "confirmation_required", "key apply requires --yes and --plan-id from its exact preview")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Preview first, then apply with --yes --plan-id.", file=sys.stderr)
+            return 1
+        if not is_apply and (args.yes or args.plan_id):
+            response = _error(request_id, "invalid_arguments", "key preview does not accept apply flags")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Preview does not accept apply flags.", file=sys.stderr)
+            return 1
+        payload = {}
+        if args.key_fingerprint: payload["fingerprint"] = args.key_fingerprint
+        if public_key is not None: payload["public_key"] = public_key
+        if is_apply: payload.update({"confirmed": True, "plan_id": args.plan_id})
     elif args.operation == "continuity.prepare":
         payload = {"test_id": args.test_id or "manual-checkpoint", "repository": args.repository, "commit": args.commit,
                    "worktree_state": args.worktree_state, "task_state": args.task_state,

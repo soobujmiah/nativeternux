@@ -5,7 +5,10 @@ from __future__ import annotations
 import curses
 import json
 import os
+from pathlib import Path
+from pathlib import Path
 import re
+import stat
 import sys
 import textwrap
 import uuid
@@ -280,18 +283,106 @@ def _desktop_action(screen: "curses._CursesWindow", resource: dict[str, Any]) ->
     return _call(operation)
 
 
+def _public_key_catalog() -> list[dict[str, str]]:
+    ssh_dir = Path.home() / ".ssh"
+    try:
+        metadata = ssh_dir.lstat()
+        if ssh_dir.is_symlink() or not ssh_dir.is_dir() or metadata.st_uid != os.getuid():
+            return []
+        candidates = sorted(ssh_dir.glob("*.pub"), key=lambda item: item.name.casefold())[:64]
+    except OSError:
+        return []
+    found: list[dict[str, str]] = []
+    for path in candidates:
+        try:
+            item = path.lstat()
+            if path.is_symlink() or not path.is_file() or item.st_uid != os.getuid() or item.st_size > 16_384:
+                continue
+            fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) |
+                         getattr(os, "O_CLOEXEC", 0))
+            try:
+                opened = os.fstat(fd)
+                if (not stat.S_ISREG(opened.st_mode) or opened.st_ino != item.st_ino
+                        or opened.st_dev != item.st_dev or opened.st_uid != os.getuid()
+                        or opened.st_size > 16_384):
+                    continue
+                with os.fdopen(fd, "rb", closefd=False) as stream:
+                    content = stream.read(16_385)
+            finally:
+                os.close(fd)
+            if len(content) > 16_384:
+                continue
+            raw = content.decode("utf-8").splitlines()
+            if len(raw) != 1:
+                continue
+            parsed = management_service.ssh_key_inventory._parse_line(raw[0])
+            if parsed and parsed.get("status") == "valid":
+                found.append({"name": path.name, "public_key": raw[0],
+                              "fingerprint": parsed["fingerprint"], "key_type": parsed["key_type"]})
+        except (OSError, UnicodeError):
+            continue
+    return found
+
+
 def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
     if resource.get("id") != "network.ssh.managed-8023":
         return {"ok": False, "error": {"code": "externally_managed_resource"}}
+    operations = set(resource.get("supported_operations", []))
     choices = [(name, f"{name.title()} SSH service") for name in ("start", "stop", "restart")
-               if f"ssh.service.{name}" in resource.get("supported_operations", [])]
-    if "ssh.keys.list" in resource.get("supported_operations", []):
+               if f"ssh.service.{name}" in operations]
+    if "ssh.keys.list" in operations:
         choices.append(("keys", "View shared SSH key fingerprints"))
+    if "ssh.keys.add.preview" in operations:
+        choices.append(("enroll", "Enroll a public key from Native .ssh"))
+    if "ssh.keys.remove.preview" in operations:
+        choices.append(("revoke", "Remove an authorized key"))
     action = _choose(screen, "Managed SSH · port 8023", choices)
     if action == "keys":
         return _call("ssh.keys.list")
+    if action in {"enroll", "revoke"}:
+        if action == "enroll":
+            keys = _public_key_catalog()
+            selected = _choose(screen, "Select a Native public key",
+                [(str(i), f"{item['name']} · {item['key_type']} · {item['fingerprint']}")
+                 for i, item in enumerate(keys)])
+            if not selected.isdigit() or int(selected) >= len(keys):
+                return {"ok": False, "error": {"code": "cancelled"}}
+            key = keys[int(selected)]
+            operation = "ssh.keys.add.preview"
+            args: dict[str, object] = {"public_key": key["public_key"]}
+            title = f"Enroll {key['name']} ({key['fingerprint']})"
+        else:
+            listed = _call("ssh.keys.list")
+            inventory = listed.get("data", {}) if listed.get("ok") else {}
+            keys = inventory.get("keys", []) if isinstance(inventory, dict) else []
+            selected = _choose(screen, "Select a shared authorized key",
+                [(str(i), f"{item.get('key_type')} · {item.get('fingerprint')} · {item.get('label')}")
+                 for i, item in enumerate(keys) if isinstance(item, dict)])
+            if not selected.isdigit() or int(selected) >= len(keys):
+                return {"ok": False, "error": {"code": "cancelled"}}
+            key = keys[int(selected)]
+            operation = "ssh.keys.remove.preview"
+            args = {"fingerprint": key["fingerprint"]}
+            title = f"Remove {key.get('key_type')} · {key['fingerprint']}"
+        preview = _call(operation, args)
+        if not preview.get("ok"):
+            return preview
+        plan = preview.get("data", {})
+        if not isinstance(plan, dict) or not plan.get("changed"):
+            return preview
+        _show_details(screen, plan)
+        confirm = _prompt(screen,
+            f"{title}. Affects SSH 8022 and 8023. Type yes to confirm")
+        if confirm.lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        apply_op = operation.replace(".preview", ".apply")
+        args.update({"confirmed": True, "plan_id": plan.get("plan_id")})
+        result = _call(apply_op, args)
+        if result.get("ok"):
+            _call("ssh.keys.list")
+        return result
     operation = {"start": "ssh.service.start", "stop": "ssh.service.stop", "restart": "ssh.service.restart"}.get(action)
-    if not operation or operation not in resource.get("supported_operations", []):
+    if not operation or operation not in operations:
         return {"ok": False, "error": {"code": "action_unavailable"}}
     preview = _call(operation, {"confirmed": False, "plan_id": None})
     if not preview.get("ok"):
@@ -309,7 +400,6 @@ def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]
     if confirm != "yes":
         return {"ok": False, "error": {"code": "cancelled"}}
     return _call(operation, {"confirmed": True, "plan_id": plan_id})
-
 
 def _edit_monitor_policy(screen: "curses._CursesWindow") -> dict[str, object] | None:
     current = _call("desktop.monitor.status")
@@ -445,6 +535,10 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)"),
                                             ("ssh.service.restart", "restart SSH 8023 (preview)")) if op in operations)
+        if "ssh.keys.add.preview" in operations:
+            labels.append("enroll a public key from Native .ssh")
+        if "ssh.keys.remove.preview" in operations:
+            labels.append("remove an authorized key by fingerprint")
         labels.append("public-key login only; password login is disabled")
     elif resource_id == "native.wakelock":
         labels.append("inspect Ternuxx-owned Wake Lock leases")

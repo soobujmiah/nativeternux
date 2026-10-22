@@ -382,10 +382,15 @@ EOF
       ;;
     ssh)
       cat <<'EOF'
-tx ssh inspect/keys-list/start/stop/restart - Native SSH diagnostics and fixed Runit service control
+tx ssh inspect/keys-list/enroll-preview/enroll/revoke-preview/revoke/start/stop/restart - Native SSH management
 
   tx ssh inspect
   tx ssh keys-list                    # shared Termux account key fingerprints and labels
+  cat ~/.ssh/id_ed25519.pub | tx ssh enroll-preview --public-key-stdin
+  cat ~/.ssh/id_ed25519.pub | tx ssh enroll --public-key-stdin --yes --plan-id <id>
+  tx ssh revoke-preview --key-fingerprint SHA256:<fingerprint>
+  tx ssh revoke --key-fingerprint SHA256:<fingerprint> --yes --plan-id <id>
+  # Enrollment/revocation affects the shared Termux account: SSH 8022 and 8023.
   tx proot status # Inventory installed guests without entering them
   tx ssh start                         # read-only preview
   tx ssh start --yes --plan-id <id>    # apply exact preview

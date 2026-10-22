@@ -44,6 +44,43 @@ class ManagementServiceTests(unittest.TestCase):
         self.assertEqual(result["data"]["status"], "missing")
         self.assertEqual(result["data"]["keys"], [])
 
+    def test_ssh_key_enrollment_preview_and_apply_use_shared_confirmed_service(self) -> None:
+        import os
+        with tempfile.TemporaryDirectory(prefix="ssh-key-service-") as temp:
+            home = Path(temp)
+            (home / ".ssh").mkdir(mode=0o700)
+            os.chown(home, os.getuid(), -1)
+            os.chown(home / ".ssh", os.getuid(), -1)
+            key_path = home / "test-key"
+            generated = management_service.subprocess.run(
+                ["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C",
+                 "service-test", "-f", str(key_path)],
+                capture_output=True, text=True, timeout=10, check=False)
+            self.assertEqual(generated.returncode, 0)
+            public_key = key_path.with_suffix(".pub").read_text(encoding="utf-8").strip()
+            parsed = management_service.ssh_key_inventory._parse_line(public_key)
+            env = {**NATIVE_ENV, "HOME": str(home),
+                   "TERNUXX_STATE_DIR": str(home / ".local/share/ternuxx")}
+            with patch.object(management_service.ssh_key_inventory, "list_managed_authorized_keys",
+                              return_value={"authorized_keys_path_verified": True}):
+                preview = management_service.dispatch(request("ssh.keys.add.preview", {
+                    "public_key": public_key}), env=env)
+                self.assertTrue(preview["ok"])
+                self.assertEqual(preview["data"]["fingerprint"], parsed["fingerprint"])
+                self.assertNotIn(public_key, repr(preview))
+                applied = management_service.dispatch(request("ssh.keys.add.apply", {
+                    "public_key": public_key, "confirmed": True,
+                    "plan_id": preview["data"]["plan_id"]}), env=env)
+            self.assertTrue(applied["ok"])
+            self.assertEqual((home / ".ssh/authorized_keys").read_text(), public_key + "\n")
+            self.assertEqual((home / ".ssh/authorized_keys").stat().st_mode & 0o777, 0o600)
+
+    def test_ssh_key_changes_fail_closed_without_verified_managed_key_path(self) -> None:
+        result = management_service.dispatch(request("ssh.keys.remove.preview", {
+            "fingerprint": "SHA256:abc"}), env=NATIVE_ENV)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "ssh_configuration_unverified")
+
     def test_terminal_broker_status_is_optional_and_never_probes_proot(self) -> None:
         with tempfile.TemporaryDirectory(prefix="management-terminal-status-") as temp:
             home = Path(temp)

@@ -395,6 +395,15 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             mock.call("ssh.service.restart", {"confirmed": True, "plan_id": "a" * 64}),
         ])
 
+    def test_managed_ssh_action_labels_include_only_supported_key_controls(self) -> None:
+        import terminal_ui
+        resource = {"id": "network.ssh.managed-8023", "supported_operations": [
+            "ssh.keys.list", "ssh.keys.add.preview", "ssh.keys.remove.preview",
+            "ssh.service.start"]}
+        labels = terminal_ui._available_action_labels(resource)
+        self.assertIn("public-key login only; password login is disabled", labels)
+        self.assertIn("start SSH 8023 (preview)", labels)
+
     def test_managed_ssh_key_inventory_is_read_only(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES
                         if item["id"] == "network.ssh.managed-8023")

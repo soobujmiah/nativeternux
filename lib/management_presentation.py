@@ -121,6 +121,10 @@ STATUS_TONES: Final[dict[str, str]] = {
 
 OPERATION_LABELS: Final[dict[str, str]] = {
     "ssh.keys.list": "Authorized SSH key fingerprints",
+    "ssh.keys.add.preview": "Preview SSH key enrollment",
+    "ssh.keys.add.apply": "Enroll SSH public key",
+    "ssh.keys.remove.preview": "Preview SSH key removal",
+    "ssh.keys.remove.apply": "Remove SSH public key",
     "management.catalog": "Browse resources",
     "desktop.status": "Desktop status",
     "desktop.monitor.status": "Activity monitoring policy",
