@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Dynamic Debian per-app shortcut add/remove now flows through exact-preview typed shared operations in CLI/TUI/Web/GTK. The service verifies current desktop-entry ownership and executable availability, allows safe removal of unchanged Ternuxx launchers when apps become unavailable, shares the bulk mutation lock, and preserves modified or unowned targets. GTK source/install identity matches; schema documents the inventory and dual target contract.
+VirGL status now reports client visibility and stop eligibility; global JSON forwarding is fixed across the Native CLI wrappers. Native full suite passed 887 tests (1 skipped), but Android lsof cannot identify the live :1 socket owner, so client state remains unknown and stop is refused.
 
-**Next action:** Finish safe VirGL client visibility and cleanup; qualify broken-rootfs recovery and cold boot on an isolated guest; reconcile source/install/runtime state; complete requirement-by-requirement full audit and human-operated GTK interaction review.
+**Next action:** Keep VirGL stop blocked until socket-owner visibility can be proven; qualify broken-rootfs recovery and cold boot on an isolated guest, then reconcile installed/runtime state and complete the full audit and owner-operated GTK review.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -124,6 +124,7 @@ Evidence:
 - [docs/evidence/2026-10-23-gtk-shortcut-friendly-selection.md](evidence/2026-10-23-gtk-shortcut-friendly-selection.md)
 - [docs/evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md](evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md)
 - [docs/evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md](evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md)
+- [docs/evidence/2026-10-23-p4-virgl-client-visibility.md](evidence/2026-10-23-p4-virgl-client-visibility.md)
 
 ## P5 — Distro and display compatibility profiles
 

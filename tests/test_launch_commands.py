@@ -188,6 +188,38 @@ class LaunchCommandTests(unittest.TestCase):
         self.assertNotEqual(denied.returncode, 0)
         self.assertFalse(denied_capture.exists())
 
+    def test_virgl_global_json_flag_reaches_lifecycle_cli(self) -> None:
+        capture = self.root / "virgl-cli-args"
+        script = "\n".join([
+            '_TN_LIB_DIR="$LIB_DIR"',
+            'source "$LIB_DIR/virgl.sh"',
+            'nt_fail() { echo "$*" >&2; }',
+            'nt_require_termux() { return 0; }',
+            '_nt_virgl_call() { python3 "$@"; }',
+            'nt_help() { :; }',
+            'nt_require_command() { return 0; }',
+            'python3() { printf "<%s>\n" "$@" >> "$VIRGL_ARGS_CAPTURE"; }',
+            'PREFIX="/data/data/com.termux/files/usr"',
+            'TERMUX_VERSION=fixture',
+            'TERNUXX_JSON=1; nt_cmd_virgl status',
+            'TERNUXX_JSON=0; nt_cmd_virgl status --display :2 --json',
+            'source "$LIB_DIR/launch.sh"',
+            'TERNUXX_JSON=1; nt_cmd_virgl status',
+        ])
+        env = {**self.env, "LIB_DIR": str(ROOT / "lib"),
+               "VIRGL_ARGS_CAPTURE": str(capture)}
+        result = subprocess.run([shutil.which("bash"), "-c", script],
+                                capture_output=True, text=True, env=env, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = capture.read_text().splitlines()
+        self.assertEqual(calls, [
+            "<" + str(ROOT / "lib/virgl_lifecycle.py") + ">",
+            "<status>", "<--display>", "<:1>", "<--json>",
+            "<" + str(ROOT / "lib/virgl_lifecycle.py") + ">",
+            "<status>", "<--display>", "<:2>", "<--json>",
+            "<status>", "<--display>", "<:1>", "<--json>",
+        ])
+
     def test_native_android_runtime_variables_do_not_leak_to_guest_profile(self) -> None:
         capture = self.root / "proot-env"
         env = {**self.env, "PROOT_ENV_CAPTURE": str(capture),

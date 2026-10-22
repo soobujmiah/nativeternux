@@ -9,6 +9,9 @@ import sys
 import tempfile
 import time
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
+import json
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -97,6 +100,44 @@ class VirglLifecycleTests(unittest.TestCase):
             stopped = virgl_lifecycle.stop(":1")
         self.assertEqual((stopped["state"], stopped["changed"]), ("stopped", True))
         self.assertFalse(Path(record["socket"]).exists())
+
+    def test_status_reports_verified_idle_active_and_unknown_client_visibility(self):
+        _, record = self.start_server()
+        with patch.object(virgl_lifecycle, "_lsof_socket_users", return_value={record["pid"]}):
+            idle = virgl_lifecycle.status(":1")
+        self.assertEqual(idle["client_visibility"], "verified_idle")
+        self.assertEqual(idle["client_pids"], [])
+        self.assertTrue(idle["stop_allowed"])
+        with patch.object(virgl_lifecycle, "_lsof_socket_users",
+                          return_value={record["pid"], 4567}):
+            active = virgl_lifecycle.status(":1")
+        self.assertEqual(active["client_visibility"], "active_clients")
+        self.assertEqual(active["client_pids"], [4567])
+        self.assertFalse(active["stop_allowed"])
+        with patch.object(virgl_lifecycle, "_lsof_socket_users",
+                          side_effect=virgl_lifecycle.VirglError("Native process visibility is incomplete")):
+            unknown = virgl_lifecycle.status(":1")
+        self.assertEqual(unknown["client_visibility"], "unknown")
+        self.assertIsNone(unknown["client_pids"])
+        self.assertFalse(unknown["stop_allowed"])
+        self.assertIn("incomplete", unknown["stop_block_reason"])
+
+    def test_cli_status_is_human_readable_by_default_and_json_when_requested(self):
+        snapshot = {"owner": "ternuxx", "state": "running", "display": ":1",
+                    "identity": "matched", "client_visibility": "unknown",
+                    "client_pids": None, "stop_allowed": False,
+                    "stop_block_reason": "cannot map socket owners", "read_only": True}
+        with patch.object(virgl_lifecycle, "status", return_value=snapshot):
+            human = StringIO()
+            with redirect_stdout(human):
+                self.assertEqual(virgl_lifecycle.main(["status", "--display", ":1"]), 0)
+            self.assertIn("VirGL on :1: Running", human.getvalue())
+            self.assertIn("Clients: unknown", human.getvalue())
+            self.assertIn("Safe to stop: no", human.getvalue())
+            machine = StringIO()
+            with redirect_stdout(machine):
+                self.assertEqual(virgl_lifecycle.main(["status", "--json", "--display", ":1"]), 0)
+            self.assertEqual(json.loads(machine.getvalue())["client_visibility"], "unknown")
 
     def test_stop_refuses_when_android_lsof_cannot_map_socket_or_has_incomplete_visibility(self):
         result = subprocess.CompletedProcess(["lsof"], 1, "", "")

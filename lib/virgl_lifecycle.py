@@ -219,7 +219,7 @@ def _remove_recorded_socket(record: dict[str, object], path: Path) -> None:
     path.unlink()
 
 
-def _matches_lsof(paths: dict[str, Path | str | int], pid: int) -> bool:
+def _lsof_socket_users(paths: dict[str, Path | str | int]) -> set[int]:
     sock = paths["socket"]
     assert isinstance(sock, Path)
     command = shutil.which("lsof")
@@ -239,10 +239,36 @@ def _matches_lsof(paths: dict[str, Path | str | int], pid: int) -> bool:
             raise VirglError("lsof returned ambiguous VirGL socket ownership; stop was refused")
         pids.add(int(line.strip()))
     if result.returncode == 1 and not pids:
-        raise VirglError("Android lsof could not map this Unix socket to its owner; VirGL client ownership is unknown, so stop was refused")
-    if result.returncode != 0 or pids != {pid}:
+        raise VirglError("Android lsof could not map this Unix socket to its owner; client ownership is unknown")
+    if result.returncode != 0:
+        raise VirglError("could not inspect VirGL socket users; stop was refused")
+    return pids
+
+
+def _matches_lsof(paths: dict[str, Path | str | int], pid: int) -> bool:
+    pids = _lsof_socket_users(paths)
+    if pids != {pid}:
         raise VirglError("VirGL has active or unverified socket users; stop was refused")
     return True
+
+
+def _client_visibility(paths: dict[str, Path | str | int], server_pid: int) -> dict[str, object]:
+    try:
+        pids = _lsof_socket_users(paths)
+    except VirglError as exc:
+        return {"client_visibility": "unknown", "client_pids": None,
+                "stop_allowed": False, "stop_block_reason": str(exc)}
+    if server_pid not in pids:
+        return {"client_visibility": "unknown", "client_pids": None,
+                "stop_allowed": False,
+                "stop_block_reason": "lsof did not confirm the recorded server as the socket owner"}
+    clients = sorted(pids - {server_pid})
+    if clients:
+        return {"client_visibility": "active_clients", "client_pids": clients,
+                "stop_allowed": False,
+                "stop_block_reason": "VirGL client process(es) are attached to the socket"}
+    return {"client_visibility": "verified_idle", "client_pids": [],
+            "stop_allowed": True, "stop_block_reason": ""}
 
 
 def status(display: str = ":1") -> dict[str, object]:
@@ -259,13 +285,18 @@ def status(display: str = ":1") -> dict[str, object]:
             return {"owner": "unknown", "state": "unsafe", "display": display,
                     "identity": "record-does-not-match-live-process", "read_only": True}
         info = _socket_ready(paths["socket"])
-        return {"owner": "ternuxx", "state": "running" if info else "degraded",
-                "display": display, "socket": str(paths["guest_socket"]),
-                "identity": "matched", "read_only": True}
+        result = {"owner": "ternuxx", "state": "running" if info else "degraded",
+                  "display": display, "socket": str(paths["guest_socket"]),
+                  "identity": "matched", "read_only": True}
+        result.update(_client_visibility(paths, int(record["pid"])))
+        return result
     info = _socket_ready(paths["socket"])
     if info:
         return {"owner": "external", "state": "running", "display": display,
-                "socket": str(paths["guest_socket"]), "identity": "no-ternuxx-owner-record", "read_only": True}
+                "socket": str(paths["guest_socket"]), "identity": "no-ternuxx-owner-record",
+                "client_visibility": "unknown", "client_pids": None, "stop_allowed": False,
+                "stop_block_reason": "external VirGL server is not managed by Ternuxx",
+                "read_only": True}
     return {"owner": "ternuxx", "state": "stopped", "display": display,
             "socket": str(paths["guest_socket"]), "identity": "no-responsive-owner-server", "read_only": True}
 
@@ -454,20 +485,59 @@ def stop(display: str = ":1") -> dict[str, object]:
         raise VirglError("verified VirGL process did not stop; its state and socket were retained")
 
 
+def _human_report(action: str, result: dict[str, object]) -> str:
+    display = str(result.get("display", ":1"))
+    state = str(result.get("state", "unknown")).replace("_", " ")
+    owner = {"ternuxx": "Ternuxx", "external": "External", "unknown": "Unknown"}.get(
+        str(result.get("owner")), "Unknown")
+    lines = [f"VirGL on {display}: {state.title()}", f"Owner: {owner}"]
+    if result.get("identity") == "matched":
+        lines.append("Server identity: verified")
+    elif result.get("identity"):
+        lines.append("Server identity: " + str(result["identity"]).replace("-", " "))
+    visibility = result.get("client_visibility")
+    if visibility == "verified_idle":
+        lines.append("Clients: none (verified)")
+    elif visibility == "active_clients":
+        pids = result.get("client_pids") or []
+        lines.append("Clients: attached" + (f" (processes {', '.join(map(str, pids))})" if pids else ""))
+    elif visibility == "unknown":
+        lines.append("Clients: unknown")
+    if "stop_allowed" in result:
+        lines.append("Safe to stop: " + ("yes" if result["stop_allowed"] else "no"))
+    reason = result.get("stop_block_reason")
+    if reason:
+        lines.append("Stop blocked: " + str(reason))
+    if result.get("socket"):
+        lines.append("Socket: " + str(result["socket"]))
+    if action != "status":
+        lines.append("Change: " + ("applied" if result.get("changed") else "no change"))
+        if result.get("reason"):
+            lines.append("Details: " + str(result["reason"]))
+    return "\n".join(lines)
+
+
 def main(argv: list[str]) -> int:
     if not argv or argv[0] not in {"status", "start", "ensure", "stop"}:
-        print("usage: virgl_lifecycle.py status|start|ensure|stop [--display :N]", file=sys.stderr)
+        print("usage: virgl_lifecycle.py status|start|ensure|stop [--display :N] [--json]", file=sys.stderr)
         return 2
     action, rest = argv[0], argv[1:]
-    display = ":1"
-    if rest:
-        if len(rest) != 2 or rest[0] != "--display":
-            print("usage: virgl_lifecycle.py status|start|ensure|stop [--display :N]", file=sys.stderr)
+    display, json_output = ":1", False
+    while rest:
+        flag, *rest = rest
+        if flag == "--display" and rest:
+            display, *rest = rest
+        elif flag == "--json":
+            json_output = True
+        else:
+            print("usage: virgl_lifecycle.py status|start|ensure|stop [--display :N] [--json]", file=sys.stderr)
             return 2
-        display = rest[1]
     try:
         result = status(display) if action == "status" else stop(display) if action == "stop" else start(display)
-        print(json.dumps({"command": "virgl", **result}, sort_keys=True))
+        if json_output:
+            print(json.dumps({"command": "virgl", **result}, sort_keys=True))
+        else:
+            print(_human_report(action, result))
         return 0
     except (VirglError, OSError) as exc:
         print(str(exc), file=sys.stderr)

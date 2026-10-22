@@ -121,11 +121,13 @@ EOF
       ;;
     virgl)
       cat <<'EOF'
-tx virgl [status|start|stop] [--display :N]
+tx virgl [status|start|stop] [--display :N] [--json]
 
 Manage the Ternuxx-owned Native VirGL vtest server used by Debian PRoot clients.
-Start is identity-checked and uses a private Unix socket. Stop acts only on the
-recorded Ternuxx server and refuses when socket clients or ownership are unclear.
+Start is identity-checked and uses a private Unix socket. Status reports client
+visibility and whether stopping is safe; unknown ownership always blocks stop.
+Use --json for machine-readable output. Stop acts only on the recorded Ternuxx
+server after it verifies there are no connected clients.
 The server requires the optional `virglrenderer-android` Native package. This
 command never changes the Debian rootfs or the existing Zink/Turnip userspace.
 EOF

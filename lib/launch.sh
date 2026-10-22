@@ -42,7 +42,8 @@ _nt_virgl_ensure() {
 }
 
 nt_cmd_virgl() {
-  local action="${1:-status}" display=":1" flag
+  local action="${1:-status}" display=":1" flag json_output=""
+  [ "${TERNUXX_JSON:-0}" = "1" ] && json_output="--json"
   [ $# -eq 0 ] || shift
   while [ $# -gt 0 ]; do
     flag="$1"; shift
@@ -50,6 +51,7 @@ nt_cmd_virgl() {
       --display)
         [ $# -gt 0 ] || { nt_fail "--display requires :N"; return 2; }
         display="$1"; shift ;;
+      --json) json_output="--json" ;;
       --help|-h) nt_help virgl; return 0 ;;
       *) nt_fail "Unknown VirGL option: $flag"; return 2 ;;
     esac
@@ -57,13 +59,13 @@ nt_cmd_virgl() {
   case "$action" in
     --help|-h) nt_help virgl; return 0 ;;
     status|start|stop) ;;
-    *) nt_fail "Use tx virgl [status|start|stop] [--display :N]."; return 2 ;;
+    *) nt_fail "Use tx virgl [status|start|stop] [--display :N] [--json]."; return 2 ;;
   esac
   [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] && [ -n "${TERMUX_VERSION:-}" ] || {
     nt_fail "VirGL service management requires Native Termux, not a Debian PRoot shell."
     return 1
   }
-  _nt_virgl_call "$action" --display "$display"
+  _nt_virgl_call "$action" --display "$display" $json_output
 }
 
 # Run from Native Termux; inside the guest there is no proot-distro.
