@@ -53,7 +53,7 @@ def main(argv: list[str]) -> int:
             print(json.dumps(result, ensure_ascii=False))
             return 1
         data = result["data"]
-        categories = sorted(data["categories"], key=lambda item: str(item.get("name", "")).casefold())
+        categories = data["categories"]
         for item in categories:
             print("C\t" + "\t".join(clean(item.get(k)) for k in ("id", "name", "description", "status")))
         resources = sorted(data["resources"], key=lambda item: (str(item.get("category_id", "")), str(item.get("name", "")).casefold()))

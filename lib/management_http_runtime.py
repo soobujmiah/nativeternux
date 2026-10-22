@@ -137,8 +137,10 @@ def detect_proot_browser(env: Mapping[str, str]) -> tuple[str, str] | None:
 
 
 def choose_browser(requested: str, *, native: tuple[str, str] | None,
-                   proot: tuple[str, str] | None, stdin: object = sys.stdin,
-                   stderr: object = sys.stderr) -> str | None:
+                   proot: tuple[str, str] | None, stdin: object | None = None,
+                   stderr: object | None = None) -> str | None:
+    stdin = sys.stdin if stdin is None else stdin
+    stderr = sys.stderr if stderr is None else stderr
     automatic = "native" if native else "proot" if proot else "android"
     if requested == "auto":
         return automatic
@@ -161,16 +163,20 @@ def choose_browser(requested: str, *, native: tuple[str, str] | None,
         print("Using auto-select because stdin is not interactive.", file=stderr)
         return automatic
     try:
-        answer = input("Browser [auto]: ").strip().lower()
+        print("Browser [auto]: ", end="", file=stderr, flush=True)
+        answer = stdin.readline().strip().lower()
     except (EOFError, OSError):
         return automatic
     if not answer:
         return automatic
     if answer.isdigit() and 1 <= int(answer) <= len(choices):
-        return choices[int(answer) - 1][0]
-    aliases = {value: value for value, _label in choices}
-    aliases.update({"a": "android", "n": "native", "p": "proot"})
-    selected = aliases.get(answer)
+        selected = choices[int(answer) - 1][0]
+    else:
+        aliases = {value: value for value, _label in choices}
+        aliases.update({"a": "android", "n": "native", "p": "proot"})
+        selected = aliases.get(answer)
+    if selected == "auto":
+        return automatic
     return selected if selected in {value for value, _label in choices} else None
 
 
@@ -355,10 +361,11 @@ def main(argv: list[str] | None = None) -> int:
             print("That browser is not installed or could not be detected; choose an available browser.",
                   file=sys.stderr)
             return 2
-        os.environ["TERNUXX_WEB_MODE"] = "1"
     secret = management_sessions.new_bootstrap_secret()
     try:
-        server = build_server(port=args.port, bootstrap_secret=secret)
+        runtime_env = dict(os.environ)
+        runtime_env["TERNUXX_WEB_MODE"] = "1" if args.web else "0"
+        server = build_server(port=args.port, bootstrap_secret=secret, env=runtime_env)
     except OSError:
         print("Could not bind the loopback management port; check for a port conflict.", file=sys.stderr)
         return 1
@@ -398,8 +405,8 @@ def main(argv: list[str] | None = None) -> int:
         print(runtime_label + ". Press Ctrl-C to stop.", file=sys.stderr)
         if args.web:
             url = "http://127.0.0.1:" + str(server.port) + "/"
-            opened, autofilled = open_browser(selected_browser, url, env=os.environ,
-                                                secret=secret, native=native_browser)
+            opened, autofilled = open_browser(selected_browser, url, env=runtime_env,
+                                               secret=secret, native=native_browser)
             if not opened:
                 print("Could not launch the selected browser. Open this URL manually: " + url,
                       file=sys.stderr)
@@ -407,17 +414,21 @@ def main(argv: list[str] | None = None) -> int:
                 labels = {"android": "Android default browser", "native": "Native Termux browser",
                           "proot": "Debian PRoot Firefox ESR"}
                 print("Opened " + labels[selected_browser] + " at " + url, file=sys.stderr)
-                if autofilled:
-                    print("One-time code entered in the local browser form; press Connect.",
-                          file=sys.stderr)
-                elif selected_browser != "android":
-                    print("Browser code handoff was not confirmed. "
-                          "Use --show-secret-on-clipboard-failure for an explicit terminal fallback.",
-                          file=sys.stderr)
-                    if args.show_secret_on_clipboard_failure:
-                        print("One-time bootstrap code: " + secret, file=sys.stderr)
-                elif not clipboard_copied and args.show_secret_on_clipboard_failure:
-                    print("One-time bootstrap code: " + secret, file=sys.stderr)
+            if autofilled:
+                print("One-time code entered in the local browser form; press Connect.",
+                      file=sys.stderr)
+            elif clipboard_copied:
+                print("Paste the one-time code from the clipboard into the browser form.",
+                      file=sys.stderr)
+            elif args.show_secret_on_clipboard_failure:
+                print("Explicit terminal fallback; keep this output private.", file=sys.stderr)
+                print("One-time bootstrap code: " + secret, file=sys.stderr)
+            else:
+                print("Browser code handoff was not confirmed and clipboard copy failed; "
+                      "server stopped without revealing the code. Retry with "
+                      "--show-secret-on-clipboard-failure for an explicit terminal fallback.",
+                      file=sys.stderr)
+                return 1
         stopped.wait()
     finally:
         for signum, handler in previous_handlers.items():

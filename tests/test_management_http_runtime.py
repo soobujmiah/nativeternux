@@ -60,10 +60,65 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
              patch.object(management_http_runtime.sys, "stderr", err), \
              patch.object(management_http_runtime.signal, "signal"), \
              patch.object(management_http_runtime.threading, "Event") as event:
-            self.assertEqual(management_http_runtime.main(["--port", "8765", "--web"]), 1)
+            self.assertEqual(management_http_runtime.main(["--port", "8765", "--web", "--browser", "android"]), 1)
         self.assertNotIn(SECRET, err.getvalue())
         self.assertIn("Clipboard copy failed", err.getvalue())
         event.return_value.wait.assert_not_called()
+
+    def test_interactive_auto_choices_resolve_to_a_launch_target(self) -> None:
+        native = ("/native/firefox", "Firefox")
+        proot = ("/guest/firefox-esr", "Firefox ESR")
+        for text in ("4\n", "auto\n", "\n"):
+            stream = io.StringIO(text)
+            stream.isatty = lambda: True
+            with self.subTest(text=text):
+                self.assertEqual(management_http_runtime.choose_browser(
+                    "choose", native=native, proot=proot,
+                    stdin=stream, stderr=io.StringIO()), "native")
+        stream = io.StringIO("3\n")
+        stream.isatty = lambda: True
+        self.assertEqual(management_http_runtime.choose_browser(
+            "choose", native=None, proot=proot,
+            stdin=stream, stderr=io.StringIO()), "proot")
+
+    def test_failed_browser_and_clipboard_handoffs_stop_or_use_explicit_fallback(self) -> None:
+        for explicit in (False, True):
+            err = io.StringIO()
+            err.isatty = lambda: True
+            server = type("Server", (), {"port": 8765, "start": lambda self: None,
+                                        "close": lambda self, **kwargs: True})()
+            with self.subTest(explicit=explicit), \
+                 patch.object(management_http_runtime, "detect_native_browser",
+                              return_value=("/native/firefox", "Firefox")), \
+                 patch.object(management_http_runtime.management_sessions, "new_bootstrap_secret", return_value=SECRET), \
+                 patch.object(management_http_runtime, "build_server", return_value=server) as build, \
+                 patch.object(management_http_runtime, "copy_bootstrap_secret", return_value=False), \
+                 patch.object(management_http_runtime, "open_browser", return_value=(False, False)), \
+                 patch.object(management_http_runtime.sys, "stderr", err), \
+                 patch.object(management_http_runtime.signal, "signal"), \
+                 patch.object(management_http_runtime.threading, "Event") as event:
+                argv = ["--port", "8765", "--web", "--browser", "native"]
+                if explicit:
+                    argv.append("--show-secret-on-clipboard-failure")
+                self.assertEqual(management_http_runtime.main(argv), 0 if explicit else 1)
+                self.assertEqual(SECRET in err.getvalue(), explicit)
+                self.assertEqual(build.call_args.kwargs["env"]["TERNUXX_WEB_MODE"], "1")
+                self.assertEqual(event.return_value.wait.called, explicit)
+
+    def test_readonly_command_cannot_inherit_web_mutation_mode(self) -> None:
+        err = io.StringIO()
+        err.isatty = lambda: True
+        server = type("Server", (), {"port": 8765, "start": lambda self: None,
+                                    "close": lambda self, **kwargs: True})()
+        with patch.dict(management_http_runtime.os.environ, {"TERNUXX_WEB_MODE": "1"}), (
+             patch.object(management_http_runtime, "build_server", return_value=server)) as build, (
+             patch.object(management_http_runtime.sys, "stderr", err)), (
+             patch.object(management_http_runtime.signal, "signal")), (
+             patch.object(management_http_runtime.threading, "Event")):
+            self.assertEqual(management_http_runtime.main(["--port", "8765"]), 0)
+            self.assertEqual(build.call_args.kwargs["env"]["TERNUXX_WEB_MODE"], "0")
+            self.assertEqual(management_http_runtime.os.environ["TERNUXX_WEB_MODE"], "1")
+
     def test_clipboard_copy_failure_is_reported_as_boolean_only(self) -> None:
         with patch.object(management_http_runtime.shutil, "which", return_value=None):
             self.assertFalse(management_http_runtime.copy_bootstrap_secret("secret"))

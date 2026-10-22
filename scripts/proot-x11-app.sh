@@ -60,9 +60,6 @@ PROOT_ENV=(env -u ANDROID_ART_ROOT -u ANDROID_DATA -u ANDROID_I18N_ROOT
   -u BOOTCLASSPATH -u DEX2OATBOOTCLASSPATH -u EXTERNAL_STORAGE)
 "${PROOT_ENV[@]}" proot-distro login debian --shared-tmp --user "$GUEST_USER" --env "DISPLAY=$DISPLAY_VALUE" -- xdpyinfo >/dev/null
 # The Ternux activity and desktop are owner-managed; never take over its UI here.
-if ! "$PREFIX/bin/am" start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null 2>&1; then
-  echo "Termux:X11 Activity request was not confirmed; continuing with the already-verified live X11 display." >&2
-fi
 if ! "$ROOT/tx" audio start >/dev/null; then
   echo "Native PulseAudio is not ready; continuing the PRoot GUI launch without audio." >&2
 fi

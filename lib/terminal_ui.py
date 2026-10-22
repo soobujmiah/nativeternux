@@ -753,7 +753,7 @@ def _run(screen: "curses._CursesWindow") -> int:
     if not catalog_result.get("ok"):
         raise RuntimeError("Could not load the shared resource catalog")
     catalog = catalog_result["data"]
-    categories: list[dict[str, Any]] = sorted(catalog["categories"], key=lambda item: item["name"].casefold())
+    categories: list[dict[str, Any]] = list(catalog["categories"])
     all_resources: list[dict[str, Any]] = sorted(catalog["resources"], key=lambda item: (item["category_id"], item["name"].casefold()))
     category_index = selected = scroll = 0
     query = ""
@@ -825,7 +825,7 @@ def _run(screen: "curses._CursesWindow") -> int:
             report = _call("management.catalog")
             if report.get("ok"):
                 catalog = report["data"]
-                categories = sorted(catalog["categories"], key=lambda item: item["name"].casefold())
+                categories = list(catalog["categories"])
                 all_resources = sorted(catalog["resources"], key=lambda item: (item["category_id"], item["name"].casefold()))
                 category_index = min(category_index, len(categories) - 1)
         elif key in (ord("a"), ord("A")) and resources:

@@ -69,16 +69,16 @@ DOMAINS = [
 CATEGORIES: list[Category] = [
     {"id":"system-health", "name":"System & health", "description":"Device, runtime, resource use, and overall health.", "status":"partial"},
     {"id":"services", "name":"Services & background", "description":"Managed services, supervisors, and background work.", "status":"partial"},
-    {"id":"deployments", "name":"Server & application deployment", "description":"Server templates, deployments, ports, versions, and rollback.", "status":"planned"},
+    {"id":"networking", "name":"Networking & remote access", "description":"SSH ownership, listener policy, and approved remote workflows.", "status":"partial"},
+    {"id":"desktop-audio", "name":"Desktop & multimedia", "description":"Display, GUI sessions, audio, and graphical dependencies.", "status":"partial"},
     {"id":"proot", "name":"Debian PRoot & applications", "description":"Profile inventory, preview-confirmed diagnostic sessions, bounded health reads, and a foreground Debian login that passed one live identity check; attach/detach, shared-rootfs concurrency, and general GUI/workstation supervision remain unqualified.", "status":"partial"},
     {"id":"graphics-acceleration", "name":"Graphics acceleration", "description":"Provider-specific GPU, Vulkan, and software-rendering diagnostics.", "status":"partial"},
-    {"id":"desktop-audio", "name":"Desktop & multimedia", "description":"Display, GUI sessions, audio, and graphical dependencies.", "status":"partial"},
-    {"id":"ai-providers", "name":"AI runtime & providers", "description":"Local runtimes, models, hardware capabilities, and API providers.", "status":"planned"},
-    {"id":"networking", "name":"Networking & remote access", "description":"SSH ownership, listener policy, and approved remote workflows.", "status":"partial"},
     {"id":"boot-automation", "name":"Boot & automation", "description":"Termux:Boot profiles, service startup, and scheduled work.", "status":"partial"},
-    {"id":"software", "name":"Software & dependencies", "description":"Native Termux and separate Debian package environments.", "status":"partial"},
     {"id":"security-recovery", "name":"Configuration, security & recovery", "description":"Validated state, backups, access policy, and recovery actions.", "status":"partial"},
     {"id":"observability", "name":"Diagnostics & observability", "description":"Doctor findings, health evidence, logs, and operational events.", "status":"partial"},
+    {"id":"software", "name":"Software & dependencies", "description":"Native Termux and separate Debian package environments.", "status":"partial"},
+    {"id":"ai-providers", "name":"AI runtime & providers", "description":"Local runtimes, models, hardware capabilities, and API providers.", "status":"planned"},
+    {"id":"deployments", "name":"Server & application deployment", "description":"Server templates, deployments, ports, versions, and rollback.", "status":"planned"},
     {"id":"extensions", "name":"Extensions & integrations", "description":"Future provider adapters with explicit lifecycle contracts.", "status":"planned"},
 ]
 

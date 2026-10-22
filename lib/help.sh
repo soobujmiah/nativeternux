@@ -308,9 +308,9 @@ tx web — Open the shared local management Web UI
 
 Starts a loopback-only service, copies the one-time secret to the Termux clipboard,
 and offers Android, installed Native Termux, installed Debian PRoot, or auto-select.
-Clipboard failure stops safely without revealing
-the secret; use --show-secret-on-clipboard-failure for an explicit terminal
-fallback if clipboard or browser handoff fails. Native/PRoot X11 browsers receive the code in the login field; Android uses clipboard paste.
+If neither clipboard nor browser-form handoff works, the server stops without
+revealing the code. Use --show-secret-on-clipboard-failure for an explicit
+private terminal fallback. Native/PRoot X11 browsers receive the code in the login field; Android uses clipboard paste.
 Choose with --browser android|native|proot|auto to skip the prompt.
 Auto-select prefers an installed Native browser, then Debian PRoot Firefox ESR,
 then Android's default browser. Press Ctrl-C to stop. The Web client uses
