@@ -13,7 +13,7 @@ The P4 phase state previously named browser-rendered Web review of the isolated 
 - **Complete:** the receipt-owned replay guest passed exact private retire/restore with the same container/rootfs identity and no deletion.
 - **Complete for direct Zink:** installed tx verified Native :1 X11/audio and Zink/Turnip GLX drawing on the fresh replay alias.
 - **Complete: receipt-bound VirGL replay draw:** the installed tx route and bounded verifier rendered VirGL on Native :1; a final Zink recheck still passed on the same replay rootfs. **Open: exact VirGL stop/client visibility:** Android lsof/fuser cannot prove socket-client ownership, so the lifecycle correctly refuses stop and the Ternuxx-owned service remains running. Nested Xephyr :2 graphics remains unqualified/failed. See [VirGL route and cleanup evidence](2026-10-22-p4-virgl-route-recheck.md).
-- **Open:** Web mutation/client parity, wider Native-core failure-injection for absent/broken PRoot, and requirement-by-requirement source/installed-runtime/full-repository audit.
+- **Partial:** Native read-only CLI, catalog, boot-helper, graphics-status, SSH-diagnostics and recovery probes all returned usable results with an injected failing `proot-distro` command; Doctor kept that failure informational. Actual executable absence, missing/broken guest rootfs, and Native boot/workload behavior with PRoot absent remain unproven. **Open:** Web mutation/client parity, safe exact VirGL stop/client visibility, and requirement-by-requirement source/installed-runtime/full-repository audit. See [Native failure-injection evidence](2026-10-22-native-optional-proot-failure-injection.md).
 
 ## Evidence
 

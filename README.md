@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Fresh Debian Trixie replay, package receipt, protected-default-rootfs checks, exact retire/restore, direct Zink/Turnip and receipt-bound VirGL GLX draws now pass through installed tx. Exact VirGL stop still fails closed because Android socket-client ownership is unavailable; Web mutation/client parity, wider Native-independence injection and full audit remain open.
+Fresh replay setup and rollback, Zink/Turnip, VirGL drawing, GUI terminal handoff, and visible Web acceptance are evidenced. A bounded Native read-only core sweep also passed with an injected failing proot-distro command; missing/broken guest isolation, Web mutation parity, safe VirGL cleanup, and the full audit remain open.
 
-**Next action:** Resolve safe exact VirGL socket-client visibility/cleanup while preserving the running managed server; then close Web mutation/client parity, Native-independence injection and the full source/installed/runtime audit.
+**Next action:** Continue Web mutation parity and a safe exact VirGL client-visibility path; extend failure injection to a positively isolated missing/broken guest scenario, then finish the source/installed/runtime audit and P4 acceptance.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

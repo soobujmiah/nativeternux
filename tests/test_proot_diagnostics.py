@@ -168,8 +168,11 @@ class ProotDiagnosticsTests(unittest.TestCase):
             home = base / "home"
             home.mkdir()
             state = home / ".local/share/ternuxx"
+            state.mkdir(parents=True, mode=0o700)
+            state.chmod(0o700)
             setup_state = state / "proot-setup"
             (setup_state / "previews").mkdir(parents=True, mode=0o700)
+            setup_state.chmod(0o700)
             prefix = base / "prefix"
             containers = prefix / "var/lib/proot-distro/containers"
             container = containers / alias
