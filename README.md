@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native broker/four client paths and monitor registration exist; isolated monitor interval replay verified. Full audit, disposable guest replay and all-client terminal qualification remain open.
+Native broker/four client paths and monitor exist; guarded fresh aliases implemented and live replay is under qualification. Full audit and all-client terminal acceptance remain open.
 
-**Next action:** Complete installed/runtime inventory and P1-P3 evidence mapping, then shared credential/service policy controls and separately guarded disposable guest/terminal replay; preserve Native Termux, SSH 8022 and the active Codex guest.
+**Next action:** Finish separate guest setup and preservation verification, then qualify managed terminal start/attach/I-O/resize/detach/close across clients; continue installed/profile inventory, P1-P3 mapping and shared credential/service policy controls.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

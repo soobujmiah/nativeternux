@@ -403,8 +403,8 @@ tx proot verify --distro debian (--guest-user USER|--guest-user-from rootfs) --d
 tx proot setup status
 tx proot setup adopt-preview --user NAME
 tx proot setup adopt --user NAME --yes --plan-id PLAN_ID
-tx proot setup fresh-preview --user NAME
-tx proot setup fresh-install --user NAME --yes --plan-id PLAN_ID
+tx proot setup fresh-preview --user NAME [--alias ternuxx-replay-NAME]
+tx proot setup fresh-install --user NAME [--alias ternuxx-replay-NAME] --yes --plan-id PLAN_ID
 tx proot legacy-cli preview
 tx proot legacy-cli remove --plan-id PLAN_ID
 tx proot legacy-cli rollback --backup-id BACKUP_ID

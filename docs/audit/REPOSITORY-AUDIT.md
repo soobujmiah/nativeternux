@@ -34,7 +34,7 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A08 | SKB pointer said private while actual GitHub metadata is public | Corrected after authenticated metadata read; private runtime payloads remain excluded |
 | A09 | Full all-document/source review and installed inventory not yet proven | Open; use inventory and explicit evidence per item |
 | A10 | SSH key/enrollment/removal, password/recovery, per-service boot/Wake Lock policy incomplete | Open; implement shared contract before client controls |
-| A11 | Fresh installer refuses the existing Debian alias, so live replay cannot use the working guest | Open; design a separately named disposable target with refusal/rollback guards |
+| A11 | Fresh installer had no separate target beside the existing Debian alias | Explicit guarded replay aliases implemented; live pinned-image/package replay under qualification. Removal/rollback and four-client setup/terminal acceptance remain open |
 | A12 | Experimental Native driver setup and customized guest config not fully reproducible | Open; inventory provenance and build a checked-in replay path |
 | A13 | X11 secret entry depends on identifying/focusing a browser window | Open audit of exact target/focus/fallback behavior, especially existing Native browser windows |
 | A14 | Historical ADR/architecture implementation paragraphs and structured feature matrices can read as current | SSH/continuity architecture corrected; old narratives preserved losslessly as history. Remaining full ADR/matrix review open |
@@ -53,6 +53,10 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 
 | A22 | 8022 and 8023 share the Termux account; credential edits can affect both | Credential contract now requires explicit shared-account impact and preservation; implementation remains open |
 | A23 | P2 original full pre-consent transaction preview is unrecoverable, despite later current-state checks | Historical limitation retained; do not count later installed-state/fixture checks as proof of that original approval. Full P1–P3 claim/evidence mapping remains open |
+
+| A24 | Refused unowned fresh destination could become resumable after the failure handler wrote an ownership-like journal | Reproduced, fixed and regression-covered; failed-stage resume now requires exact verified rootfs/container identity |
+| A25 | Fresh setup shell AND/OR list could hide an APT failure by falling through to user creation | Reproduced with host-safe command stubs; independent fail-fast commands and conditional user creation now verified |
+| A26 | Graphics artifact staging followed member symlinks and reused a PID-named download target | Private no-follow/exclusive artifact I/O, bounded downloads and staging serialization implemented; foreign-byte/symlink preservation tested |
 
 ## Continuation order
 

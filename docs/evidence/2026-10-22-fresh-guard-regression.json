@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-22T05:24:55.270492+00:00",
+  "native_suite": {
+    "passed": 722,
+    "seconds": 103.215
+  },
+  "fresh_setup_tests": 14,
+  "existing_adoption_tests": 4,
+  "pre_fix_failures_reproduced": [
+    "unowned destination becomes resumable after refusal",
+    "APT failure masked by shell AND/OR list"
+  ],
+  "source_sha256": {
+    "lib/proot_fresh_setup.py": "7bbe4e8d629b94c40b54103816e1111e29beed62dfd36f54a92927ee9218d7ad",
+    "lib/proot_setup.py": "6a26c41af451c4daf6de615e2db8823782460bc1b03ad0f97305dd56e42f1fee",
+    "lib/proot.sh": "90ee0a3e955fe314e4d839f50ad94f06f0e0cdf7b1fcb399e03a7324fdf93426",
+    "lib/help.sh": "8f4c6a3af059a736d8d3ae46265bc68d12fb4b1c2ff9cd1fcf862d4c1e52084d",
+    "tests/test_proot_fresh_setup.py": "6dd0097cb1390d8e1994dfe64e340ad1944523a3b09c6025c285865a072ad852"
+  },
+  "live_replay_alias": "ternuxx-replay-p4",
+  "live_setup_qualified": false,
+  "live_stage_at_observation": "package archive retrieval after pinned base image and repository verification",
+  "existing_working_guest_targeted": false
+}

@@ -157,7 +157,7 @@ nt_cmd_proot() {
     db) _nt_use launch; nt_cmd_db "$@" ;;
     gui)   _nt_proot_gui "$@" ;;
     setup)
-      local action="${1:-status}" user="" plan_id="" confirmed=0 option
+      local action="${1:-status}" user="" plan_id="" guest_alias="" confirmed=0 option
       [ $# -eq 0 ] || shift
       case "$action" in
         status|adopt-preview|adopt|fresh-preview|fresh-install) ;;
@@ -167,6 +167,9 @@ nt_cmd_proot() {
         option="$1"; shift
         case "$option" in
           --user) [ "$#" -gt 0 ] || { nt_fail "--user needs a value."; return 2; }; user="$1"; shift ;;
+          --alias)
+            [ "$#" -gt 0 ] && [ -n "$1" ] || { nt_fail "--alias needs a value."; return 2; }
+            guest_alias="$1"; shift ;;
           --plan-id) [ "$#" -gt 0 ] || { nt_fail "--plan-id needs a value."; return 2; }; plan_id="$1"; shift ;;
           --yes) confirmed=1 ;;
           --help|-h) nt_help proot; return 0 ;;
@@ -191,6 +194,12 @@ nt_cmd_proot() {
           nt_fail "Usage: tx proot setup fresh-preview --user NAME"; return 2;
         }; setup_args+=(--user "$user") ;;
       esac
+      if [ -n "$guest_alias" ]; then
+        case "$action" in
+          fresh-preview|fresh-install) setup_args+=(--alias "$guest_alias") ;;
+          *) nt_fail "--alias is supported only by fresh-preview/fresh-install."; return 2 ;;
+        esac
+      fi
       python3 "$_TN_LIB_DIR/proot_setup.py" "${setup_args[@]}"
       ;;
     *) nt_fail "Use proot status|inspect|verify|legacy-cli [host]|db|gui|setup; use tx pgui for the full Debian desktop."; return 2 ;;

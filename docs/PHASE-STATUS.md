@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Native broker/four client paths and monitor registration exist; isolated monitor interval replay verified. Full audit, disposable guest replay and all-client terminal qualification remain open.
+Native broker/four client paths and monitor exist; guarded fresh aliases implemented and live replay is under qualification. Full audit and all-client terminal acceptance remain open.
 
-**Next action:** Complete installed/runtime inventory and P1-P3 evidence mapping, then shared credential/service policy controls and separately guarded disposable guest/terminal replay; preserve Native Termux, SSH 8022 and the active Codex guest.
+**Next action:** Finish separate guest setup and preservation verification, then qualify managed terminal start/attach/I-O/resize/detach/close across clients; continue installed/profile inventory, P1-P3 mapping and shared credential/service policy controls.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -91,6 +91,7 @@ Evidence:
 - [docs/evidence/2026-10-22-native-ui-and-audit-remediation.md](evidence/2026-10-22-native-ui-and-audit-remediation.md)
 - [docs/evidence/2026-10-22-monitor-service-registration.md](evidence/2026-10-22-monitor-service-registration.md)
 - [docs/evidence/2026-10-22-native-entrypoint-and-contract-audit.md](evidence/2026-10-22-native-entrypoint-and-contract-audit.md)
+- [docs/evidence/2026-10-22-guarded-fresh-replay.md](evidence/2026-10-22-guarded-fresh-replay.md)
 
 ## P5 — Distro and display compatibility profiles
 

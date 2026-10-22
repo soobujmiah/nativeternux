@@ -13,25 +13,25 @@ Ternuxx is in active development. Its `install` command uses a saved, preview-fi
 
 `tx proot setup status` reports whether the installed Debian rootfs is recorded by Ternuxx. For an existing Debian Trixie rootfs, preview adoption with `tx proot setup adopt-preview --user NAME`, check the account, release, rootfs identity, and plan ID, then apply only that preview with `tx proot setup adopt --user NAME --yes --plan-id ID`. Adoption writes a private Native Ternuxx state record; it does not write to the guest.
 
-This adoption step does not install packages, migrate guest configuration, or remove the old Ternux CLI. A separate fresh Trixie installer is available but currently has fixture evidence only; it has not been applied to a clean device and does not replay the customized existing workstation. Existing-guest package/config adaptation still needs an exact target preview, backup, and tested rollback. The active guest continues to work through its existing setup.
+This adoption step does not install packages, migrate guest configuration, or remove the old Ternux CLI. A separate fresh Trixie installer supports an explicitly named disposable target alongside the working Debian guest. A live replay is under qualification; it is not a clean-device or customized-workstation acceptance claim. Existing-guest package/config adaptation still needs an exact target preview, backup, and tested rollback. The active guest continues to work through its existing setup.
 
 ## Fresh Debian Trixie setup
 
-On a clean Termux profile where the `debian` alias does not exist, create and review a private setup plan:
+On a clean Termux profile use the default `debian` target only when absent. To test alongside an existing guest, select an unused `ternuxx-replay-NAME` alias explicitly:
 
 ```sh
-./tx proot setup fresh-preview --user NAME
+./tx proot setup fresh-preview --user NAME --alias ternuxx-replay-example
 ```
 
 Check the selected user, dated Debian image and APT snapshot, package groups, available storage, and Turnip decision. Apply only the exact returned plan ID:
 
 ```sh
-./tx proot setup fresh-install --user NAME --yes --plan-id PLAN_ID
+./tx proot setup fresh-install --user NAME --alias ternuxx-replay-example --yes --plan-id PLAN_ID
 ```
 
-The installer checks the pulled arm64 image content before changing APT sources or guest users, installs the manifest package groups, and records the installed package/version list. It refuses to overwrite an existing `debian` rootfs, including the current workstation. The installer has fixture-tested reproducibility logic, but no clean-device install or post-install rendering has been verified. A failed guest is retained with its journal for inspection/resume; an uninstall/rollback action is not implemented.
+The installer checks the pulled arm64 image content before guest configuration. It provisions the fixed workstation manifest, then verifies that every requested package is installed in the recorded dpkg inventory. Arbitrary aliases, occupied containers and symlinked destinations are refused. The working `debian` rootfs is not overwritten. A refused target does not gain ownership through a failure journal. Package-stage resume requires the same preview and verified container/rootfs device/inode identity; an unverified partial image remains for inspection. An uninstall/rollback action and Web/TUI/GTK setup flows remain open. No clean-device or post-install rendering acceptance is claimed.
 
-See [fresh setup evidence](evidence/2026-10-20-proot-fresh-reproducibility.md).
+See [current guarded replay evidence](evidence/2026-10-22-guarded-fresh-replay.md) and the [earlier fixture snapshot](evidence/2026-10-20-proot-fresh-reproducibility.md).
 
 ## Timezone default and selection
 
@@ -43,7 +43,7 @@ A new Ternuxx installation uses `Asia/Dhaka` by default. The preference is selec
 
 The future installer must let the owner choose Bash, Zsh, or Fish separately for Native Termux and the Debian PRoot provider. The currently active shell is a preselection hint only; the installer must not silently switch shells. Missing shell packages must appear in a provider-specific plan and require explicit confirmation before installation. Shell theme and configuration selection belongs to the shared management service and Ternuxx-owned overlays. No existing startup file or Ternux configuration is overwritten. See [ADR-0008](architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md) and the [shell profile schema](../schemas/shell-profile.schema.json).
 
-The Native workstation transaction includes `proot-distro`, Termux:X11, PulseAudio/D-Bus, Python, XFCE host packages, and the `glmark2`, `xorg-server-xvfb`, and `xdotool` graphics/X11 utilities. These support benchmarking, virtual X displays, and X11 input automation. The Native transaction does not create or replace a Debian rootfs. The existing Debian adapter supports read-only verification and a private adoption record. A separate preview-bound fresh Debian Trixie provisioner is fixture-tested, but has not been applied to a clean device; it refuses to overwrite an existing `debian` rootfs. Package/config migration of the existing guest is not implemented. Mesa, Turnip/Vulkan, and VirGL remain separate acceleration providers and are not installed by the base transaction. The Android Termux:X11 app remains a separate requirement. The exact package set and dependency plan are resolved from current signed indexes and rechecked immediately before any authorized installation; transitive packages are recorded per transaction rather than pinned as permanent direct installer targets. Upstream Termux:X11 currently documents enabling `x11-repo`, installing its companion package, then installing XFCE; exact package names and commands must be checked again before release. See the [upstream Termux:X11 guide](https://github.com/termux/termux-x11).
+The Native workstation transaction includes `proot-distro`, Termux:X11, PulseAudio/D-Bus, Python, XFCE host packages, and the `glmark2`, `xorg-server-xvfb`, and `xdotool` graphics/X11 utilities. These support benchmarking, virtual X displays, and X11 input automation. The Native transaction does not create or replace a Debian rootfs. The existing Debian adapter supports read-only verification and a private adoption record. A separate preview-bound fresh Debian Trixie provisioner supports a distinct disposable alias and refuses occupied containers; live replay and clean-device acceptance are tracked above. Package/config migration of the existing guest is not implemented. Mesa, Turnip/Vulkan, and VirGL remain separate acceleration providers and are not installed by the base transaction. The Android Termux:X11 app remains a separate requirement. The exact package set and dependency plan are resolved from current signed indexes and rechecked immediately before any authorized installation; transitive packages are recorded per transaction rather than pinned as permanent direct installer targets. Upstream Termux:X11 currently documents enabling `x11-repo`, installing its companion package, then installing XFCE; exact package names and commands must be checked again before release. See the [upstream Termux:X11 guide](https://github.com/termux/termux-x11).
 
 ### Planned optional software selection (not implemented)
 
@@ -59,11 +59,11 @@ Safety and fallback requirements:
 - Non-interactive installation defaults to core-only. Explicit optional selections are required even with `--yes`; `--all` must be provider-scoped and show a preview.
 - Show the provider, repository, package IDs, dependency changes, and reliable size data before confirmation. Unknown package sizes remain unknown.
 - Cancellation, invalid catalog IDs, or an unavailable provider make no optional package changes. A failed optional item must be reported as failed; unrelated selections continue only if they are independent and partial completion can be reported safely.
-- The existing Debian rootfs is never an implicit package target. The owner-selected existing Debian adapter is an explicit target; any guest package/config change must show its exact target and dependency plan and require explicit apply. A separately managed fresh guest is a distinct future profile.
+- The existing Debian rootfs is never an implicit package target. The owner-selected existing Debian adapter is an explicit target; any guest package/config change must show its exact target and dependency plan and require explicit apply. Fresh provisioning targets a separately named, absent container; it does not migrate the existing guest.
 
 This is a design requirement, not an implemented installer feature or device-qualified package list.
 
-The native Termux Turnip test on the inspected Adreno 825 failed with `VK_ERROR_INCOMPATIBLE_DRIVER` for the observed package version. Native GPU acceleration must not be promised for that configuration without a passing live renderer check. The existing Debian PRoot has a live-verified Ternuxx-managed Zink/Turnip route; see [PRoot GPU reuse](PROOT-GPU.md). The separate Ternux project is reference-only and its CLI is not required. Current official local package-index candidates and the read-only XFCE dependency simulations are recorded in [Research & Evidence](RESEARCH.md#12-native-termux-desktop-packages-and-host-integrations); their exact transaction must be previewed again before implementation installs anything.
+The historical Native Turnip test failed with `VK_ERROR_INCOMPATIBLE_DRIVER` for its recorded package version. Later API/workload evidence and remaining limits are tracked in [GPU qualification](testing/GPU-ACCELERATION.md); do not generalize one version/context to every backend. The existing Debian PRoot has a live-verified Ternuxx-managed Zink/Turnip route; see [PRoot GPU reuse](PROOT-GPU.md). The separate Ternux project is reference-only and its CLI is not required. Current official local package-index candidates and the read-only XFCE dependency simulations are recorded in [Research & Evidence](RESEARCH.md#12-native-termux-desktop-packages-and-host-integrations); their exact transaction must be previewed again before implementation installs anything.
 
 ## Before an installation flow is published
 

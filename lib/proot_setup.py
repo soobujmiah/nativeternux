@@ -259,6 +259,7 @@ def main() -> int:
     parser.add_argument("--home", default=os.environ.get("HOME", ""))
     parser.add_argument("--state-dir", default=os.environ.get("TERNUXX_STATE_DIR", ""))
     parser.add_argument("--user", default="")
+    parser.add_argument("--alias", help="fresh-only debian or ternuxx-replay-NAME target")
     parser.add_argument("--plan-id", default="")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -266,6 +267,8 @@ def main() -> int:
     if not args.prefix or not args.home or not args.state_dir:
         parser.error("Native Termux PREFIX, HOME, and Ternuxx state directory are required")
     try:
+        if args.alias is not None and args.action not in {"fresh-preview", "fresh-install"}:
+            parser.error("--alias is supported only by fresh setup")
         if args.action == "status":
             result = status(repo_root=args.repo_root, prefix=args.prefix, home=args.home, state_dir=args.state_dir)
         elif args.action == "adopt-preview":
@@ -277,13 +280,15 @@ def main() -> int:
             if not args.user or args.plan_id or args.yes:
                 parser.error("fresh-preview requires --user NAME")
             result = proot_fresh_setup.preview(repo_root=args.repo_root, prefix=args.prefix,
-                                               home=args.home, state_dir=args.state_dir, user=args.user)
+                                               home=args.home, state_dir=args.state_dir, user=args.user,
+                                               alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS)
         elif args.action == "fresh-install":
             if not args.user or not args.plan_id or not args.yes:
                 parser.error("fresh-install requires --user NAME --yes --plan-id ID")
             result = proot_fresh_setup.apply(repo_root=args.repo_root, prefix=args.prefix,
                                              home=args.home, state_dir=args.state_dir, user=args.user,
-                                             plan_id=args.plan_id, confirmed=True)
+                                             plan_id=args.plan_id, confirmed=True,
+                                             alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS)
         else:
             if not args.user or not args.plan_id or not args.yes:
                 parser.error("adopt requires --user NAME --yes --plan-id ID")

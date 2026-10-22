@@ -22,6 +22,8 @@ Browser menu Auto selection and failed code-handoff handling are repaired. The c
 
 GTK was rebuilt and source/bridge/binary identities match. All three checked-in Runit definitions, all three boot helpers, tx shim and the three installed canonical recovery modules match source; isolated recovery imports resolve from the installed path. See the [entrypoint inventory](docs/evidence/2026-10-22-native-entrypoint-inventory.json). The fixed GUI monitor scheduler is now installed and running idle; monitoring/focus/Activity launch remain off. Fresh registration and two 30-second Linux-only ticks passed in a separate private Runit root. CLI service registration is available; shared-client install controls remain open. This is partial live/source parity, not a completed audit of every installed component. See [UI/audit evidence](docs/evidence/2026-10-22-native-ui-and-audit-remediation.md) and [monitor deployment/replay](docs/evidence/2026-10-22-monitor-service-registration.md).
 
+Fresh Debian setup now accepts a guarded separate `ternuxx-replay-NAME` target. Failed-refusal journal adoption and shell failure masking were reproduced and fixed; identity-bound resume, package status validation and safe artifact staging are regression-covered. The new `ternuxx-replay-p4` image verified and reached package provisioning; live completion/preservation remains under observation. See [guarded replay evidence](docs/evidence/2026-10-22-guarded-fresh-replay.md).
+
 ## Required continuation
 
 The full owner objective remains active in [the repository audit worklist](docs/audit/REPOSITORY-AUDIT.md):

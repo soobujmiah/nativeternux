@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Complete installed/runtime inventory and P1-P3 evidence mapping, then shared credential/service policy controls and separately guarded disposable guest/terminal replay; preserve Native Termux, SSH 8022 and the active Codex guest.
+**Next action:** Finish separate guest setup and preservation verification, then qualify managed terminal start/attach/I-O/resize/detach/close across clients; continue installed/profile inventory, P1-P3 mapping and shared credential/service policy controls.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
