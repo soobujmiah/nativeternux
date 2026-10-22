@@ -75,6 +75,46 @@ class ManagementServiceTests(unittest.TestCase):
             self.assertEqual((home / ".ssh/authorized_keys").read_text(), public_key + "\n")
             self.assertEqual((home / ".ssh/authorized_keys").stat().st_mode & 0o777, 0o600)
 
+    def test_ssh_key_rollback_uses_the_authorized_shared_service(self) -> None:
+        import os
+        with tempfile.TemporaryDirectory(prefix="ssh-key-rollback-service-") as temp:
+            home = Path(temp)
+            ssh = home / ".ssh"
+            home.mkdir(mode=0o700, exist_ok=True)
+            ssh.mkdir(mode=0o700)
+            os.chown(home, os.getuid(), -1)
+            os.chown(ssh, os.getuid(), -1)
+            source = home / "test-key"
+            generated = management_service.subprocess.run(
+                ["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(source)],
+                capture_output=True, text=True, timeout=10, check=False)
+            self.assertEqual(generated.returncode, 0)
+            public_key = source.with_suffix(".pub").read_text(encoding="utf-8").strip()
+            env = {**NATIVE_ENV, "HOME": str(home)}
+            with patch.object(management_service.ssh_key_inventory, "list_managed_authorized_keys",
+                              return_value={"authorized_keys_path_verified": True}):
+                preview = management_service.dispatch(request("ssh.keys.add.preview", {
+                    "public_key": public_key}), env=env)
+                apply_result = management_service.dispatch(request("ssh.keys.add.apply", {
+                    "public_key": public_key, "confirmed": True,
+                    "plan_id": preview["data"]["plan_id"]}), env=env)
+                self.assertTrue(apply_result["ok"])
+                rollback_id = apply_result["data"]["rollback_id"]
+                records = management_service.dispatch(request("ssh.keys.rollback.list"), env=env)
+                self.assertTrue(records["ok"])
+                self.assertEqual(records["data"]["count"], 1)
+                self.assertNotIn(public_key, repr(records))
+                rollback = management_service.dispatch(request("ssh.keys.rollback.preview", {
+                    "rollback_id": rollback_id}), env=env)
+                self.assertTrue(rollback["ok"])
+                self.assertNotIn(public_key, repr(rollback))
+                restored = management_service.dispatch(request("ssh.keys.rollback.apply", {
+                    "rollback_id": rollback_id, "confirmed": True,
+                    "plan_id": rollback["data"]["plan_id"]}), env=env)
+            self.assertTrue(restored["ok"])
+            self.assertEqual(restored["data"]["status"], "complete")
+            self.assertFalse((ssh / "authorized_keys").exists())
+
     def test_native_ssh_client_key_generation_uses_preview_and_private_file_permissions(self) -> None:
         import os
         with tempfile.TemporaryDirectory(prefix="ssh-client-key-service-") as temp:
@@ -100,6 +140,11 @@ class ManagementServiceTests(unittest.TestCase):
             self.assertRegex(created["data"]["fingerprint"], r"^SHA256:[A-Za-z0-9+/]{43}$")
             self.assertNotIn(private.read_text(), repr(created))
             self.assertTrue(created["data"]["enrollment_required"])
+
+    def test_ssh_key_rollback_list_fails_closed_without_verified_managed_key_path(self) -> None:
+        result = management_service.dispatch(request("ssh.keys.rollback.list"), env=NATIVE_ENV)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "ssh_configuration_unverified")
 
     def test_ssh_key_changes_fail_closed_without_verified_managed_key_path(self) -> None:
         result = management_service.dispatch(request("ssh.keys.remove.preview", {

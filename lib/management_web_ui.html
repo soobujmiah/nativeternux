@@ -126,6 +126,23 @@ This changes login access for both owner-managed SSH 8022 and Ternuxx SSH 8023."
    if(result?.ok)await run("ssh.keys.list");
   }catch(e){notice.textContent=e.message}
  }
+ async function restoreSshKeyChange(){
+  try{
+   const listed=await run("ssh.keys.rollback.list");if(!listed?.ok)return;
+   const entries=listed.data?.entries||[];if(!entries.length){notice.textContent="No saved SSH key changes are available to restore.";return}
+   const menu=entries.map((item,index)=>index+": "+String(item.action||"change")+" - "+String(item.fingerprint||"")+" - "+String(item.status||"")).join("\n");
+   const selected=window.prompt("Select a saved key change by number:\n"+menu,"0");if(selected===null)return;
+   const index=Number(selected);if(!Number.isInteger(index)||index<0||index>=entries.length){notice.textContent="Choose a number from the list; no change was applied.";return}
+   const item=entries[index];const preview=await run("ssh.keys.rollback.preview",{rollback_id:item.rollback_id});if(!preview?.ok)return;
+   const plan=preview.data;if(!plan.can_restore){notice.textContent=plan.conflict?"Authorized keys changed since this snapshot; restore refused to overwrite newer changes.":"This snapshot is already restored.";return}
+   if(!window.confirm("Restore the exact previous shared authorized_keys file?
+
+Affects SSH 8022 and 8023. Restore is refused if the file changed since this snapshot.
+
+"+plan.before_sha256+" -> "+plan.after_sha256))return;
+   const result=await run("ssh.keys.rollback.apply",{rollback_id:item.rollback_id,confirmed:true,plan_id:plan.plan_id});if(result?.ok)await run("ssh.keys.list");
+  }catch(e){notice.textContent=e.message}
+ }
  async function manageSshAutostart(){
   try{
    const current=await run("ssh.service.autostart.status");if(!current?.ok)return;
@@ -234,6 +251,7 @@ This removes access for both owner-managed SSH 8022 and Ternuxx SSH 8023. Existi
    if(operations.includes("ssh.service.autostart.preview")){const b=document.createElement("button");b.textContent="Set SSH start with Termux services";b.onclick=()=>manageSshAutostart();actions.append(b)}
    if(operations.includes("ssh.keys.add.preview")){const b=document.createElement("button");b.textContent="Enroll a public key";b.onclick=()=>enrollSshKey();actions.append(b)}
    if(operations.includes("ssh.keys.remove.preview")){const b=document.createElement("button");b.textContent="Remove a key by fingerprint";b.onclick=()=>revokeSshKey();actions.append(b)}
+  if(operations.includes("ssh.keys.rollback.list")){const b=document.createElement("button");b.textContent="Restore a previous SSH key change";b.onclick=()=>restoreSshKeyChange();actions.append(b)}
    for(const [op,label] of [["ssh.service.start","Start managed SSH"],["ssh.service.stop","Stop managed SSH"],["ssh.service.restart","Restart managed SSH"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label;b.onclick=()=>manageSsh(op);actions.append(b)}
   }
   if(r.id==="graphics.native"||r.id==="graphics.debian"){

@@ -136,6 +136,40 @@ class SshKeyClientContractTests(unittest.TestCase):
         self.assertIn("ssh.service.autostart.status", ssh["supported_operations"])
         self.assertIn("ssh.service.autostart.preview", ssh["supported_operations"])
         self.assertIn("ssh.service.autostart.apply", ssh["supported_operations"])
+        self.assertTrue({"ssh.keys.rollback.list", "ssh.keys.rollback.preview",
+                         "ssh.keys.rollback.apply"} <= set(ssh["supported_operations"]))
+        self.assertTrue({"ssh.keys.rollback.preview", "ssh.keys.rollback.apply"}
+                        <= management_sessions.MUTATING_OPERATIONS)
+        self.assertEqual(management_authorization.required_capability("ssh.keys.rollback.list"),
+                         "ssh.credentials.read")
+        self.assertEqual(management_authorization.required_capability("ssh.keys.rollback.apply"),
+                         "ssh.credentials.manage")
+        self.assertTrue({"ssh.keys.rollback.preview", "ssh.keys.rollback.apply"}
+                        <= management_http_runtime._WEB_MUTATING_OPERATIONS)
+        self.assertIn("Restore a previous SSH key change", (ROOT / "lib/terminal_ui.py").read_text())
+        self.assertIn("restoreSshKeyChange", (ROOT / "lib/management_web_ui.html").read_text())
+        gtk = (ROOT / "apps/management-center/management-center.c").read_text()
+        self.assertIn("Restore previous SSH key change", gtk)
+        self.assertIn("ssh-key-rollback-apply", gtk)
+
+
+    def test_cli_ssh_rollback_uses_typed_id_and_exact_confirmed_plan(self):
+        rollback_id = "a" * 32
+        plan_id = "b" * 24
+        response = {"ok": True, "data": {"status": "ready"}}
+        with patch.dict(os.environ, {"TERMUX_VERSION": "test",
+                "PREFIX": "/data/data/com.termux/files/usr", "HOME": "/tmp/home"}), \
+             patch("sys.stdout", io.StringIO()), \
+             patch.object(management_service, "dispatch", return_value=response) as dispatch:
+            self.assertEqual(management_service.main([
+                "--operation", "ssh.keys.rollback.preview",
+                "--operation-id", rollback_id, "--json"]), 0)
+            self.assertEqual(dispatch.call_args.args[0]["args"], {"rollback_id": rollback_id})
+            self.assertEqual(management_service.main([
+                "--operation", "ssh.keys.rollback.apply",
+                "--operation-id", rollback_id, "--yes", "--plan-id", plan_id, "--json"]), 0)
+            self.assertEqual(dispatch.call_args.args[0]["args"], {
+                "rollback_id": rollback_id, "confirmed": True, "plan_id": plan_id})
 
 
 if __name__ == "__main__":

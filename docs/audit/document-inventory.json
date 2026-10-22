@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 404,
-  "read_count": 96,
+  "document_count": 405,
+  "read_count": 97,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "6ca2d3bb43af776532fee4c7f1eb03dffadccd1e300eb6bea528f4be4e04442f",
+      "sha256": "0b3c3d23cdd25c570a3c0a7fb54b98c982e73c80752935b87553a56325f73810",
       "lines": 53,
       "read_status": "read",
-      "read_sha256": "6ca2d3bb43af776532fee4c7f1eb03dffadccd1e300eb6bea528f4be4e04442f"
+      "read_sha256": "0b3c3d23cdd25c570a3c0a7fb54b98c982e73c80752935b87553a56325f73810"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -515,10 +515,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "112c9d31e034836f2b762c022441ed13dbf25d0a397f90e170b85af3b2543f18",
-      "lines": 87,
+      "sha256": "07af0f9b15a93de38c8b63489e2fda0757d6dbb40c51bf83f704d4e91f35ca40",
+      "lines": 88,
       "read_status": "read",
-      "read_sha256": "112c9d31e034836f2b762c022441ed13dbf25d0a397f90e170b85af3b2543f18"
+      "read_sha256": "07af0f9b15a93de38c8b63489e2fda0757d6dbb40c51bf83f704d4e91f35ca40"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2455,6 +2455,14 @@
       "lines": 31,
       "read_status": "read",
       "read_sha256": "c22cb3265c3db04764f0e998359000bcbd8a462e6743da67ff7460f02c9bc838"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-ssh-key-change-rollback.md",
+      "kind": "narrative",
+      "sha256": "ff7ae06a64c77c57cb9468031c4b7a606e563a5d0465329d811b606d3485bd3e",
+      "lines": 21,
+      "read_status": "read",
+      "read_sha256": "ff7ae06a64c77c57cb9468031c4b7a606e563a5d0465329d811b606d3485bd3e"
     },
     {
       "path": "docs/evidence/2026-10-22-ssh-key-inventory.md",

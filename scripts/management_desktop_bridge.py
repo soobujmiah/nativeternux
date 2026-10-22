@@ -184,6 +184,33 @@ def main(argv: list[str]) -> int:
         result = call(operation, args)
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action == "ssh-key-rollback-list" and len(argv) == 1:
+        result = call("ssh.keys.rollback.list")
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        entries = result.get("data", {}).get("entries", [])
+        for entry in entries:
+            print("R\t" + clean(entry.get("rollback_id")) + "\t" + clean(entry.get("fingerprint"))
+                  + "\t" + clean(entry.get("action")) + "\t" + clean(entry.get("status")))
+        if not entries: print("R\t-\t-\t-\t-")
+        return 0
+    if action == "ssh-key-rollback-preview" and len(argv) == 2:
+        result = call("ssh.keys.rollback.preview", {"rollback_id": argv[1]})
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        data = result.get("data", {}); plan_id = data.get("plan_id")
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
+            print("Could not verify the exact SSH recovery preview."); return 1
+        print("P\t" + plan_id + "\t" + clean(data.get("rollback_id")) + "\t" + clean(data.get("effect")))
+        return 0
+    if action == "ssh-key-rollback-apply" and len(argv) == 3:
+        rollback_id, plan_id = argv[1:]
+        if not re.fullmatch(r"[0-9a-f]{32}", rollback_id) or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
+            print("The SSH recovery preview is invalid or expired."); return 2
+        result = call("ssh.keys.rollback.apply", {"rollback_id": rollback_id,
+            "confirmed": True, "plan_id": plan_id})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "ssh-keys-list" and len(argv) == 1:
         result = call("ssh.keys.list")
         print(management_presentation.format_report(result))

@@ -382,10 +382,13 @@ EOF
       ;;
     ssh)
       cat <<'EOF'
-tx ssh inspect/keys-list/enroll-preview/enroll/revoke-preview/revoke/client-key-preview/client-key-create/autostart-status/autostart-preview/autostart-apply/start/stop/restart - Native SSH management
+tx ssh inspect/keys-list/rollback-list/rollback-preview/rollback-apply/enroll-preview/enroll/revoke-preview/revoke/client-key-preview/client-key-create/autostart-status/autostart-preview/autostart-apply/start/stop/restart - Native SSH management
 
   tx ssh inspect
   tx ssh keys-list                    # shared Termux account key fingerprints and labels
+  tx ssh rollback-list                # list private authorized-key recovery snapshots
+  tx ssh rollback-preview ID          # preview exact conflict-checked restore
+  tx ssh rollback-apply ID --yes --plan-id PLAN_ID
   tx ssh client-key-preview --key-name recovery8023
   tx ssh client-key-create --key-name recovery8023 --yes --plan-id <id>
   tx ssh autostart-status

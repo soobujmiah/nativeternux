@@ -377,6 +377,24 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             self.assertEqual(bridge.main(["shortcut-apply", "add", "unknown", "b" * 24]), 2)
         dispatch.assert_not_called()
 
+    def test_ssh_key_rollback_bridge_lists_and_uses_exact_preview(self) -> None:
+        listing = {"ok": True, "data": {"entries": [{"rollback_id": "a" * 32,
+            "fingerprint": "SHA256:" + "b" * 43, "action": "remove", "status": "applied"}]}}
+        with mock.patch.object(bridge, "call", return_value=listing) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["ssh-key-rollback-list"]), 0)
+        dispatch.assert_called_once_with("ssh.keys.rollback.list")
+        self.assertTrue(output.getvalue().startswith("R\t" + "a" * 32))
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
+                "plan_id": "c" * 24, "rollback_id": "a" * 32,
+                "effect": "Restore exact prior file."}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["ssh-key-rollback-preview", "a" * 32]), 0)
+        dispatch.assert_called_once_with("ssh.keys.rollback.preview", {"rollback_id": "a" * 32})
+        self.assertTrue(output.getvalue().startswith("P\t" + "c" * 24 + "\t" + "a" * 32))
+
     def test_timezone_set_bridge_calls_typed_preference_operation(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"timezone": "UTC"}}) as dispatch:
             output = StringIO()

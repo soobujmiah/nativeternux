@@ -366,9 +366,41 @@ def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]
         choices.append(("enroll", "Enroll a public key from Native .ssh"))
     if "ssh.keys.remove.preview" in operations:
         choices.append(("revoke", "Remove an authorized key"))
+    if "ssh.keys.rollback.list" in operations:
+        choices.append(("rollback", "Restore a previous SSH key change"))
     action = _choose(screen, "Managed SSH · port 8023", choices)
     if action == "keys":
         return _call("ssh.keys.list")
+    if action == "rollback":
+        listed = _call("ssh.keys.rollback.list")
+        if not listed.get("ok"):
+            return listed
+        entries = listed.get("data", {}).get("entries", [])
+        eligible = [entry for entry in entries if isinstance(entry, dict)]
+        if not eligible:
+            _show_details(screen, {"message": "No saved SSH key changes are available to restore."})
+            return listed
+        selected = _choose(screen, "Select an SSH key change to restore",
+            [(str(i), f"{entry.get('action', 'change').title()} - {entry.get('fingerprint', '')} - {entry.get('status', '')}")
+             for i, entry in enumerate(eligible)])
+        if not isinstance(selected, str) or not selected.isdigit() or int(selected) >= len(eligible):
+            return {"ok": False, "error": {"code": "cancelled"}}
+        rollback_id = eligible[int(selected)].get("rollback_id")
+        preview = _call("ssh.keys.rollback.preview", {"rollback_id": rollback_id})
+        if not preview.get("ok"):
+            return preview
+        plan = preview.get("data", {})
+        _show_details(screen, plan)
+        if not plan.get("can_restore"):
+            return preview
+        confirm = _prompt(screen, "Restore exact previous SSH access for shared ports 8022 and 8023? Type yes")
+        if confirm.lower() != "yes":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        result = _call("ssh.keys.rollback.apply", {"rollback_id": rollback_id,
+            "confirmed": True, "plan_id": plan.get("plan_id")})
+        if result.get("ok"):
+            _call("ssh.keys.list")
+        return result
     if action == "autostart":
         current = _call("ssh.service.autostart.status")
         if not current.get("ok"):

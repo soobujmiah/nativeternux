@@ -132,6 +132,15 @@ class SshKeyManagerTests(unittest.TestCase):
             ssh_key_manager.preview("add", home=self.home, uid=self.uid,
                 fingerprint=self.fp1, public_key="restrict,command=\"id\" " + self.first)
 
+    def test_group_or_world_writable_authorized_keys_is_refused(self):
+        self.keys.write_text(self.first + "\n")
+        self.keys.chmod(0o666)
+        original = self.keys.read_bytes()
+        with self.assertRaises(ssh_key_manager.SshKeyMutationError):
+            ssh_key_manager.preview("remove", home=self.home, uid=self.uid, fingerprint=self.fp1)
+        self.assertEqual(self.keys.read_bytes(), original)
+        self.assertEqual(self.keys.stat().st_mode & 0o777, 0o666)
+
     def test_symlink_target_and_unsafe_directory_are_rejected(self):
         outside = Path(self.tmp.name) / "outside"
         outside.write_text(self.first + "\n")
@@ -143,6 +152,93 @@ class SshKeyManagerTests(unittest.TestCase):
         with self.assertRaises(ssh_key_manager.SshKeyMutationError):
             ssh_key_manager.preview("add", home=self.home, uid=self.uid,
                                     fingerprint=self.fp1, public_key=self.first)
+
+
+    def test_remove_rollback_restores_exact_snapshot_and_is_repeatable(self):
+        original = b"# owner note\n" + self.first.encode() + b"\nlegacy-invalid-line\n" + self.second.encode()
+        self.keys.write_bytes(original)
+        self.keys.chmod(0o640)
+        plan = ssh_key_manager.preview("remove", home=self.home, uid=self.uid, fingerprint=self.fp1)
+        result = ssh_key_manager.apply("remove", home=self.home, uid=self.uid,
+            fingerprint=self.fp1, confirmed=True, plan_id=plan["plan_id"])
+        rollback_id = result["rollback_id"]
+        self.assertEqual(result["status"], "complete")
+        self.assertNotIn(self.first, self.keys.read_text())
+        entries = ssh_key_manager.rollback_list(home=self.home, uid=self.uid)
+        self.assertEqual(entries["count"], 1)
+        self.assertNotIn(self.first, repr(entries))
+        preview = ssh_key_manager.rollback_preview(rollback_id, home=self.home, uid=self.uid)
+        self.assertTrue(preview["can_restore"])
+        self.assertNotIn(original.decode(), repr(preview))
+        restored = ssh_key_manager.rollback_apply(rollback_id, home=self.home, uid=self.uid,
+            confirmed=True, plan_id=preview["plan_id"])
+        self.assertEqual(restored["status"], "complete")
+        self.assertEqual(self.keys.read_bytes(), original)
+        self.assertEqual(self.keys.stat().st_mode & 0o777, 0o640)
+        again = ssh_key_manager.rollback_preview(rollback_id, home=self.home, uid=self.uid)
+        self.assertEqual(again["status"], "already_restored")
+
+    def test_add_rollback_restores_absent_authorized_keys(self):
+        plan = ssh_key_manager.preview("add", home=self.home, uid=self.uid,
+            fingerprint=self.fp1, public_key=self.first)
+        result = ssh_key_manager.apply("add", home=self.home, uid=self.uid,
+            fingerprint=self.fp1, public_key=self.first, confirmed=True, plan_id=plan["plan_id"])
+        self.assertTrue(self.keys.exists())
+        rollback = ssh_key_manager.rollback_preview(result["rollback_id"], home=self.home, uid=self.uid)
+        result = ssh_key_manager.rollback_apply(result["rollback_id"], home=self.home, uid=self.uid,
+            confirmed=True, plan_id=rollback["plan_id"])
+        self.assertEqual(result["status"], "complete")
+        self.assertFalse(self.keys.exists())
+
+    def test_rollback_refuses_permission_only_change_after_key_mutation(self):
+        self.keys.write_text(self.first + "\n" + self.second + "\n")
+        plan = ssh_key_manager.preview("remove", home=self.home, uid=self.uid, fingerprint=self.fp1)
+        result = ssh_key_manager.apply("remove", home=self.home, uid=self.uid,
+            fingerprint=self.fp1, confirmed=True, plan_id=plan["plan_id"])
+        current_bytes = self.keys.read_bytes()
+        self.keys.chmod(0o644)
+        rollback = ssh_key_manager.rollback_preview(result["rollback_id"], home=self.home, uid=self.uid)
+        self.assertEqual(rollback["status"], "conflict")
+        denied = ssh_key_manager.rollback_apply(result["rollback_id"], home=self.home, uid=self.uid,
+            confirmed=True, plan_id=rollback["plan_id"])
+        self.assertEqual(denied["status"], "conflict")
+        self.assertEqual(self.keys.read_bytes(), current_bytes)
+        self.assertEqual(self.keys.stat().st_mode & 0o777, 0o644)
+
+    def test_rollback_refuses_to_overwrite_concurrent_authorized_key_changes(self):
+        self.keys.write_text(self.first + "\n" + self.second + "\n")
+        self.keys.chmod(0o600)
+        plan = ssh_key_manager.preview("remove", home=self.home, uid=self.uid, fingerprint=self.fp1)
+        result = ssh_key_manager.apply("remove", home=self.home, uid=self.uid,
+            fingerprint=self.fp1, confirmed=True, plan_id=plan["plan_id"])
+        self.keys.write_text(self.second + "\n# concurrent owner change\n")
+        self.keys.chmod(0o600)
+        rollback = ssh_key_manager.rollback_preview(result["rollback_id"], home=self.home, uid=self.uid)
+        self.assertTrue(rollback["conflict"])
+        self.assertFalse(rollback["can_restore"])
+        result = ssh_key_manager.rollback_apply(result["rollback_id"], home=self.home, uid=self.uid,
+            confirmed=True, plan_id=rollback["plan_id"])
+        self.assertEqual(result["status"], "conflict")
+        self.assertIn("concurrent owner change", self.keys.read_text())
+
+    def test_crash_after_atomic_replacement_keeps_recoverable_snapshot(self):
+        plan = ssh_key_manager.preview("add", home=self.home, uid=self.uid,
+            fingerprint=self.fp1, public_key=self.first)
+        original = ssh_key_manager._set_rollback_snapshot_status
+        def fail_after_replace(*args, **kwargs):
+            raise ssh_key_manager.SshKeyMutationError("simulated crash after replacement")
+        ssh_key_manager._set_rollback_snapshot_status = fail_after_replace
+        try:
+            with self.assertRaisesRegex(ssh_key_manager.SshKeyMutationError, "simulated crash"):
+                ssh_key_manager.apply("add", home=self.home, uid=self.uid,
+                    fingerprint=self.fp1, public_key=self.first, confirmed=True, plan_id=plan["plan_id"])
+        finally:
+            ssh_key_manager._set_rollback_snapshot_status = original
+        entries = ssh_key_manager.rollback_list(home=self.home, uid=self.uid)
+        self.assertEqual(entries["entries"][0]["status"], "prepared")
+        rollback = ssh_key_manager.rollback_preview(entries["entries"][0]["rollback_id"],
+            home=self.home, uid=self.uid)
+        self.assertTrue(rollback["can_restore"])
 
 
 if __name__ == "__main__":

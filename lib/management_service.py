@@ -88,6 +88,9 @@ OPERATIONS = {
     "ssh.keys.add.apply": {"args": {"public_key", "fingerprint", "confirmed", "plan_id"}},
     "ssh.keys.remove.preview": {"args": {"fingerprint"}},
     "ssh.keys.remove.apply": {"args": {"fingerprint", "confirmed", "plan_id"}},
+    "ssh.keys.rollback.list": {"args": set()},
+    "ssh.keys.rollback.preview": {"args": {"rollback_id"}},
+    "ssh.keys.rollback.apply": {"args": {"rollback_id", "confirmed", "plan_id"}},
     "ssh.client-key.create.preview": {"args": {"name"}},
     "ssh.client-key.create.apply": {"args": {"name", "confirmed", "plan_id"}},
     "ssh.service.autostart.status": {"args": set()},
@@ -407,6 +410,26 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = remote_access_policy.preview(args["policy"]) if "policy" in args else remote_access_policy.preview()
         elif operation == "ssh.keys.list":
             data = ssh_key_inventory.list_managed_authorized_keys(home=home)
+        elif operation == "ssh.keys.rollback.list":
+            effective = ssh_key_inventory.list_managed_authorized_keys(home=home)
+            if effective.get("authorized_keys_path_verified") is not True:
+                return _error(request_id, "ssh_configuration_unverified", "managed SSH authorized-key path is not verified; no changes made")
+            data = ssh_key_manager.rollback_list(home=home, uid=os.getuid())
+        elif operation in {"ssh.keys.rollback.preview", "ssh.keys.rollback.apply"}:
+            rollback_id = args.get("rollback_id")
+            if not isinstance(rollback_id, str):
+                return _error(request_id, "invalid_arguments", "a valid SSH rollback ID is required")
+            if operation.endswith(".apply") and (args.get("confirmed") is not True
+                    or not isinstance(args.get("plan_id"), str)):
+                return _error(request_id, "confirmation_required", "SSH credential restore requires its exact preview plan and explicit confirmation")
+            effective = ssh_key_inventory.list_managed_authorized_keys(home=home)
+            if effective.get("authorized_keys_path_verified") is not True:
+                return _error(request_id, "ssh_configuration_unverified", "managed SSH authorized-key path is not verified; no changes made")
+            if operation.endswith(".preview"):
+                data = ssh_key_manager.rollback_preview(rollback_id, home=home, uid=os.getuid())
+            else:
+                data = ssh_key_manager.rollback_apply(rollback_id, home=home, uid=os.getuid(),
+                    confirmed=args["confirmed"], plan_id=args["plan_id"])
         elif operation.startswith("ssh.keys."):
             if operation.endswith(".preview") or operation.endswith(".apply"):
                 action = "add" if ".add." in operation else "remove"
@@ -1228,7 +1251,7 @@ def main(argv: list[str] | None = None) -> int:
                 else: print("Preview first, then apply with --yes --plan-id PLAN_ID.", file=sys.stderr)
                 return 1
             payload = {"plan_id": args.plan_id, "confirmed": True}
-    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "terminal.broker.status", "native.ssh.status", "ssh.keys.list", "boot.status", "wakelock.status", "wakelock.ssh-policy.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
+    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "terminal.broker.status", "native.ssh.status", "ssh.keys.list", "ssh.keys.rollback.list", "boot.status", "wakelock.status", "wakelock.ssh-policy.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
         payload = {}
         if args.operation == "continuity.status" and args.test_id:
             payload["test_id"] = args.test_id
@@ -1538,8 +1561,22 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             payload = {"action": args.shortcut_action, "app_id": args.app_id,
                        "confirmed": True, "plan_id": args.plan_id}
-    elif args.operation in {"ssh.inspect", "ssh.keys.list"}:
+    elif args.operation in {"ssh.inspect", "ssh.keys.list", "ssh.keys.rollback.list"}:
         payload = {}
+    elif args.operation in {"ssh.keys.rollback.preview", "ssh.keys.rollback.apply"}:
+        if not args.operation_id:
+            response = _error(request_id, "invalid_arguments", "--operation-id is required for SSH rollback")
+            if args.json: print(json.dumps(response, sort_keys=True))
+            else: print("Provide the rollback ID with --operation-id.", file=sys.stderr)
+            return 1
+        payload = {"rollback_id": args.operation_id}
+        if args.operation.endswith(".apply"):
+            if not args.yes or not args.plan_id:
+                response = _error(request_id, "confirmation_required", "SSH rollback apply requires --yes and the exact --plan-id from preview")
+                if args.json: print(json.dumps(response, sort_keys=True))
+                else: print("Preview first, then apply with --yes --plan-id PLAN_ID.", file=sys.stderr)
+                return 1
+            payload.update({"confirmed": True, "plan_id": args.plan_id})
     elif args.operation in {"ssh.keys.add.preview", "ssh.keys.add.apply",
                             "ssh.keys.remove.preview", "ssh.keys.remove.apply"}:
         is_add = ".add." in args.operation

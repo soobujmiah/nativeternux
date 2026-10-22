@@ -4,7 +4,7 @@
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search, *action_scroll;
-                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_terminal_button, *proot_stop_button, *proot_confirm_button, *proot_cancel_button, *monitor_box, *monitor_enabled,
+                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_terminal_button, *proot_stop_button, *proot_confirm_button, *proot_cancel_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; gchar *proot_pending_action, *proot_pending_session_id, *proot_pending_plan_id; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; guint category_count; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
@@ -13,6 +13,7 @@ static Center *app_center;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5);
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact);
+static void ask_ssh_rollback_confirmation(Center *c, const gchar *rollback_id, const gchar *plan_id, const gchar *effect);
 static void choose_graphics_api(GtkButton *button, gpointer data);
 static void ask_shortcut_confirmation(Center *c, const gchar *action, const gchar *app_id, const gchar *plan_id, const gchar *target, const gchar *transition);
 static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *summary);
@@ -23,6 +24,8 @@ static void show_management_log(GtkButton *button, gpointer data);
 static void show_ssh_keys(GtkButton *button, gpointer data);
 static void enroll_ssh_key(GtkButton *button, gpointer data);
 static void revoke_ssh_key(GtkButton *button, gpointer data);
+static void restore_ssh_key(GtkButton *button, gpointer data);
+static void ssh_rollback_choice(GObject *source, GAsyncResult *result, gpointer user_data);
 static void generate_ssh_key(GtkButton *button, gpointer data);
 static void ssh_client_key_preview(GtkButton *button, gpointer data);
 static void ask_ssh_client_key_confirmation(Center *c, const gchar *name, const gchar *plan_id, const gchar *path, const gchar *impact);
@@ -271,6 +274,51 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
                 g_strchomp(f[3]); ask_ssh_autostart_confirmation(c, f[2], f[1], f[3]);
             } else gtk_label_set_text(GTK_LABEL(c->notice), "SSH startup preference preview was invalid.");
             g_strfreev(f);
+        } else if (g_strcmp0(request->action, "ssh-key-rollback-list") == 0 && stdout_text && g_str_has_prefix(stdout_text, "R\t")) {
+            gchar **lines = g_strsplit(stdout_text, "\n", -1);
+            GPtrArray *ids = g_ptr_array_new_with_free_func(g_free);
+            GPtrArray *labels = g_ptr_array_new_with_free_func(g_free);
+            for (guint i = 0; lines[i]; i++) {
+                gchar **f = g_strsplit(lines[i], "\t", 5);
+                if (f[0] && g_strcmp0(f[0], "R") == 0 && f[1] && g_strcmp0(f[1], "-") != 0
+                        && g_regex_match_simple("^[0-9a-f]{32}$", f[1], 0, 0)) {
+                    g_ptr_array_add(ids, g_strdup(f[1]));
+                    g_ptr_array_add(labels, g_strdup_printf("%s key %s (%s)", f[3] ? f[3] : "changed",
+                        f[2] ? f[2] : "fingerprint unavailable", f[4] ? f[4] : "saved"));
+                }
+                g_strfreev(f);
+            }
+            g_strfreev(lines);
+            if (ids->len == 0) {
+                gtk_label_set_text(GTK_LABEL(c->notice), "No saved SSH key changes are available to restore.");
+            } else {
+                gchar **choices = g_new0(gchar *, labels->len + 2); choices[0] = g_strdup("Cancel");
+                GString *message = g_string_new("Choose a saved authorized-key change to restore:");
+                GString *joined = g_string_new(NULL);
+                for (guint i = 0; i < ids->len; i++) {
+                    choices[i + 1] = g_strdup_printf("%u. %s", i + 1, (gchar *)g_ptr_array_index(labels, i));
+                    g_string_append_printf(message, "\n\n%u. %s", i + 1, (gchar *)g_ptr_array_index(labels, i));
+                    if (i) g_string_append_c(joined, ',');
+                    g_string_append(joined, g_ptr_array_index(ids, i));
+                }
+                GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message->str);
+                gtk_alert_dialog_set_buttons(dialog, (const char * const *)choices);
+                gtk_alert_dialog_set_default_button(dialog, 0);
+                Request *request = g_new0(Request, 1); request->center = c;
+                request->action = g_strdup("ssh-key-rollback-select"); request->resource_id = g_string_free(joined, FALSE);
+                gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, ssh_rollback_choice, request);
+                gtk_label_set_text(GTK_LABEL(c->notice), "Choose an exact saved SSH key state to review.");
+                g_object_unref(dialog); g_string_free(message, TRUE);
+                g_strfreev(choices);
+            }
+            g_ptr_array_unref(ids); g_ptr_array_unref(labels);
+        } else if (g_strcmp0(request->action, "ssh-key-rollback-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+            gchar **f = g_strsplit(stdout_text, "\t", 4);
+            if (f[1] && g_regex_match_simple("^[0-9a-f]{24}$", f[1], 0, 0) && f[2]
+                    && g_regex_match_simple("^[0-9a-f]{32}$", f[2], 0, 0) && f[3]) {
+                g_strchomp(f[3]); ask_ssh_rollback_confirmation(c, f[2], f[1], f[3]);
+            } else gtk_label_set_text(GTK_LABEL(c->notice), "SSH recovery preview was invalid; no change was made.");
+            g_strfreev(f);
         } else if (g_strcmp0(request->action, "ssh-client-key-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
             gchar **f = g_strsplit(stdout_text, "\t", 5);
             gchar *expected_path = f[2] ? g_strdup_printf("~/.ssh/ternuxx-keys/%s", f[2]) : NULL;
@@ -429,7 +477,7 @@ static void show_resource(Center *c, Resource *r) {
     else if (g_strcmp0(r->id, "graphics.debian") == 0)
         gui_actions = "Check status · Verify OpenGL, GLES, Vulkan";
     else if (g_strcmp0(r->id, "network.ssh.managed-8023") == 0)
-        gui_actions = "Check status · Generate a Native recovery key · Enroll or revoke public keys · Set SSH automatic start · Start, stop, or restart managed SSH (8023)";
+        gui_actions = "Check status · Generate a Native recovery key · Enroll, revoke, or restore public keys · Set SSH automatic start · Start, stop, or restart managed SSH (8023)";
     else if (g_strcmp0(r->id, "native.wakelock") == 0)
         gui_actions = "Inspect Wake Lock leases · Set managed SSH keep-awake preference";
     else if (g_strcmp0(r->id, "native.gui.activity-monitor") == 0)
@@ -486,6 +534,7 @@ static void show_resource(Center *c, Resource *r) {
     gtk_widget_set_visible(c->ssh_keys_button, managed_ssh);
     gtk_widget_set_visible(c->ssh_enroll_button, managed_ssh);
     gtk_widget_set_visible(c->ssh_revoke_button, managed_ssh);
+    gtk_widget_set_visible(c->ssh_rollback_button, managed_ssh);
     gtk_widget_set_visible(c->ssh_generate_button, managed_ssh);
     gtk_widget_set_visible(c->ssh_autostart_button, managed_ssh);
     gtk_widget_set_visible(c->ssh_wakelock_button, wakelock);
@@ -493,7 +542,7 @@ static void show_resource(Center *c, Resource *r) {
     if (graphics) { gtk_button_set_label(GTK_BUTTON(c->start_button), "Graphics status"); gtk_button_set_label(GTK_BUTTON(c->stop_button), "Verify OpenGL"); }
     else { gtk_button_set_label(GTK_BUTTON(c->start_button), managed_ssh ? "Start managed SSH (8023)" : "Start desktop"); gtk_button_set_label(GTK_BUTTON(c->stop_button), managed_ssh ? "Stop managed SSH (8023)" : "Stop desktop"); }
     gtk_widget_set_visible(c->monitor_box, monitor);
-    GtkWidget *action_buttons[] = {c->start_button, c->stop_button, c->ssh_restart_button, c->ssh_keys_button, c->ssh_enroll_button, c->ssh_revoke_button, c->ssh_generate_button, c->ssh_autostart_button, c->ssh_wakelock_button, c->graphics_select_button,
+    GtkWidget *action_buttons[] = {c->start_button, c->stop_button, c->ssh_restart_button, c->ssh_keys_button, c->ssh_enroll_button, c->ssh_revoke_button, c->ssh_rollback_button, c->ssh_generate_button, c->ssh_autostart_button, c->ssh_wakelock_button, c->graphics_select_button,
         c->graphics_api_button, c->history_button, c->desktop_log_button, c->logs_button,
         c->audit_logs_button, c->cron_button, c->cron_history_button, c->cron_manage_button,
         c->timezone_set_button, c->proot_app_button, c->proot_shortcut_button,
@@ -590,6 +639,8 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
             run_bridge(request->center, request->action, "confirmed", request->resource_id, NULL, NULL, NULL);
         else if (g_strcmp0(request->action, "ssh-key-add-apply") == 0 || g_strcmp0(request->action, "ssh-key-remove-apply") == 0)
             run_bridge(request->center, request->action, "confirmed", request->resource_id, request->plan_id, NULL, NULL);
+        else if (g_strcmp0(request->action, "ssh-key-rollback-apply") == 0)
+            run_bridge(request->center, "ssh-key-rollback-apply", request->resource_id, request->plan_id, NULL, NULL, NULL);
         else if (g_strcmp0(request->action, "ssh-client-key-apply") == 0)
             run_bridge(request->center, "ssh-client-key-apply", "confirmed", request->resource_id, request->plan_id, NULL, NULL);
         else if (g_strcmp0(request->action, "ssh-autostart-apply") == 0)
@@ -1006,6 +1057,36 @@ static void ask_ssh_key_confirmation(Center *c, const gchar *action, const gchar
     g_object_unref(dialog); g_free(message);
 }
 
+static void ssh_rollback_choice(GObject *source, GAsyncResult *result, gpointer user_data) {
+    GtkAlertDialog *dialog = GTK_ALERT_DIALOG(source); Request *request = user_data; GError *error = NULL;
+    int choice = gtk_alert_dialog_choose_finish(dialog, result, &error);
+    if (!error && choice > 0) {
+        gchar **ids = g_strsplit(request->resource_id ? request->resource_id : "", ",", -1);
+        guint index = (guint)(choice - 1);
+        if (ids[index] && g_regex_match_simple("^[0-9a-f]{32}$", ids[index], 0, 0))
+            run_bridge(request->center, "ssh-key-rollback-preview", ids[index], NULL, NULL, NULL, NULL);
+        else gtk_label_set_text(GTK_LABEL(request->center->notice), "Selected SSH recovery record is invalid.");
+        g_strfreev(ids);
+    } else if (error) { gtk_label_set_text(GTK_LABEL(request->center->notice), error->message); g_clear_error(&error); }
+    else gtk_label_set_text(GTK_LABEL(request->center->notice), "SSH recovery cancelled.");
+    g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
+}
+static void restore_ssh_key(GtkButton *button, gpointer data) {
+    (void)button; run_bridge(data, "ssh-key-rollback-list", NULL, NULL, NULL, NULL, NULL);
+}
+static void ask_ssh_rollback_confirmation(Center *c, const gchar *rollback_id,
+                                          const gchar *plan_id, const gchar *effect) {
+    gchar *message = g_strdup_printf("Restore the exact previous authorized_keys file?\n\n%s\n\nThis affects owner-managed SSH 8022 and Ternuxx SSH 8023. Restore is refused if the file changed since this snapshot.", effect);
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
+    const char *choices[] = {"Cancel", "Restore saved key state", NULL};
+    gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
+    Request *request = g_new0(Request, 1); request->center = c;
+    request->action = g_strdup("ssh-key-rollback-apply"); request->resource_id = g_strdup(rollback_id);
+    request->plan_id = g_strdup(plan_id);
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
+    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact SSH key recovery");
+    g_object_unref(dialog); g_free(message);
+}
 static void show_management_log(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "logs-read", "management-api", NULL, NULL, NULL, NULL);
 }
@@ -1155,7 +1236,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->category_list=gtk_list_box_new(); gtk_widget_set_size_request(c->category_list,155,-1); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->category_list),GTK_SELECTION_SINGLE); gtk_paned_set_start_child(GTK_PANED(paned),c->category_list);
     GtkWidget *middle=gtk_paned_new(GTK_ORIENTATION_VERTICAL); GtkWidget *center=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_size_request(center,-1,180); c->search=gtk_search_entry_new(); gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(c->search),"Search resources"); gtk_box_append(GTK_BOX(center),c->search); c->resource_list=gtk_list_box_new(); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->resource_list),GTK_SELECTION_SINGLE); GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),c->resource_list); gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(center),scroll); gtk_paned_set_start_child(GTK_PANED(middle),center);
     GtkWidget *right=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); c->details=gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(c->details),FALSE); gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->details),GTK_WRAP_WORD_CHAR); GtkWidget *detail_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(detail_scroll),c->details); gtk_widget_set_vexpand(detail_scroll,TRUE);
-    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->desktop_log_button=gtk_button_new_with_label("Read Native desktop log (may include app output)"); gtk_widget_set_visible(c->desktop_log_button,FALSE); c->logs_button=gtk_button_new_with_label("Read Cron scheduler log"); gtk_widget_set_visible(c->logs_button,FALSE); c->audit_logs_button=gtk_button_new_with_label("Read management audit log"); gtk_widget_set_visible(c->audit_logs_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->ssh_restart_button=gtk_button_new_with_label("Restart managed SSH (8023)"); gtk_widget_set_visible(c->ssh_restart_button,FALSE); c->ssh_keys_button=gtk_button_new_with_label("View shared SSH key fingerprints"); gtk_widget_set_visible(c->ssh_keys_button,FALSE); c->ssh_enroll_button=gtk_button_new_with_label("Enroll public key..."); gtk_widget_set_visible(c->ssh_enroll_button,FALSE); c->ssh_revoke_button=gtk_button_new_with_label("Revoke public key..."); gtk_widget_set_visible(c->ssh_revoke_button,FALSE); c->ssh_generate_button=gtk_button_new_with_label("Create Native recovery key..."); gtk_widget_set_visible(c->ssh_generate_button,FALSE); c->ssh_autostart_button=gtk_button_new_with_label("Set SSH start with Termux services..."); gtk_widget_set_visible(c->ssh_autostart_button,FALSE); c->ssh_wakelock_button=gtk_button_new_with_label("Set managed SSH keep-awake preference..."); gtk_widget_set_visible(c->ssh_wakelock_button,FALSE); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->ssh_restart_button); gtk_box_append(GTK_BOX(actions),c->ssh_keys_button); gtk_box_append(GTK_BOX(actions),c->ssh_enroll_button); gtk_box_append(GTK_BOX(actions),c->ssh_revoke_button); gtk_box_append(GTK_BOX(actions),c->ssh_generate_button); gtk_box_append(GTK_BOX(actions),c->ssh_autostart_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); gtk_box_append(GTK_BOX(actions),c->desktop_log_button); gtk_box_append(GTK_BOX(actions),c->logs_button); gtk_box_append(GTK_BOX(actions),c->audit_logs_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); c->proot_list_button=gtk_button_new_with_label("List PRoot app shortcuts"); gtk_widget_set_visible(c->proot_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_list_button);
+    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->desktop_log_button=gtk_button_new_with_label("Read Native desktop log (may include app output)"); gtk_widget_set_visible(c->desktop_log_button,FALSE); c->logs_button=gtk_button_new_with_label("Read Cron scheduler log"); gtk_widget_set_visible(c->logs_button,FALSE); c->audit_logs_button=gtk_button_new_with_label("Read management audit log"); gtk_widget_set_visible(c->audit_logs_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->ssh_restart_button=gtk_button_new_with_label("Restart managed SSH (8023)"); gtk_widget_set_visible(c->ssh_restart_button,FALSE); c->ssh_keys_button=gtk_button_new_with_label("View shared SSH key fingerprints"); gtk_widget_set_visible(c->ssh_keys_button,FALSE); c->ssh_enroll_button=gtk_button_new_with_label("Enroll public key..."); gtk_widget_set_visible(c->ssh_enroll_button,FALSE); c->ssh_revoke_button=gtk_button_new_with_label("Revoke public key..."); gtk_widget_set_visible(c->ssh_revoke_button,FALSE); c->ssh_rollback_button=gtk_button_new_with_label("Restore previous SSH key change..."); gtk_widget_set_visible(c->ssh_rollback_button,FALSE); c->ssh_generate_button=gtk_button_new_with_label("Create Native recovery key..."); gtk_widget_set_visible(c->ssh_generate_button,FALSE); c->ssh_autostart_button=gtk_button_new_with_label("Set SSH start with Termux services..."); gtk_widget_set_visible(c->ssh_autostart_button,FALSE); c->ssh_wakelock_button=gtk_button_new_with_label("Set managed SSH keep-awake preference..."); gtk_widget_set_visible(c->ssh_wakelock_button,FALSE); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->ssh_restart_button); gtk_box_append(GTK_BOX(actions),c->ssh_keys_button); gtk_box_append(GTK_BOX(actions),c->ssh_enroll_button); gtk_box_append(GTK_BOX(actions),c->ssh_revoke_button); gtk_box_append(GTK_BOX(actions),c->ssh_rollback_button); gtk_box_append(GTK_BOX(actions),c->ssh_generate_button); gtk_box_append(GTK_BOX(actions),c->ssh_autostart_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); gtk_box_append(GTK_BOX(actions),c->desktop_log_button); gtk_box_append(GTK_BOX(actions),c->logs_button); gtk_box_append(GTK_BOX(actions),c->audit_logs_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); c->proot_list_button=gtk_button_new_with_label("List PRoot app shortcuts"); gtk_widget_set_visible(c->proot_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_list_button);
     c->proot_sessions_button=gtk_button_new_with_label("List PRoot sessions"); gtk_widget_set_visible(c->proot_sessions_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_sessions_button);
     c->proot_recovery_button=gtk_button_new_with_label("Inspect PRoot recovery..."); gtk_widget_set_visible(c->proot_recovery_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_recovery_button);
     c->proot_probe_button=gtk_button_new_with_label("Start isolated probe..."); gtk_widget_set_visible(c->proot_probe_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_probe_button); c->proot_terminal_button=gtk_button_new_with_label("Open Debian terminal..."); gtk_widget_set_visible(c->proot_terminal_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_terminal_button);
@@ -1167,7 +1248,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_halign(tagline,GTK_ALIGN_START); gtk_widget_add_css_class(tagline,"dim-label");
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(c->proot_sessions_button,"clicked",G_CALLBACK(show_proot_sessions),c); g_signal_connect(c->proot_probe_button,"clicked",G_CALLBACK(start_proot_probe),c); g_signal_connect(c->proot_terminal_button,"clicked",G_CALLBACK(open_interactive_terminal),c); g_signal_connect(c->proot_recovery_button,"clicked",G_CALLBACK(proot_recovery_clicked),c); g_signal_connect(c->proot_stop_button,"clicked",G_CALLBACK(stop_proot_session),c); g_signal_connect(c->proot_confirm_button,"clicked",G_CALLBACK(proot_confirm_clicked),c); g_signal_connect(c->proot_cancel_button,"clicked",G_CALLBACK(proot_cancel_clicked),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(c->proot_sessions_button,"clicked",G_CALLBACK(show_proot_sessions),c); g_signal_connect(c->proot_probe_button,"clicked",G_CALLBACK(start_proot_probe),c); g_signal_connect(c->proot_terminal_button,"clicked",G_CALLBACK(open_interactive_terminal),c); g_signal_connect(c->proot_recovery_button,"clicked",G_CALLBACK(proot_recovery_clicked),c); g_signal_connect(c->proot_stop_button,"clicked",G_CALLBACK(stop_proot_session),c); g_signal_connect(c->proot_confirm_button,"clicked",G_CALLBACK(proot_confirm_clicked),c); g_signal_connect(c->proot_cancel_button,"clicked",G_CALLBACK(proot_cancel_clicked),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window)); return TRUE;
 }
 int main(int argc, char **argv) {

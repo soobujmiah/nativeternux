@@ -24,7 +24,7 @@ FIELD_LABELS: Final[dict[str, str]] = {
     "boot_status": "Boot status", "persistent": "Keep active in background",
     "wakelock": "Wake Lock", "last_checked": "Last checked",
     "message": "Details", "impact": "Change impact", "action": "Action",
-    "operation_id": "Action", "id": "Reference", "code": "Reference",
+    "operation_id": "Action", "id": "Reference", "code": "Reference", "rollback_id": "Recovery reference",
     "profile": "Profile", "endpoint": "Connection address",
     "port": "Port", "bind_address": "Bind address", "auth_methods": "Login methods",
     "password_authentication": "Password login", "public_key_authentication": "Key login",
