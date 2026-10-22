@@ -5,6 +5,9 @@ import http.client
 import io
 import json
 from pathlib import Path
+import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -30,6 +33,17 @@ def native_env(home: str) -> dict[str, str]:
 
 
 class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("node"), "Node.js is optional on Native Termux")
+    def test_inline_web_javascript_has_valid_syntax_when_node_is_available(self) -> None:
+        page = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
+        inline = [match.group(2) for match in re.finditer(
+            r"<script\b([^>]*)>(.*?)</script\s*>", page, re.IGNORECASE | re.DOTALL)
+            if not re.search(r"\bsrc\s*=", match.group(1), re.IGNORECASE)]
+        self.assertTrue(inline, "management page has no inline JavaScript")
+        for script in inline:
+            subprocess.run(["node", "--check"], input=script, text=True, check=True,
+                           capture_output=True)
+
     def test_web_ssh_help_matches_publickey_only_service_policy(self) -> None:
         ui = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
         self.assertIn("public-key login only", ui)
