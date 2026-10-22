@@ -1,0 +1,7 @@
+event_id: commit-808a0853b938-de20b6d4f7088cf2
+repository: soobujmiah/ternuxx
+commit: 808a0853b938a2c6ae4d20a9fbdd3f920802ff3b
+kind: commit
+occurred_at: '2026-10-22T16:14:18Z'
+status: completed
+summary: 'docs(p4): confirm installed replay graphics path'
