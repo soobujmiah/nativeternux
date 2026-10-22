@@ -12,7 +12,7 @@ Implement in Native `$HOME/ternuxx` over SSH 8022. The installed `tx` shim dispa
 
 P0–P3 are recorded complete within dated evidence scope; P4 remains active. [P3 RB08 evidence](docs/evidence/2026-10-22-p3-rb08-postboot-exit-audit.md) distinguishes observed Native boot/authenticated readiness from its private NOT_READY checkpoint. The current recovery module copy was deployed after that boot; its later cold-boot execution is unobserved. No reboot is part of this continuation.
 
-The persistent Native terminal broker and CLI/TUI/Web/GTK paths exist. Actual CLI, TUI and authenticated Web terminal lifecycle passed on the separate replay guest. GTK start, attach, resize, detach, and exact stop-preview/apply have now passed on the separate replay guest; cross-client continuity remains open. The owner's `tx db` process must not be used as that lifecycle test target.
+The persistent Native terminal broker and CLI/TUI/Web/GTK paths exist. Actual CLI, TUI and authenticated Web terminal lifecycle passed on the separate replay guest. GTK start, attach, resize, detach, and exact stop-preview/apply have passed on the separate replay guest. A real same-session CLI → authenticated Web API → TUI handoff now passes; the GTK picker bridge sees the same session, while GTK/VTE handoff remains open. See [cross-client handoff evidence](docs/evidence/2026-10-22-cross-client-terminal-handoff.md). The owner's `tx db` process must not be used as that lifecycle test target.
 
 ## Latest implementation
 
@@ -40,7 +40,7 @@ The full owner objective remains active in [the repository audit worklist](docs/
 
 - Review every narrative/structured document and relevant source/test; inventory is not proof of review.
 - SSH key-change rollback, disposable enrollment/authentication qualification, next-supervisor autostart and next-start Wake Lock controls now have shared paths. Remaining SSH gates are the bounded password-recovery decision and cold-boot delivery verification; do not broaden key-management work beyond those explicit gates.
-- Complete remaining guest replay/rollback and GTK/cross-client terminal qualification while preserving the working guest.
+- Qualify same-session attach/I/O through GTK/VTE, then finish exact replay-guest retirement/rollback and remaining provider-route/config acceptance while preserving the working guest.
 - Reconcile every installed runtime component and reproduce the supported setup from a clean isolated target.
 - Recheck P1–P3 acceptance scope, correct stale claims, and continue the remaining roadmap in order.
 

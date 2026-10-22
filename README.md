@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles pass; all four clients expose preview-confirmed Native SSH recovery-key creation, next-supervisor autostart and next-start per-service Wake Lock policy. Current Wake Lock preference remains default-enabled; wrapper source/install parity verified. Cross-client continuity, durable credential rollback, password/cold-boot policy, fresh-guest retirement/rollback, and remaining P4 acceptance stay open.
+Separate replay guest setup and CLI, authenticated Web API, TUI, and GTK terminal lifecycles pass. A real same-session CLI→Web API→TUI handoff passes; GTK picker sees that session, while GTK/VTE same-session handoff, fresh-guest retirement/rollback, provider routes and remaining P4 acceptance stay open. Durable SSH key rollback and four-client startup/Wake Lock controls pass; bounded password/cold-boot gates remain.
 
-**Next action:** Implement and qualify durable credential rollback; resolve password recovery and cold-boot delivery; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
+**Next action:** Qualify same-session attach and I/O through GTK/VTE, then finish exact replay guest retirement/rollback and remaining provider-route/config acceptance without touching the owner’s active PRoot; continue the requirement and document audit. Keep SSH work bounded to password recovery and cold-boot evidence.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

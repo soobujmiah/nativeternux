@@ -40,7 +40,15 @@ See [registration and evidence](../evidence/2026-10-22-monitor-service-registrat
 
 The [separate guest setup and broker/CLI replay](../evidence/2026-10-22-fresh-setup-and-probe-safety.md) completed with scoped preservation checks. Follow [the isolated broker procedure](../architecture/INTERACTIVE-PROOT-TERMINALS.md#separate-guest-qualification) after fresh setup succeeds. In a second Native terminal, use that same private state namespace with `./tx terminal start`; review the selected replay alias/rootfs before confirming. Exercise I/O and terminal resizing, use Ctrl+] to detach, then `./tx terminal attach SESSION_ID` and `./tx terminal close SESSION_ID` with the same namespace. Close must show the exact session and profile-specific signal/scope before confirmation.
 
-This is an opt-in device replay, not part of the ordinary unit suite. Terminal content stays out of evidence/logs. Preserve failed state for diagnosis; never force-signal or adopt the working guest. Actual CLI, broker, TUI and Web lifecycles passed on the separate guest; GTK and cross-client acceptance remain open.
+This is an opt-in device replay, not part of the ordinary unit suite. Terminal content stays out of evidence/logs. Preserve failed state for diagnosis; never force-signal or adopt the working guest. Actual CLI, broker, TUI and Web lifecycles passed on the separate guest; GTK/VTE and remaining cross-client acceptance stay open.
+
+A sequential cross-client handoff uses the same receipt-verified replay guest and private broker:
+
+```sh
+"$HOME/.cache/ternuxx-ui-check-venv/bin/python" tools/check_terminal_handoff.py --alias ternuxx-replay-p4
+```
+
+It verifies real CLI start/I-O/resize/detach, authenticated Web API attach/I-O/resize/detach, then TUI attach/I-O/resize/detach on the same session; it checks shared inventory and GTK picker visibility, closes that exact test session by preview/apply, and verifies the default Debian root identity/profile. It does not qualify a GTK/VTE attach or a browser-rendered terminal window. A failed run preserves its private state for exact recovery; never target the default Debian alias. See [cross-client evidence](../evidence/2026-10-22-cross-client-terminal-handoff.md).
 
 The opt-in real TUI replay uses the same separately owned guest. From Native Termux, install the pinned checker-only dependencies into a private Python environment and run:
 

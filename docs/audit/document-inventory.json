@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 405,
-  "read_count": 97,
+  "document_count": 406,
+  "read_count": 94,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "0b3c3d23cdd25c570a3c0a7fb54b98c982e73c80752935b87553a56325f73810",
+      "sha256": "234ca75702e75c5c8d5ec743b6ef630429f1e681ad520a6b10d423aa8866eb2b",
       "lines": 53,
-      "read_status": "read",
-      "read_sha256": "0b3c3d23cdd25c570a3c0a7fb54b98c982e73c80752935b87553a56325f73810"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "84959dcf3fca65cf68068b5cf17380759491e296421a13411547ee7201e3d72f",
+      "sha256": "f15d94cd83dc255135b13feb6608472fba564ed97841e2dda4d603cca99f9912",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "b2abd8cecebf87e9fd83e8a5d8210226613ae9099032d6216aa9a94c5a12b225",
-      "lines": 163,
+      "sha256": "9a7bd5dcf71cfa606eb6394e4afcfe33395de2f2533112b0080bfb496b7a98ed",
+      "lines": 164,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "82e38e90e6a66778b92941790b341fc65f84cb72b02bc4575522b77286564420",
+      "sha256": "ab288c95a2119bd32e71fe58060b7adaf7714a51b9c040f2f56d216c2fe4eb43",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -515,10 +515,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "07af0f9b15a93de38c8b63489e2fda0757d6dbb40c51bf83f704d4e91f35ca40",
-      "lines": 88,
-      "read_status": "read",
-      "read_sha256": "07af0f9b15a93de38c8b63489e2fda0757d6dbb40c51bf83f704d4e91f35ca40"
+      "sha256": "1c28facdab402c697295ddf50831e917bdf64a19955ad5c7faebed9d8227a55f",
+      "lines": 89,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2201,6 +2201,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-22-cross-client-terminal-handoff.md",
+      "kind": "narrative",
+      "sha256": "52578742469a08d27ffef90fa53f80a2f7a97ee528a7d0d5eea12aa09dcb82ab",
+      "lines": 25,
+      "read_status": "read",
+      "read_sha256": "52578742469a08d27ffef90fa53f80a2f7a97ee528a7d0d5eea12aa09dcb82ab"
+    },
+    {
       "path": "docs/evidence/2026-10-22-fresh-guard-regression.json",
       "kind": "structured",
       "sha256": "107821fba626b70c342c9a2f3608086968b0c8988561a21abd8c4f42ad5e9cbd",
@@ -2843,10 +2851,10 @@
     {
       "path": "docs/testing/README.md",
       "kind": "narrative",
-      "sha256": "fbba3b797f92147368ccf7d9799de134edc19d9f602e82412c822c77d5366221",
-      "lines": 77,
-      "read_status": "read",
-      "read_sha256": "fbba3b797f92147368ccf7d9799de134edc19d9f602e82412c822c77d5366221"
+      "sha256": "311de97703a22af52cd3dbe14144ba3800f2675fa73ba83fa823c98d308a4551",
+      "lines": 85,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",
@@ -2875,10 +2883,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "182eb3adcb5d3f56a8d8f4026f7ca3cea9cd42d7a9da1ae890befb9b54ffa62c",
-      "lines": 178,
-      "read_status": "read",
-      "read_sha256": "182eb3adcb5d3f56a8d8f4026f7ca3cea9cd42d7a9da1ae890befb9b54ffa62c"
+      "sha256": "446f5a574ae4eea725ecfc16d96ac9be0f3f333858615845941b4ee5132c83c8",
+      "lines": 179,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "requirements-dev.txt",

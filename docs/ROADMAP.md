@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Implement and qualify durable credential rollback; resolve password recovery and cold-boot delivery; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
+**Next action:** Qualify same-session attach and I/O through GTK/VTE, then finish exact replay guest retirement/rollback and remaining provider-route/config acceptance without touching the owner’s active PRoot; continue the requirement and document audit. Keep SSH work bounded to password recovery and cold-boot evidence.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
