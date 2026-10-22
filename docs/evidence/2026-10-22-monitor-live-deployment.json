@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-22T00:21:45.551867+00:00",
+  "service": {
+    "installed": true,
+    "run_sha256": "6cdd345256c740215350cf52c6a46b662aa0ce698bdd5fe3a63798c16a1bfabd",
+    "service_id": "ternuxx-gui-monitor",
+    "source_matches": true,
+    "status": "running"
+  },
+  "worker_uses_canonical_checkout": true,
+  "scheduler": "running_idle",
+  "enabled": false,
+  "focus_check": false,
+  "activity_launch": false,
+  "last_check_at": null,
+  "linux_gui_health": "running",
+  "module_sha256": "69a4d2be219d228a1e84db23a1c698dc7ab5afba287d2e622d9d186cf444d81a",
+  "preservation": "Native desktop, terminal broker, development SSH 8022 and working Codex guest were not stopped."
+}

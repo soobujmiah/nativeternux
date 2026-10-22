@@ -347,6 +347,8 @@ tx gui — Native Termux GTK management center
   tx gui                              Open the installed GTK management center
   tx gui start|stop|restart|status    Preserve native desktop lifecycle aliases
   tx gui monitor status|enable|disable|configure OPTIONS
+  tx gui monitor service status|preview-install
+  tx gui monitor service install --yes --plan-id PLAN_ID
 
 Run from Native Termux with a local X11 display selected. Install the graphical
 client with 'tx mng center install'. Desktop lifecycle remains available as

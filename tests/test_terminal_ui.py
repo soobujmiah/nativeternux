@@ -459,6 +459,17 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertIn("Verified as managed by Ternuxx", report)
         self.assertNotIn("never show this", report)
 
+    def test_human_report_preserves_paths_and_labels_lists_and_operations(self) -> None:
+        path = "/home/example/.local/share/ternuxx/log/gui-monitoring.log"
+        url = "https://example.test/one-time_code"
+        report = management_presentation.format_report({
+            "operation": "desktop.monitor.status",
+            "data": {"log_path": path, "url": url, "interval_bounds_seconds": [30, 86400]}})
+        self.assertIn(path, report)
+        self.assertIn(url, report)
+        self.assertIn("Operation: Activity monitoring policy", report)
+        self.assertIn("Interval bounds seconds:", report)
+
     def test_human_report_explains_status_unavailable_without_machine_code(self) -> None:
         report = management_presentation.format_report({
             "ok": False, "error": {"code": "live_status_unavailable"},

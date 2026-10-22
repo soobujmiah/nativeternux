@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Native broker and four terminal client paths exist. Real Firefox authenticated UI, responsive layout, stable actions and terminal dialog are verified without starting a guest; disposable managed guest replay and full interactive attach remain open.
+Native broker/four client paths and monitor registration exist; isolated monitor interval replay verified. Full audit, disposable guest replay and all-client terminal qualification remain open.
 
-**Next action:** Implement a separately guarded disposable guest replay and qualify managed terminal start/attach/I-O/resize/detach/exact close across CLI, TUI, Web and GTK; preserve the active Codex guest and Native Termux. Continue the full repository audit from docs/audit/REPOSITORY-AUDIT.md.
+**Next action:** Complete installed/runtime inventory and P1-P3 evidence mapping, then shared credential/service policy controls and separately guarded disposable guest/terminal replay; preserve Native Termux, SSH 8022 and the active Codex guest.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -89,6 +89,7 @@ Evidence:
 - [docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md](evidence/2026-10-22-p4-terminal-client-and-gui-review.md)
 - [docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md](evidence/2026-10-22-p4-persistent-broker-web-terminal.md)
 - [docs/evidence/2026-10-22-native-ui-and-audit-remediation.md](evidence/2026-10-22-native-ui-and-audit-remediation.md)
+- [docs/evidence/2026-10-22-monitor-service-registration.md](evidence/2026-10-22-monitor-service-registration.md)
 
 ## P5 — Distro and display compatibility profiles
 

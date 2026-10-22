@@ -30,6 +30,12 @@ Headless checks require exact 390/752/1440 CSS-pixel viewports. The disposable b
 
 See [Mozilla's protocol](https://firefox-source-docs.mozilla.org/remote/marionette/Protocol.html). Firefox/PRoot are optional checker dependencies, not Native core dependencies.
 
+## Private Native monitor replay
+
+With Native Runit tools already installed, run `python3 tools/check_monitor_service.py --interval-check`. It starts its own Runit watcher with one fixed service under a private temporary root and separate monitoring state. It verifies fresh registration, idle policy, two Linux-only ticks 30 seconds apart, unchanged workstation policy, and exact test-service exit/removal. It does not stop existing services, change workstation monitoring flags, or start a guest. This replay is opt-in and is not part of ordinary unit tests.
+
+See [registration and evidence](../evidence/2026-10-22-monitor-service-registration.md). Android Activity/focus behavior and cold-boot delivery require separate qualification.
+
 ## Evidence and qualification
 
 [Current limits](KNOWN-LIMITATIONS.md), [device compatibility](DEVICE-COMPATIBILITY.md), [client coverage](../architecture/CAPABILITY-MATRIX.md), and [the active audit](../audit/REPOSITORY-AUDIT.md) track remaining gates.

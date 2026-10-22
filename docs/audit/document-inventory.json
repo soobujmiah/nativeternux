@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 358,
-  "read_count": 30,
+  "document_count": 362,
+  "read_count": 32,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "be6fe4a4994cb23590e5ddeaa7c9b347e750952dcb39533bf84040de6a11b6c3",
+      "sha256": "7b07c4c3f1128139116d3d18666a503ce7844539dd35dffe4b141358711a375e",
       "lines": 35,
       "read_status": "read",
-      "read_sha256": "be6fe4a4994cb23590e5ddeaa7c9b347e750952dcb39533bf84040de6a11b6c3"
+      "read_sha256": "7b07c4c3f1128139116d3d18666a503ce7844539dd35dffe4b141358711a375e"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "2e57e6e45aa85c67ed2b6ba30df8a7c07cafe4a6452ebed02f9e7995a5b51fee",
+      "sha256": "3c6a7b411731cc03f377714e5273788086ea2383de0a5de9b9261bbe3603e831",
       "lines": 82,
-      "read_status": "read",
-      "read_sha256": "2e57e6e45aa85c67ed2b6ba30df8a7c07cafe4a6452ebed02f9e7995a5b51fee"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "SECURITY.md",
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "debc6f9256ce0e795cf31c39bfb7ce5b0449cdce6f086907d4a1b449e84efa35",
-      "lines": 150,
+      "sha256": "42ec2569e61c03b9cd7f781da29f9309738a736e64feac964cdfc7787849b1a3",
+      "lines": 151,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -211,10 +211,10 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "eb1c28fb49375df4935e92a77a46ea6103193019890ce962015c6ef6db2204e4",
+      "sha256": "2c9d359548245cf343a745abed9b913089594b209b5a9c93cc8db42c326b5429",
       "lines": 311,
-      "read_status": "read",
-      "read_sha256": "eb1c28fb49375df4935e92a77a46ea6103193019890ce962015c6ef6db2204e4"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/SOFTWARE-CATALOG.md",
@@ -243,10 +243,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "1ce054b23c179645a32aa7b9a16a378020e8a127d49903cf47b0fce64be251f7",
-      "lines": 24,
+      "sha256": "59b04da7cc45b793e395a6f4ce91ad68397e53d426c141b8edbeffa5b21cb618",
+      "lines": 25,
       "read_status": "read",
-      "read_sha256": "1ce054b23c179645a32aa7b9a16a378020e8a127d49903cf47b0fce64be251f7"
+      "read_sha256": "59b04da7cc45b793e395a6f4ce91ad68397e53d426c141b8edbeffa5b21cb618"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -267,10 +267,10 @@
     {
       "path": "docs/architecture/GUI-MONITORING-POLICY.md",
       "kind": "narrative",
-      "sha256": "9501537458596494b228f6697a5e3f400165ee8de2df9336a9c8ad65c6cbcc0a",
-      "lines": 28,
+      "sha256": "44c206e09aeccf533a9789a34090c7c48c1ec268d8fca60d05bb6cf5574faa5f",
+      "lines": 45,
       "read_status": "read",
-      "read_sha256": "9501537458596494b228f6697a5e3f400165ee8de2df9336a9c8ad65c6cbcc0a"
+      "read_sha256": "44c206e09aeccf533a9789a34090c7c48c1ec268d8fca60d05bb6cf5574faa5f"
     },
     {
       "path": "docs/architecture/GUI-SESSION-LIFECYCLE.md",
@@ -475,10 +475,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "722ffd068ef25fd36fd52c4ff9d99c01809090d54468f80892230a14d8967265",
-      "lines": 58,
+      "sha256": "2ee3da48ff288d4d3fed76f6937da0a57462776641caca9fdd9f43f18738c258",
+      "lines": 63,
       "read_status": "read",
-      "read_sha256": "722ffd068ef25fd36fd52c4ff9d99c01809090d54468f80892230a14d8967265"
+      "read_sha256": "2ee3da48ff288d4d3fed76f6937da0a57462776641caca9fdd9f43f18738c258"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2169,6 +2169,38 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-22-monitor-live-deployment.json",
+      "kind": "structured",
+      "sha256": "d741d21b02b496b13e3f10b4864cc50642c83eedb9d93dda088782c064ecbee2",
+      "lines": 20,
+      "read_status": "read",
+      "read_sha256": "d741d21b02b496b13e3f10b4864cc50642c83eedb9d93dda088782c064ecbee2"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-monitor-service-registration.md",
+      "kind": "narrative",
+      "sha256": "02c9dac1b5c2d9bb4938224d8595e6ea7d2089665d2604d47c17a7239b41928f",
+      "lines": 36,
+      "read_status": "read",
+      "read_sha256": "02c9dac1b5c2d9bb4938224d8595e6ea7d2089665d2604d47c17a7239b41928f"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-monitor-service-replay.json",
+      "kind": "structured",
+      "sha256": "f31ba421b5db8addfd33e98b031c294f9a7e152e874a06c3463528e2309902fe",
+      "lines": 17,
+      "read_status": "read",
+      "read_sha256": "f31ba421b5db8addfd33e98b031c294f9a7e152e874a06c3463528e2309902fe"
+    },
+    {
+      "path": "docs/evidence/2026-10-22-monitor-web-ui-check.json",
+      "kind": "structured",
+      "sha256": "9669350916d6e5bce82709fc48378b119c1c111f72aff04d1d6e046d0b5592aa",
+      "lines": 54,
+      "read_status": "read",
+      "read_sha256": "9669350916d6e5bce82709fc48378b119c1c111f72aff04d1d6e046d0b5592aa"
+    },
+    {
       "path": "docs/evidence/2026-10-22-native-selected-deployment-parity.json",
       "kind": "structured",
       "sha256": "8bf7f0a2e22d690367d237f8339078a1535e3a316ce4a28b09279628be3cd127",
@@ -2475,10 +2507,10 @@
     {
       "path": "docs/testing/README.md",
       "kind": "narrative",
-      "sha256": "3f10821c3e3f09f4dbb03c518c1f499073709f693d9c6c0d6fab524e65746b38",
-      "lines": 45,
+      "sha256": "0e7081db958c207a81d00f8cf5fdd14b075629d3b8dd64f383e30ac9fb7a8d60",
+      "lines": 51,
       "read_status": "read",
-      "read_sha256": "3f10821c3e3f09f4dbb03c518c1f499073709f693d9c6c0d6fab524e65746b38"
+      "read_sha256": "0e7081db958c207a81d00f8cf5fdd14b075629d3b8dd64f383e30ac9fb7a8d60"
     },
     {
       "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",
@@ -2507,10 +2539,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "fe01a1f859e9204b04945743707fa85510bd3c5a1fe7a4ab81f7c0d17813639a",
-      "lines": 165,
+      "sha256": "f58cefddd1274ab4c9059e80b93b03138bdb2714e275ce3ca84f5354d745ccf9",
+      "lines": 166,
       "read_status": "read",
-      "read_sha256": "fe01a1f859e9204b04945743707fa85510bd3c5a1fe7a4ab81f7c0d17813639a"
+      "read_sha256": "f58cefddd1274ab4c9059e80b93b03138bdb2714e275ce3ca84f5354d745ccf9"
     },
     {
       "path": "requirements-dev.txt",

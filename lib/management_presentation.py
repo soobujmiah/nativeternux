@@ -15,7 +15,7 @@ FIELD_LABELS: Final[dict[str, str]] = {
     "readiness": "Readiness", "availability": "Availability",
     "ownership": "Ownership", "authority": "Managed by",
     "provider": "Provider", "environment": "Environment",
-    "enabled": "Enabled", "running": "Running", "healthy": "Health",
+    "scheduler": "Background checker", "enabled": "Enabled", "running": "Running", "healthy": "Health",
     "interval_seconds": "Check interval (seconds)", "interval_value": "Check interval",
     "activity_launch": "Request Activity launch when missing",
     "focus_check": "Check Activity focus", "boot": "Boot startup",
@@ -54,6 +54,8 @@ HIDDEN_FIELDS: Final[frozenset[str]] = frozenset({
 })
 
 VALUE_LABELS: Final[dict[str, str]] = {
+    "running_idle": "Ready; monitoring is off",
+    "configuration-managed": "Policy managed by Ternuxx",
     "ternuxx_verified": "Verified as managed by Ternuxx",
     "configuration-managed-scheduler-not-installed": "Policy saved; background checker is not installed",
     "scheduler-not-installed": "Background checker is not installed",
@@ -179,6 +181,8 @@ def human_value(value: object) -> str:
     if value is None:
         return "Not reported"
     if isinstance(value, str):
+        if "/" in value:
+            return value  # Paths and URLs are identifiers, not state tokens.
         if value in VALUE_LABELS:
             return VALUE_LABELS[value]
         if value in STATUS_LABELS:
@@ -221,8 +225,8 @@ def format_report(value: object) -> str:
                 title = FIELD_LABELS.get(normalized, str(key).replace("_", " ").replace(".", " ").capitalize())
                 visit(child, depth + (1 if label else 0), title)
         elif isinstance(item, (list, tuple)):
-            if label and not item:
-                lines.append(f"{indent}{label}: None")
+            if label:
+                lines.append(f"{indent}{label}:" if item else f"{indent}{label}: None")
             for index, child in enumerate(item, 1):
                 if isinstance(child, (dict, list, tuple)):
                     lines.append(f"{indent}{index}.")
@@ -230,7 +234,8 @@ def format_report(value: object) -> str:
                 else:
                     lines.append(f"{indent}{index}. {human_value(child)}")
         else:
-            rendered = str(item) if label in {"Reference", "Action"} else human_value(item)
+            rendered = (operation_label(item) if label == "Operation" and isinstance(item, str)
+                        else str(item) if label in {"Reference", "Action"} else human_value(item))
             lines.append(f"{indent}{label + ': ' if label else ''}{rendered}")
 
     visit(value)

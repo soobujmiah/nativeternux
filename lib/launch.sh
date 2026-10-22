@@ -197,6 +197,11 @@ nt_cmd_gui_monitor() {
   local -a args=()
   case "$action" in
     --help|-h) nt_help gui; return 0 ;;
+    service)
+      nt_require_termux || return 1
+      nt_require_command python3 || return 1
+      python3 "$_TN_LIB_DIR/gui_monitoring.py" service "$@"
+      return $? ;;
     status) operation="desktop.monitor.status" ;;
     enable) operation="desktop.monitor.configure"; args+=(--monitor-enabled) ;;
     disable) operation="desktop.monitor.configure"; args+=(--monitor-disabled) ;;

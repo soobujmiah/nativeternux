@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-22T00:21:08.385758+00:00",
+  "service_id": "ternuxx-gui-monitor",
+  "fresh_isolated_registration": true,
+  "idle_default_verified": true,
+  "source_matches": true,
+  "interval_check": true,
+  "tick_count": 2,
+  "tick_interval_seconds": 30.0,
+  "workstation_policy_unchanged": true,
+  "activity_launch_enabled": false,
+  "focus_check_enabled": false,
+  "run_sha256": "6cdd345256c740215350cf52c6a46b662aa0ce698bdd5fe3a63798c16a1bfabd",
+  "module_sha256": "69a4d2be219d228a1e84db23a1c698dc7ab5afba287d2e622d9d186cf444d81a",
+  "private_service_exited_and_removed": true
+}

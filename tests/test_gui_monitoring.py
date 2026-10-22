@@ -150,6 +150,34 @@ class GuiMonitoringTests(unittest.TestCase):
         self.assertEqual(result["next_check_at"], "2026-10-19T01:00:00+00:00")
         self.assertEqual(result["freshness"], "fresh")
 
+    def test_disabled_policy_reports_live_idle_worker_without_enabling(self) -> None:
+        path = self.root / ".gui-monitor-scheduler.lock"
+        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            result = gui_monitoring.status(self.root)
+            self.assertEqual(result["scheduler"], "running_idle")
+            self.assertFalse(result["enabled"])
+            self.assertFalse(result["activity_requests_performed"])
+            self.assertFalse(result["focus_probe_performed"])
+            self.assertFalse((self.root / "gui-monitoring.json").exists())
+        finally:
+            os.close(fd)
+        self.assertEqual(gui_monitoring.status(self.root)["scheduler"], "disabled")
+
+    def test_service_commands_refuse_non_native_runtime(self) -> None:
+        with patch.dict(os.environ, {"PREFIX": "/missing", "TERMUX_VERSION": ""}):
+            self.assertEqual(gui_monitoring._main(["service", "status"]), 1)
+
+    def test_catalog_does_not_assert_an_unqueried_installation_is_missing(self) -> None:
+        import management_catalog
+        import management_presentation
+        resources = management_catalog.build_catalog(set())["resources"]
+        item = next(x for x in resources if x["id"] == "native.gui.activity-monitor")
+        self.assertEqual(item["state"]["readiness"], "query-required")
+        self.assertEqual(item["background"]["status"], "query-required")
+        self.assertEqual(management_presentation.human_value("running_idle"), "Ready; monitoring is off")
+
     def test_scheduler_lock_reports_existing_singleton(self) -> None:
         gui_monitoring.configure(self.root, enabled=True)
         path = self.root / ".gui-monitor-scheduler.lock"

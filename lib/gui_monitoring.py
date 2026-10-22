@@ -232,23 +232,21 @@ def configure(
 
 
 def _scheduler_state(root: Path, enabled: bool) -> str:
-    if not enabled:
-        return "disabled"
     lock = root / ".gui-monitor-scheduler.lock"
     try:
         info = lock.lstat()
     except FileNotFoundError:
-        return "not_running"
+        return "not_running" if enabled else "disabled"
     if stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and not (info.st_mode & 0o077):
         try:
             fd = os.open(lock, os.O_RDWR | getattr(os, "O_NOFOLLOW", 0))
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
-                return "running"
+                return "running" if enabled else "running_idle"
             finally:
                 os.close(fd)
-            return "not_running"
+            return "not_running" if enabled else "disabled"
         except OSError:
             return "unknown"
     return "unsafe"
@@ -443,7 +441,10 @@ def run_scheduler(home: str, state_dir: str, env: dict[str, str] | None = None) 
 
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=("status", "configure", "run"))
+    parser.add_argument("command", choices=("status", "configure", "run", "service"))
+    parser.add_argument("service_action", nargs="?", choices=("status", "preview-install", "install"))
+    parser.add_argument("--yes", action="store_true")
+    parser.add_argument("--plan-id")
     parser.add_argument("--home", default=os.environ.get("HOME", ""))
     parser.add_argument("--state-dir", default=os.environ.get("TERNUXX_STATE_DIR", ""))
     parser.add_argument("--enabled", action="store_true", default=None)
@@ -456,6 +457,27 @@ def _main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-focus-check", action="store_true")
     args = parser.parse_args(argv)
     try:
+        if args.command == "service":
+            import terminal_service_deployment as deployment
+            prefix = os.environ.get("PREFIX")
+            if prefix != "/data/data/com.termux/files/usr" or not os.environ.get("TERMUX_VERSION"):
+                raise MonitoringError("GUI monitor service commands require Native Termux")
+            kwargs = {"prefix": prefix, "service_id": deployment.MONITOR_SERVICE_ID}
+            try:
+                if args.service_action == "status":
+                    result = deployment.status(**kwargs)
+                elif args.service_action == "preview-install":
+                    result = deployment.preview_install(**kwargs)
+                elif args.service_action == "install":
+                    result = deployment.install(**kwargs, confirmed=args.yes, plan_id=args.plan_id)
+                else:
+                    raise MonitoringError("use service status|preview-install|install --yes --plan-id PLAN_ID")
+            except (deployment.ServiceInstallError, subprocess.SubprocessError) as exc:
+                raise MonitoringError(str(exc)) from exc
+            print(json.dumps({"ok": True, "data": result}, sort_keys=True))
+            return 0
+        if args.service_action or args.yes or args.plan_id:
+            raise MonitoringError("service arguments require the service command")
         if not args.state_dir:
             raise MonitoringError("TERNUXX_STATE_DIR is required")
         if args.command == "status":

@@ -42,9 +42,14 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A15 | Phase date basis is implicit: tool records UTC dates while some historical local-date corrections exist | Open reconciliation; date mismatch alone is not a new gate failure |
 | A16 | Two GitHub workflows independently run the full suite | Open CI efficiency/authority review |
 
-| A17 | GUI monitor scheduler definition exists but is not installed; saved policy alone cannot deliver scheduled checks | Open source/live gap; add exact guarded deployment and appropriate client controls |
+| A17 | GUI monitor scheduler existed only in source | Native CLI registration and idle live deployment now verified; private fresh Runit replay delivered two 30-second Linux-only ticks. Shared-client service registration controls remain open |
 
 | A18 | Browser reload loses the in-memory session and cannot reuse its consumed bootstrap code | Open reconnect/session-continuity design; historical reload failure is not counted as successful authentication |
+
+| A19 | Service rollback could stop/remove a competing identical registration | Reproduced before fix; serialized install and exclusive inode ownership now preserve competitors; failed stop retains owned definition |
+| A20 | New Runit directories may not be discovered before the first start request | Observed during initial live apply; bounded discovery retry added and verified by fixture plus fresh isolated live replay |
+
+| A21 | Human formatting changed punctuation inside file paths/URLs and omitted list headings | Paths/URLs now remain exact in shared/Web formatting; shared reports label lists and translate operation names; regression added |
 
 ## Continuation order
 

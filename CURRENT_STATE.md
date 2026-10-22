@@ -20,7 +20,7 @@ Web now has purpose-ordered numbered categories, actions before independently sc
 
 Browser menu Auto selection and failed code-handoff handling are repaired. The clipboard-failure fixture now explicitly selects Android; a literal escape preventing the terminal-service test module from loading is fixed. The opt-in [Firefox checker](tools/check_web_ui.py) verifies authentication, search, overflow, action stability, the external 8022 boundary, and the terminal dialog using catalog/session-inventory reads only.
 
-GTK was rebuilt and source/bridge/binary identities match. Selected tx/boot/SSH/broker definitions and installed recovery modules match source; recovery imports resolve from the installed path. The GUI monitor scheduler is not installed, so scheduled policy delivery remains a concrete gap. This is partial live/source parity, not a completed audit of every installed component. See [current evidence](docs/evidence/2026-10-22-native-ui-and-audit-remediation.md).
+GTK was rebuilt and source/bridge/binary identities match. Selected tx/boot/SSH/broker definitions and installed recovery modules match source; recovery imports resolve from the installed path. The fixed GUI monitor scheduler is now installed and running idle; monitoring/focus/Activity launch remain off. Fresh registration and two 30-second Linux-only ticks passed in a separate private Runit root. CLI service registration is available; shared-client install controls remain open. This is partial live/source parity, not a completed audit of every installed component. See [UI/audit evidence](docs/evidence/2026-10-22-native-ui-and-audit-remediation.md) and [monitor deployment/replay](docs/evidence/2026-10-22-monitor-service-registration.md).
 
 ## Required continuation
 

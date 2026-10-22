@@ -14,6 +14,7 @@ This is a source/evidence overview, not proof that every action is live-qualifie
 | Development SSH 8022 | Externally managed inspection | No product lifecycle/auth mutation; preserve this channel |
 | Boot/Wake Lock | Native helpers/profiles, owner-scoped leases, diagnostics, selected CLI/TUI controls | Uniform service policies/client controls and next-boot observation of current recovery modules |
 | Cron | Persistent definitions, previewed mutations/history across clients; CLI/TUI scheduler controls | Web/GTK scheduler lifecycle, retry/cancellation/non-skip delivery and production recovery |
+| GUI monitoring | Shared policy status/configuration; Native preview-first service install; idle live worker and private interval replay verified | Web/TUI/GTK registration controls; Android Activity/focus and later cold boot qualification |
 | Timezone | CLI/TUI/GTK scheduling preference; Web status/zone reads | No Android system-time mutation; no Web timezone write scope |
 | Logs/recovery | Fixed bounded logs/history in clients; broader CLI recovery | Full recovery-write parity; no arbitrary paths/Android-wide logs |
 | Optional PRoot | Inventory/probes, named apps/shortcuts, fixed broker and four transport paths | Disposable replay, managed attach lifecycle, concurrency/nested presentation/preservation acceptance |
