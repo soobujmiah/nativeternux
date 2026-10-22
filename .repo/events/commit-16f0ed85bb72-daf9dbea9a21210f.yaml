@@ -1,0 +1,7 @@
+event_id: commit-16f0ed85bb72-daf9dbea9a21210f
+repository: soobujmiah/ternuxx
+commit: 16f0ed85bb72e77d2e7b4e73f4890d0303305333
+kind: commit
+occurred_at: '2026-10-22T09:18:06Z'
+status: completed
+summary: 'feat(ssh): add shared authorized-key inventory'
