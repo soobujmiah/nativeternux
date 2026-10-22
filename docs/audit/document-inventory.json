@@ -331,10 +331,10 @@
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
       "kind": "narrative",
-      "sha256": "21c5b9a6e5c27a11ef66c0b5d805d3644b4ea1ed605622cb73631c1f62810db9",
+      "sha256": "1f60606fb76ef0bd4fc19d6fa95cb9bb2b4dcea2643d49493306b8336c76d815",
       "lines": 53,
       "read_status": "read",
-      "read_sha256": "21c5b9a6e5c27a11ef66c0b5d805d3644b4ea1ed605622cb73631c1f62810db9"
+      "read_sha256": "1f60606fb76ef0bd4fc19d6fa95cb9bb2b4dcea2643d49493306b8336c76d815"
     },
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",

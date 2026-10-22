@@ -8,7 +8,7 @@ Native Termux owns SSH and recovery; Debian PRoot is an optional client/provider
 
 `tx ssh inspect` and `native.ssh.status` report redacted configuration, service/process identity, effective bind/auth policy and bounded loopback banner reachability. They do not read credential files, expose raw config or authenticate. Procfs and SOCK_DIAG listener observations are separate; restricted visibility remains unknown.
 
-`tx ssh start|stop` first previews the exact fixed service. Apply requires `--yes --plan-id PLAN_ID`, rechecks definition/manager/state identity and journals before Runit control. All four clients expose scoped managed-8023 status/start/stop through the common service. A catalog entry alone is not a client action.
+`tx ssh start|stop|restart` first previews the exact fixed service. Apply requires `--yes --plan-id PLAN_ID`, rechecks definition/manager/state identity and journals before Runit control. Restart always requires confirmation, sends down then up to the one fixed unit, and warns that active 8023 clients may disconnect. All four clients expose scoped managed-8023 status/start/stop/restart through the common service. A catalog entry alone is not a client action.
 
 `lib/runit_deployment.py` separately reconciles the fixed run definition using a validated plan, private backup and rollback. Definition replacement does not restart a daemon or change SSH config. Credential wizard, general connection profiles, authenticated post-action readiness, caller-session correlation, SSH boot toggle and selectable Wake Lock policy remain incomplete.
 
