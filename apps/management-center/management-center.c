@@ -1335,36 +1335,54 @@ static void launch_proot_app(GtkButton *button, gpointer data) {
     g_signal_connect(launch, "clicked", G_CALLBACK(proot_app_launch_clicked), window);
     gtk_window_present(GTK_WINDOW(window));
 }
+static const gchar *const proot_shortcut_ids[] = {
+    "terminal", "files", "firefox", "blender", "pavucontrol", "system-config-printer",
+    "thunar-bulk-rename", "thunar-settings", "thunar-volman-settings", "vlc", "xarchiver",
+    "xfce4-appfinder", "xfce4-terminal-settings", "shortcut-manager", NULL
+};
+static const gchar *const proot_shortcut_labels[] = {
+    "PRoot Terminal", "PRoot Files", "PRoot Firefox", "Blender (PRoot)",
+    "Volume Control (PRoot)", "Print Settings (PRoot)", "Bulk Rename (PRoot)",
+    "Thunar Preferences (PRoot)", "Removable Drives and Media (PRoot)",
+    "VLC media player (PRoot)", "Xarchiver (PRoot)", "Application Finder (PRoot)",
+    "Xfce Terminal Settings (PRoot)", "Manage PRoot Shortcuts", NULL
+};
 static void proot_shortcut_preview_clicked(GtkButton *button, gpointer data) {
     (void)button; GtkWidget *window = data;
     Center *c = g_object_get_data(G_OBJECT(window), "shortcut-center");
-    GtkWidget *action_entry = g_object_get_data(G_OBJECT(window), "shortcut-action-entry");
-    GtkWidget *app_entry = g_object_get_data(G_OBJECT(window), "shortcut-app-entry");
-    const gchar *action = gtk_editable_get_text(GTK_EDITABLE(action_entry));
-    const gchar *app_id = gtk_editable_get_text(GTK_EDITABLE(app_entry));
-    if ((g_strcmp0(action, "add") != 0 && g_strcmp0(action, "remove") != 0) || !app_id || !*app_id) {
-        gtk_label_set_text(GTK_LABEL(c->notice), "Enter add/remove and a catalog app ID.");
-    } else {
-        run_bridge(c, "shortcut-preview", action, app_id, NULL, NULL, NULL);
-        gtk_window_destroy(GTK_WINDOW(window));
+    GtkWidget *action_widget = g_object_get_data(G_OBJECT(window), "shortcut-action-entry");
+    GtkWidget *app_widget = g_object_get_data(G_OBJECT(window), "shortcut-app-entry");
+    guint action_index = gtk_drop_down_get_selected(GTK_DROP_DOWN(action_widget));
+    guint app_index = gtk_drop_down_get_selected(GTK_DROP_DOWN(app_widget));
+    const gchar *actions[] = {"add", "remove", NULL};
+    if (action_index >= G_N_ELEMENTS(actions) - 1
+            || app_index >= G_N_ELEMENTS(proot_shortcut_ids) - 1) {
+        gtk_label_set_text(GTK_LABEL(c->notice), "Choose an action and a listed PRoot app.");
+        return;
     }
+    run_bridge(c, "shortcut-preview", actions[action_index],
+               proot_shortcut_ids[app_index], NULL, NULL, NULL);
+    gtk_window_destroy(GTK_WINDOW(window));
 }
 static void manage_proot_shortcut(GtkButton *button, gpointer data) {
     (void)button; Center *c = data;
     GtkWidget *window = gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(window), "Manage one PRoot app shortcut");
+    gtk_window_set_title(GTK_WINDOW(window), "Manage a PRoot app shortcut");
     gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window));
-    gtk_window_set_modal(GTK_WINDOW(window), TRUE); gtk_window_set_default_size(GTK_WINDOW(window), 480, 220);
+    gtk_window_set_modal(GTK_WINDOW(window), TRUE); gtk_window_set_default_size(GTK_WINDOW(window), 480, 250);
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_widget_set_margin_top(box, 16); gtk_widget_set_margin_bottom(box, 16);
     gtk_widget_set_margin_start(box, 16); gtk_widget_set_margin_end(box, 16);
     gtk_window_set_child(GTK_WINDOW(window), box);
-    gtk_box_append(GTK_BOX(box), gtk_label_new("This edits only the selected Ternuxx-owned launcher in the Native PRoot Apps menu. Existing conflicts are preserved."));
-    GtkWidget *action = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(action), "Action: add or remove");
-    GtkWidget *app = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(app), "Catalog app ID, for example files");
+    gtk_box_append(GTK_BOX(box), gtk_label_new("Choose a PRoot app and action. The exact change is previewed before confirmation; unrelated shortcuts are preserved."));
+    const gchar *actions[] = {"Add shortcut", "Remove shortcut", NULL};
+    GtkWidget *action = gtk_drop_down_new_from_strings(actions);
+    GtkWidget *app = gtk_drop_down_new_from_strings(proot_shortcut_labels);
+    gtk_widget_set_hexpand(action, TRUE); gtk_widget_set_hexpand(app, TRUE);
     gtk_box_append(GTK_BOX(box), action); gtk_box_append(GTK_BOX(box), app);
     GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    GtkWidget *cancel = gtk_button_new_with_label("Cancel"); GtkWidget *preview = gtk_button_new_with_label("Preview change");
+    GtkWidget *cancel = gtk_button_new_with_label("Cancel");
+    GtkWidget *preview = gtk_button_new_with_label("Preview change");
     gtk_box_append(GTK_BOX(buttons), cancel); gtk_box_append(GTK_BOX(buttons), preview); gtk_box_append(GTK_BOX(box), buttons);
     g_object_set_data(G_OBJECT(window), "shortcut-center", c);
     g_object_set_data(G_OBJECT(window), "shortcut-action-entry", action);

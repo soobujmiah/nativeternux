@@ -38,6 +38,14 @@ class ManagementCenterReplayGuestUiTests(unittest.TestCase):
         self.assertIn('"Ternuxx GTK handoff test" : "Ternuxx Management Center"', SOURCE)
         self.assertIn('(test_attach || review_instance) ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS', SOURCE)
 
+    def test_proot_shortcut_manager_uses_friendly_catalog_selections(self):
+        self.assertIn('gtk_drop_down_new_from_strings(proot_shortcut_labels)', SOURCE)
+        self.assertIn('gtk_drop_down_new_from_strings(actions)', SOURCE)
+        self.assertIn('"PRoot Terminal", "PRoot Files", "PRoot Firefox"', SOURCE)
+        self.assertIn('proot_shortcut_ids[app_index]', SOURCE)
+        self.assertNotIn('Catalog app ID, for example files', SOURCE)
+        self.assertNotIn('Action: add or remove', SOURCE)
+
     def test_shortcut_sync_rollback_has_a_visible_shared_service_action(self):
         self.assertIn('gtk_button_new_with_label("Restore saved PRoot app menu…")', SOURCE)
         self.assertIn('gtk_widget_set_visible(c->proot_rollback_button, proot_apps);', SOURCE)

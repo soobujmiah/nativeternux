@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Broker dispatcher, CLI/TUI/GTK terminal paths and shortcut rollback are implemented across clients. GTK rollback control is installed with source/artifact parity and visually present, but its chooser/preview/confirmation interaction remains unverified. Individual add/remove now share the bulk sync/rollback lock and revalidate under it. Foreground no-guest status smoke check passed; persistent service and Web terminal client remain open.
+Persistent Native Runit terminal broker is installed and rechecked against current source; browser Web terminal lifecycle passed on a separate replay guest, and CLI/TUI/GTK terminal handoff has passing evidence. Shortcut rollback spans the clients; GTK rollback is installed with source/artifact parity and visually present but its human interaction remains unverified. Individual shortcut add/remove share the bulk sync/rollback lock. GTK shortcut form now offers friendly Add/Remove and app selectors for the fixed catalog. Dynamic application wizard, safe VirGL cleanup, broken-rootfs/cold-boot qualification, runtime reconciliation and full audit remain open.
 
-**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; continue safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit. Keep persistent broker service and Web terminal client open until their end-to-end gates pass.
+**Next action:** Continue the full shortcut wizard and operation-parity audit, safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement review. Obtain human-operated GTK shortcut chooser/preview interaction evidence.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -120,6 +120,8 @@ Evidence:
 - [docs/evidence/2026-10-22-p4-shortcut-sync-rollback.md](evidence/2026-10-22-p4-shortcut-sync-rollback.md)
 - [docs/evidence/2026-10-23-gtk-shortcut-rollback.md](evidence/2026-10-23-gtk-shortcut-rollback.md)
 - [docs/evidence/2026-10-23-p4-shortcut-serialization.md](evidence/2026-10-23-p4-shortcut-serialization.md)
+- [docs/evidence/2026-10-23-p4-broker-runtime-recheck.md](evidence/2026-10-23-p4-broker-runtime-recheck.md)
+- [docs/evidence/2026-10-23-gtk-shortcut-friendly-selection.md](evidence/2026-10-23-gtk-shortcut-friendly-selection.md)
 
 ## P5 — Distro and display compatibility profiles
 

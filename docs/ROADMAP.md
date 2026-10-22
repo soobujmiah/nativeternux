@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; continue safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit. Keep persistent broker service and Web terminal client open until their end-to-end gates pass.
+**Next action:** Continue the full shortcut wizard and operation-parity audit, safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement review. Obtain human-operated GTK shortcut chooser/preview interaction evidence.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

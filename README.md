@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Broker dispatcher, CLI/TUI/GTK terminal paths and shortcut rollback are implemented across clients. GTK rollback control is installed with source/artifact parity and visually present, but its chooser/preview/confirmation interaction remains unverified. Individual add/remove now share the bulk sync/rollback lock and revalidate under it. Foreground no-guest status smoke check passed; persistent service and Web terminal client remain open.
+Persistent Native Runit terminal broker is installed and rechecked against current source; browser Web terminal lifecycle passed on a separate replay guest, and CLI/TUI/GTK terminal handoff has passing evidence. Shortcut rollback spans the clients; GTK rollback is installed with source/artifact parity and visually present but its human interaction remains unverified. Individual shortcut add/remove share the bulk sync/rollback lock. GTK shortcut form now offers friendly Add/Remove and app selectors for the fixed catalog. Dynamic application wizard, safe VirGL cleanup, broken-rootfs/cold-boot qualification, runtime reconciliation and full audit remain open.
 
-**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; continue safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit. Keep persistent broker service and Web terminal client open until their end-to-end gates pass.
+**Next action:** Continue the full shortcut wizard and operation-parity audit, safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement review. Obtain human-operated GTK shortcut chooser/preview interaction evidence.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

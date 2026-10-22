@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 427,
-  "read_count": 96,
+  "document_count": 429,
+  "read_count": 95,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "68090f63a2801f21cec3ffa692f11fc7f47fa4723837ea23e94c33c13085e456",
+      "sha256": "81c052ba6d3a57f2c594990fc4e2b783cd9fe55cd8f681c01088184e3c549640",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "1af0b2843f1cb67b0d41a2d0dafc3ae1fd0587d4019536da00d3b23a4af31d8c",
-      "lines": 181,
+      "sha256": "5c528609148817b4b351893dc783b401edbd111b719a1cace502f679a31d408e",
+      "lines": 183,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -211,7 +211,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "3af648965c542dbecee6172dbab59fbb7a9124e5164dc4d84a279f9b2f0dd3c8",
+      "sha256": "1cb812d75b53a568d3972813487c382a9da12595ada9b5b0358d4e9313fc8644",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -243,10 +243,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "c15c6c1824b8bd5ebceb66108c870396065bd88822051e733298da5f5c01bbae",
+      "sha256": "0db5094dbea39a72ec17872d32b73bc66124972effbd01115bac083a8e99ad86",
       "lines": 25,
-      "read_status": "read",
-      "read_sha256": "c15c6c1824b8bd5ebceb66108c870396065bd88822051e733298da5f5c01bbae"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -515,7 +515,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "f1bbbcd752456d65792adf2ad8c1787d6f12418d62af9a3b612bf042c0b6a2af",
+      "sha256": "ee41f2b998a2d46b8e9dcf94c1ad74b03056fa522a745ea30ee601e1ceb56fbf",
       "lines": 97,
       "read_status": "pending",
       "read_sha256": null
@@ -2737,10 +2737,26 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-23-gtk-shortcut-friendly-selection.md",
+      "kind": "narrative",
+      "sha256": "c23ab2764096a60ce1f6e85e27ca70e7d28d60710a1698b5b8545ef7b68aee42",
+      "lines": 8,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-23-gtk-shortcut-rollback.md",
       "kind": "narrative",
       "sha256": "70e18ee9178ea73f8534b49a6f11246803bf682e7e46c680df3a5323e7abc419",
       "lines": 30,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-23-p4-broker-runtime-recheck.md",
+      "kind": "narrative",
+      "sha256": "502e40fb93152d5eb1c2fe61ff1f0260f1a800c527a0a6d36f9ec52537176b70",
+      "lines": 20,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3051,8 +3067,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "808d54f03896e3c4d8a886d29e1e0957e64ca5d2c8ba611e31ffcdbd432aac27",
-      "lines": 196,
+      "sha256": "85407d19df70c69ed252a46c9617e69acf1b41be8bef54ee8246f1d47ba4223a",
+      "lines": 198,
       "read_status": "pending",
       "read_sha256": null
     },
