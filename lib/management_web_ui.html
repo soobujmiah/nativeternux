@@ -47,7 +47,7 @@ details{border-top:1px solid var(--line);padding:.7rem 0}summary{cursor:pointer;
 pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a120e;padding:.7rem;border-radius:8px;max-height:40vh;overflow:auto}
 .mobile-action-bar,.back-to-resources{display:none}
 @media(max-width:1100px){.layout{grid-template-columns:minmax(170px,200px) minmax(0,1fr)}.detail-panel{grid-column:2;height:min(760px,80dvh);position:static}.sidebar{grid-row:1/3}}
-@media(max-width:850px){.layout{display:flex;flex-direction:column;padding:.7rem;padding-bottom:5rem}.layout>.panel{width:100%}.sidebar{position:static;max-height:none;overflow:hidden}.nav{display:flex;overflow:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}.nav button{flex:0 0 auto;width:auto;max-width:85vw;white-space:nowrap}.nav-count{display:none}.sidebar>details{display:none}.detail-panel{height:auto;max-height:none;order:3;scroll-margin-top:85px}.action-dock .actions{max-height:36dvh}.resource-inspection{max-height:42dvh;flex:auto}.back-to-resources{display:block}.mobile-action-bar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:4;gap:.6rem;padding:.65rem .75rem calc(.65rem + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}.mobile-action-bar button{flex:1;min-width:0}.brand-footer{padding-bottom:5rem!important}}
+@media(max-width:850px){.layout{display:flex;flex-direction:column;padding:.7rem;padding-bottom:5rem}.layout>.panel{width:100%}.sidebar{position:static;max-height:none;overflow:hidden}.nav{display:flex;overflow:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}.nav button{flex:0 0 auto;width:auto;max-width:min(42vw,17rem);white-space:normal;line-height:1.25;text-align:left}.nav-count{display:none}.sidebar>details{display:none}.detail-panel{height:auto;max-height:none;order:3;scroll-margin-top:85px}.action-dock .actions{max-height:36dvh}.resource-inspection{max-height:42dvh;flex:auto}.back-to-resources{display:block}.mobile-action-bar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:4;gap:.6rem;padding:.65rem .75rem calc(.65rem + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}.mobile-action-bar button{flex:1;min-width:0}.brand-footer{padding-bottom:5rem!important}}
 @media(max-width:760px){header{padding:.7rem 1rem;flex-wrap:wrap}h1{font-size:1rem;min-width:0;overflow-wrap:anywhere}#disconnect{margin-left:auto}.login{width:calc(100% - 1rem);margin:1rem auto}.login .tools{display:grid;grid-template-columns:minmax(0,1fr)}.login .tools input{width:100%;min-width:0}.tools input,.tools select{min-width:0;max-width:100%;width:100%}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:380px){.layout{padding:.5rem;padding-bottom:5rem}.panel{padding:.75rem}.summary{grid-template-columns:1fr}header{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
@@ -118,9 +118,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
    const preview=await sshKeyPlan("ssh.keys.add.preview",{public_key:publicKey});
    out.textContent=JSON.stringify(preview,null,2);$("#result-readable").textContent=humanReport({ok:true,data:preview});
    if(!preview.changed)return;
-   const message="Add this "+preview.key_type+" key ("+preview.fingerprint+") to the shared Termux account?
-
-This changes login access for both owner-managed SSH 8022 and Ternuxx SSH 8023.";
+   const message="Add this "+preview.key_type+" key ("+preview.fingerprint+") to the shared Termux account?\n\nThis changes login access for both owner-managed SSH 8022 and Ternuxx SSH 8023.";
    if(!window.confirm(message))return;
    const result=await run("ssh.keys.add.apply",{public_key:publicKey,confirmed:true,plan_id:preview.plan_id});
    if(result?.ok)await run("ssh.keys.list");
@@ -135,11 +133,7 @@ This changes login access for both owner-managed SSH 8022 and Ternuxx SSH 8023."
    const index=Number(selected);if(!Number.isInteger(index)||index<0||index>=entries.length){notice.textContent="Choose a number from the list; no change was applied.";return}
    const item=entries[index];const preview=await run("ssh.keys.rollback.preview",{rollback_id:item.rollback_id});if(!preview?.ok)return;
    const plan=preview.data;if(!plan.can_restore){notice.textContent=plan.conflict?"Authorized keys changed since this snapshot; restore refused to overwrite newer changes.":"This snapshot is already restored.";return}
-   if(!window.confirm("Restore the exact previous shared authorized_keys file?
-
-Affects SSH 8022 and 8023. Restore is refused if the file changed since this snapshot.
-
-"+plan.before_sha256+" -> "+plan.after_sha256))return;
+   if(!window.confirm("Restore the exact previous shared authorized_keys file?\n\nAffects SSH 8022 and 8023. Restore is refused if the file changed since this snapshot.\n\n"+plan.before_sha256+" -> "+plan.after_sha256))return;
    const result=await run("ssh.keys.rollback.apply",{rollback_id:item.rollback_id,confirmed:true,plan_id:plan.plan_id});if(result?.ok)await run("ssh.keys.list");
   }catch(e){notice.textContent=e.message}
  }
@@ -195,15 +189,20 @@ Affects SSH 8022 and 8023. Restore is refused if the file changed since this sna
    const preview=await sshKeyPlan("ssh.keys.remove.preview",{fingerprint:fingerprint});
    out.textContent=JSON.stringify(preview,null,2);$("#result-readable").textContent=humanReport({ok:true,data:preview});
    if(!preview.changed)return;
-   const message="Remove "+preview.matching_entries+" matching authorized key record(s), fingerprint "+preview.fingerprint+"?
-
-This removes access for both owner-managed SSH 8022 and Ternuxx SSH 8023. Existing SSH sessions may stay connected.";
+   const message="Remove "+preview.matching_entries+" matching authorized key record(s), fingerprint "+preview.fingerprint+"?\n\nThis removes access for both owner-managed SSH 8022 and Ternuxx SSH 8023. Existing SSH sessions may stay connected.";
    if(!window.confirm(message))return;
    const result=await run("ssh.keys.remove.apply",{fingerprint:preview.fingerprint,confirmed:true,plan_id:preview.plan_id});
    if(result?.ok)await run("ssh.keys.list");
   }catch(e){notice.textContent=e.message}
  }
  async function manageSsh(operation){const label=operation.endsWith("start")?"start":operation.endsWith("stop")?"stop":"restart";notice.textContent="Checking managed SSH 8023…";const preview=await run(operation,{confirmed:false,plan_id:null});if(!preview||!preview.ok)return;const data=preview.data||{};if(!data.requires_confirmation){notice.textContent="Managed SSH 8023 is already "+(data.current_status||"in the requested state")+"; no change made.";return}if(typeof data.plan_id!=="string"){notice.textContent="The service preview did not return a valid confirmation plan.";return}const impact=String(data.impact||"Only the Ternuxx-managed SSH service on 127.0.0.1:8023 will be changed.");if(!window.confirm("Confirm "+label+" managed SSH on port 8023?\n\n"+impact+"\n\n8022 manual development SSH is excluded."))return;await run(operation,{confirmed:true,plan_id:data.plan_id})}
+ function revealActiveCategory(){
+  const nav=$("#categories"),active=nav.querySelector(".active");if(!active)return;
+  const navRect=nav.getBoundingClientRect(),activeRect=active.getBoundingClientRect();
+  if(activeRect.left<navRect.left)nav.scrollLeft-=navRect.left-activeRect.left;
+  else if(activeRect.right>navRect.right)nav.scrollLeft+=activeRect.right-navRect.right;
+ }
+ window.addEventListener("resize",revealActiveCategory,{passive:true});
  function drawCategories(){
   const nav=$("#categories");nav.replaceChildren();
   const ordered=catalog.categories;
@@ -219,6 +218,7 @@ This removes access for both owner-managed SSH 8022 and Ternuxx SSH 8023. Existi
    b.onclick=()=>{selectedCategory=category.id;selectedResource=null;drawCategories();drawResources();showResource(null)};
    nav.append(b);
   }
+  revealActiveCategory();
  }
  function drawSummary(){
   const resources=allResources.filter(r=>!selectedCategory||r.category_id===selectedCategory);
@@ -267,7 +267,7 @@ This removes access for both owner-managed SSH 8022 and Ternuxx SSH 8023. Existi
    const alias=document.createElement("input");alias.placeholder="Exact alias: ternuxx-replay-NAME";alias.setAttribute("aria-label","Ternuxx replay guest alias");alias.autocomplete="off";
    const backup=document.createElement("input");backup.placeholder="Backup ID, for restore";backup.setAttribute("aria-label","Replay guest backup ID");backup.autocomplete="off";
    const previewButton=document.createElement("button");previewButton.className="primary";previewButton.textContent="Preview guest change";
-   previewButton.onclick=async()=>{const a=alias.value.trim(),kind=action.value;if(!/^ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}$/.test(a)){notice.textContent="Enter an exact Ternuxx replay alias.";return}let op,args;if(kind==="retire"){op="proot.setup.retire.preview";args={alias:a}}else{const b=backup.value.trim();if(!/^[0-9a-f]{32}$/.test(b)){notice.textContent="Enter the 32-character backup ID from a prior retirement.";return}op="proot.setup.restore.preview";args={alias:a,backup_id:b}}const result=await run(op,args);if(!result?.ok)return;const data=result.data||{},plan=data.plan_id;if(!/^[0-9a-f]{64}$/.test(plan||"")){notice.textContent="The preview did not return a valid plan.";return}const impact=String(data.operation?.impact||"Review the exact replay guest change.");if(!window.confirm((kind==="retire"?"Retire":"Restore")+" "+a+"?\\n\\n"+impact+"\\n\\nOnly the exact receipt-verified replay guest can be moved; no guest files are deleted.))return;const applyOp=kind==="retire"?"proot.setup.retire.apply":"proot.setup.restore.apply";const applyArgs={alias:a,confirmed:true,plan_id:plan};if(kind==="restore")applyArgs.backup_id=backup.value.trim();const applied=await run(applyOp,applyArgs);if(applied?.ok)notice.textContent=kind==="retire"?"Replay guest safely retired; private restore backup preserved.":"Replay guest restored from the exact private backup."};
+   previewButton.onclick=async()=>{const a=alias.value.trim(),kind=action.value;if(!/^ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}$/.test(a)){notice.textContent="Enter an exact Ternuxx replay alias.";return}let op,args;if(kind==="retire"){op="proot.setup.retire.preview";args={alias:a}}else{const b=backup.value.trim();if(!/^[0-9a-f]{32}$/.test(b)){notice.textContent="Enter the 32-character backup ID from a prior retirement.";return}op="proot.setup.restore.preview";args={alias:a,backup_id:b}}const result=await run(op,args);if(!result?.ok)return;const data=result.data||{},plan=data.plan_id;if(!/^[0-9a-f]{64}$/.test(plan||"")){notice.textContent="The preview did not return a valid plan.";return}const impact=String(data.operation?.impact||"Review the exact replay guest change.");if(!window.confirm((kind==="retire"?"Retire":"Restore")+" "+a+"?\\n\\n"+impact+"\\n\\nOnly the exact receipt-verified replay guest can be moved; no guest files are deleted."))return;const applyOp=kind==="retire"?"proot.setup.retire.apply":"proot.setup.restore.apply";const applyArgs={alias:a,confirmed:true,plan_id:plan};if(kind==="restore")applyArgs.backup_id=backup.value.trim();const applied=await run(applyOp,applyArgs);if(applied?.ok)notice.textContent=kind==="retire"?"Replay guest safely retired; private restore backup preserved.":"Replay guest restored from the exact private backup."};
    actions.append(action,alias,backup,previewButton)
   }
   if(r.id==="proot.debian.workloads"||r.id==="proot.interactive-terminal-broker"){const terminalButton=document.createElement("button");terminalButton.className="primary";terminalButton.textContent="Open Debian terminal";terminalButton.onclick=openTerminalDialog;actions.append(terminalButton)}

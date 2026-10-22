@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-22",
+  "purpose": "Visible Web management UI acceptance on the already-running Native X11 desktop.",
+  "mode": "visible",
+  "browser": "Firefox ESR 153.5.0",
+  "display": ":1",
+  "requested_viewport": 752,
+  "actual_viewport": {
+    "width": 742,
+    "height": 881
+  },
+  "checks": {
+    "connect_and_catalog": true,
+    "active_category_label_fully_visible": true,
+    "horizontal_page_overflow": false,
+    "mobile_quick_bar_visible": true,
+    "action_panel_position_stable_under_long_details": true,
+    "late_response_resource_binding": true,
+    "owner_managed_ssh_8022_inspection_only": true,
+    "wake_lock_status_control": true,
+    "terminal_renderer_fits": true,
+    "managed_terminal_session_started": false
+  },
+  "broker_operations": [
+    "management.catalog",
+    "proot.sessions.list"
+  ],
+  "isolated_browser_profile": true,
+  "distro": "ternuxx-replay-p4",
+  "guest_login_performed": true,
+  "guest_profile_injection_possible": true,
+  "replay_guest_rootfs_identity_preserved": true,
+  "profile_content_mode_mtime_restored": true,
+  "profile_inode_replaced_by_proot_distro_login": true,
+  "legacy_profile_absent": true,
+  "screenshot": "2026-10-22-web-ui-visible-acceptance.png",
+  "screenshot_sha256": "ea11281527aa4534419a5207717c9b522f927f1a5c055d9eafd19e798d7197b7",
+  "source_sha256": {
+    "lib/management_web_ui.html": "6cdf791a1d63b2e4a45c6ae5bcd243e3357cfbde6c145f7f0a37ed98e5ae2e14",
+    "lib/management_http_runtime.py": "7c6cbe8debc85e8d4ed271df3cf46b91891f0773580bbf384ad4dd7eed740f14",
+    "lib/management_catalog.py": "de79e89bf5ac1db74efdd4a25098659952a7a9c4686195ed761c44dfaa0de84f"
+  },
+  "note": "This run restored the replay guest profile file content, permissions, timestamp, and rootfs directory identity. PRoot-Distro replaced the profile file inode during login. A prior failed guard attempt had already regenerated this isolated guest's profile from an older configuration; that earlier exact content was not recoverable. The default Debian rootfs and active Codex guest were not targeted.",
+  "headless_viewports": [
+    {
+      "width": 390,
+      "overflow": false,
+      "activeCategoryFits": true,
+      "navScrollLeft": 6,
+      "quickBar": "flex"
+    },
+    {
+      "width": 752,
+      "overflow": false,
+      "activeCategoryFits": true,
+      "navScrollLeft": 6,
+      "quickBar": "flex"
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "activeCategoryFits": true,
+      "navScrollLeft": 0,
+      "quickBar": "none"
+    }
+  ],
+  "regression_test": "tests.test_management_http_runtime.TernuxxManagementHTTPRuntimeTests.test_web_console_has_bounded_mobile_layout_and_touch_navigation_rules"
+}

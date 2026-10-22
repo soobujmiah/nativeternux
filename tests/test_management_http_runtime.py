@@ -421,6 +421,8 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('max-width:100%', page)
         self.assertIn('min-height:44px', page)
         self.assertIn('overscroll-behavior-inline:contain', page)
+        self.assertIn('max-width:min(42vw,17rem);white-space:normal', page)
+        self.assertIn('window.addEventListener("resize",revealActiveCategory', page)
         self.assertIn('@media(max-width:380px)', page)
         self.assertIn('font:15px system-ui,sans-serif', page)
         for handler in ('$("#connect").onclick=connect', '$("#disconnect").onclick=',

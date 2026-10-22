@@ -174,8 +174,18 @@ def run_checks(browser, secret, screenshots, *, visible=False):
         browser.evaluate("window.scrollTo(0,0);return true;")
         metrics = browser.evaluate("""
           const actions=document.querySelector('.action-dock').getBoundingClientRect();
+          const nav=document.querySelector('#categories');
+          const active=nav.querySelector('[aria-current="page"]');
+          const navRect=nav.getBoundingClientRect();
+          const activeRect=active?.getBoundingClientRect();
           return {width:innerWidth,height:innerHeight,
             overflow:document.documentElement.scrollWidth>innerWidth+1,
+            activeCategoryFits:!!activeRect&&activeRect.left>=navRect.left-1
+              &&activeRect.right<=navRect.right+1&&active.scrollWidth<=active.clientWidth+1,
+            activeCategoryGeometry:activeRect?{left:activeRect.left,right:activeRect.right,
+              width:activeRect.width,scrollWidth:active.scrollWidth,clientWidth:active.clientWidth,
+              navLeft:navRect.left,navRight:navRect.right,navScrollLeft:nav.scrollLeft,
+              navScrollWidth:nav.scrollWidth,navClientWidth:nav.clientWidth}:null,
             actionTop:actions.top,
             quickBar:getComputedStyle(document.querySelector('#mobile-action-bar')).display};
         """)
@@ -187,6 +197,10 @@ def run_checks(browser, secret, screenshots, *, visible=False):
             require(300 <= metrics["width"] <= width,
                     "visible Firefox viewport is outside the expected window")
         require(not metrics["overflow"], "page overflows horizontally at width " + str(width))
+        if metrics["width"] <= 850:
+            require(metrics["activeCategoryFits"],
+                    "selected category label is clipped at width " + str(width) + ": "
+                    + json.dumps(metrics.get("activeCategoryGeometry"), sort_keys=True))
         require((metrics["quickBar"] != "none") == (metrics["width"] <= 850),
                 "quick actions do not match the actual viewport")
         browser.evaluate("""
