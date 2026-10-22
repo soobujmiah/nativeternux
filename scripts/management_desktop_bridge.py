@@ -471,12 +471,34 @@ def main(argv: list[str]) -> int:
         result = call("proot.stop", {"session_id": session_id, "confirmed": True, "plan_id": plan_id})
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action == "proot-app-options" and len(argv) == 1:
+        import proot_shortcuts
+        result = call("proot.shortcuts.list")
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        for app_id, item in proot_shortcuts.CATALOG.items():
+            print("C\t" + clean(app_id) + "\t" + clean(item.get("name")))
+        inventory = result.get("data", {}).get("desktop_applications", {})
+        for item in inventory.get("items", []) if isinstance(inventory, dict) else []:
+            desktop_id, name = item.get("desktop_id"), item.get("name")
+            if (item.get("status") == "available" and isinstance(desktop_id, str)
+                    and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id)
+                    and isinstance(name, str) and name.strip()):
+                print("D\t" + desktop_id + "\t" + clean(name))
+        return 0
     if action == "proot-app-launch" and len(argv) == 2:
         import proot_shortcuts
-        if argv[1] not in proot_shortcuts.CATALOG:
-            print(json.dumps({"ok": False, "error": {"code": "unknown_proot_app"}}))
-            return 2
-        result = call("proot.app.launch", {"app_id": argv[1]})
+        if argv[1].startswith("desktop:"):
+            desktop_id = argv[1][8:]
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id):
+                print(json.dumps({"ok": False, "error": {"code": "invalid_desktop_app"}}))
+                return 2
+            result = call("proot.app.launch", {"desktop_id": desktop_id})
+        else:
+            if argv[1] not in proot_shortcuts.CATALOG:
+                print(json.dumps({"ok": False, "error": {"code": "unknown_proot_app"}}))
+                return 2
+            result = call("proot.app.launch", {"app_id": argv[1]})
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "shortcut-preview" and len(argv) == 3:

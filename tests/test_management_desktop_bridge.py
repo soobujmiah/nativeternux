@@ -371,6 +371,33 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                     self.assertEqual(bridge.main(list(args)), 2)
                 dispatch.assert_not_called()
 
+    def test_proot_app_options_use_discovered_friendly_names_and_valid_ids(self) -> None:
+        payload = {"ok": True, "data": {"items": [], "desktop_applications": {"items": [
+            {"desktop_id": "firefox.desktop", "name": "Firefox ESR", "status": "available"},
+            {"desktop_id": "../escape.desktop", "name": "Unsafe", "status": "available"},
+            {"desktop_id": "hidden.desktop", "name": "Hidden", "status": "hidden"},
+        ]}}}
+        with mock.patch.object(bridge, "call", return_value=payload) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["proot-app-options"]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.list")
+        self.assertIn("D\tfirefox.desktop\tFirefox ESR", output.getvalue())
+        self.assertNotIn("escape", output.getvalue())
+        self.assertNotIn("Hidden", output.getvalue())
+
+    def test_dynamic_proot_launch_bridge_uses_typed_desktop_id(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"desktop_id": "firefox.desktop"}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["proot-app-launch", "desktop:firefox.desktop"]), 0)
+        dispatch.assert_called_once_with("proot.app.launch", {"desktop_id": "firefox.desktop"})
+
+    def test_dynamic_proot_launch_bridge_rejects_invalid_desktop_id(self) -> None:
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["proot-app-launch", "desktop:../bad"]), 2)
+        dispatch.assert_not_called()
+
     def test_named_proot_launch_bridge_calls_shared_typed_operation(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"app_id": "files"}}) as dispatch:
             output = StringIO()

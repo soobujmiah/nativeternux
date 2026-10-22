@@ -22,6 +22,8 @@ static void ask_shortcut_confirmation(Center *c, const gchar *action, const gcha
 static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *summary);
 static void confirmed_action(GObject *source, GAsyncResult *result, gpointer user_data);
 static void proot_app_cancel_clicked(GtkButton *button, gpointer data);
+static void proot_app_launch_clicked(GtkButton *button, gpointer data);
+static void show_proot_app_options(Center *c, const gchar *output);
 static void manage_replay_guest(GtkButton *button, gpointer data);
 static void replay_guest_preview_clicked(GtkButton *button, gpointer data);
 static void ask_guest_lifecycle_confirmation(Center *c, const gchar *kind, const gchar *alias, const gchar *backup_id, const gchar *plan_id, const gchar *impact);
@@ -259,6 +261,8 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
                 g_strchomp(f[5]); ask_guest_lifecycle_confirmation(c, f[1], f[3], f[4], f[2], f[5]);
             } else gtk_label_set_text(GTK_LABEL(c->notice), "Replay guest preview response was invalid.");
             g_strfreev(f);
+        } else if (g_strcmp0(request->action, "proot-app-options") == 0 && success && stdout_text) {
+            show_proot_app_options(c, stdout_text);
         } else if (g_strcmp0(request->action, "terminal-session-options") == 0 && success) {
             show_terminal_choices(c, stdout_text);
         } else if (g_strcmp0(request->action, "cron-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
@@ -1313,31 +1317,56 @@ static void proot_app_launch_clicked(GtkButton *button, gpointer data) {
     (void)button; GtkWidget *window = data;
     Center *c = g_object_get_data(G_OBJECT(window), "proot-center");
     GtkWidget *selector = g_object_get_data(G_OBJECT(window), "proot-app-select");
+    GPtrArray *ids = g_object_get_data(G_OBJECT(window), "proot-app-ids");
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(selector));
-    if (index >= G_N_ELEMENTS(proot_shortcut_ids) - 1) {
+    if (!ids || index >= ids->len) {
         gtk_label_set_text(GTK_LABEL(c->notice), "Choose a listed PRoot app.");
         return;
     }
-    run_bridge(c, "proot-app-launch", proot_shortcut_ids[index], NULL, NULL, NULL, NULL);
+    const gchar *selected = g_ptr_array_index(ids, index);
+    if (g_str_has_prefix(selected, "D:")) {
+        gchar *launch_id = g_strconcat("desktop:", selected + 2, NULL);
+        run_bridge(c, "proot-app-launch", launch_id, NULL, NULL, NULL, NULL);
+        g_free(launch_id);
+    } else if (g_str_has_prefix(selected, "C:"))
+        run_bridge(c, "proot-app-launch", selected + 2, NULL, NULL, NULL, NULL);
     gtk_window_destroy(GTK_WINDOW(window));
 }
-static void proot_app_cancel_clicked(GtkButton *button, gpointer data) {
-    (void)button; gtk_window_destroy(GTK_WINDOW(data));
-}
-static void launch_proot_app(GtkButton *button, gpointer data) {
-    (void)button; Center *c = data;
+static void show_proot_app_options(Center *c, const gchar *output) {
+    GtkStringList *model = gtk_string_list_new(NULL);
+    GPtrArray *ids = g_ptr_array_new_with_free_func(g_free);
+    gchar **lines = g_strsplit(output, "\n", -1);
+    for (guint i = 0; lines[i]; i++) {
+        gchar **fields = g_strsplit(lines[i], "\t", 3);
+        gboolean valid = fields[0] && fields[1] && fields[2]
+            && ((g_strcmp0(fields[0], "C") == 0
+                 && g_regex_match_simple("^[a-z0-9][a-z0-9-]{0,63}$", fields[1], 0, 0))
+                || (g_strcmp0(fields[0], "D") == 0
+                    && g_regex_match_simple("^[A-Za-z0-9][A-Za-z0-9_.-]{0,254}$", fields[1], 0, 0)));
+        if (valid && *fields[2]) {
+            g_ptr_array_add(ids, g_strdup_printf("%s:%s", fields[0], fields[1]));
+            gchar *label = g_strdup_printf("%s%s", fields[2],
+                g_strcmp0(fields[0], "D") == 0 ? " (Debian)" : " (Ternuxx)");
+            gtk_string_list_append(model, label); g_free(label);
+        }
+        g_strfreev(fields);
+    }
+    g_strfreev(lines);
+    if (ids->len == 0) {
+        gtk_label_set_text(GTK_LABEL(c->notice), "No runnable Debian apps were discovered.");
+        g_ptr_array_unref(ids); g_object_unref(model); return;
+    }
     GtkWidget *window = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(window), "Launch a PRoot app");
     gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window));
-    gtk_window_set_modal(GTK_WINDOW(window), TRUE); gtk_window_set_default_size(GTK_WINDOW(window), 500, 210);
+    gtk_window_set_modal(GTK_WINDOW(window), TRUE); gtk_window_set_default_size(GTK_WINDOW(window), 500, 220);
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_widget_set_margin_top(box, 16); gtk_widget_set_margin_bottom(box, 16);
     gtk_widget_set_margin_start(box, 16); gtk_widget_set_margin_end(box, 16);
     gtk_window_set_child(GTK_WINDOW(window), box);
-    gtk_box_append(GTK_BOX(box), gtk_label_new("Launches the selected Debian PRoot app in the current Native Ternuxx display. Guest app availability is not pre-verified. It uses the existing guest and does not install software or change its configuration."));
-    GtkWidget *selector = gtk_drop_down_new_from_strings(proot_shortcut_labels);
-    gtk_widget_set_hexpand(selector, TRUE);
-    gtk_box_append(GTK_BOX(box), selector);
+    gtk_box_append(GTK_BOX(box), gtk_label_new("Choose an installed Debian app. Availability is checked again when it launches."));
+    GtkWidget *selector = gtk_drop_down_new(G_LIST_MODEL(model), NULL);
+    gtk_widget_set_hexpand(selector, TRUE); gtk_box_append(GTK_BOX(box), selector);
     GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
     GtkWidget *cancel = gtk_button_new_with_label("Cancel");
     GtkWidget *launch = gtk_button_new_with_label("Launch app");
@@ -1345,9 +1374,16 @@ static void launch_proot_app(GtkButton *button, gpointer data) {
     gtk_box_append(GTK_BOX(box), buttons);
     g_object_set_data(G_OBJECT(window), "proot-center", c);
     g_object_set_data(G_OBJECT(window), "proot-app-select", selector);
+    g_object_set_data_full(G_OBJECT(window), "proot-app-ids", ids, (GDestroyNotify)g_ptr_array_unref);
     g_signal_connect(cancel, "clicked", G_CALLBACK(proot_app_cancel_clicked), window);
     g_signal_connect(launch, "clicked", G_CALLBACK(proot_app_launch_clicked), window);
-    gtk_window_present(GTK_WINDOW(window));
+    gtk_window_present(GTK_WINDOW(window)); g_object_unref(model);
+}
+static void proot_app_cancel_clicked(GtkButton *button, gpointer data) {
+    (void)button; gtk_window_destroy(GTK_WINDOW(data));
+}
+static void launch_proot_app(GtkButton *button, gpointer data) {
+    (void)button; run_bridge(data, "proot-app-options", NULL, NULL, NULL, NULL, NULL);
 }
 static void proot_shortcut_preview_clicked(GtkButton *button, gpointer data) {
     (void)button; GtkWidget *window = data;

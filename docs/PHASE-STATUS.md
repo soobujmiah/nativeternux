@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Persistent Native Runit terminal broker is installed and rechecked against current source; browser Web terminal lifecycle passed on a separate replay guest, and CLI/TUI/GTK terminal handoff has passing evidence. Shortcut rollback spans the clients; GTK rollback is installed with source/artifact parity and visually present but its human interaction remains unverified. Individual shortcut add/remove share the bulk sync/rollback lock. GTK shortcut form now offers friendly Add/Remove and app selectors for the fixed catalog. Dynamic application wizard, safe VirGL cleanup, broken-rootfs/cold-boot qualification, runtime reconciliation and full audit remain open.
+Persistent terminal broker and Web/TUI/GTK dynamic Debian app launch selection are installed and regression-tested. GTK source/install identity matches. GTK per-app shortcut CRUD remains fixed-catalog only; VirGL cleanup, broken-rootfs/cold-boot qualification, runtime reconciliation, human UI interaction, and the full requirement audit remain open.
 
-**Next action:** Continue the full shortcut wizard and operation-parity audit, safe VirGL client visibility/cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement review. Obtain human-operated GTK shortcut chooser/preview interaction evidence.
+**Next action:** Complete dynamic per-app shortcut CRUD with preview/apply/rollback parity across clients; qualify safe VirGL cleanup and broken-rootfs/cold boot on an isolated guest; reconcile installed/source/runtime state; complete requirement-by-requirement audit and human-operated GTK review.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -122,6 +122,7 @@ Evidence:
 - [docs/evidence/2026-10-23-p4-shortcut-serialization.md](evidence/2026-10-23-p4-shortcut-serialization.md)
 - [docs/evidence/2026-10-23-p4-broker-runtime-recheck.md](evidence/2026-10-23-p4-broker-runtime-recheck.md)
 - [docs/evidence/2026-10-23-gtk-shortcut-friendly-selection.md](evidence/2026-10-23-gtk-shortcut-friendly-selection.md)
+- [docs/evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md](evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md)
 
 ## P5 — Distro and display compatibility profiles
 
