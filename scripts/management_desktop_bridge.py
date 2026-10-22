@@ -338,6 +338,45 @@ def main(argv: list[str]) -> int:
                                                          "confirmed": True, "plan_id": plan_id})
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action == "shortcut-sync-rollback-list" and len(argv) == 1:
+        result = call("proot.shortcuts.sync.rollback.list")
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        rows = result.get("data", {}).get("rollbacks", [])
+        emitted = False
+        for item in rows:
+            if (not isinstance(item, dict) or item.get("integrity") != "valid"
+                    or item.get("status") != "applied"
+                    or not re.fullmatch(r"[0-9a-f]{32}", str(item.get("rollback_id", "")))):
+                continue
+            print("R\t" + item["rollback_id"] + "\t" + clean(item.get("created_at"))
+                  + "\t" + clean(item.get("entry_count")))
+            emitted = True
+        if not emitted: print("R\t-\t-\t-")
+        return 0
+    if action == "shortcut-sync-rollback-preview" and len(argv) == 2:
+        rollback_id = argv[1]
+        if not re.fullmatch(r"[0-9a-f]{32}", rollback_id):
+            print("Invalid saved PRoot shortcut sync ID."); return 2
+        result = call("proot.shortcuts.sync.rollback.preview", {"rollback_id": rollback_id})
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        data = result.get("data", {}); plan_id = data.get("plan_id")
+        changes = data.get("changes", [])
+        summary = "; ".join(clean(item.get("action")) + " " + clean(item.get("path"))
+                            for item in changes if isinstance(item, dict))
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
+            print("Could not verify the exact shortcut restore preview."); return 1
+        print("P\t" + plan_id + "\t" + rollback_id + "\t" + clean(summary))
+        return 0
+    if action == "shortcut-sync-rollback-apply" and len(argv) == 3:
+        rollback_id, plan_id = argv[1:]
+        if not re.fullmatch(r"[0-9a-f]{32}", rollback_id) or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
+            print("The PRoot shortcut restore preview is invalid or expired."); return 2
+        result = call("proot.shortcuts.sync.rollback.apply", {
+            "rollback_id": rollback_id, "confirmed": True, "plan_id": plan_id})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "shortcut-list" and len(argv) == 1:
         result = call("proot.shortcuts.list")
         print(management_presentation.format_report(result))

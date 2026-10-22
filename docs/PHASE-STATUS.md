@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Selected Debian app, replay/graphics, cross-client terminal, and Native failure-isolation evidence is recorded. Bulk shortcut sync has previewed apply and durable CLI/TUI/shared-service rollback; authenticated Web controls passed visible Firefox review. GTK actions, broader synchronization, safe VirGL cleanup, broken-rootfs/cold-boot qualification, and the full audit remain open.
+Broker dispatcher, CLI/TUI/GTK terminal paths and GTK shortcut rollback controls are implemented; rollback controls are installed with source/artifact hash parity and visibly present, while the GTK action interaction remains unverified. Foreground no-guest status smoke check passed; persistent service and Web terminal client remain open.
 
-**Next action:** Add GTK rollback controls with rebuild/install and visible review; unify synchronization with per-shortcut add/remove; then continue safe VirGL client visibility, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and the requirement-by-requirement audit.
+**Next action:** Obtain human-operated GTK chooser/preview interaction evidence; then unify synchronization with per-shortcut add/remove, continue safe VirGL client visibility and cleanup, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and requirement-by-requirement audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -118,6 +118,7 @@ Evidence:
 - [docs/evidence/2026-10-22-native-provider-failure-isolation.md](evidence/2026-10-22-native-provider-failure-isolation.md)
 - [docs/evidence/2026-10-22-p4-previewed-shortcut-sync.md](evidence/2026-10-22-p4-previewed-shortcut-sync.md)
 - [docs/evidence/2026-10-22-p4-shortcut-sync-rollback.md](evidence/2026-10-22-p4-shortcut-sync-rollback.md)
+- [docs/evidence/2026-10-23-gtk-shortcut-rollback.md](evidence/2026-10-23-gtk-shortcut-rollback.md)
 
 ## P5 — Distro and display compatibility profiles
 

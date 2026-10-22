@@ -246,6 +246,38 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("proot.shortcuts.list")
         self.assertIn("Shortcut state: Installed", output.getvalue())
 
+    def test_proot_shortcut_sync_rollback_bridge_lists_previews_and_applies_exact_plan(self) -> None:
+        rollback_id = "a" * 32
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"rollbacks": [
+                {"rollback_id": rollback_id, "created_at": "today", "entry_count": 2,
+                 "integrity": "valid", "status": "applied"},
+                {"rollback_id": "b" * 32, "integrity": "invalid", "status": "applied"}]}}) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["shortcut-sync-rollback-list"]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.sync.rollback.list")
+        self.assertIn("R" + chr(9) + rollback_id + chr(9) + "today", output.getvalue())
+        self.assertNotIn("b" * 32, output.getvalue())
+        preview_payload = {"ok": True, "data": {"plan_id": "c" * 24, "rollback_id": rollback_id,
+            "changes": [{"action": "restore", "path": "xfce/data/applications/ternuxx-proot-app-files.desktop"}]}}
+        with mock.patch.object(bridge, "call", return_value=preview_payload) as dispatch:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(bridge.main(["shortcut-sync-rollback-preview", rollback_id]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.sync.rollback.preview", {"rollback_id": rollback_id})
+        self.assertIn("restore", output.getvalue())
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"status": "complete"}}) as dispatch:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["shortcut-sync-rollback-apply", rollback_id, "c" * 24]), 0)
+        dispatch.assert_called_once_with("proot.shortcuts.sync.rollback.apply", {
+            "rollback_id": rollback_id, "confirmed": True, "plan_id": "c" * 24})
+
+    def test_proot_shortcut_sync_rollback_bridge_rejects_bad_ids(self) -> None:
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["shortcut-sync-rollback-preview", "../bad"]), 2)
+            self.assertEqual(bridge.main(["shortcut-sync-rollback-apply", "../bad", "x"]), 2)
+        dispatch.assert_not_called()
+
     def test_proot_session_inventory_and_recovery_bridge_use_read_operations(self) -> None:
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"sessions": []}}) as dispatch:
             with redirect_stdout(StringIO()):

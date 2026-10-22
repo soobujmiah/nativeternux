@@ -27,11 +27,26 @@ class ManagementCenterReplayGuestUiTests(unittest.TestCase):
         self.assertIn('g_strcmp0(request->action, "inspect") == 0', SOURCE)
         self.assertIn('g_strcmp0(request->resource_id, c->selected_resource_id) != 0', SOURCE)
 
+    def test_review_instance_opens_without_forwarding_to_the_running_app(self):
+        self.assertIn('g_strcmp0(argv[1], "--review") == 0', SOURCE)
+        self.assertIn('"dev.ternuxx.management-center.review"', SOURCE)
+        self.assertIn('(test_attach || review_instance) ? G_APPLICATION_NON_UNIQUE', SOURCE)
+
     def test_gtk_test_attach_requires_a_verified_session_id(self):
         self.assertIn('"--test-attach-session"', SOURCE)
         self.assertIn('"^proot-[0-9a-f]{32}$"', SOURCE)
         self.assertIn('"Ternuxx GTK handoff test" : "Ternuxx Management Center"', SOURCE)
-        self.assertIn('test_attach ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS', SOURCE)
+        self.assertIn('(test_attach || review_instance) ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS', SOURCE)
+
+    def test_shortcut_sync_rollback_has_a_visible_shared_service_action(self):
+        self.assertIn('gtk_button_new_with_label("Restore saved PRoot app menu…")', SOURCE)
+        self.assertIn('gtk_widget_set_visible(c->proot_rollback_button, proot_apps);', SOURCE)
+        self.assertIn('g_signal_connect(c->proot_rollback_button,"clicked",G_CALLBACK(show_proot_shortcut_rollbacks),c);', SOURCE)
+        self.assertIn('run_bridge(data, "shortcut-sync-rollback-list"', SOURCE)
+        self.assertIn('run_bridge(request->center, "shortcut-sync-rollback-preview"', SOURCE)
+        self.assertIn('run_bridge(request->center, "shortcut-sync-rollback-apply"', SOURCE)
+        self.assertIn('ask_proot_shortcut_rollback_confirmation(c, f[2], f[1], f[3]);', SOURCE)
+        self.assertIn('gtk_alert_dialog_set_default_button(dialog, 0);', SOURCE)
 
     def test_single_replay_action_keeps_a_visible_action_pane(self):
         self.assertIn('gtk_widget_set_visible(c->proot_guest_button, proot_apps || replay_guests);', SOURCE)
