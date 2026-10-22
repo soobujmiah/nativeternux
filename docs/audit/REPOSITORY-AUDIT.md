@@ -10,7 +10,7 @@ Status: IN_PROGRESS. This tracks the complete owner request, not just the first 
 | Every document read and reconciled | Per-file reviewed hash plus claim/source/evidence cross-check; current authority and historical snapshots distinguished | Inventory underway; full coverage not achieved |
 | Full source/dirty/untracked audit | Reviewed tracked source/tests/config/assets, explained dirty work, syntax/tests/security/provider-boundary review | Clean baseline inspected; current changes are audit-owned; complete module review pending |
 | P1–P3 completion is accurate | Every exit criterion mapped to dated evidence and current regression/preservation scope | Completion evidence re-read in part; no new physical reboot/no-PRoot test; full gate-by-gate revalidation pending |
-| Native installed/runtime matches repository | Installer/module/service/menu/source identity inventory and exact comparisons | tx shim, GTK source/bridge/binary and recovery modules verified; remaining deployment targets pending |
+| Native installed/runtime matches repository | Installer/module/service/menu/source identity inventory and exact comparisons | All source Runit/boot definitions, tx shim, GTK source/bridge/binary and currently installed canonical recovery modules verified; profiles/config/package/driver and fresh setup inventory pending |
 | Fully reproducible supported workstation | Fresh isolated setup from checked-in manifests; exact package/driver/config provenance; rollback and preservation proof | Fixture-only fresh Debian path; disposable live replay and experimental Native driver reproduction open |
 | All-client interactive terminals | Disposable guest start/attach/I/O/resize/detach/exact close through four clients | Source paths exist; full live acceptance pending |
 | Current docs without conflicting duplicate status | One source for phase, CI, coverage and handoff; historical evidence dated; links checked | Root handoff/architecture/testing/manifest reconciled; remaining docs/ADRs/structured matrices pending |
@@ -37,7 +37,7 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A11 | Fresh installer refuses the existing Debian alias, so live replay cannot use the working guest | Open; design a separately named disposable target with refusal/rollback guards |
 | A12 | Experimental Native driver setup and customized guest config not fully reproducible | Open; inventory provenance and build a checked-in replay path |
 | A13 | X11 secret entry depends on identifying/focusing a browser window | Open audit of exact target/focus/fallback behavior, especially existing Native browser windows |
-| A14 | Historical ADR implementation paragraphs and structured feature matrices can read as current | Open full review; retain decisions but link dynamic implementation state |
+| A14 | Historical ADR/architecture implementation paragraphs and structured feature matrices can read as current | SSH/continuity architecture corrected; old narratives preserved losslessly as history. Remaining full ADR/matrix review open |
 
 | A15 | Phase date basis is implicit: tool records UTC dates while some historical local-date corrections exist | Open reconciliation; date mismatch alone is not a new gate failure |
 | A16 | Two GitHub workflows independently run the full suite | Open CI efficiency/authority review |
@@ -50,6 +50,9 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A20 | New Runit directories may not be discovered before the first start request | Observed during initial live apply; bounded discovery retry added and verified by fixture plus fresh isolated live replay |
 
 | A21 | Human formatting changed punctuation inside file paths/URLs and omitted list headings | Paths/URLs now remain exact in shared/Web formatting; shared reports label lists and translate operation names; regression added |
+
+| A22 | 8022 and 8023 share the Termux account; credential edits can affect both | Credential contract now requires explicit shared-account impact and preservation; implementation remains open |
+| A23 | P2 original full pre-consent transaction preview is unrecoverable, despite later current-state checks | Historical limitation retained; do not count later installed-state/fixture checks as proof of that original approval. Full P1–P3 claim/evidence mapping remains open |
 
 ## Continuation order
 

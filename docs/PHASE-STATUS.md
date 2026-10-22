@@ -90,6 +90,7 @@ Evidence:
 - [docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md](evidence/2026-10-22-p4-persistent-broker-web-terminal.md)
 - [docs/evidence/2026-10-22-native-ui-and-audit-remediation.md](evidence/2026-10-22-native-ui-and-audit-remediation.md)
 - [docs/evidence/2026-10-22-monitor-service-registration.md](evidence/2026-10-22-monitor-service-registration.md)
+- [docs/evidence/2026-10-22-native-entrypoint-and-contract-audit.md](evidence/2026-10-22-native-entrypoint-and-contract-audit.md)
 
 ## P5 — Distro and display compatibility profiles
 

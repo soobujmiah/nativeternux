@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-22T04:48:20.691554+00:00",
+  "source_head": "f73b46531b3323f675355f2eca4f35262a6d9bf8",
+  "scope": "All checked-in Runit run definitions and Termux:Boot helper scripts, installed tx shim, and every Python module currently in the canonical installed runtime directory.",
+  "script_targets": [
+    {
+      "source": "scripts/termux-services/ternuxx-gui-monitor/run",
+      "target_role": "$PREFIX/var/service/ternuxx-gui-monitor/run",
+      "safe_regular_file": true,
+      "source_sha256": "6cdd345256c740215350cf52c6a46b662aa0ce698bdd5fe3a63798c16a1bfabd",
+      "installed_sha256": "6cdd345256c740215350cf52c6a46b662aa0ce698bdd5fe3a63798c16a1bfabd",
+      "matches": true,
+      "mode": "0o755"
+    },
+    {
+      "source": "scripts/termux-services/ternuxx-sshd/run",
+      "target_role": "$PREFIX/var/service/ternuxx-sshd/run",
+      "safe_regular_file": true,
+      "source_sha256": "1e45a818d1d5c4b9d74eddb46ee57b3e74412915e63fadacfb609c25301b9237",
+      "installed_sha256": "1e45a818d1d5c4b9d74eddb46ee57b3e74412915e63fadacfb609c25301b9237",
+      "matches": true,
+      "mode": "0o700"
+    },
+    {
+      "source": "scripts/termux-services/ternuxx-terminal-broker/run",
+      "target_role": "$PREFIX/var/service/ternuxx-terminal-broker/run",
+      "safe_regular_file": true,
+      "source_sha256": "cd6a3f107bad6bb434ca6770ac3f28de8386b8afa582f45809d7c45855881eb4",
+      "installed_sha256": "cd6a3f107bad6bb434ca6770ac3f28de8386b8afa582f45809d7c45855881eb4",
+      "matches": true,
+      "mode": "0o755"
+    },
+    {
+      "source": "scripts/termux-boot/00-ternuxx-services",
+      "target_role": "$HOME/.termux/boot/00-ternuxx-services",
+      "safe_regular_file": true,
+      "source_sha256": "7dfdd79e1add71e2d26a4fa9cd7dbd8c16f88d69ddf39ba2a3a85f1f1cedd36a",
+      "installed_sha256": "7dfdd79e1add71e2d26a4fa9cd7dbd8c16f88d69ddf39ba2a3a85f1f1cedd36a",
+      "matches": true,
+      "mode": "0o700"
+    },
+    {
+      "source": "scripts/termux-boot/20-ternuxx-cron",
+      "target_role": "$HOME/.termux/boot/20-ternuxx-cron",
+      "safe_regular_file": true,
+      "source_sha256": "99d14d969ba47f77057611079c239058e40e19c49ed5b12575f89765cd48b12f",
+      "installed_sha256": "99d14d969ba47f77057611079c239058e40e19c49ed5b12575f89765cd48b12f",
+      "matches": true,
+      "mode": "0o700"
+    },
+    {
+      "source": "scripts/termux-boot/ternuxx-recovery",
+      "target_role": "$HOME/.termux/boot/ternuxx-recovery",
+      "safe_regular_file": true,
+      "source_sha256": "fdb974fec7e8e026d7b4f8ba305eb54dd8a95e82bda01eac42c9a81de8fba896",
+      "installed_sha256": "fdb974fec7e8e026d7b4f8ba305eb54dd8a95e82bda01eac42c9a81de8fba896",
+      "matches": true,
+      "mode": "0o700"
+    },
+    {
+      "source": "scripts/tx-installed",
+      "target_role": "$PREFIX/bin/tx",
+      "safe_regular_file": true,
+      "source_sha256": "a8735006203922cb7d7ab885e7fa1b85ca8608282de79d427d12a21a2511c401",
+      "installed_sha256": "a8735006203922cb7d7ab885e7fa1b85ca8608282de79d427d12a21a2511c401",
+      "matches": true,
+      "mode": "0o755"
+    }
+  ],
+  "installed_canonical_python_modules": [
+    {
+      "module": "continuity.py",
+      "source_exists": true,
+      "safe_regular_file": true,
+      "source_sha256": "1e4118766bac840eccad578506f18759db1ab877f29f62d66947f6a4e7d37843",
+      "installed_sha256": "1e4118766bac840eccad578506f18759db1ab877f29f62d66947f6a4e7d37843",
+      "matches": true
+    },
+    {
+      "module": "reboot_recovery.py",
+      "source_exists": true,
+      "safe_regular_file": true,
+      "source_sha256": "6e7fdb678966e1ae4fa5f871b2c251dbc66be8710a9f3421118c61f7de56dfe3",
+      "installed_sha256": "6e7fdb678966e1ae4fa5f871b2c251dbc66be8710a9f3421118c61f7de56dfe3",
+      "matches": true
+    },
+    {
+      "module": "ssh_diagnostics.py",
+      "source_exists": true,
+      "safe_regular_file": true,
+      "source_sha256": "e012e70aa865344f522970fe36b1be34eaa9f48b9508ffeb21e07d8eba61f48a",
+      "installed_sha256": "e012e70aa865344f522970fe36b1be34eaa9f48b9508ffeb21e07d8eba61f48a",
+      "matches": true
+    }
+  ],
+  "isolated_installed_import_closure": true,
+  "complete_repository_deployment_audit": false,
+  "remaining": [
+    "GTK/client launcher identity has separate evidence",
+    "Shell/profile hooks and optional app shortcuts",
+    "Runtime configuration and package/driver provenance",
+    "Disposable supported setup replay",
+    "Future cold-boot execution of current copies"
+  ]
+}

@@ -86,7 +86,8 @@
         "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",
         "docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md",
         "docs/evidence/2026-10-22-native-ui-and-audit-remediation.md",
-        "docs/evidence/2026-10-22-monitor-service-registration.md"
+        "docs/evidence/2026-10-22-monitor-service-registration.md",
+        "docs/evidence/2026-10-22-native-entrypoint-and-contract-audit.md"
       ],
       "next_action": "Complete installed/runtime inventory and P1-P3 evidence mapping, then shared credential/service policy controls and separately guarded disposable guest/terminal replay; preserve Native Termux, SSH 8022 and the active Codex guest."
     },
