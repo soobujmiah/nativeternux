@@ -16,9 +16,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Selected Debian app, replay/graphics, cross-client terminal, and Native failure-isolation evidence is recorded. Bulk shortcut sync has previewed apply and durable confirmed CLI/shared-service rollback; authenticated Web controls, GTK/TUI actions, broader synchronization, safe VirGL cleanup, broken-rootfs/cold-boot qualification, and the full audit remain open.
+Selected Debian app, replay/graphics, cross-client terminal, and Native failure-isolation evidence is recorded. Bulk shortcut sync has previewed apply and durable confirmed rollback in CLI/shared service, plus authenticated Web controls that passed visible Firefox review. GTK/TUI actions, broader synchronization, safe VirGL cleanup, broken-rootfs/cold-boot qualification, and the full audit remain open.
 
-**Next action:** Add authenticated Web, GTK and TUI rollback actions and locking shared with individual shortcut edits; then continue safe VirGL client visibility, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and the requirement-by-requirement audit.
+**Next action:** Add GTK and TUI rollback actions and locking shared with individual shortcut edits; then continue safe VirGL client visibility, installed/source/runtime reconciliation, actual broken-rootfs and cold-boot qualification, and the requirement-by-requirement audit.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

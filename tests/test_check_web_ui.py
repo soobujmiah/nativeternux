@@ -10,6 +10,14 @@ class WebUICheckerTargetTests(unittest.TestCase):
     def test_only_named_replay_aliases_are_accepted(self):
         self.assertEqual(isolated_replay_distro("ternuxx-replay-p4"), "ternuxx-replay-p4")
 
+    def test_checker_requires_visible_shortcut_rollback_controls(self):
+        source = (Path(__file__).resolve().parents[1] / "tools" / "check_web_ui.py").read_text()
+        self.assertIn("Load shortcut sync history", source)
+        self.assertIn("Preview shortcut restore", source)
+        self.assertIn("proot_shortcut_sync_rollback_control", source)
+        self.assertIn("historyVisible", source)
+        self.assertIn("restoreVisible", source)
+
     def test_checker_requires_visible_previewed_shortcut_sync_control(self):
         source = (Path(__file__).resolve().parents[1] / "tools" / "check_web_ui.py").read_text()
         self.assertIn("Preview all Debian app shortcuts", source)

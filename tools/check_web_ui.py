@@ -247,6 +247,28 @@ def run_checks(browser, secret, screenshots, *, visible=False):
             encoded = encoded["value"]
         (screenshots / "web-proot-shortcut-sync-control.png").write_bytes(base64.b64decode(encoded))
     report.append({"proot_shortcut_sync_control": shortcut_sync_control})
+    rollback_control = browser.evaluate("""
+      const history=[...document.querySelectorAll('#resource-actions button')]
+        .find(x=>x.textContent==='Load shortcut sync history');
+      const restore=[...document.querySelectorAll('#resource-actions button')]
+        .find(x=>x.textContent==='Preview shortcut restore');
+      const dock=document.querySelector('.action-dock .actions').getBoundingClientRect();
+      const quick=document.querySelector('#mobile-action-bar');
+      const quickTop=getComputedStyle(quick).display==='none'?innerHeight:quick.getBoundingClientRect().top;
+      history?.scrollIntoView({block:'center',inline:'nearest'});
+      const h=history?.getBoundingClientRect(),r=restore?.getBoundingClientRect();
+      return {historyVisible:!!h&&h.width>0&&h.height>0&&h.top>=dock.top&&h.bottom<=dock.bottom&&h.bottom<=quickTop,
+        restoreVisible:!!r&&r.width>0&&r.height>0&&r.top>=dock.top&&r.bottom<=dock.bottom&&r.bottom<=quickTop,
+        historyLabel:history?.textContent,restoreLabel:restore?.textContent,
+        historyDisabled:history?.disabled,restoreDisabled:restore?.disabled};
+    """)
+    require(rollback_control["historyVisible"] and rollback_control["restoreVisible"],
+            "Web shortcut rollback controls are outside the visible action area")
+    if screenshots:
+        encoded=browser.call("WebDriver:TakeScreenshot", {})
+        if isinstance(encoded,dict): encoded=encoded["value"]
+        (screenshots / "web-proot-shortcut-rollback-control.png").write_bytes(base64.b64decode(encoded))
+    report.append({"proot_shortcut_sync_rollback_control":rollback_control})
     require(browser.evaluate("""
       return [...document.querySelectorAll('#resource-actions button')]
         .some(x=>x.textContent==='Preview and reconcile exited session');
@@ -426,7 +448,7 @@ def main():
                                          "catalog-order", "resource-search", "ssh-password-disabled-recovery-hint", "horizontal-overflow",
                                          "stable-actions", "late-response-resource-binding", "8022-inspection-only",
                                          "wakelock-status-control", "proot-recovery-reconcile-control",
-                                         "proot-shortcut-sync-control", "terminal-renderer-no-guest-start"],
+                                         "proot-shortcut-sync-control", "proot-shortcut-sync-rollback-control", "terminal-renderer-no-guest-start"],
                               "source_sha256": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
                                                 for name in ["lib/management_web_ui.html",
                                                              "lib/management_http_runtime.py",

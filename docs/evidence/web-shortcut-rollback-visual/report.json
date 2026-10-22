@@ -1,0 +1,90 @@
+{
+  "ok": true,
+  "browser": "153.5.0",
+  "mode": "visible",
+  "viewports": [
+    {
+      "width": 742,
+      "height": 881,
+      "overflow": false,
+      "activeCategoryFits": true,
+      "activeCategoryGeometry": {
+        "left": 193.28334045410156,
+        "right": 401.21665954589844,
+        "width": 207.93331909179688,
+        "scrollWidth": 206,
+        "clientWidth": 206,
+        "navLeft": 26.5,
+        "navRight": 715.5,
+        "navScrollLeft": 0,
+        "navScrollWidth": 2922,
+        "navClientWidth": 689
+      },
+      "actionTop": 869.3499755859375,
+      "quickBar": "flex",
+      "requested_width": 752
+    },
+    {
+      "proot_shortcut_sync_control": {
+        "visible": true,
+        "label": "Preview all Debian app shortcuts",
+        "buttonTop": 407.3999938964844,
+        "dockTop": 355.1499938964844,
+        "dockBottom": 672.3000183105469,
+        "quickTop": 816.5
+      }
+    },
+    {
+      "proot_shortcut_sync_rollback_control": {
+        "historyVisible": true,
+        "restoreVisible": true,
+        "historyLabel": "Load shortcut sync history",
+        "restoreLabel": "Preview shortcut restore",
+        "historyDisabled": false,
+        "restoreDisabled": true
+      }
+    },
+    {
+      "proot_recovery_control": {
+        "visible": true,
+        "disabled": true,
+        "label": "Preview and reconcile exited session",
+        "buttonTop": 407.3999938964844,
+        "dockTop": 156.14999389648438,
+        "dockBottom": 473.3000183105469,
+        "quickTop": 816.5
+      }
+    }
+  ],
+  "operations": [
+    "management.catalog",
+    "proot.sessions.list",
+    "proot.sessions.list"
+  ],
+  "distro": "ternuxx-replay-p4",
+  "managed_terminal_session_started": false,
+  "browser_guest_login_performed": true,
+  "guest_profile_injection_possible": true,
+  "isolated_browser_profile": true,
+  "checks": [
+    "unauthenticated-hidden-state",
+    "bootstrap-cleared",
+    "catalog-order",
+    "resource-search",
+    "ssh-password-disabled-recovery-hint",
+    "horizontal-overflow",
+    "stable-actions",
+    "late-response-resource-binding",
+    "8022-inspection-only",
+    "wakelock-status-control",
+    "proot-recovery-reconcile-control",
+    "proot-shortcut-sync-control",
+    "proot-shortcut-sync-rollback-control",
+    "terminal-renderer-no-guest-start"
+  ],
+  "source_sha256": {
+    "lib/management_web_ui.html": "4708f1a485cdf9cf9f45b3a8cb50ba189c0e577dbad404e2bc6686040209e6df",
+    "lib/management_http_runtime.py": "6624e679d49c60b24145eba5962e872996d52893f063f528746834dbb1e5bba2",
+    "lib/management_catalog.py": "7102e38b448030867abeae6a56d9bc073aaa8a297966ba018ea77e9467800d23"
+  }
+}
