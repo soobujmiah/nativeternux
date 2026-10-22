@@ -17,11 +17,11 @@ The unit/fixture suite covers lifecycle identity/refusal, previews, journals/rec
 
 ## Real Firefox checks
 
-The opt-in checker runs installed Debian Firefox ESR with an isolated Native shared-tmp profile. It starts an ephemeral loopback Web runtime/private test state and permits only catalog/session-inventory reads. It does not start/attach/stop a guest session.
+The opt-in checker runs installed Firefox ESR only from a named `ternuxx-replay-*` disposable alias; it refuses the protected default `debian` workload. It starts an ephemeral loopback Web runtime/private test state and permits only catalog/session-inventory reads. The browser login can trigger PRoot-Distro's Termux profile injection in the selected replay guest, so the checker reports that possibility and must never be pointed at the owner's working guest. It does not start/attach/stop a Ternuxx-managed guest terminal session.
 
 ```sh
-python3 tools/check_web_ui.py
-python3 tools/check_web_ui.py --visible
+python3 tools/check_web_ui.py --distro ternuxx-replay-p4
+python3 tools/check_web_ui.py --distro ternuxx-replay-p4 --visible
 ```
 
 Run from the repository root in Native Termux. Visible mode uses the existing X11 display without starting a desktop/Android Activity. Optional `--screenshots "$PREFIX/tmp/ternuxx-web-ui-review"` saves scoped captures; delete them after inspection.

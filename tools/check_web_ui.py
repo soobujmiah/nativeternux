@@ -24,6 +24,18 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+_REPLAY_DISTRO = re.compile(r"^ternuxx-replay-[A-Za-z0-9_-]{1,17}$")
+
+
+def isolated_replay_distro(value: str) -> str:
+    """Refuse the owner's default Debian rootfs for browser qualification."""
+    if not isinstance(value, str) or not _REPLAY_DISTRO.fullmatch(value):
+        raise argparse.ArgumentTypeError(
+            "must name a Ternuxx disposable alias such as ternuxx-replay-p4; the default debian guest is protected"
+        )
+    return value
+
+
 sys.path.insert(0, str(ROOT / "lib"))
 import management_http_runtime
 import management_service
@@ -140,6 +152,15 @@ def run_checks(browser, secret, screenshots, *, visible=False):
     browser.evaluate("const s=document.querySelector('#search');s.value='';"
                      "s.dispatchEvent(new Event('input'));return true;")
     select_resource(browser, "Services & background", "8023")
+    login_help = browser.evaluate("""
+      const node=[...document.querySelectorAll('.field-note')]
+        .find(x=>x.querySelector('summary')?.textContent==='SSH login help');
+      return node?.textContent||'';
+    """)
+    require("public-key login only" in login_help and
+            "password login is disabled" in login_help and
+            "ssh -p 8023 termux" in login_help,
+            "SSH recovery guidance does not match the verified public-key-only policy")
     report = []
     # Firefox browser chrome enforces a desktop minimum width. Remove only that
     # constraint in this disposable profile so 390 really means a 390px viewport.
@@ -239,6 +260,7 @@ def run_checks(browser, secret, screenshots, *, visible=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--distro", required=True, type=isolated_replay_distro, help="Ternuxx disposable replay alias; the default Debian workload is refused")
     parser.add_argument("--visible", action="store_true", help="Use the existing Native X11 display")
     parser.add_argument("--screenshots", type=Path, help="Save scoped UI PNGs to this directory")
     args = parser.parse_args()
@@ -279,8 +301,8 @@ def main():
             server = management_http_runtime.build_server(port=0, bootstrap_secret=secret, env=env)
             server.start()
             guest_user = proot_diagnostics.resolve_proot_guest_user(
-                distro="debian", prefix=env["PREFIX"])
-            command = [shutil.which("proot-distro") or "proot-distro", "login", "debian",
+                distro=args.distro, prefix=env["PREFIX"])
+            command = [shutil.which("proot-distro") or "proot-distro", "login", args.distro,
                        "--shared-tmp", "--user", guest_user]
             if args.visible:
                 browser_env = management_http_runtime.browser_x11_environment(os.environ)
@@ -322,10 +344,13 @@ def main():
             print(json.dumps({"ok": True, "browser": caps.get("browserVersion"),
                               "mode": "visible" if args.visible else "headless",
                               "viewports": metrics, "operations": operations,
-                              "guest_session_started": False,
-                              "isolated_profile": True,
+                              "distro": args.distro,
+                              "managed_terminal_session_started": False,
+                              "browser_guest_login_performed": True,
+                              "guest_profile_injection_possible": True,
+                              "isolated_browser_profile": True,
                               "checks": ["unauthenticated-hidden-state", "bootstrap-cleared",
-                                         "catalog-order", "resource-search", "horizontal-overflow",
+                                         "catalog-order", "resource-search", "ssh-password-disabled-recovery-hint", "horizontal-overflow",
                                          "stable-actions", "late-response-resource-binding", "8022-inspection-only",
                                          "wakelock-status-control", "terminal-renderer-no-guest-start"],
                               "source_sha256": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()

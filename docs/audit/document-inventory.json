@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 392,
-  "read_count": 81,
+  "document_count": 393,
+  "read_count": 82,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "cf6e311f91b5cdeba061c53181bf34580f7c76807c9300d7bb469d8328cfdab3",
+      "sha256": "a19cc12f0724e9264fca930e32825731fce2784d61b2a50178b720777c9fe527",
       "lines": 45,
       "read_status": "read",
-      "read_sha256": "cf6e311f91b5cdeba061c53181bf34580f7c76807c9300d7bb469d8328cfdab3"
+      "read_sha256": "a19cc12f0724e9264fca930e32825731fce2784d61b2a50178b720777c9fe527"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -507,10 +507,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "869ccd9e36a4d0f54021268b3e541ca26f6f4fdda75fa9994c7502a876635e55",
-      "lines": 84,
+      "sha256": "d3aa672e14d1c92d0b4733bfd1a079794fb36b2ad9ecbdeed06a826fb5d17cb2",
+      "lines": 85,
       "read_status": "read",
-      "read_sha256": "869ccd9e36a4d0f54021268b3e541ca26f6f4fdda75fa9994c7502a876635e55"
+      "read_sha256": "d3aa672e14d1c92d0b4733bfd1a079794fb36b2ad9ecbdeed06a826fb5d17cb2"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2465,6 +2465,14 @@
       "read_sha256": "6cbda2e7982bccc53cda11749e6f81f3afd6a612c6246b70407ba171693f5ae7"
     },
     {
+      "path": "docs/evidence/2026-10-22-web-checker-replay-guard.md",
+      "kind": "narrative",
+      "sha256": "8e5ef12e08bd415b924aa6bf299f3de1cb3281d77f516c3d5bb59ef74cb5b8b3",
+      "lines": 18,
+      "read_status": "read",
+      "read_sha256": "8e5ef12e08bd415b924aa6bf299f3de1cb3281d77f516c3d5bb59ef74cb5b8b3"
+    },
+    {
       "path": "docs/evidence/2026-10-22-web-source-regression.json",
       "kind": "structured",
       "sha256": "a03346692f459370cf1dc7413540f02b7eef7e1469d961247e25e88548581726",
@@ -2739,10 +2747,10 @@
     {
       "path": "docs/testing/README.md",
       "kind": "narrative",
-      "sha256": "783167724e67be537757e12256695257bb001d6821415a0ad67692fb78b5b7e0",
+      "sha256": "fbba3b797f92147368ccf7d9799de134edc19d9f602e82412c822c77d5366221",
       "lines": 77,
       "read_status": "read",
-      "read_sha256": "783167724e67be537757e12256695257bb001d6821415a0ad67692fb78b5b7e0"
+      "read_sha256": "fbba3b797f92147368ccf7d9799de134edc19d9f602e82412c822c77d5366221"
     },
     {
       "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",

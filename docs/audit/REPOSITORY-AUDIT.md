@@ -71,6 +71,7 @@ Implement over Native SSH 8022. Preserve Native Termux, managed 8023 access and 
 | A35 | GTK recovery history exposed opaque IDs/ISO timestamps and reserved action space after long details on the portrait X11 window | Fixed with bounded readable history, reference redaction, action-first pane ordering and empty-action collapse; 28 focused GTK bridge tests and live Native visual check passed. Broader GTK/client parity remains open; see [visual review](../evidence/2026-10-22-management-center-visual-review.md) |
 
 | A36 | Runit SSH lifecycle used service ID where Termux `sv` requires the absolute service path; live status/preview failed despite the service being healthy | Fixed to invoke only `$PREFIX/var/service/ternuxx-sshd`, accept the exact ID or exact absolute status label, and reject a sibling unit. Restart preview now works read-only on Native; restart apply intentionally not run. Focused lifecycle/recovery/client tests pass; see [evidence](../evidence/2026-10-22-ssh-service-restart.md) |
+| A37 | Firefox checker targeted the protected default Debian alias, where PRoot-Distro login may inject a Termux profile | Fixed checker to require an explicit `ternuxx-replay-*` alias, disclose possible replay-rootfs profile injection, and validate the SSH recovery guidance. Two target-guard unit tests pass; actual browser interaction/visual review remains owner-operated and unverified. See [checker guard evidence](../evidence/2026-10-22-web-checker-replay-guard.md) |
 
 ## Continuation order
 
