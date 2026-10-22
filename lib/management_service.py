@@ -154,6 +154,9 @@ OPERATIONS = {
     "recovery.rollback.preview": {"args": {"operation_id"}},
     "recovery.rollback.apply": {"args": {"operation_id", "confirmed", "plan_id"}},
     "wakelock.status": {"args": set()},
+    "wakelock.ssh-policy.status": {"args": set()},
+    "wakelock.ssh-policy.preview": {"args": {"enabled"}},
+    "wakelock.ssh-policy.apply": {"args": {"enabled", "confirmed", "plan_id"}},
     "wakelock.acquire": {"args": {"owner", "persistent"}},
     "wakelock.release": {"args": {"owner", "persistent"}},
     "continuity.status": {"args": {"test_id"}},
@@ -703,6 +706,20 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             data = termux_boot_cron.apply(action, home=home, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"), confirmed=confirmed, plan_id=plan_id)
         elif operation == "wakelock.status":
             data = wakelock_manager.status(state_dir=state_dir)
+        elif operation == "wakelock.ssh-policy.status":
+            data = wakelock_manager.service_policy_status(state_dir=state_dir)
+        elif operation == "wakelock.ssh-policy.preview":
+            enabled = args.get("enabled")
+            if type(enabled) is not bool:
+                return _error(request_id, "invalid_arguments", "enabled must be a boolean")
+            data = wakelock_manager.service_policy_preview(state_dir=state_dir, enabled=enabled)
+        elif operation == "wakelock.ssh-policy.apply":
+            enabled = args.get("enabled")
+            if (type(enabled) is not bool or args.get("confirmed") is not True
+                    or not isinstance(args.get("plan_id"), str)):
+                return _error(request_id, "confirmation_required", "Wake Lock policy apply requires an exact preview and confirmation")
+            data = wakelock_manager.service_policy_apply(state_dir=state_dir, enabled=enabled,
+                confirmed=True, plan_id=args["plan_id"])
         elif operation in {"wakelock.acquire", "wakelock.release"}:
             owner = args.get("owner")
             persistent = args.get("persistent", False)
@@ -929,6 +946,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--plan-id")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--persistent", action="store_true")
+    ssh_wakelock_toggle = parser.add_mutually_exclusive_group()
+    ssh_wakelock_toggle.add_argument("--ssh-wakelock-enabled", dest="ssh_wakelock_enabled", action="store_true", default=None)
+    ssh_wakelock_toggle.add_argument("--ssh-wakelock-disabled", dest="ssh_wakelock_enabled", action="store_false")
     parser.add_argument("--graphics", action="store_true")
     parser.add_argument("--category")
     parser.add_argument("--query")
@@ -1208,7 +1228,7 @@ def main(argv: list[str] | None = None) -> int:
                 else: print("Preview first, then apply with --yes --plan-id PLAN_ID.", file=sys.stderr)
                 return 1
             payload = {"plan_id": args.plan_id, "confirmed": True}
-    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "terminal.broker.status", "native.ssh.status", "ssh.keys.list", "boot.status", "wakelock.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
+    elif args.operation in {"cron.status", "agent.hermes.status", "ssh.inspect", "proot.status", "terminal.broker.status", "native.ssh.status", "ssh.keys.list", "boot.status", "wakelock.status", "wakelock.ssh-policy.status", "continuity.status", "boot.profile.status", "boot.helpers.status", "boot.cron.status", "boot.cron.validate", "backup.list", "recovery.status"}:
         payload = {}
         if args.operation == "continuity.status" and args.test_id:
             payload["test_id"] = args.test_id
@@ -1327,6 +1347,20 @@ def main(argv: list[str] | None = None) -> int:
         payload = {"confirmed": args.yes}
         if args.plan_id is not None:
             payload["plan_id"] = args.plan_id
+    elif args.operation == "wakelock.ssh-policy.status":
+        payload = {}
+    elif args.operation in {"wakelock.ssh-policy.preview", "wakelock.ssh-policy.apply"}:
+        if args.ssh_wakelock_enabled is None:
+            response = _error(request_id, "invalid_arguments", "choose --ssh-wakelock-enabled or --ssh-wakelock-disabled")
+            print(json.dumps(response, sort_keys=True) if args.json else "Ternuxx operation failed [invalid_arguments]: choose an SSH Wake Lock setting", file=None if args.json else sys.stderr)
+            return 1
+        payload = {"enabled": args.ssh_wakelock_enabled}
+        if args.operation.endswith("apply"):
+            if not args.yes or not args.plan_id:
+                response = _error(request_id, "confirmation_required", "Wake Lock policy apply requires --yes and --plan-id")
+                print(json.dumps(response, sort_keys=True) if args.json else "Ternuxx operation failed [confirmation_required]: apply requires --yes and --plan-id", file=None if args.json else sys.stderr)
+                return 1
+            payload.update({"confirmed": True, "plan_id": args.plan_id})
     elif args.operation in {"wakelock.acquire", "wakelock.release"}:
         if not args.owner:
             response = _error(request_id, "invalid_arguments", "--owner is required")

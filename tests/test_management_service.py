@@ -520,6 +520,23 @@ class ManagementServiceTests(unittest.TestCase):
                 "enabled": False, "confirmed": "yes", "plan_id": "a" * 32}), env=env)
             self.assertFalse(denied["ok"])
 
+    def test_ssh_wakelock_policy_uses_preview_apply_and_preserves_running_lease(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="ssh-wakelock-service-") as temp:
+            home = Path(temp) / "home"; home.mkdir(mode=0o700)
+            state = home / ".local/share/ternuxx"; state.mkdir(mode=0o700, parents=True)
+            env = {**NATIVE_ENV, "HOME": str(home), "TERNUXX_STATE_DIR": str(state)}
+            current = management_service.dispatch(request("wakelock.ssh-policy.status"), env=env)
+            self.assertTrue(current["ok"]); self.assertTrue(current["data"]["persistent_lease_enabled"])
+            preview = management_service.dispatch(request("wakelock.ssh-policy.preview", {"enabled": False}), env=env)
+            self.assertTrue(preview["ok"]); self.assertTrue(preview["data"]["requires_confirmation"])
+            unconfirmed = management_service.dispatch(request("wakelock.ssh-policy.apply", {
+                "enabled": False, "confirmed": False, "plan_id": preview["data"]["plan_id"]}), env=env)
+            self.assertFalse(unconfirmed["ok"]); self.assertEqual(unconfirmed["error"]["code"], "confirmation_required")
+            applied = management_service.dispatch(request("wakelock.ssh-policy.apply", {
+                "enabled": False, "confirmed": True, "plan_id": preview["data"]["plan_id"]}), env=env)
+            self.assertTrue(applied["ok"]); self.assertFalse(applied["data"]["current_service_lease_changed"])
+            self.assertFalse(management_service.dispatch(request("wakelock.ssh-policy.status"), env=env)["data"]["persistent_lease_enabled"])
+
     def test_ssh_service_preview_is_allowlisted_and_requires_native_private_state(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ternuxx-ssh-service-api-") as temp:
             home = Path(temp) / "home"

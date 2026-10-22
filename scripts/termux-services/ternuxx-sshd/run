@@ -18,11 +18,22 @@ chmod 700 "$TERNUXX_STATE_DIR" "$LOG_DIR" 2>/dev/null || true
 exec >>"$LOG_FILE" 2>&1
 printf 'wrapper-started-at=%s pid=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$"
 
-if ! "$PREFIX/bin/bash" "$PREFIX/bin/tx" wakelock acquire native.sshd --persistent >/dev/null; then
+WAKELOCK_ACQUIRED=0
+acquire_response=$(TERNUXX_JSON=1 "$PREFIX/bin/bash" "$PREFIX/bin/tx" wakelock acquire native.sshd --persistent) || {
   printf 'wakelock-acquire=failed-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   exit 1
-fi
-printf 'wakelock-acquire=ok-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+lease_state=$(printf '%s' "$acquire_response" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("data",{}).get("state", ""))') || exit 1
+case "$lease_state" in
+  acquired|already_acquired)
+    WAKELOCK_ACQUIRED=1
+    printf 'wakelock-acquire=ok-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" ;;
+  policy_disabled)
+    printf 'wakelock-acquire=skipped-by-service-policy-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" ;;
+  *)
+    printf 'wakelock-acquire=unverified-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    exit 1 ;;
+esac
 
 child=""
 cleanup() {
@@ -31,7 +42,9 @@ cleanup() {
     kill -TERM "$child" 2>/dev/null || true
     wait "$child" 2>/dev/null || true
   fi
-  "$PREFIX/bin/bash" "$PREFIX/bin/tx" wakelock release native.sshd --persistent >/dev/null 2>&1 || true
+  if [ "$WAKELOCK_ACQUIRED" -eq 1 ]; then
+    "$PREFIX/bin/bash" "$PREFIX/bin/tx" wakelock release native.sshd --persistent >/dev/null 2>&1 || true
+  fi
 }
 trap cleanup EXIT
 trap 'exit 0' TERM INT

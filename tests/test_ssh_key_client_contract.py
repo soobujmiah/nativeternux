@@ -47,6 +47,27 @@ class SshKeyClientContractTests(unittest.TestCase):
         self.assertEqual(request["args"], {"public_key": key})
         self.assertNotIn(key, output.getvalue())
 
+    def test_ssh_wakelock_policy_cli_and_all_clients_share_the_typed_operation(self):
+        response = {"ok": True, "data": {"changed": True, "requires_confirmation": True}}
+        with patch.dict(os.environ, {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr", "HOME": "/tmp/home"}), \
+             patch("sys.stdout", io.StringIO()), \
+             patch.object(management_service, "dispatch", return_value=response) as dispatch:
+            self.assertEqual(management_service.main(["--operation", "wakelock.ssh-policy.preview",
+                "--ssh-wakelock-disabled", "--json"]), 0)
+        self.assertEqual(dispatch.call_args.args[0]["args"], {"enabled": False})
+        self.assertEqual(management_authorization.required_capability("wakelock.ssh-policy.status"), "diagnostics.read")
+        self.assertEqual(management_authorization.required_capability("wakelock.ssh-policy.apply"), "wakelock.policy.manage")
+        self.assertIn("wakelock.ssh-policy.preview", management_sessions.MUTATING_OPERATIONS)
+        self.assertIn("wakelock.ssh-policy.apply", management_http_runtime._WEB_MUTATING_OPERATIONS)
+        page = (ROOT / "lib/management_web_ui.html").read_text()
+        tui = (ROOT / "lib/terminal_ui.py").read_text()
+        gtk = (ROOT / "apps/management-center/management-center.c").read_text()
+        bridge = (ROOT / "scripts/management_desktop_bridge.py").read_text()
+        self.assertIn("Set managed SSH keep-awake preference", page)
+        self.assertIn("_wakelock_action(screen)", tui)
+        self.assertIn("ssh-wakelock-apply", gtk)
+        self.assertIn("wakelock.ssh-policy.apply", bridge)
+
     def test_cli_ssh_autostart_preview_requires_typed_preference(self):
         response = {"ok": True, "data": {"status": "ready", "changed": True}}
         with patch.dict(os.environ, {"TERMUX_VERSION": "test", "PREFIX": "/data/data/com.termux/files/usr", "HOME": "/tmp/home"}), \

@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles pass; all four clients now expose preview-confirmed Native SSH recovery-key creation and next-supervisor autostart policy, with GTK install/source identity verified. Cross-client continuity, disposable authentication qualification, durable credential rollback, password/Wake Lock/cold-boot policy, fresh-guest retirement/rollback, and remaining P4 acceptance stay open.
+Separate pinned guest setup and production broker plus actual CLI, TUI, Web and GTK terminal lifecycles pass; all four clients expose preview-confirmed Native SSH recovery-key creation, next-supervisor autostart and next-start per-service Wake Lock policy. Current Wake Lock preference remains default-enabled; wrapper source/install parity verified. Cross-client continuity, disposable authentication qualification, durable credential rollback, password/cold-boot policy, fresh-guest retirement/rollback, and remaining P4 acceptance stay open.
 
-**Next action:** Qualify recovery-key enrollment/authentication and durable rollback on disposable credentials; resolve password recovery and per-service Wake Lock policy plus cold-boot delivery; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
+**Next action:** Qualify recovery-key enrollment/authentication and durable rollback on disposable credentials; resolve password recovery and cold-boot delivery; qualify cross-client terminal continuity, fresh-guest retirement/rollback, config parity/probe plans, and continue full source/document audit.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -100,6 +100,7 @@ Evidence:
 - [docs/evidence/2026-10-22-native-installed-parity-1007.json](evidence/2026-10-22-native-installed-parity-1007.json)
 - [docs/evidence/2026-10-22-ssh-client-key-generation.md](evidence/2026-10-22-ssh-client-key-generation.md)
 - [docs/evidence/2026-10-22-ssh-service-autostart-policy.md](evidence/2026-10-22-ssh-service-autostart-policy.md)
+- [docs/evidence/2026-10-22-managed-ssh-wakelock-policy.md](evidence/2026-10-22-managed-ssh-wakelock-policy.md)
 
 ## P5 — Distro and display compatibility profiles
 

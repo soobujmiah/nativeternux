@@ -75,6 +75,23 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("ssh.service.autostart.apply", {
             "enabled": False, "confirmed": True, "plan_id": "d" * 32})
 
+    def test_ssh_wakelock_policy_bridge_uses_shared_preview_and_apply(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
+                "persistent_lease_enabled": True}}) as dispatch, redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["ssh-wakelock-status"]), 0)
+        dispatch.assert_called_once_with("wakelock.ssh-policy.status")
+        self.assertEqual(output.getvalue().strip(), "S\ttrue")
+        preview = {"ok": True, "data": {"changed": True, "plan_id": "e" * 32,
+                   "effect": "current SSH lease remains unchanged"}}
+        with mock.patch.object(bridge, "call", return_value=preview) as dispatch, redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["ssh-wakelock-preview", "disabled"]), 0)
+        dispatch.assert_called_once_with("wakelock.ssh-policy.preview", {"enabled": False})
+        self.assertEqual(output.getvalue().strip().split(chr(9))[:3], ["P", "e" * 32, "false"])
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"status": "updated"}}) as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["ssh-wakelock-apply", "confirmed", "false", "e" * 32]), 0)
+        dispatch.assert_called_once_with("wakelock.ssh-policy.apply", {
+            "enabled": False, "confirmed": True, "plan_id": "e" * 32})
+
     def test_ssh_autostart_apply_rejects_malformed_plan(self) -> None:
         with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
             self.assertEqual(bridge.main(["ssh-autostart-apply", "confirmed", "false", "bad"]), 2)

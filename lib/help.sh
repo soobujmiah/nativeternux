@@ -503,12 +503,16 @@ unknown unless a verified platform API is added.
 
   tx wakelock acquire <owner>
   tx wakelock release <owner>
+  tx wakelock ssh-policy status
+  tx wakelock ssh-policy preview --enabled|--disabled
+  tx wakelock ssh-policy apply --enabled|--disabled --yes --plan-id ID
   tx wakelock acquire native.sshd --persistent
 
 Acquire/release tracks a Ternuxx-owned lease in private native state. Only the
 owner process can release its non-persistent lease. Persistent leases are
-reserved for the native SSH service and must be released by that service's
-manager. Android still exposes one app-global lock; unrelated Termux clients
+reserved for the native SSH service and released by its manager. Its optional
+service policy applies on the next service start; changing the preference leaves
+the current process and lease untouched. Android still exposes one app-global lock; unrelated Termux clients
 are outside this coordinator.
 EOF
       ;;

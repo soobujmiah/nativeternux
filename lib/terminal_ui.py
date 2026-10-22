@@ -324,6 +324,32 @@ def _public_key_catalog() -> list[dict[str, str]]:
     return found
 
 
+def _wakelock_action(screen: "curses._CursesWindow") -> dict[str, object]:
+    choice = _choose(screen, "Wake Lock", [
+        ("status", "Check current Wake Lock status"),
+        ("ssh-policy", "Set managed SSH keep-awake preference"),
+    ])
+    if choice != "ssh-policy":
+        return _call("wakelock.status")
+    current = _call("wakelock.ssh-policy.status")
+    if not current.get("ok"):
+        return current
+    enabled = current.get("data", {}).get("persistent_lease_enabled") is True
+    answer = _prompt(screen, "Keep managed SSH awake across idle? Current: "
+                     + ("Yes" if enabled else "No") + "; enter yes or no").lower()
+    if answer not in {"yes", "no"}:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    desired = answer == "yes"
+    preview = _call("wakelock.ssh-policy.preview", {"enabled": desired})
+    if not preview.get("ok") or not preview.get("data", {}).get("changed"):
+        return preview
+    _show_details(screen, preview)
+    if _prompt(screen, "This applies at the next managed SSH start; current lease stays unchanged. Type yes").lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("wakelock.ssh-policy.apply", {"enabled": desired, "confirmed": True,
+                                                  "plan_id": preview.get("data", {}).get("plan_id")})
+
+
 def _managed_ssh_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
     if resource.get("id") != "network.ssh.managed-8023":
         return {"ok": False, "error": {"code": "externally_managed_resource"}}
@@ -1098,7 +1124,7 @@ def _run(screen: "curses._CursesWindow") -> int:
             elif resource["id"] == "boot.termux.profile":
                 report = _boot_action(screen)
             elif resource["id"] == "native.wakelock":
-                report = _call("wakelock.status")
+                report = _wakelock_action(screen)
             else:
                 report = {"ok": False, "error": {"code": "guided_action_unavailable"}}
 

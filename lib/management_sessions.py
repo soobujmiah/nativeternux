@@ -31,7 +31,7 @@ MUTATING_OPERATIONS = frozenset({
     "ssh.keys.add.preview", "ssh.keys.add.apply", "ssh.keys.remove.preview", "ssh.keys.remove.apply",
     "ssh.client-key.create.preview", "ssh.client-key.create.apply", "ssh.service.autostart.preview", "ssh.service.autostart.apply", "boot.enable", "boot.disable", "boot.cron.enable", "boot.cron.disable",
     "backup.create", "restore.apply", "recovery.resolve",
-    "recovery.rollback.apply", "wakelock.acquire", "wakelock.release",
+    "recovery.rollback.apply", "wakelock.acquire", "wakelock.release", "wakelock.ssh-policy.preview", "wakelock.ssh-policy.apply",
     "continuity.prepare", "continuity.verify", "continuity.prepare-reboot-test",
     "continuity.verify-reboot-test", "proot.app.launch", "proot.shortcuts.apply", "proot.shortcuts.sync",
     "cron.jobs.mutation.preview", "cron.jobs.mutation.apply",
@@ -55,7 +55,7 @@ READ_ONLY_OPERATIONS = frozenset({
     "remote.access.preview", "boot.status", "boot.profile.status", "boot.helpers.status",
     "boot.profile.preview", "boot.cron.status", "boot.cron.validate", "boot.cron.preview", "backup.list", "backup.inspect", "restore.preview",
     "recovery.status", "recovery.inspect", "recovery.rollback.preview",
-    "wakelock.status", "continuity.status", "continuity.resume-info",
+    "wakelock.status", "wakelock.ssh-policy.status", "continuity.status", "continuity.resume-info",
 })
 
 

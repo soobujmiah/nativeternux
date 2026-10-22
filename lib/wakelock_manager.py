@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -195,6 +196,141 @@ def _run(command: str, runner: Callable[..., subprocess.CompletedProcess[str]]) 
         raise WakeLockError("Termux Wake Lock command returned failure")
 
 
+
+_SERVICE_POLICY_FILE = "service-policy.json"
+
+
+def _service_policy_snapshot(root: Path) -> tuple[bool, tuple[object, ...]]:
+    path = root / _SERVICE_POLICY_FILE
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+    try:
+        fd = os.open(path, flags)
+    except FileNotFoundError:
+        return True, ("absent-default-enabled",)
+    except OSError as exc:
+        raise WakeLockError("managed SSH Wake Lock policy cannot be opened safely") from exc
+    try:
+        info = os.fstat(fd)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid()
+                or stat.S_IMODE(info.st_mode) & 0o077 or info.st_size > 4096):
+            raise WakeLockError("managed SSH Wake Lock policy file identity is not verified")
+        raw = os.read(fd, 4097)
+        if len(raw) > 4096:
+            raise WakeLockError("managed SSH Wake Lock policy file exceeds its size limit")
+    finally:
+        os.close(fd)
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeError, ValueError, TypeError) as exc:
+        raise WakeLockError("managed SSH Wake Lock policy is invalid") from exc
+    if (not isinstance(value, dict) or set(value) != {"schema_version", "native_sshd_enabled"}
+            or value["schema_version"] != 1 or type(value["native_sshd_enabled"]) is not bool):
+        raise WakeLockError("managed SSH Wake Lock policy schema is unsupported")
+    identity = ("present", info.st_dev, info.st_ino, info.st_mode, info.st_uid,
+                info.st_size, info.st_mtime_ns, hashlib.sha256(raw).hexdigest())
+    return value["native_sshd_enabled"], identity
+
+
+def _service_policy_plan_id(root: Path, enabled: bool, identity: tuple[object, ...]) -> str:
+    material = repr(("native-sshd-wakelock-policy-v1", os.getuid(), str(root), identity, enabled)).encode()
+    return hashlib.sha256(material).hexdigest()[:32]
+
+
+def service_policy_status(*, state_dir: str | os.PathLike[str]) -> dict[str, object]:
+    root = _root(state_dir)
+    if root.is_symlink():
+        raise WakeLockError("Wake Lock state directory must not be a symbolic link")
+    if not root.exists():
+        enabled = True
+        identity = ("absent-default-enabled",)
+    else:
+        with _locked(root):
+            enabled, identity = _service_policy_snapshot(root)
+    return {"component": "wakelock_manager", "service": "native.sshd",
+            "persistent_lease_enabled": enabled,
+            "configured": identity[0] == "present",
+            "default": True, "applies_at": "next managed SSH service start",
+            "current_service_lease_changed": False,
+            "platform_lock_state": "unknown"}
+
+
+def service_policy_preview(*, state_dir: str | os.PathLike[str], enabled: bool) -> dict[str, object]:
+    if type(enabled) is not bool:
+        raise WakeLockError("enabled must be a boolean")
+    root = _root(state_dir)
+    if root.is_symlink():
+        raise WakeLockError("Wake Lock state directory must not be a symbolic link")
+    if not root.exists():
+        current, identity = True, ("absent-default-enabled",)
+    else:
+        with _locked(root):
+            current, identity = _service_policy_snapshot(root)
+    changed = current != enabled
+    return {"component": "wakelock_manager", "service": "native.sshd",
+            "currently_enabled": current, "requested_enabled": enabled,
+            "changed": changed, "requires_confirmation": changed,
+            "plan_id": _service_policy_plan_id(root, enabled, identity) if changed else None,
+            "effect": "The managed SSH service will acquire or skip its persistent Wake Lock lease on its next start. The running service and its current lease are unchanged.",
+            "platform_lock_state": "unknown"}
+
+
+def _write_service_policy(root: Path, enabled: bool) -> None:
+    fd = -1
+    temporary = ""
+    try:
+        fd, temporary = tempfile.mkstemp(prefix=".service-policy-", dir=root)
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            fd = -1
+            json.dump({"schema_version": 1, "native_sshd_enabled": enabled}, stream,
+                      sort_keys=True, separators=(",", ":"))
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, root / _SERVICE_POLICY_FILE)
+        temporary = ""
+        directory_fd = os.open(root, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    except OSError as exc:
+        raise WakeLockError(f"cannot persist managed SSH Wake Lock policy ({exc.__class__.__name__})") from exc
+    finally:
+        if fd >= 0:
+            os.close(fd)
+        if temporary:
+            try:
+                os.unlink(temporary)
+            except FileNotFoundError:
+                pass
+
+
+def service_policy_apply(*, state_dir: str | os.PathLike[str], enabled: bool,
+                         confirmed: bool, plan_id: str) -> dict[str, object]:
+    if type(enabled) is not bool:
+        raise WakeLockError("enabled must be a boolean")
+    root = _root(state_dir)
+    with _locked(root):
+        current, identity = _service_policy_snapshot(root)
+        changed = current != enabled
+        plan = {"component": "wakelock_manager", "service": "native.sshd",
+                "currently_enabled": current, "requested_enabled": enabled,
+                "changed": changed, "requires_confirmation": changed,
+                "plan_id": _service_policy_plan_id(root, enabled, identity) if changed else None,
+                "effect": "The managed SSH service will acquire or skip its persistent Wake Lock lease on its next start. The running service and its current lease are unchanged.",
+                "platform_lock_state": "unknown"}
+        if not changed:
+            return plan
+        if not confirmed:
+            return {**plan, "status": "confirmation_required"}
+        if not isinstance(plan_id, str) or plan_id != plan["plan_id"]:
+            return {**plan, "changed": False, "status": "stale_plan"}
+        _write_service_policy(root, enabled)
+        return {**plan, "status": "updated", "configured": True,
+                "current_service_lease_changed": False}
+
+
 def status(*, state_dir: str | os.PathLike[str], which: Callable[[str], str | None] = shutil.which) -> dict[str, object]:
     root = _root(state_dir)
     if root.is_symlink():
@@ -260,6 +396,10 @@ def acquire(
     unlock_command = str(Path(prefix) / "bin/termux-wake-unlock")
     with _locked(root):
         state = _read(root)
+        if persistent and owner == "native.sshd":
+            policy_enabled, _policy_identity = _service_policy_snapshot(root)
+            if not policy_enabled:
+                return {"owner": owner, "state": "policy_disabled", "owner_count": len(state["owners"])}
         current_boot = _boot_id()
         if state["boot_id"] is not None and current_boot is not None and state["boot_id"] != current_boot:
             state = {"schema_version": 1, "boot_id": current_boot, "owners": {}, "last_error": None}

@@ -162,6 +162,66 @@ class WakeLockManagerTests(unittest.TestCase):
             status = wakelock_manager.status(state_dir=self.state)
             self.assertEqual(status["boot_id_relation"], "unknown")
 
+    def test_service_policy_defaults_enabled_without_creating_state(self) -> None:
+        report = wakelock_manager.service_policy_status(state_dir=self.state)
+        self.assertTrue(report["persistent_lease_enabled"])
+        self.assertFalse(report["configured"])
+        self.assertFalse(self.state.exists())
+
+    def test_service_policy_preview_confirm_apply_and_stale_plan(self) -> None:
+        plan = wakelock_manager.service_policy_preview(state_dir=self.state, enabled=False)
+        self.assertTrue(plan["changed"])
+        unconfirmed = wakelock_manager.service_policy_apply(
+            state_dir=self.state, enabled=False, confirmed=False, plan_id=plan["plan_id"])
+        self.assertEqual(unconfirmed["status"], "confirmation_required")
+        stale = wakelock_manager.service_policy_apply(
+            state_dir=self.state, enabled=False, confirmed=True, plan_id="bad")
+        self.assertEqual(stale["status"], "stale_plan")
+        applied = wakelock_manager.service_policy_apply(
+            state_dir=self.state, enabled=False, confirmed=True, plan_id=plan["plan_id"])
+        self.assertEqual(applied["status"], "updated")
+        report = wakelock_manager.service_policy_status(state_dir=self.state)
+        self.assertFalse(report["persistent_lease_enabled"])
+        policy = self.state / "wakelock/service-policy.json"
+        self.assertEqual(policy.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(self.runner.calls, [])
+
+    def test_disabled_service_policy_skips_only_future_persistent_acquire(self) -> None:
+        plan = wakelock_manager.service_policy_preview(state_dir=self.state, enabled=False)
+        wakelock_manager.service_policy_apply(state_dir=self.state, enabled=False,
+                                               confirmed=True, plan_id=plan["plan_id"])
+        with patch.object(wakelock_manager, "_process_start", return_value="caller-start"):
+            result = self.acquire("native.sshd", persistent=True)
+        self.assertEqual(result["state"], "policy_disabled")
+        self.assertEqual(self.runner.calls, [])
+
+    def test_disabling_policy_preserves_running_lease_until_owner_releases(self) -> None:
+        with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):
+            self.acquire("native.sshd", persistent=True)
+            plan = wakelock_manager.service_policy_preview(state_dir=self.state, enabled=False)
+            wakelock_manager.service_policy_apply(state_dir=self.state, enabled=False,
+                                                   confirmed=True, plan_id=plan["plan_id"])
+            self.assertIn("native.sshd", wakelock_manager.status(state_dir=self.state)["managed_owners"])
+            released = self.release("native.sshd", persistent=True)
+        self.assertEqual(released["state"], "released_last_registered_lease")
+        self.assertEqual(self.runner.calls[-1], ["/termux/bin/termux-wake-unlock"])
+
+    def test_service_policy_rejects_symlink_and_non_private_file(self) -> None:
+        self.state.mkdir(parents=True)
+        root = self.state / "wakelock"
+        root.mkdir(mode=0o700)
+        target = self.state / "target"
+        target.write_text('{"schema_version":1,"native_sshd_enabled":false}')
+        (root / "service-policy.json").symlink_to(target)
+        with self.assertRaises(wakelock_manager.WakeLockError):
+            wakelock_manager.service_policy_status(state_dir=self.state)
+        (root / "service-policy.json").unlink()
+        policy = root / "service-policy.json"
+        policy.write_text('{"schema_version":1,"native_sshd_enabled":false}')
+        policy.chmod(0o644)
+        with self.assertRaisesRegex(wakelock_manager.WakeLockError, "identity is not verified"):
+            wakelock_manager.service_policy_status(state_dir=self.state)
+
 
 if __name__ == "__main__":
     unittest.main()

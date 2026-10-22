@@ -77,7 +77,7 @@ class NativeServiceScriptTests(unittest.TestCase):
             config.parent.mkdir(parents=True)
             config.write_text("fixture\n")
             events = root / "events.log"
-            executable(prefix / "bin/tx", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{events}'\nprintf 'state=%s\\n' \"${{TERNUXX_STATE_DIR:-}}\" >> '{events}'\n")
+            executable(prefix / "bin/tx", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{events}'\nprintf 'state=%s\\n' \"${{TERNUXX_STATE_DIR:-}}\" >> '{events}'\ncase \"$*\" in\n  *'wakelock acquire native.sshd --persistent'*) echo '{{\"ok\":true,\"data\":{{\"state\":\"acquired\"}}}}' ;;\nesac\n")
             executable(prefix / "bin/sshd", f"#!/bin/sh\nif [ \"$1\" = -t ]; then exit 0; fi\necho daemon-started >> '{events}'\nexec sleep 60\n")
             (prefix / "bin/bash").symlink_to(shutil.which("bash"))
             env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
@@ -101,6 +101,41 @@ class NativeServiceScriptTests(unittest.TestCase):
                 proc.wait(timeout=5)
                 proc.communicate(timeout=1)
                 self.assertIn("wakelock release native.sshd --persistent", events.read_text())
+            finally:
+                if proc.poll() is None:
+                    proc.kill()
+                    proc.wait(timeout=2)
+
+    def test_service_wrapper_skips_disabled_persistent_lease_and_keeps_ssh_running(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="ternuxx-runit-policy-script-") as temp:
+            root = Path(temp)
+            prefix = root / "prefix"
+            home = root / "home"
+            state = home / ".local/share/ternuxx"
+            config = home / ".config/ternuxx/sshd_recovery.conf"
+            config.parent.mkdir(parents=True)
+            config.write_text("fixture\n")
+            events = root / "events.log"
+            executable(prefix / "bin/tx", "#!/bin/sh\nprintf '%s\\n' \"$*\" >> '" + str(events) + "'\ncase \"$*\" in *'wakelock acquire native.sshd --persistent'*) echo '{\"ok\":true,\"data\":{\"state\":\"policy_disabled\"}}' ;; esac\n")
+            executable(prefix / "bin/sshd", "#!/bin/sh\nif [ \"$1\" = -t ]; then exit 0; fi\necho daemon-started >> '" + str(events) + "'\nexec sleep 60\n")
+            (prefix / "bin/bash").symlink_to(shutil.which("bash"))
+            env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
+                   "TERMUX_VERSION": "fixture", "TERNUXX_STATE_DIR": str(state)}
+            proc = subprocess.Popen(["bash", str(SERVICE_SCRIPT)], env=env,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                deadline = time.monotonic() + 5
+                while time.monotonic() < deadline and (not events.exists() or "daemon-started" not in events.read_text()):
+                    if proc.poll() is not None:
+                        self.fail(f"service exited early: {proc.communicate()}")
+                    time.sleep(0.05)
+                self.assertIn("daemon-started", events.read_text())
+                service_log = (state / "log/sshd-runit.log").read_text()
+                self.assertIn("wakelock-acquire=skipped-by-service-policy-at-", service_log)
+                proc.send_signal(signal.SIGTERM)
+                proc.wait(timeout=5)
+                proc.communicate(timeout=1)
+                self.assertNotIn("wakelock release native.sshd --persistent", events.read_text())
             finally:
                 if proc.poll() is None:
                     proc.kill()

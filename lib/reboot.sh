@@ -116,6 +116,32 @@ nt_cmd_wakelock() {
     status)
       [ "$#" -eq 0 ] || { nt_fail "Usage: tx wakelock status"; return 2; }
       _nt_management_call --operation wakelock.status ;;
+    ssh-policy)
+      local sub="${1:-status}" enabled_flag="" confirmed=0 plan_id=""
+      case "$sub" in
+        status)
+          [ "$#" -eq 1 ] || { nt_fail "Usage: tx wakelock ssh-policy status"; return 2; }
+          _nt_management_call --operation wakelock.ssh-policy.status ;;
+        preview|apply)
+          shift
+          while [ "$#" -gt 0 ]; do
+            case "$1" in
+              --enabled) [ -z "$enabled_flag" ] || { nt_fail "Choose one SSH Wake Lock setting"; return 2; }; enabled_flag="--ssh-wakelock-enabled"; shift ;;
+              --disabled) [ -z "$enabled_flag" ] || { nt_fail "Choose one SSH Wake Lock setting"; return 2; }; enabled_flag="--ssh-wakelock-disabled"; shift ;;
+              --yes) confirmed=1; shift ;;
+              --plan-id) [ "$#" -ge 2 ] || { nt_fail "--plan-id needs a value"; return 2; }; local plan_id="$2"; shift 2 ;;
+              *) nt_fail "Unknown SSH Wake Lock option: $1"; return 2 ;;
+            esac
+          done
+          [ -n "$enabled_flag" ] || { nt_fail "Choose --enabled or --disabled"; return 2; }
+          if [ "$sub" = "preview" ]; then
+            _nt_management_call --operation wakelock.ssh-policy.preview "$enabled_flag"
+          else
+            [ "$confirmed" -eq 1 ] && [ -n "${plan_id:-}" ] || { nt_fail "Apply requires --yes and --plan-id"; return 2; }
+            _nt_management_call --operation wakelock.ssh-policy.apply "$enabled_flag" --yes --plan-id "$plan_id"
+          fi ;;
+        *) nt_fail "Usage: tx wakelock ssh-policy status | preview --enabled|--disabled | apply --enabled|--disabled --yes --plan-id ID"; return 2 ;;
+      esac ;;
     acquire|release)
       local owner="${1:-}" persistent=0
       [ -n "$owner" ] || { nt_fail "Usage: tx wakelock $action <owner> [--persistent]"; return 2; }
@@ -128,6 +154,6 @@ nt_cmd_wakelock() {
       else
         _nt_management_call --operation "$op" --owner "$owner"
       fi ;;
-    *) nt_fail "Supported Wake Lock operations: status, acquire <owner>, release <owner>"; return 2 ;;
+    *) nt_fail "Supported Wake Lock operations: status, ssh-policy status/preview/apply, acquire <owner>, release <owner>"; return 2 ;;
   esac
 }
