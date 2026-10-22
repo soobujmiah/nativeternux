@@ -23,6 +23,7 @@ Native Termux, 2026-10-22:
 - `tx-management-center --self-check`: PASS (GTK 4.24.1, VTE 0.84.1).
 - Installed identity record matches C source SHA-256 `6ab82e029147712a7f704ac97cb08fddd66a32491cbbd821d8e1fd3cde3260b8`, bridge source SHA-256 `15e65b7abd6749d6ea43f17d2c52d675c367a20cd4821fbb05aa136377885097`, and installed binary SHA-256 `80bdf4ab7aded05b24452a9d4b59c5f02001abcff7a39ad79b8c02018bcd50bf`.
 - Application menu entry `$PREFIX/share/applications/ternuxx-management-center.desktop`: present.
+- A disposable Ed25519 test key was generated in a private temporary directory and used only for the real Native GTK-bridge enrollment preview. The preview returned a well-formed exact plan and disclosed impact on both 8022 and 8023. SHA-256 of the production `.ssh/authorized_keys` file matched before and after. The temporary keypair was removed; no apply was sent.
 - No SSH key, SSH configuration, or service state was changed.
 
 ## Acceptance still open

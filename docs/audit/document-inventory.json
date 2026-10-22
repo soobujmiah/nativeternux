@@ -2411,10 +2411,10 @@
     {
       "path": "docs/evidence/2026-10-22-ssh-gtk-key-controls.md",
       "kind": "narrative",
-      "sha256": "7f983191c803ec4f72b69cfdd0843d247ceca6225491adb83b8000e70a98b8c7",
-      "lines": 30,
+      "sha256": "c22cb3265c3db04764f0e998359000bcbd8a462e6743da67ff7460f02c9bc838",
+      "lines": 31,
       "read_status": "read",
-      "read_sha256": "7f983191c803ec4f72b69cfdd0843d247ceca6225491adb83b8000e70a98b8c7"
+      "read_sha256": "c22cb3265c3db04764f0e998359000bcbd8a462e6743da67ff7460f02c9bc838"
     },
     {
       "path": "docs/evidence/2026-10-22-ssh-key-inventory.md",
