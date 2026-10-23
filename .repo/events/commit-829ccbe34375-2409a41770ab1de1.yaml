@@ -1,0 +1,7 @@
+event_id: commit-829ccbe34375-2409a41770ab1de1
+repository: soobujmiah/ternuxx
+commit: 829ccbe34375f34e5c53d791b82efd3aad5cec53
+kind: commit
+occurred_at: '2026-10-23T15:09:23Z'
+status: completed
+summary: 'docs: align hybrid guide with current provider scope'
