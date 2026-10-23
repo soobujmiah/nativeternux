@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 106,
+  "read_count": 105,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "763990f2219e5bdaaa8e1df60752144102b273a90541bb0b9f674bfa96c9dea4",
+      "sha256": "07ed29cea2a5750b2ff65e862d9bdd0c336f0ad35641c44079b02212854ff67e",
       "lines": 92,
-      "read_status": "read",
-      "read_sha256": "763990f2219e5bdaaa8e1df60752144102b273a90541bb0b9f674bfa96c9dea4"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "SECURITY.md",
@@ -171,7 +171,7 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "e2a84321477e77fa501743ff5add4a45e75f05a5850f86397a2b9805c7075956",
+      "sha256": "d23df1e94015032669102bd457aff1c830600092850497b859c0ab8bbc5d9f2a",
       "lines": 188,
       "read_status": "pending",
       "read_sha256": null
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "36aa1f527f98d8d0251ce0f2c9da5455796418cd5bc83dac87d815b26eeb3a37",
-      "lines": 129,
+      "sha256": "50b847b76ea4ebd0aa8531755447f1db550c9ded4e279ec124d6e7e39644805d",
+      "lines": 130,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3163,7 +3163,7 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "70cd0540a8a4d82d1a31840094b3fd33b31c690052181cf71bb18f25a88a2d04",
+      "sha256": "50ac80985b42d168312bb62e632593609f6f4ec5bd4fbd6dee68b3ee9cd17a27",
       "lines": 203,
       "read_status": "pending",
       "read_sha256": null

@@ -15,7 +15,7 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native suite passed 893 tests (1 skipped); the final focused setup suite passed 23/23. A separate Debian Trixie replay from the pinned image and APT snapshot passed while preserving the existing guest. Native package candidate drift remains: 4/16 versions differ, no upgrades applied, and a durable version lock is still open.
+Native suite passed 894 tests (1 skipped) on 2026-10-24; focused PRoot adoption tests passed 7/7. A separate Debian Trixie replay from the pinned image and APT snapshot passed while preserving the existing guest. Native package candidate drift remains: 4/16 versions differ, no upgrades applied, and a durable version lock is still open.
 
 **Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; finish P4 reproducibility, existing-guest migration and rollback evidence, then reconcile installed/runtime state and the remaining full-audit gates.
 
