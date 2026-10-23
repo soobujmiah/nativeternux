@@ -4,8 +4,8 @@ See [phase state](../../project/phase-state.json), [client coverage](../architec
 
 - Product unit/fixture tests exist and run on Native/CI. They do not qualify Android boot, fresh setup, GPU/NPU use, or complete live client parity.
 - SSH key generation/enrollment/removal, password/recovery controls, per-SSH boot policy, and selectable service Wake Lock policy remain incomplete.
-- Broker and four terminal paths exist; full disposable managed guest lifecycle is not accepted. Protect the owner's Codex guest.
-- Fresh Debian setup is fixture-tested and refuses the existing rootfs. Separate live replay and complete recovery remain unqualified; the customized workstation is not yet reproducible from this repository alone.
+- One CLI → authenticated Web API → TUI → GTK/VTE session passed I/O, resize, detach and exact close on a disposable guest. Full mutation parity, wider guest configuration/workload coverage, and lifecycle rollback remain open. Protect the owner's Codex guest.
+- Fresh Debian setup is fixture-tested and refuses the existing rootfs. A separate replay from the pinned Trixie image and APT snapshot installed and verified 50 requested packages; an earlier failed package stage resumed under a matching new preview. Clean-device setup, complete failure recovery, rollback, and customized-workstation reproduction remain unqualified.
 - Direct `:1`, standalone `:0`, and nested `:2` graphics are separate. Nested draw/presentation remains unqualified.
 - Selected experimental Native GL/GLES/Vulkan draws exist. Stock ICD failure, fallback, application compatibility, clean driver installation, sustained/thermal behavior, and inference are separate gates.
 - No Ternuxx inference engine, model loader, CPU/GPU/NPU inference backend, or inference benchmark harness exists. External experiments do not qualify this project.

@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 102,
+  "read_count": 103,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -115,10 +115,10 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "kind": "narrative",
-      "sha256": "297830d2bbef5cbe63e82eeb41facc3c4e26d86691f9996d534390cf8532e5a1",
+      "sha256": "f0c583a5fad4b54b2ed97decaad2632b6869f8901b64c84e09b215f8e7543ec8",
       "lines": 43,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "f0c583a5fad4b54b2ed97decaad2632b6869f8901b64c84e09b215f8e7543ec8"
     },
     {
       "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
@@ -131,10 +131,10 @@
     {
       "path": "docs/HYBRID-INTEGRATION.md",
       "kind": "narrative",
-      "sha256": "76dfdd80fc0eacc5f772dacb247a866a3c24050032144c64eaf7b4c799054907",
+      "sha256": "68ed4b69628a2191b64ee02dfc4bb985ad2af53e6d63f9e6dd0f9cfda6214dec",
       "lines": 98,
       "read_status": "read",
-      "read_sha256": "76dfdd80fc0eacc5f772dacb247a866a3c24050032144c64eaf7b4c799054907"
+      "read_sha256": "68ed4b69628a2191b64ee02dfc4bb985ad2af53e6d63f9e6dd0f9cfda6214dec"
     },
     {
       "path": "docs/INSTALLATION.md",
@@ -187,10 +187,10 @@
     {
       "path": "docs/PROOT-GPU.md",
       "kind": "narrative",
-      "sha256": "47747d7d090d73f4bfd1c31ab18b5d3230f18a4a4a251ddca2817ff76e34c197",
+      "sha256": "850aee7347e35109983726746d7d464498d89edd23597b9d8f97f54cc0e39294",
       "lines": 52,
       "read_status": "read",
-      "read_sha256": "47747d7d090d73f4bfd1c31ab18b5d3230f18a4a4a251ddca2817ff76e34c197"
+      "read_sha256": "850aee7347e35109983726746d7d464498d89edd23597b9d8f97f54cc0e39294"
     },
     {
       "path": "docs/PROOT-GUI-DISPLAY0.md",
@@ -331,10 +331,10 @@
     {
       "path": "docs/architecture/PROOT-SESSIONS.md",
       "kind": "narrative",
-      "sha256": "b24535f6225c37f93a12d9e6213ef6ba461ccd1303850ee75a5e4bd60445eafa",
+      "sha256": "a606bad2b5edef878ae1275555715b707a89fb4f246ff30125bd41d8d1197abd",
       "lines": 58,
       "read_status": "read",
-      "read_sha256": "b24535f6225c37f93a12d9e6213ef6ba461ccd1303850ee75a5e4bd60445eafa"
+      "read_sha256": "a606bad2b5edef878ae1275555715b707a89fb4f246ff30125bd41d8d1197abd"
     },
     {
       "path": "docs/architecture/SHARED-MANAGEMENT-PLAN.md",
@@ -531,7 +531,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "ee50faf4dbb2d49fea181ee37067c48234ffca00ebc33ee2daf4a8825ae321c9",
+      "sha256": "371707707c72d103ff282ced8fb6312081a27c12fca0430fa9e24d853b1d9ab9",
       "lines": 115,
       "read_status": "pending",
       "read_sha256": null
@@ -3115,10 +3115,10 @@
     {
       "path": "docs/testing/KNOWN-LIMITATIONS.md",
       "kind": "narrative",
-      "sha256": "02e1fcedd2fa734a1aa646fbe5f7b1d10cb7b08409b2fdb3c2a3f73ae2bcfe78",
+      "sha256": "a02348a8ecea25806020e8c376bed510b4ae05eae93c8a83cf2bc3f9901dff3a",
       "lines": 16,
       "read_status": "read",
-      "read_sha256": "02e1fcedd2fa734a1aa646fbe5f7b1d10cb7b08409b2fdb3c2a3f73ae2bcfe78"
+      "read_sha256": "a02348a8ecea25806020e8c376bed510b4ae05eae93c8a83cf2bc3f9901dff3a"
     },
     {
       "path": "docs/testing/NPU-ACCELERATION.md",

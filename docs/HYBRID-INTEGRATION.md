@@ -14,7 +14,7 @@ Native Termux manager ── native SSH, services, Doctor, continuity journal, r
    ├── Termux:X11 + selected desktop session (optional)
    ├── Native apps + Termux:API actions
    └── Existing Debian PRoot provider (optional, independently managed)
-          ├── existing Ternux GPU environment and Linux apps
+          ├── existing Debian graphics stack and Linux applications
           └── selected workspace + bounded, authorized workload requests
 ```
 
@@ -23,7 +23,7 @@ Native recovery and selected native services run independently. A separate optio
 | Profile | Desktop owner | PRoot use | Display policy |
 |---|---|---|---|
 | `native` | Native XFCE in Termux | Available for selected guest workloads | One native XFCE session on the managed X11 display |
-| `proot` | Existing Debian XFCE session | Full existing Ternux desktop/workload route | Guest desktop on the managed X11 display, using the reviewed Ternux environment |
+| `proot` | Existing Debian XFCE session | Existing Debian desktop and workload route | Guest desktop on the managed X11 display, using the Ternuxx-managed Debian display/audio handoff |
 | `hybrid` | Native XFCE in Termux | Guest applications and jobs on demand | One desktop session; do not launch a second XFCE against the same display |
 
 The `proot` and `hybrid` rows describe optional workload/desktop choices, not boot prerequisites. Starting both full desktop sessions simultaneously requires an independently validated second display and explicit resource/ownership handling. Ternuxx’s canonical first-party Debian command is `tx db`. The Native `db`/`droot` aliases now delegate to its regular-user/root paths after an owner-authorized migration; the `x`/`xgo` convenience aliases and `~/x.sh` wrapper remain as inventoried in [the entrypoint decision evidence](evidence/2026-10-22-legacy-entrypoint-inventory.md). Shell changes require explicit authorization and rollback; see [current alias migration evidence](evidence/2026-10-23-native-legacy-alias-migration.md).
@@ -39,10 +39,10 @@ The `proot` and `hybrid` rows describe optional workload/desktop choices, not bo
 | Display | Native clients and guest GUI apps connect to the selected Termux:X11 display | Display readiness and GUI visibility are reported independently | A single XFCE owner per display. Guest X11 clients use the host display socket through the supported shared-tmp/X11 mechanism. |
 | Audio | Native Termux owns PulseAudio when it starts it; guest clients receive the configured endpoint | Playback errors and process state return to Doctor/logs | One service owner. Stop only a service Ternuxx started and recorded. |
 | Android APIs | Native Termux calls supported Termux:API commands after user action/permission | Result is returned to native CLI/UI; a selected result can be handed to PRoot | Do not expose API app credentials or arbitrary Android broadcasts inside the guest. |
-| GPU/NPU | Native and guest workloads choose their own verified runtime/backend | Each result records provider, renderer/delegate, and workload proof | The Ternux Zink/Turnip route stays a guest process route; it does not become native GPU support. NPU remains unclaimed until proven per context. |
+| GPU/NPU | Native and guest workloads choose their own verified runtime/backend | Each result records provider, renderer/delegate, and workload proof | Debian Zink/Turnip remains a guest-process route; it does not establish Native GPU support. The separate Ternux project is reference-only and its CLI/state are not runtime dependencies. NPU remains unclaimed until proven per context. |
 | Packages/catalog | Installer declares `termux` or `proot-debian` target and previews that package manager's exact transaction | Installed app metadata is recorded per provider | Never use apt to install across the host/guest boundary; optional app removal cannot prune the guest or base desktop. |
 | Optimization | Select a profile and controls for the chosen provider/workload | Metrics, baseline comparison, thermal state, and restore status are reported | No silent cross-provider fallback, system clock changes, or thermal-protection bypass. |
-| Doctor/recovery | Host manager gathers read-only findings from both environments | One report labels each finding's provider and owner | Repair/restore operates only within the explicitly selected Ternuxx-owned target. Existing Ternux state needs separate consent and backup. |
+| Doctor/recovery | Host manager gathers read-only findings from both environments | One report labels each finding's provider and owner | Repair/restore operates only within the explicitly selected Ternuxx-owned target. Existing Debian guest state needs a task-specific preview, backup, explicit apply, and tested rollback before migration. |
 
 ## Independent SSH services and controls
 

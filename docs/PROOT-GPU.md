@@ -38,7 +38,7 @@ The VirGL lifecycle implementation and CLI handoff pass isolated tests. Installe
 
 ## Preserve existing configuration
 
-Do not replace the Debian rootfs, remove packages, or edit guest profile hooks based on their names. The installed `proot-distro` login writer owns its generated profile. Ternuxx passes the required display, audio, and selected graphics values through explicit launch arguments and filters Android runtime variables. Before any guest configuration mutation, inventory active consumers and capture content, mode, owner, hash, and a scoped recovery copy. Preserve the active `tx db` session and current Native GUI/audio services during qualification.
+Do not replace the Debian rootfs or remove packages as a shortcut. The installed `proot-distro` login writer owns its generated profile, so do not edit that hook based on its filename alone. This does not impose a blanket ban on the owner-authorized Ternuxx guest adaptation: inspect the exact file, writer, and active consumers; preview the exact diff and effects; capture content, mode, owner, hash, and a scoped recovery copy; then apply only the reviewed Ternuxx operation and verify both the result and rollback. Prefer a Ternuxx-owned overlay when a package login writer would overwrite a direct edit. Preserve the active `tx db` session and current Native GUI/audio services during qualification.
 
 PulseAudio uses Ternuxx's private managed configuration and authenticated cookie in the current path. The package `$PREFIX/etc/pulse/default.pa` is not the active configuration. Leave it unchanged unless a reproduced defect is causally tied to it and a rollback is verified.
 

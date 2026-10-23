@@ -40,4 +40,4 @@ Native and Debian backends are separate runtime contexts. The graphics manager d
 
 CPU is the baseline. Ternuxx has no integrated inference engine or NPU runtime. Wine/Hangover is an optional application-provider proposal requiring per-app architecture, graphics, input/audio, and recovery evidence; a Native Vulkan draw does not qualify Wine/DXVK. See [Wine](WINE-NATIVE.md), [software](SOFTWARE-CATALOG.md), and [optimization](OPTIMIZATION.md).
 
-Full application lifecycle, client parity, isolated setup replay, and release qualification remain roadmap work tracked in [the audit](audit/REPOSITORY-AUDIT.md).
+Full application lifecycle, clean-device reproduction, fresh-setup rollback, client parity, and release qualification remain roadmap work tracked in [the audit](audit/REPOSITORY-AUDIT.md).
