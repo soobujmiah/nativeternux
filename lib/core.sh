@@ -64,6 +64,21 @@ print(json.dumps(result, ensure_ascii=False))
 PYJSON
 }
 
+# --- Library loader -------------------------------------------------------
+declare -A _NT_LOADED
+_nt_use() {
+  local lib="$1"
+  [ -n "${_NT_LOADED[$lib]:-}" ] && return 0
+  local f="${_TN_LIB_DIR:-}/${lib}.sh"
+  if [ -f "$f" ]; then
+    # shellcheck disable=SC1090
+    . "$f"
+    _NT_LOADED["$lib"]=1
+    return 0
+  fi
+  nt_die "Internal error: library '$lib' not found at $f" 99
+}
+
 # --- State file ---------------------------------------------------------
 _nt_state_file() {
   # Resolve only. Readers must not create the state directory as a side effect.
