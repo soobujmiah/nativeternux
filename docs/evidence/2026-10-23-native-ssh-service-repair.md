@@ -12,7 +12,7 @@ The wrapper now requests JSON through the supported global `tx --json` option, v
 
 - The exact Ternuxx deploy preview showed a change only to the fixed `ternuxx-sshd/run` service definition; deployment used the matching preview plan and preserved a rollback snapshot.
 - A first apply preview expired when supervisor status changed between preview and apply. No definition was changed by that stale plan. A fresh preview was taken and its exact plan applied successfully.
-- The subsequent restart operation returned a generic failure, but immediate read-only inspection verified the managed 8023 service running, installed/source definition hashes matching, and the 127.0.0.1:8023 SSH banner responding. The registered `native.sshd` Wake Lock owner was present with no stale or unknown owners.
+- The supervisor changed the service state between a restart preview (stopped) and apply (running); because current status is bound into the plan, the stale apply was rejected before journaling or mutation. A fresh preview while running was then applied successfully. The first immediate inspection saw the Runit process before its SSH listener was ready; a bounded follow-up confirmed the managed service running, installed/source hashes matching, and the 127.0.0.1:8023 SSH banner responding. The registered `native.sshd` Wake Lock owner was present with no stale or unknown owners.
 - Native SSH 8022 configuration and the active Debian PRoot were not changed by this repair. Listener ownership for 8022 remains unknown where the OS denied observation.
 
 ## Verification

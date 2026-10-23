@@ -56,7 +56,7 @@ Evidence:
 
 **Status:** in_progress
 
-VirGL status now reports client visibility and stop eligibility; global JSON forwarding is fixed across the Native CLI wrappers. Native full suite passed 888 tests (1 skipped) on 2026-10-23, but Android lsof cannot identify the live :1 socket owner, so client state remains unknown and stop is refused. The 2026-10-23 managed SSH wrapper JSON-handshake repair restored the fixed 8023 service; the attempted restart returned a generic failure despite subsequent healthy read-only status and remains under review.
+VirGL status now reports client visibility and stop eligibility; global JSON forwarding is fixed across the Native CLI wrappers. Native full suite passed 888 tests (1 skipped) on 2026-10-23, but Android lsof cannot identify the live :1 socket owner, so client state remains unknown and stop is refused. The 2026-10-23 managed SSH wrapper JSON-handshake repair restored the fixed 8023 service; a stale restart plan was rejected after supervisor state changed; a fresh exact-plan restart then passed and the loopback banner became reachable after startup.
 
 **Next action:** Keep VirGL stop blocked until socket-owner visibility can be proven; qualify broken-rootfs recovery and cold boot on an isolated guest, then reconcile installed/runtime state and complete the full audit and owner-operated GTK review.
 

@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "3d99e1ab8c8e74e70bf2b00f450c096c7146603b016b169b2195f2f560eb6ca5",
+      "sha256": "b7edcdca62f12d53b42fddd97fceeb7b1cb9661e9f3a9ddb8a4b8cb58a725d10",
       "lines": 63,
       "read_status": "read",
-      "read_sha256": "3d99e1ab8c8e74e70bf2b00f450c096c7146603b016b169b2195f2f560eb6ca5"
+      "read_sha256": "b7edcdca62f12d53b42fddd97fceeb7b1cb9661e9f3a9ddb8a4b8cb58a725d10"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -163,10 +163,10 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "0517e709d2bfbe6f62d924f8d56c83120804935922fd9160ec4f4a94cc1b3f60",
+      "sha256": "359cc0c7c6d64f63fe838b4c304ef053452f5e0e75df42b41f1e6d45de8b2bef",
       "lines": 186,
       "read_status": "read",
-      "read_sha256": "0517e709d2bfbe6f62d924f8d56c83120804935922fd9160ec4f4a94cc1b3f60"
+      "read_sha256": "359cc0c7c6d64f63fe838b4c304ef053452f5e0e75df42b41f1e6d45de8b2bef"
     },
     {
       "path": "docs/PRODUCT-VISION.md",
@@ -523,10 +523,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "2da7210098725ad4d0d18d36e6ca89674ce4e5c122dee5336cbda400b78f6974",
+      "sha256": "7b38f4dc8e0a38d6a385ff9e1eef84b7167deb6c2441da0e369ffc38bd1a82b6",
       "lines": 101,
       "read_status": "read",
-      "read_sha256": "2da7210098725ad4d0d18d36e6ca89674ce4e5c122dee5336cbda400b78f6974"
+      "read_sha256": "7b38f4dc8e0a38d6a385ff9e1eef84b7167deb6c2441da0e369ffc38bd1a82b6"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2763,10 +2763,10 @@
     {
       "path": "docs/evidence/2026-10-23-native-ssh-service-repair.md",
       "kind": "narrative",
-      "sha256": "a7310f9d9f66ab1c5c8075ed4c8bad636c218225da46d6c990465e9db01aae0d",
+      "sha256": "24e9ac268201c97f6641f588395466e93d033426799c470bdcf2a42fb5c92e8c",
       "lines": 26,
       "read_status": "read",
-      "read_sha256": "a7310f9d9f66ab1c5c8075ed4c8bad636c218225da46d6c990465e9db01aae0d"
+      "read_sha256": "24e9ac268201c97f6641f588395466e93d033426799c470bdcf2a42fb5c92e8c"
     },
     {
       "path": "docs/evidence/2026-10-23-p4-broker-runtime-recheck.md",
