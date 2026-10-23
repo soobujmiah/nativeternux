@@ -1,0 +1,7 @@
+event_id: commit-48afa2396158-1d0944e531f0d518
+repository: soobujmiah/ternuxx
+commit: 48afa2396158e8463ed28dadce0c3fd405179be4
+kind: commit
+occurred_at: '2026-10-23T18:30:05Z'
+status: completed
+summary: 'docs(audit): mark install guides reviewed'
