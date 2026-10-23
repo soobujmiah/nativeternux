@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native Termux suite passed 895 tests with 1 skip; pinned Debian replay verified 50 packages while preserving the existing guest. Native package candidates differ 4/16; no upgrades applied. Durable package lock, clean-device replay, guest migration/rollback and GUI acceptance remain open. Prohibited external X11 repository URL is absent from current main.
+Native suite passed 896 tests with 1 skip. VirGL stopped-state reporting now agrees with the absent process/socket, while replacement sockets and unknown active clients remain fail-closed. P4 Native package locking, clean-device replay, guest migration/rollback, and GUI/accelerator gates remain open; package drift is 4/16 with no upgrades applied.
 
-**Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; close Native package lock/update lifecycle and exact existing-guest migration/rollback evidence, then reconcile installed/runtime state and remaining audit gates.
+**Next action:** Keep live VirGL stop refused whenever client visibility is unknown; close Native package version-lock/update lifecycle, clean-device replay, and exact existing-guest migration/rollback evidence, then reconcile remaining GUI and release gates.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

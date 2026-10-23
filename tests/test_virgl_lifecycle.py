@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -111,6 +112,27 @@ class VirglLifecycleTests(unittest.TestCase):
             stopped = virgl_lifecycle.stop(":1")
         self.assertEqual((stopped["state"], stopped["changed"]), ("stopped", True))
         self.assertFalse(Path(record["socket"]).exists())
+        self.assertEqual(virgl_lifecycle.status(":1")["state"], "stopped")
+        already_stopped = virgl_lifecycle.stop(":1")
+        self.assertEqual((already_stopped["owner"], already_stopped["state"],
+                          already_stopped["changed"]), ("ternuxx", "stopped", False))
+
+    def test_stopped_record_does_not_claim_a_replaced_socket_is_stopped(self):
+        _, record = self.start_server()
+        with patch.object(virgl_lifecycle, "_matches_lsof", return_value=True):
+            virgl_lifecycle.stop(":1")
+
+        replacement = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        replacement.bind(record["socket"])
+        replacement.listen(1)
+        try:
+            state = virgl_lifecycle.status(":1")
+            self.assertEqual(state["state"], "unsafe")
+            self.assertFalse(state["stop_allowed"])
+            self.assertTrue(Path(record["socket"]).exists())
+        finally:
+            replacement.close()
+            Path(record["socket"]).unlink(missing_ok=True)
 
     def test_status_reports_verified_idle_active_and_unknown_client_visibility(self):
         _, record = self.start_server()

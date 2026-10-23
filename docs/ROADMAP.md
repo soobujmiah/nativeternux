@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; close Native package lock/update lifecycle and exact existing-guest migration/rollback evidence, then reconcile installed/runtime state and remaining audit gates.
+**Next action:** Keep live VirGL stop refused whenever client visibility is unknown; close Native package version-lock/update lifecycle, clean-device replay, and exact existing-guest migration/rollback evidence, then reconcile remaining GUI and release gates.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

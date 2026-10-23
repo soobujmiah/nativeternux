@@ -289,6 +289,30 @@ def status(display: str = ":1") -> dict[str, object]:
     record = _record_read(paths["record"])
     if record is not None:
         process = _matches(record, paths)
+        if record["status"] == "stopped":
+            if process is not None:
+                return {"owner": "unknown", "state": "unsafe", "display": display,
+                        "identity": "stopped-record-matches-live-process",
+                        "client_visibility": "unknown", "client_pids": None,
+                        "stop_allowed": False,
+                        "stop_block_reason": "the stopped owner record matches a live process",
+                        "read_only": True}
+            info = _socket_info(paths["socket"])
+            if info is None:
+                return {"owner": "ternuxx", "state": "stopped", "display": display,
+                        "socket": str(paths["guest_socket"]),
+                        "identity": "recorded-stopped-no-process-or-socket", "read_only": True}
+            if (info.st_dev != record["socket_device"]
+                    or info.st_ino != record["socket_inode"]):
+                return {"owner": "unknown", "state": "unsafe", "display": display,
+                        "identity": "socket-does-not-match-stopped-record",
+                        "client_visibility": "unknown", "client_pids": None,
+                        "stop_allowed": False,
+                        "stop_block_reason": "socket identity differs from the stopped owner record",
+                        "read_only": True}
+            return {"owner": "ternuxx", "state": "stale", "display": display,
+                    "socket": str(paths["guest_socket"]),
+                    "identity": "stopped-recorded-socket-remains", "read_only": True}
         if process is None:
             recorded = _proc(record["pid"])
             if recorded is None or recorded["state"] in {"Z", "X"}:
@@ -462,9 +486,12 @@ def stop(display: str = ":1") -> dict[str, object]:
     _ensure_dirs(paths)
     with _Lock(paths["lock"]):
         record = _record_read(paths["record"])
-        if not record or record.get("status") == "stopped":
+        if not record:
             return {"owner": "unknown", "state": "unchanged", "display": display,
                     "changed": False, "reason": "no active Ternuxx VirGL record; no process was signaled"}
+        if record.get("status") == "stopped":
+            return {"owner": "ternuxx", "state": "stopped", "display": display,
+                    "changed": False, "reason": "VirGL is already stopped; no process was signaled"}
         process = _matches(record, paths)
         if process is None:
             stale_process = _proc(int(record["pid"]))
