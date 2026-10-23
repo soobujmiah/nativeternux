@@ -1,0 +1,7 @@
+event_id: commit-5fd625e1ca03-2e8f5636ca38a4c3
+repository: soobujmiah/ternuxx
+commit: 5fd625e1ca03dd0d9082a164c8f2292cd111152b
+kind: commit
+occurred_at: '2026-10-23T15:17:46Z'
+status: completed
+summary: fix stale PRoot provider guidance
