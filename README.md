@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Exact legacy ICD rename, interrupted-apply rollback, and inode-preserving restoration passed on the owned disposable Debian replay; default guest untouched.
+Disposable Debian migration interruption recovery and exact retire/restore now pass with inode/hash preservation; active default Debian remains untouched.
 
-**Next action:** Validate complete fresh Debian setup/config rollback and replay reproducibility on an isolated guest; then close remaining GUI/audio/workload evidence without stopping or mutating the active default guest.
+**Next action:** Reconcile remaining P4 config/package lifecycle and CLI/TUI/Web/GTK action parity against current source; then collect current isolated GUI/audio/workload evidence without stopping the active default Debian session.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

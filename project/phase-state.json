@@ -56,7 +56,7 @@
       "title": "Existing Ternux PRoot feature-parity provider",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Exact legacy ICD rename, interrupted-apply rollback, and inode-preserving restoration passed on the owned disposable Debian replay; default guest untouched.",
+      "summary": "Disposable Debian migration interruption recovery and exact retire/restore now pass with inode/hash preservation; active default Debian remains untouched.",
       "evidence": [
         "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
         "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
@@ -132,9 +132,10 @@
         "docs/evidence/2026-10-24-adoption-record-refresh.md",
         "docs/evidence/2026-10-24-fresh-turnip-path-audit.md",
         "docs/evidence/2026-10-24-dynamic-proot-user-selection.md",
-        "docs/evidence/2026-10-24-p4-managed-icd-migration.md"
+        "docs/evidence/2026-10-24-p4-managed-icd-migration.md",
+        "docs/evidence/2026-10-24-p4-replay-retire-restore-recheck.md"
       ],
-      "next_action": "Validate complete fresh Debian setup/config rollback and replay reproducibility on an isolated guest; then close remaining GUI/audio/workload evidence without stopping or mutating the active default guest."
+      "next_action": "Reconcile remaining P4 config/package lifecycle and CLI/TUI/Web/GTK action parity against current source; then collect current isolated GUI/audio/workload evidence without stopping the active default Debian session."
     },
     {
       "id": "P5",
