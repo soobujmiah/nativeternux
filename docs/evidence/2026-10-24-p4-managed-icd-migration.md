@@ -18,13 +18,14 @@ Fresh Debian setup already binds the user supplied with --user into its exact pr
 
 ## Evidence
 
-- bash scripts/repo_test.sh: 929 tests passed, 1 skipped; 137.746 seconds. This ran before the final CLI action wrapper and source-contract assertions were added.
+- bash scripts/repo_test.sh: 933 tests passed, 1 skipped; 101.182 seconds on the current Native checkout after the final CLI action wrapper and source-contract assertions.
 - After the final CLI wrapper and source-contract assertions: 239 focused tests passed, 1 skipped, including management service, Web, TUI, GTK contract, desktop bridge, Debian setup, and ICD migration fixtures.
 - GTK C source passed clang -Wall -Wextra -fsyntax-only with GTK4/VTE4 headers.
 - bash -n lib/proot.sh lib/help.sh and git diff --check passed.
 - python3 -m tools.repo_knowledge verify: 0 findings.
 - ./tx proot setup icd-migrate-preview --alias debian returned plan d06b8b6b1106c545f4807ee3faab078212ca4a98c679da1617063878d5324d23. It observed source hash 6e03d879305dcae3371a212bc7e9dcb23a5e42e9bf741966fe455972baa0b145, size 205 bytes, and an absent canonical target. The preview wrote Native private plan state only; no guest file was changed.
-- ./tx proot status observed host PRoot PIDs 590 and 32668 with ownership unverified. No guest apply was attempted.
+- Initial status showed the default Debian and replay PRoot host processes with ownership unverified. Read-only `/proc` cmdline/cwd inspection tied active processes to the default Debian rootfs; the selected replay alias had no active managed session or PRoot process. The default guest was not changed.
+- On the completed, Ternuxx-owned disposable `ternuxx-replay-p4` rootfs (device/inode 65086/5078478), the existing canonical ICD was parked by exact no-replace rename in private Native state. The exact known legacy bytes were seeded at the absent source path as a test fixture. Failure was injected immediately after the migration rename, leaving the prepared receipt; rollback preview/apply recovered the source. Cleanup removed only the seeded fixture and restored the original canonical ICD with the same inode 185751 and SHA-256 `4b589776fa718e61e1d607b894f16134c0465802e39549d76c67e653d8c00c97`. The legacy path is absent again. The default Debian guest was only read for source fixture bytes and remains untouched.
 - Before updating GTK, the installed binary, launcher, identity, and desktop entry matched their recorded SHA-256 values; an exact private rollback copy was retained under TERNUXX_STATE_DIR/upgrade-backups/management-center-20261024T0358Z. No management-center process was running. The installer rebuilt and replaced the client. Installed binary SHA-256 is 71eceb0810c152d65ff93937fe17c399b8e4bb0b0426d5696f71971999e1b591; source and bridge hashes match the current checkout. The installed binary reported GTK 4.24.1 and VTE 0.84.1 under --self-check. No GUI was opened, so visible rendering and interactive dialog behavior remain unverified.
 
 ## Remaining P4 work

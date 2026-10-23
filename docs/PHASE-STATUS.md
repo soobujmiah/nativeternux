@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Legacy Debian ICD rename is preview-bound and rollback-capable through shared CLI, TUI, Web, and GTK source; no live guest changes made.
+Exact legacy ICD rename, interrupted-apply rollback, and inode-preserving restoration passed on the owned disposable Debian replay; default guest untouched.
 
-**Next action:** Validate the exact ICD rename, interrupted apply recovery, and rollback on an idle disposable Debian guest; keep the existing default guest untouched.
+**Next action:** Validate complete fresh Debian setup/config rollback and replay reproducibility on an isolated guest; then close remaining GUI/audio/workload evidence without stopping or mutating the active default guest.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)

@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Legacy Debian ICD rename is preview-bound and rollback-capable through shared CLI, TUI, Web, and GTK source; no live guest changes made.
+Exact legacy ICD rename, interrupted-apply rollback, and inode-preserving restoration passed on the owned disposable Debian replay; default guest untouched.
 
-**Next action:** Validate the exact ICD rename, interrupted apply recovery, and rollback on an idle disposable Debian guest; keep the existing default guest untouched.
+**Next action:** Validate complete fresh Debian setup/config rollback and replay reproducibility on an isolated guest; then close remaining GUI/audio/workload evidence without stopping or mutating the active default guest.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

@@ -56,7 +56,7 @@
       "title": "Existing Ternux PRoot feature-parity provider",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Legacy Debian ICD rename is preview-bound and rollback-capable through shared CLI, TUI, Web, and GTK source; no live guest changes made.",
+      "summary": "Exact legacy ICD rename, interrupted-apply rollback, and inode-preserving restoration passed on the owned disposable Debian replay; default guest untouched.",
       "evidence": [
         "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
         "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
@@ -134,7 +134,7 @@
         "docs/evidence/2026-10-24-dynamic-proot-user-selection.md",
         "docs/evidence/2026-10-24-p4-managed-icd-migration.md"
       ],
-      "next_action": "Validate the exact ICD rename, interrupted apply recovery, and rollback on an idle disposable Debian guest; keep the existing default guest untouched."
+      "next_action": "Validate complete fresh Debian setup/config rollback and replay reproducibility on an isolated guest; then close remaining GUI/audio/workload evidence without stopping or mutating the active default guest."
     },
     {
       "id": "P5",

@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Validate the exact ICD rename, interrupted apply recovery, and rollback on an idle disposable Debian guest; keep the existing default guest untouched.
+**Next action:** Validate complete fresh Debian setup/config rollback and replay reproducibility on an isolated guest; then close remaining GUI/audio/workload evidence without stopping or mutating the active default guest.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
