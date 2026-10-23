@@ -14,13 +14,15 @@ identity, operation scope, and lifecycle. PRoot shares the Android device's
 network namespace and is not a security sandbox.
 
 The current Ternuxx management layer has an in-process typed dispatcher, an
-authenticated HTTP request adapter, and an optional explicitly started
-loopback HTTP listener. It has no production service/boot integration, browser
-client, or qualified private remote transport. `remote.access.preview` remains
-a read-only policy preview; the existing remote-access contract is in ADR-0013.
-The installed/runtime ADB placement and Shizuku startup arrangement were
-owner-reported and then documented in the dated ADT audit; current runtime
-identity and behavior remain unverified.
+authenticated HTTP request adapter, a bounded loopback server, and a foreground
+runtime. Authenticated browser/Web clients use that shared service for a scoped
+set of operations; see the current [Management API contract](../MANAGEMENT-API.md).
+The HTTP runtime is not automatically provisioned as a persistent Runit or
+Termux:Boot service, and no qualified private remote transport consumes the
+remote policy. `remote.access.preview` remains a read-only policy preview; the
+remote-access contract is in ADR-0013. The installed/runtime ADB placement and
+Shizuku startup arrangement were owner-reported and then documented in the
+dated ADT audit; current runtime identity and behavior remain unverified.
 
 ADB has separate client, server, and device-daemon roles. The ADB server's
 local client port (normally TCP 5037) is not the Android device's `adbd`
@@ -86,11 +88,12 @@ See [ADB live recheck](../../evidence/2026-10-18-p3-adb-live-recheck-0656.json).
    transport, explicit client scope, and revocation path; it is off by default.
 4. The Ternuxx management TCP API is a separate adapter over the existing
    typed shared management services, never a shell proxy or direct ADB bridge.
-   Its optional source listener is loopback-only and is not wired to a
-   production service or boot profile; device and browser qualification remain
-   gates. Off-home access follows ADR-0013 through an owner-selected private
-   transport. No public bind, router port-forward, wildcard CORS, or generic
-   command route is introduced.
+   Its foreground runtime is fixed to loopback and is explicitly invoked; it
+   is not automatically provisioned as a persistent service or boot profile.
+   Authenticated Web clients are integrated with scoped grants, but target-device
+   lifecycle and private-transport qualification remain gates. Off-home access
+   follows ADR-0013 through an owner-selected private transport. No public bind,
+   router port-forward, wildcard CORS, or generic command route is introduced.
 5. Professional-service requirements for the management endpoint include:
    versioned typed routes; explicit target provider; operation-scoped
    authentication and authorization; default-deny scopes; loopback bind and
@@ -112,9 +115,11 @@ See [ADB live recheck](../../evidence/2026-10-18-p3-adb-live-recheck-0656.json).
 
 ### P3: Ternuxx management TCP adapter
 
-- Complete the API threat model, wire format, authentication bootstrap,
-  authorization mapping, limits, audit/redaction, and lifecycle/recovery
-  contract before wiring or enabling a production listener/service.
+- Current source implements the typed API, one-use session bootstrap, exact
+  operation scopes, CSRF, request limits, audit/idempotency, and a bounded
+  loopback listener. Persistent service/boot ownership, restart-safe bootstrap
+  provisioning, operational recovery, and private remote transport remain open
+  before this endpoint can be treated as a production managed service.
 - An API-v1 operation-to-capability map now covers the full application
   service allowlist and has parity tests. It is policy data only; a transport
   must authenticate the session and enforce its scope before dispatch. The
@@ -145,8 +150,10 @@ See [ADB live recheck](../../evidence/2026-10-18-p3-adb-live-recheck-0656.json).
   `ternuxx management http serve`. It runs in the foreground, grants only
   reviewed read-only scopes, and displays a new one-use bootstrap secret only
   on an interactive terminal. It writes no bootstrap secret and starts no
-  service automatically; boot/service integration, browser onboarding, and
-  device qualification remain open.
+  service automatically; boot/service integration, durable/restart-safe
+  bootstrap provisioning, and target-device lifecycle qualification remain
+  open. The shared authenticated Web client is described in the current
+  Management API contract.
 - The loopback HTTP contract separates `GET /health` liveness from
   `GET /ready` listener readiness. The latter is tied to the owned serving
   thread and reports 503 when its readiness probe is false; during drain the

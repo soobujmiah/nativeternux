@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 442,
-  "read_count": 118,
+  "read_count": 120,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -461,16 +461,16 @@
       "kind": "narrative",
       "sha256": "c4ce6da50eaed21e7460cf6fbb86ba38123a84cc8695fd5c206821f509c49f38",
       "lines": 117,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "c4ce6da50eaed21e7460cf6fbb86ba38123a84cc8695fd5c206821f509c49f38"
     },
     {
       "path": "docs/architecture/decisions/ADR-0014-proot-adb-and-management-tcp.md",
       "kind": "narrative",
-      "sha256": "5d39366bacf5918a284aa634daff43286c6ded71e1eb20011d4e617cb1ae9945",
-      "lines": 210,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "058d726e595d6faa0d2ab92685657f0769ad2fb7c1541f15eb5d16d6332bf7d7",
+      "lines": 217,
+      "read_status": "read",
+      "read_sha256": "058d726e595d6faa0d2ab92685657f0769ad2fb7c1541f15eb5d16d6332bf7d7"
     },
     {
       "path": "docs/architecture/decisions/ADR-0015-ternuxx-owned-existing-proot.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "230f1a69930ba167a0cede56a23423315879a7c9504daae74626b62d5d87307e",
-      "lines": 144,
+      "sha256": "05c53807589a38630d5764a27340d5426e9b36b4749bc61a837fdbba9a21bad4",
+      "lines": 145,
       "read_status": "read",
-      "read_sha256": "230f1a69930ba167a0cede56a23423315879a7c9504daae74626b62d5d87307e"
+      "read_sha256": "05c53807589a38630d5764a27340d5426e9b36b4749bc61a837fdbba9a21bad4"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
