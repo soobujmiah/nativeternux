@@ -1,0 +1,7 @@
+event_id: commit-4eeea3a9619c-a1b851b3cd73b2c8
+repository: soobujmiah/ternuxx
+commit: 4eeea3a9619cadb7ec753ff36ebdc0ee82673bfe
+kind: commit
+occurred_at: '2026-10-23T15:14:44Z'
+status: completed
+summary: docs clarify PRoot lifecycle ownership
