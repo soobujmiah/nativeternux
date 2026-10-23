@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native suite passed 896 tests with 1 skip. VirGL stopped-state reporting now agrees with the absent process/socket, while replacement sockets and unknown active clients remain fail-closed. P4 Native package locking, clean-device replay, guest migration/rollback, and GUI/accelerator gates remain open; package drift is 4/16 with no upgrades applied.
+Native suite passed 896 tests with 1 skip. Latest local signed Termux indexes (22 Oct) still show four upgrades across the 16-package core; read-only APT simulation resolved 4 upgrades, 0 installs/removals, none applied. Rolling-release metadata cannot guarantee historical artifact retrieval; package update/lock workflow, clean replay, migration/rollback, and GUI gates remain open.
 
-**Next action:** Keep live VirGL stop refused whenever client visibility is unknown; close Native package version-lock/update lifecycle, clean-device replay, and exact existing-guest migration/rollback evidence, then reconcile remaining GUI and release gates.
+**Next action:** Implement a preview-first Native package version/update lifecycle that binds exact candidates and fails closed on unavailable locks; specify artifact retention limits, then continue clean-device replay and existing-guest migration/rollback evidence.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

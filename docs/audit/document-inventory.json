@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 444,
+  "document_count": 445,
   "read_count": 121,
   "reading_complete": false,
   "broken_local_links": [],
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "27ff6ff6f0a791053d7b8b14034e348db7cf0665746d116e6ff40d9baf0338c8",
+      "sha256": "3b262387653a8754250ae7efa3900e07da111ffe5413c9af247eacb983e516e4",
       "lines": 92,
       "read_status": "pending",
       "read_sha256": null
@@ -171,8 +171,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "f91cbcd38369e94e36d459886368428c72e2564c0bc6dfde6a668aa69057ab1b",
-      "lines": 190,
+      "sha256": "dc848b6fce27eeb248c2c90d71ef66598fb3cbb3605da5e367596bb905436a7e",
+      "lines": 191,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -227,7 +227,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "6043f2300d1794aa1b2d595a16b877026107ca9a2cfef449c11f811faf10ea23",
+      "sha256": "60600df51851da9163cde26455645de6152135a6651bc3806ec05feb2a54de34",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "4b6f183ee4307115b3d7b0a2c33aa988a0298331e67a5bd2e3b9e610cb4d728a",
-      "lines": 147,
+      "sha256": "a7401d4677917a1ce12817f50c006200ab619364f5372dcfe3798ca1cbf25dce",
+      "lines": 148,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2873,6 +2873,14 @@
       "read_sha256": "be9a5d59fa8bfbbae4a78fe81f76931573b7d73c0b27f4648ec6a2f4098ddd93"
     },
     {
+      "path": "docs/evidence/2026-10-24-native-package-candidate-recheck.md",
+      "kind": "narrative",
+      "sha256": "5fbafcba3bd400776a77b1d226b155b8d3ce11d5712f85bc8977c8e13c8ddad0",
+      "lines": 48,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-24-native-suite-and-url-verification.md",
       "kind": "narrative",
       "sha256": "4baff597502f7aca4b5efad57bb240878ede57e53b28dbdcb2c645fd76b1fcbf",
@@ -3187,8 +3195,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "02da404febd489c73aa8bc285aadf8ed008a15ef0fc11546b65790019c05978b",
-      "lines": 205,
+      "sha256": "07e11dabd57f43ae7f4c94bbe8fefe9c55b97bc2db39db7ed346fd71c76aa6dd",
+      "lines": 206,
       "read_status": "pending",
       "read_sha256": null
     },

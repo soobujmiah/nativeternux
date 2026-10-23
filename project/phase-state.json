@@ -56,7 +56,7 @@
       "title": "Existing Ternux PRoot feature-parity provider",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Native suite passed 896 tests with 1 skip. VirGL stopped-state reporting now agrees with the absent process/socket, while replacement sockets and unknown active clients remain fail-closed. P4 Native package locking, clean-device replay, guest migration/rollback, and GUI/accelerator gates remain open; package drift is 4/16 with no upgrades applied.",
+      "summary": "Native suite passed 896 tests with 1 skip. Latest local signed Termux indexes (22 Oct) still show four upgrades across the 16-package core; read-only APT simulation resolved 4 upgrades, 0 installs/removals, none applied. Rolling-release metadata cannot guarantee historical artifact retrieval; package update/lock workflow, clean replay, migration/rollback, and GUI gates remain open.",
       "evidence": [
         "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
         "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
@@ -125,9 +125,10 @@
         "docs/evidence/2026-10-23-disposable-debian-replay.md",
         "docs/evidence/2026-10-23-native-package-version-drift.md",
         "docs/evidence/2026-10-24-native-suite-and-url-verification.md",
-        "docs/evidence/2026-10-24-virgl-stopped-status-correction.md"
+        "docs/evidence/2026-10-24-virgl-stopped-status-correction.md",
+        "docs/evidence/2026-10-24-native-package-candidate-recheck.md"
       ],
-      "next_action": "Keep live VirGL stop refused whenever client visibility is unknown; close Native package version-lock/update lifecycle, clean-device replay, and exact existing-guest migration/rollback evidence, then reconcile remaining GUI and release gates."
+      "next_action": "Implement a preview-first Native package version/update lifecycle that binds exact candidates and fails closed on unavailable locks; specify artifact retention limits, then continue clean-device replay and existing-guest migration/rollback evidence."
     },
     {
       "id": "P5",

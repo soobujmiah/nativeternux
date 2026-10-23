@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Native suite passed 896 tests with 1 skip. VirGL stopped-state reporting now agrees with the absent process/socket, while replacement sockets and unknown active clients remain fail-closed. P4 Native package locking, clean-device replay, guest migration/rollback, and GUI/accelerator gates remain open; package drift is 4/16 with no upgrades applied.
+Native suite passed 896 tests with 1 skip. Latest local signed Termux indexes (22 Oct) still show four upgrades across the 16-package core; read-only APT simulation resolved 4 upgrades, 0 installs/removals, none applied. Rolling-release metadata cannot guarantee historical artifact retrieval; package update/lock workflow, clean replay, migration/rollback, and GUI gates remain open.
 
-**Next action:** Keep live VirGL stop refused whenever client visibility is unknown; close Native package version-lock/update lifecycle, clean-device replay, and exact existing-guest migration/rollback evidence, then reconcile remaining GUI and release gates.
+**Next action:** Implement a preview-first Native package version/update lifecycle that binds exact candidates and fails closed on unavailable locks; specify artifact retention limits, then continue clean-device replay and existing-guest migration/rollback evidence.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -129,6 +129,7 @@ Evidence:
 - [docs/evidence/2026-10-23-native-package-version-drift.md](evidence/2026-10-23-native-package-version-drift.md)
 - [docs/evidence/2026-10-24-native-suite-and-url-verification.md](evidence/2026-10-24-native-suite-and-url-verification.md)
 - [docs/evidence/2026-10-24-virgl-stopped-status-correction.md](evidence/2026-10-24-virgl-stopped-status-correction.md)
+- [docs/evidence/2026-10-24-native-package-candidate-recheck.md](evidence/2026-10-24-native-package-candidate-recheck.md)
 
 ## P5 — Distro and display compatibility profiles
 
