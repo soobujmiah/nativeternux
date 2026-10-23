@@ -116,6 +116,7 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A72 | Live existing-Debian status returned `profile_changed` after only fresh-installer snapshot metadata changed, without explaining that this says nothing about guest drift | Kept strict manifest binding and added explicit hash/detail with a read-only next action; a fixture proves status leaves both the guest tree and saved adoption record unchanged, and the guide explains the status. |
 | A73 | PRoot session guide still described the migrated owner aliases as direct package-manager calls and CLI/Operations help omitted the normal-login hook's possible guest writes | Updated the current alias description from the recorded migration, separated immediate `tx db` from the tracked broker profile, and disclosed the hook side effect and preview/rollback limits in architecture, operations, and CLI help. |
 | A74 | P4 phase state and generated README/status retained the previous 893-test count after an added regression fixture raised the live suite to 894 | Recorded the 2026-10-24 894-pass/1-skip suite and 7/7 focused PRoot adoption tests in phase state, then regenerated phase docs from that authority. |
+| A75 | Current SSH lifecycle guide contradicted itself by calling durable key rollback incomplete after documenting its verified implementation | Removed rollback from the open-work list; retained password-recovery, post-action, caller-correlation, cold-boot, and GTK visual review gaps. Dated evidence remains unchanged. |
 
 
 ## Continuation order

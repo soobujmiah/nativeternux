@@ -347,7 +347,7 @@
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
       "kind": "narrative",
-      "sha256": "ce38da31f4fdad62b3c0b0d14e8156ec6320661f58b0a93094120b8ea257717d",
+      "sha256": "a09fe2d7ae747835ac918090e03c437a1925a3651a5c2b4888458719e1a1795a",
       "lines": 55,
       "read_status": "pending",
       "read_sha256": null
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "50b847b76ea4ebd0aa8531755447f1db550c9ded4e279ec124d6e7e39644805d",
-      "lines": 130,
+      "sha256": "1125f5e7b1b883220d6401a47dca73d2264c0df8d56d3321970baa8b41d3a1fe",
+      "lines": 131,
       "read_status": "pending",
       "read_sha256": null
     },
