@@ -1,0 +1,7 @@
+event_id: commit-e5d605f482fa-639336019f146dfe
+repository: soobujmiah/ternuxx
+commit: e5d605f482faacc3b2e29973e9f3f8f9f0b0b236
+kind: commit
+occurred_at: '2026-10-23T10:23:18Z'
+status: completed
+summary: 'docs(p4): add virgl socket-owner visibility fix evidence'
