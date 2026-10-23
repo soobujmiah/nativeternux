@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 438,
-  "read_count": 110,
+  "read_count": 108,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -147,10 +147,10 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "95c3068e52e0ee6e2c0df34d6a5b64023fbdef9b876339e62e1f93e9cc2040b6",
+      "sha256": "91a10da4e25f9da434d614d1ca9cf980ba3b3e8b280a385e8aae22afa0227074",
       "lines": 189,
-      "read_status": "read",
-      "read_sha256": "95c3068e52e0ee6e2c0df34d6a5b64023fbdef9b876339e62e1f93e9cc2040b6"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/OPTIMIZATION.md",
@@ -211,7 +211,7 @@
     {
       "path": "docs/RESEARCH.md",
       "kind": "narrative",
-      "sha256": "29b8ec19e8f007de7affb7732364352244c95b307069e0cdfd5957aa457d9a88",
+      "sha256": "08bf7675112bf25fc4cca63d7baf51fecce75239012318715b302130004d7256",
       "lines": 329,
       "read_status": "pending",
       "read_sha256": null
@@ -523,10 +523,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "4dd559880169582363941723dc915232e08b363bdfe1ed41ec80d386c153db4d",
-      "lines": 109,
-      "read_status": "read",
-      "read_sha256": "4dd559880169582363941723dc915232e08b363bdfe1ed41ec80d386c153db4d"
+      "sha256": "93357a7697dfa78211e1b319fae686635ba58dd6f0cb02dc6027893d4413bd59",
+      "lines": 110,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",

@@ -187,7 +187,7 @@ This section supersedes the 2026-10-17 audit snapshot. Ternuxx now verifies the 
 | Ternux PRoot launcher passes through KGSL/DRM and selects Zink | Ternux source at local commit `ef65cb4` | Source verified; runtime not rerun |
 | Debian PRoot GL renderer on active display `:1` is Zink/Turnip | Live `glxinfo -B` in PRoot on 2026-10-18 | Verified for this process/display; see P4 evidence |
 | Existing Ternux-owned `:0` session uses Zink/Turnip | Ternux documentation and owner's prior report | Not independently verified in this review |
-| Ternuxx can reuse that rootfs automatically | No adapter exists | Not implemented |
+| Ternuxx can reuse the Debian rootfs for bounded operations | Typed Native-to-PRoot adapter supports inventory, isolated verification, and selected explicit guest operations; active guest/session ownership remains separately verified | Implemented in bounded scope; broad lifecycle and workload qualification remain incomplete |
 | Shader cache alone proves current hardware acceleration | Insufficient evidence | Rejected |
 
 
