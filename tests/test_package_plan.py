@@ -282,6 +282,23 @@ echo 'install ok installed'
             records = list((Path(temporary) / "home/.local/share/ternuxx/install-transactions").glob("*.json"))
             self.assertEqual({json.loads(item.read_text())["outcome"] for item in records}, {"preview", "applied"})
 
+    def test_install_preview_is_concise_and_verbose_mode_shows_simulation(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-install-output-") as temporary:
+            env, _capture = self._install_command_fixture(temporary)
+            base = ["bash", "-c", 'source "$1"; nt_require_termux() { return 0; }; shift; nt_cmd_install "$@"', "bash", str(PHASES)]
+            short = subprocess.run([*base, "preview"], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            self.assertEqual(short.returncode, 0, short.stderr)
+            self.assertIn("Requested packages:", short.stderr)
+            self.assertIn("Resolved changes:", short.stderr)
+            self.assertIn("Preview only; no package changes", short.stderr)
+            self.assertIn("Apply after review: tx install apply", short.stderr)
+            self.assertNotIn("Reading package lists", short.stderr)
+
+            verbose = subprocess.run([*base, "preview", "--verbose"], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            self.assertEqual(verbose.returncode, 0, verbose.stderr)
+            self.assertIn("Reading package lists", verbose.stdout)
+            self.assertIn("Resolved APT transaction", verbose.stderr)
+
     def test_changed_simulation_is_refused_before_apt_apply(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-install-mismatch-") as temporary:
             env, capture = self._install_command_fixture(temporary)

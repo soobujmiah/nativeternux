@@ -461,10 +461,14 @@ def _kgsl_accessible() -> bool:
 
 
 def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
-          plan_id: str, confirmed: bool, runner=subprocess.run, alias: str = ALIAS) -> dict:
+          plan_id: str, confirmed: bool, runner=subprocess.run, alias: str = ALIAS,
+          password: str | None = None) -> dict:
     alias = _alias(alias)
     if confirmed is not True:
         raise FreshSetupError("fresh Debian install requires explicit confirmation")
+    if password is not None and (len(password) < 8 or len(password) > 1024
+                                 or any(ch in password for ch in "\x00\r\n")):
+        raise FreshSetupError("guest password must be 8-1024 characters without line breaks")
     if not re.fullmatch(r"[0-9a-f]{64}", plan_id):
         raise FreshSetupError("valid fresh setup preview ID required")
     manifest_path = Path(repo_root) / "config/proot/debian-trixie.json"
@@ -596,6 +600,13 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
                          "--", "/bin/bash", "-lc", script], check=False, timeout=3600)
         if result.returncode:
             raise FreshSetupError("Debian package setup failed; new alias retained for inspection")
+        if password is not None:
+            # Secret is sent only over stdin; never place it in argv, script, logs, plans, or receipts.
+            result = runner([manager, "login", "--isolated", "--user", "root", alias,
+                             "--", "/usr/sbin/chpasswd"], input=f"{user}:{password}\n",
+                            text=True, capture_output=True, check=False, timeout=120)
+            if result.returncode:
+                raise FreshSetupError("Debian guest password could not be configured")
         release = (rootfs / "etc/os-release").read_text(encoding="utf-8")
         release_values = dict(line.split("=", 1) for line in release.splitlines() if "=" in line)
         if (release_values.get("ID", "").strip('"') != "debian"

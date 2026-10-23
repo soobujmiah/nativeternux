@@ -132,6 +132,12 @@ def run(argv: list[str] | None=None) -> int:
     install_parser=service_sub.add_parser("install",help="apply a fresh service registration preview")
     install_parser.add_argument("--yes",action="store_true")
     install_parser.add_argument("--plan-id")
+    socket_parser=service_sub.add_parser("socket",help="inspect or recover one stale broker socket")
+    socket_sub=socket_parser.add_subparsers(dest="socket_action",required=True)
+    socket_sub.add_parser("preview",help="inspect the exact socket and preview stale-socket recovery")
+    recover_parser=socket_sub.add_parser("recover",help="remove one unchanged stale socket after explicit review")
+    recover_parser.add_argument("--yes",action="store_true")
+    recover_parser.add_argument("--plan-id")
     args=parser.parse_args(argv)
     try:
         if args.action=="serve":
@@ -147,6 +153,15 @@ def run(argv: list[str] | None=None) -> int:
                 if not args.yes or not args.plan_id:
                     print("Preview first, then apply with --yes --plan-id PLAN_ID.",file=sys.stderr);return 1
                 result=terminal_service_deployment.install(prefix=prefix,confirmed=True,plan_id=args.plan_id)
+                print(json.dumps(result,indent=2));return 0
+            if args.service_action=="socket":
+                state=os.environ.get("TERNUXX_STATE_DIR") or str(Path.home()/".local/share/ternuxx")
+                if args.socket_action=="preview":
+                    print(json.dumps(terminal_broker.preview_stale_socket_recovery(state),indent=2));return 0
+                if not args.yes or not args.plan_id:
+                    print("Preview first, then apply with --yes --plan-id PLAN_ID.",file=sys.stderr);return 1
+                result=terminal_broker.recover_stale_socket(
+                    state,confirmed=True,plan_id=args.plan_id)
                 print(json.dumps(result,indent=2));return 0
         client=_client()
         if args.action=="status":

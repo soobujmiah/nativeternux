@@ -12,6 +12,8 @@ import base64
 import binascii
 import errno
 import fcntl
+import hashlib
+import json
 from pathlib import Path
 import re
 import secrets
@@ -145,6 +147,105 @@ def broker_socket_path(state_dir: str | os.PathLike[str], *, create: bool = Fals
     return path
 
 
+def _acquire_broker_socket_lock(state_dir: str | os.PathLike[str]) -> int:
+    state = _private_state(state_dir, create=False)
+    lock_path = state / "terminal-broker-recovery.lock"
+    try:
+        lock_fd = os.open(lock_path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    except OSError as exc:
+        raise BrokerError("broker socket coordination lock is unavailable") from exc
+    info = os.fstat(lock_fd)
+    if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o600 or info.st_nlink != 1):
+        os.close(lock_fd)
+        raise BrokerError("broker socket coordination lock is unsafe")
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError as exc:
+        os.close(lock_fd)
+        raise BrokerError("another broker socket lifecycle operation is in progress") from exc
+    return lock_fd
+
+
+def preview_stale_socket_recovery(state_dir: str | os.PathLike[str]) -> dict[str, object]:
+    """Describe one exact refused Unix socket without changing it."""
+    path = broker_socket_path(state_dir)
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return {"status": "absent", "path": str(path), "changed": False}
+    if (not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o600 or info.st_nlink != 1):
+        raise BrokerError("broker socket identity or permissions are unsafe")
+    probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        probe.settimeout(0.5)
+        result = probe.connect_ex(str(path))
+    finally:
+        probe.close()
+    try:
+        current = path.lstat()
+    except FileNotFoundError as exc:
+        raise BrokerError("broker socket changed during its liveness check") from exc
+    if (current.st_dev, current.st_ino, current.st_uid, current.st_mode,
+            current.st_mtime_ns, current.st_ctime_ns) != (
+            info.st_dev, info.st_ino, info.st_uid, info.st_mode,
+            info.st_mtime_ns, info.st_ctime_ns):
+        raise BrokerError("broker socket changed during its liveness check")
+    if result == 0:
+        raise BrokerError("broker socket has a live listener; refusing recovery")
+    if result != errno.ECONNREFUSED:
+        raise BrokerError(f"broker socket liveness is unknown (connect result {result})")
+    snapshot = {
+        "operation": "terminal-broker-stale-socket-recovery",
+        "path": str(path),
+        "device": info.st_dev,
+        "inode": info.st_ino,
+        "uid": info.st_uid,
+        "mode": stat.S_IMODE(info.st_mode),
+        "mtime_ns": info.st_mtime_ns,
+        "ctime_ns": info.st_ctime_ns,
+        "probe": "connection-refused",
+    }
+    plan_id = hashlib.sha256(json.dumps(
+        snapshot, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return {"status": "stale", **snapshot, "changed": True, "plan_id": plan_id}
+
+
+def recover_stale_socket(state_dir: str | os.PathLike[str], *,
+                         confirmed: bool, plan_id: str | None) -> dict[str, object]:
+    """Remove only the unchanged private socket whose exact probe was refused."""
+    if confirmed is not True or not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        raise BrokerError("explicit confirmation and a fresh socket recovery plan ID are required")
+    state = _private_state(state_dir, create=False)
+    lock_fd = _acquire_broker_socket_lock(state)
+    try:
+        preview = preview_stale_socket_recovery(state)
+        if preview.get("status") != "stale" or preview.get("plan_id") != plan_id:
+            raise BrokerError("fresh exact socket recovery preview and plan ID are required")
+        path = broker_socket_path(state)
+        directory_fd = os.open(state, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        try:
+            current = os.stat(path.name, dir_fd=directory_fd, follow_symlinks=False)
+            if (not stat.S_ISSOCK(current.st_mode)
+                    or current.st_uid != os.getuid()
+                    or current.st_dev != preview["device"]
+                    or current.st_ino != preview["inode"]
+                    or stat.S_IMODE(current.st_mode) != 0o600):
+                raise BrokerError("broker socket changed after preview")
+            confirmation = preview_stale_socket_recovery(state)
+            if confirmation.get("plan_id") != plan_id:
+                raise BrokerError("broker socket liveness or identity changed after preview")
+            os.unlink(path.name, dir_fd=directory_fd)
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+        return {"status": "recovered", "path": str(path), "plan_id": plan_id,
+                "removed_device": preview["device"], "removed_inode": preview["inode"]}
+    finally:
+        os.close(lock_fd)
+
+
 class UnixBrokerServer:
     """One-request-per-connection Unix socket server with same-UID peer checks."""
 
@@ -162,32 +263,36 @@ class UnixBrokerServer:
     def open(self, *, backlog: int = 8) -> None:
         if type(backlog) is not int or not 1 <= backlog <= 32:
             raise BrokerError("broker backlog is outside the allowed range")
+        lock_fd = _acquire_broker_socket_lock(self.path.parent)
         try:
-            info = self.path.lstat()
-        except FileNotFoundError:
-            info = None
-        if info is not None:
-            # Never unlink or adopt a stale socket: its owner/liveness is not
-            # known here. Recovery must be an explicit, separately reviewed action.
-            raise BrokerError("broker socket path already exists")
-        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        bound = False
-        try:
-            listener.bind(str(self.path))
-            bound = True
-            os.chmod(self.path, 0o600)
-            info = self.path.lstat()
-            if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid():
-                raise BrokerError("broker socket identity is unsafe")
-            self._socket_identity = (info.st_dev, info.st_ino)
-            listener.listen(backlog)
-            listener.settimeout(0.5)
-        except BaseException:
-            listener.close()
-            if bound:
-                self._unlink_owned_socket()
-            raise
-        self.listener = listener
+            try:
+                info = self.path.lstat()
+            except FileNotFoundError:
+                info = None
+            if info is not None:
+                # Recovery remains explicit; startup never adopts or unlinks
+                # an existing socket, even after liveness checks.
+                raise BrokerError("broker socket path already exists")
+            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            bound = False
+            try:
+                listener.bind(str(self.path))
+                bound = True
+                os.chmod(self.path, 0o600)
+                info = self.path.lstat()
+                if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid():
+                    raise BrokerError("broker socket identity is unsafe")
+                self._socket_identity = (info.st_dev, info.st_ino)
+                listener.listen(backlog)
+                listener.settimeout(0.5)
+            except BaseException:
+                listener.close()
+                if bound:
+                    self._unlink_owned_socket()
+                raise
+            self.listener = listener
+        finally:
+            os.close(lock_fd)
 
     def serve_one(self) -> bool:
         if self.listener is None:

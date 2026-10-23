@@ -18,6 +18,10 @@ ROOT = Path(__file__).resolve().parents[1]
 class DesktopLifecycleFixtureTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory(prefix="ternuxx-desktop-fixture-")
+        # unittest cleanups run after tearDown; register the temp directory
+        # first so process-specific cleanups run before its mock executables
+        # disappear.
+        self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
         self.home = self.base / "home"
         self.home.mkdir()
@@ -107,7 +111,6 @@ while True:
                 timeout=20,
                 check=False,
             )
-        self.temp.cleanup()
 
     def _write_executable(self, name: str, content: str) -> None:
         path = self.bin_dir / name
@@ -392,8 +395,28 @@ bash -c "$runner" _ status
             cwd=ROOT, env=self.env, stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
-        self.addCleanup(lambda: supervisor.poll() is None and supervisor.send_signal(15))
         state_file = second_state / "session.json"
+
+        def stop_second_supervisor() -> None:
+            stop_env = {**self.env, "TERNUXX_STATE_DIR": str(second_state)}
+            if state_file.exists():
+                try:
+                    subprocess.run(
+                        ["bash", str(ROOT / "bin/tx"), "stop"], env=stop_env,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                        timeout=8, check=False,
+                    )
+                except subprocess.TimeoutExpired:
+                    pass
+            if supervisor.poll() is None:
+                supervisor.send_signal(15)
+                try:
+                    supervisor.wait(timeout=8)
+                except subprocess.TimeoutExpired:
+                    supervisor.kill()
+                    supervisor.wait(timeout=3)
+
+        self.addCleanup(stop_second_supervisor)
         for _ in range(120):
             try:
                 if json.loads(state_file.read_text())["status"] == "running":

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import getpass
 import json
 import os
 from pathlib import Path
@@ -301,10 +302,15 @@ def main() -> int:
         elif args.action == "fresh-install":
             if not args.user or not args.plan_id or not args.yes:
                 parser.error("fresh-install requires --user NAME --yes --plan-id ID")
+            password = getpass.getpass("Create Debian sudo password: ")
+            confirm_password = getpass.getpass("Confirm Debian sudo password: ")
+            if password != confirm_password:
+                raise proot_fresh_setup.FreshSetupError("password entries did not match")
             result = proot_fresh_setup.apply(repo_root=args.repo_root, prefix=args.prefix,
                                              home=args.home, state_dir=args.state_dir, user=args.user,
-                                             plan_id=args.plan_id, confirmed=True,
+                                             plan_id=args.plan_id, confirmed=True, password=password,
                                              alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS)
+            password = confirm_password = ""
         else:
             if not args.user or not args.plan_id or not args.yes:
                 parser.error("adopt requires --user NAME --yes --plan-id ID")

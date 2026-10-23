@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from contextlib import ExitStack
 import io
+import json
+import os
 from pathlib import Path
+import socket
+import stat
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -12,6 +17,29 @@ import terminal_cli
 
 
 class TerminalCLIAttachmentTests(unittest.TestCase):
+    def test_service_socket_recovery_cli_requires_the_preview_id(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-terminal-cli-recovery-") as temp:
+            state = Path(temp) / "state"
+            state.mkdir(mode=0o700)
+            path = terminal_cli.terminal_broker.broker_socket_path(state)
+            stale = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            stale.bind(str(path))
+            stale.close()
+            os.chmod(path, 0o600)
+            with mock.patch.dict(os.environ, {"TERNUXX_STATE_DIR": str(state)}):
+                with mock.patch.object(terminal_cli.sys, "stdout", new_callable=io.StringIO) as output:
+                    self.assertEqual(terminal_cli.run(["service", "socket", "preview"]), 0)
+                    plan = json.loads(output.getvalue())
+                self.assertEqual(stat.S_IMODE(path.lstat().st_mode), 0o600)
+                with mock.patch.object(terminal_cli.sys, "stderr", new_callable=io.StringIO):
+                    self.assertEqual(terminal_cli.run(["service", "socket", "recover"]), 1)
+                with mock.patch.object(terminal_cli.sys, "stdout", new_callable=io.StringIO) as output:
+                    self.assertEqual(terminal_cli.run(["service", "socket", "recover", "--yes",
+                        "--plan-id", plan["plan_id"]]), 0)
+                    result = json.loads(output.getvalue())
+            self.assertEqual(result["status"], "recovered")
+            self.assertFalse(path.exists())
+
     def run_attach(self, *, supplied=False, resize_fails=False, tty=True):
         lease = {"session_id": "proot-" + "a" * 32,
                  "generation": 7, "attachment_id": "attach-" + "b" * 32}

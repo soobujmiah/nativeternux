@@ -62,20 +62,19 @@ cd "$HOME/ternuxx"
 ./tx proot setup status
 ```
 
-আপনার সাধারণ Debian পরিবেশটি `debian` alias হলে, সেটিকে স্পষ্টভাবে শনাক্ত করে গ্রহণের পূর্বরূপ দেখুন:
+বিদ্যমান working Debian guest-কে আরেকটি rootfs না বানিয়ে Ternuxx-এর Native profile-এ যুক্ত করতে:
 
 ```sh
-./tx proot setup adopt-preview --user YOUR_DEBIAN_USERNAME
+./tx install debian
 ```
 
-ব্যবহারকারী, Debian সংস্করণ, rootfs পরিচয় এবং পরিকল্পনা ID মিলিয়ে তারপর শুধু সেই পূর্বরূপ প্রয়োগ করুন:
+এটি read-only পূর্বরূপ দেখায়: Debian সংস্করণ, account, rootfs পরিচয়, graphics driver ফাইল এবং plan ID। সব মিলিয়ে দেখে শুধু সেই পরিকল্পনা রেকর্ড করুন:
 
 ```sh
-./tx proot setup adopt --user YOUR_DEBIAN_USERNAME --yes --plan-id PLAN_ID
+./tx install debian apply PLAN_ID --yes
 ```
 
-গ্রহণ শুধু Native পাশে Ternuxx-এর ব্যক্তিগত অবস্থা-নথি তৈরি করে; এটি অতিথি পরিবেশের প্যাকেজ বা কনফিগারেশন বদলায় না। সাধারণ অতিথি পরিবেশ রূপান্তর এখনো সম্পূর্ণ নয়। ভবিষ্যতে অতিথি পরিবেশ বদল অবশ্যই নির্দিষ্ট লক্ষ্য ও পরিবর্তন দেখানো পূর্বরূপ, আগের অবস্থা সংরক্ষণ, স্পষ্ট প্রয়োগ এবং যাচাই করা rollback দিয়ে করতে হবে।
-
+এই প্রথম integration ধাপ Native পাশে ব্যক্তিগত profile record তৈরি করে; guest-এর ফাইল, package বা service বদলায় না এবং অনুপস্থিত package ইনস্টলও করে না। account নির্দিষ্ট করতে `--user YOUR_DEBIAN_USERNAME` দিন। নিচের low-level command-গুলো একই adoption প্রক্রিয়ার পুরোনো রূপ.
 ## ৫. বিদ্যমান Debian না ছুঁয়ে নতুন অতিথি পরিবেশ পরীক্ষা করুন
 
 আপনার আগে থেকেই Debian থাকলে নতুন পরীক্ষার জন্য অনন্য `ternuxx-replay-NAME` alias ব্যবহার করুন। `NAME`-এর জায়গায় ছোট ইংরেজি অক্ষর/সংখ্যা দিন; উদাহরণে `demo` ব্যবহার হয়েছে:
@@ -92,7 +91,7 @@ cd "$HOME/ternuxx"
 ./tx proot setup fresh-install --user YOUR_DEBIAN_USERNAME --alias ternuxx-replay-demo --yes --plan-id PLAN_ID
 ```
 
-এতে আলাদা Debian কনটেইনারে প্যাকেজ ইনস্টল হবে; এটি সময় নিতে এবং অনেক জায়গা ব্যবহার করতে পারে। আগের `debian` পরিবেশ প্রতিস্থাপন করার কমান্ড নয়। নিজের ডিভাইস-এর পরিকল্পনা না বুঝলে প্রয়োগ করবেন না। ইনস্টল শেষে:
+ইনস্টল প্রয়োগের সময় নির্বাচিত guest ব্যবহারকারীর sudo password দুইবার গোপনে দিতে হবে। password শুধু stdin দিয়ে guest-এ পাঠানো হয়; command, preview, receipt বা log-এ রাখা হয় না। Native Termux-এ sudo password লাগে না। এতে আলাদা Debian কনটেইনারে প্যাকেজ ইনস্টল হবে; এটি সময় নিতে এবং অনেক জায়গা ব্যবহার করতে পারে। আগের `debian` পরিবেশ প্রতিস্থাপন করার কমান্ড নয়। নিজের ডিভাইস-এর পরিকল্পনা না বুঝলে প্রয়োগ করবেন না। ইনস্টল শেষে:
 
 ```sh
 ./tx proot status --json

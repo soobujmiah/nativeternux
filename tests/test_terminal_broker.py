@@ -241,6 +241,63 @@ class TerminalBrokerTransportTests(unittest.TestCase):
                 original.close()
                 path.unlink()
 
+    def test_stale_socket_recovery_is_exact_preview_bound_and_private(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-terminal-stale-") as temp:
+            state = Path(temp) / "state"
+            state.mkdir(mode=0o700)
+            path = terminal_broker.broker_socket_path(state)
+            original = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            original.bind(str(path))
+            original.close()
+            os.chmod(path, 0o600)
+            before = path.lstat()
+
+            preview = terminal_broker.preview_stale_socket_recovery(state)
+            self.assertEqual(preview["status"], "stale")
+            self.assertEqual(preview["probe"], "connection-refused")
+            self.assertEqual(path.lstat().st_ino, before.st_ino)
+            self.assertEqual(stat.S_IMODE(path.lstat().st_mode), 0o600)
+            with self.assertRaisesRegex(terminal_broker.BrokerError, "explicit confirmation"):
+                terminal_broker.recover_stale_socket(
+                    state, confirmed=False, plan_id=preview["plan_id"])
+            result = terminal_broker.recover_stale_socket(
+                state, confirmed=True, plan_id=preview["plan_id"])
+            self.assertEqual(result["status"], "recovered")
+            self.assertFalse(path.exists())
+
+    def test_stale_socket_recovery_refuses_live_listener_and_changed_preview(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-terminal-live-socket-") as temp:
+            state = Path(temp) / "state"
+            state.mkdir(mode=0o700)
+            path = terminal_broker.broker_socket_path(state)
+            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            listener.bind(str(path))
+            os.chmod(path, 0o600)
+            listener.listen(1)
+            with self.assertRaisesRegex(terminal_broker.BrokerError, "live listener"):
+                terminal_broker.preview_stale_socket_recovery(state)
+            listener.close()
+            preview = terminal_broker.preview_stale_socket_recovery(state)
+            os.utime(path, ns=(path.stat().st_atime_ns, path.stat().st_mtime_ns + 1_000_000))
+            with self.assertRaisesRegex(terminal_broker.BrokerError, "fresh exact"):
+                terminal_broker.recover_stale_socket(
+                    state, confirmed=True, plan_id=preview["plan_id"])
+            self.assertTrue(path.exists())
+
+    def test_server_start_and_socket_recovery_share_one_lifecycle_lock(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-terminal-lock-") as temp:
+            state = Path(temp) / "state"
+            state.mkdir(mode=0o700)
+            lock_fd = terminal_broker._acquire_broker_socket_lock(state)
+            server = terminal_broker.UnixBrokerServer(state, lambda _request, _uid: {"ok": True})
+            try:
+                with self.assertRaisesRegex(terminal_broker.BrokerError, "lifecycle operation"):
+                    server.open()
+            finally:
+                os.close(lock_fd)
+            server.open()
+            server.close()
+
 
     def test_dispatcher_preview_and_start_are_authenticated_and_plan_bound(self):
         registry = terminal_broker.TerminalAttachmentRegistry(generation=29)

@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 446,
-  "read_count": 120,
+  "document_count": 447,
+  "read_count": 117,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "2953ca9aa87166c82b3af9162629bec22bafa07765cf181ce602f46359795d69",
+      "sha256": "e4826fc7b04b007c438aecd982d1e8de7ec315fea5b88bdbd7af24f0cb1172f9",
       "lines": 69,
-      "read_status": "read",
-      "read_sha256": "2953ca9aa87166c82b3af9162629bec22bafa07765cf181ce602f46359795d69"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "81981407be08529ec0c230035eebe98bebec1222a8da74e9e2e446c59ae30f1e",
+      "sha256": "c8c98acb739736394fd502a2ff8afd0be1c9f7608bb067982468d506c91f3eea",
       "lines": 92,
       "read_status": "pending",
       "read_sha256": null
@@ -83,10 +83,10 @@
     {
       "path": "bn/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "70954b64722cc1263c2a39550955ed346cffe277b8aa91edb3686f516154456e",
-      "lines": 133,
-      "read_status": "read",
-      "read_sha256": "70954b64722cc1263c2a39550955ed346cffe277b8aa91edb3686f516154456e"
+      "sha256": "1507d3d1e0c624ca8c013e4857e808233e44418110627e688af1d4bacefb0580",
+      "lines": 132,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "bn/README.md",
@@ -139,7 +139,7 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "2a05b40b8f1080ca3a516a8078052466fac4fcc4c440e6db4cd12b6b0d4e9118",
+      "sha256": "26bd2a673b51178a535161520b918b32d363464306a61c44cd7e68625c70b79b",
       "lines": 132,
       "read_status": "pending",
       "read_sha256": null
@@ -155,10 +155,10 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "d39e0d8f92e7ee74d795e8c05e37bc8b6b29d2f747dc837a358847a2e3120680",
-      "lines": 189,
-      "read_status": "read",
-      "read_sha256": "d39e0d8f92e7ee74d795e8c05e37bc8b6b29d2f747dc837a358847a2e3120680"
+      "sha256": "324a9b2901ccd081041028c95e11f8df1ea53ebe41aee0534d6a01c71bc42e54",
+      "lines": 191,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/OPTIMIZATION.md",
@@ -171,8 +171,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "ed32fb954162ef835ef23e7caaa33e4747f145cdf8b77ed5bb20ee856dfe6af3",
-      "lines": 192,
+      "sha256": "68d7d435d424ed63692bcabf384d5456ddb344b90411f0246d2835d1e7df7ffe",
+      "lines": 193,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -227,8 +227,8 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "23f4b486eb5d0b662eba2b7f9aef5f228e564687b1c3fda752b4163bd73383c4",
-      "lines": 311,
+      "sha256": "277668306ced1329b15897fb3660376b151387da2c5aeb1a78a51b4bc582fbf8",
+      "lines": 314,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "8c72e84bb6861f070a991c73892ed679510aa3c2be44bcc68914e91812a51d4b",
-      "lines": 148,
+      "sha256": "cbe34934c8c61f26dba87c5082d09d759519688b21a2a7304cfc937f040afd1d",
+      "lines": 150,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2897,6 +2897,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-24-p4-terminal-broker-and-install-preview.md",
+      "kind": "narrative",
+      "sha256": "945c9dbb843f56db2f5a965eebec400c7be9637a6b71d00cf693c3c03c1594e4",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-24-virgl-stopped-status-correction.md",
       "kind": "narrative",
       "sha256": "5ec560ffee7664c3f3ff3115bf060e6335a4bf9dfd9ba8b328c51a4a8fa7fb7c",
@@ -3203,8 +3211,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "eb4b004c0bc5a5b14841478f98bcb6b3a622446265d9fcefba9420a37c15b060",
-      "lines": 207,
+      "sha256": "9c7f4e30509dc413ea973c1e7114b4335fd9ba66b06e719475135957bf1a43ac",
+      "lines": 208,
       "read_status": "pending",
       "read_sha256": null
     },

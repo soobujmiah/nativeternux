@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Native core updates now have a saved, exact preview-and-apply CLI flow; 899 tests pass (1 skipped). Durable artifact snapshots, shared-client parity, and clean setup/migration gates remain open.
+P4 CLI now exposes a read-only, exact-identity adoption preview for the existing Debian guest; full Native suite passes 908 tests (1 skipped). Guest package/config migration, cross-client install parity, and clean-device replay remain open.
 
-**Next action:** Design a maintainable Native package artifact snapshot/retention strategy and shared-client package lifecycle, then continue clean-device replay and existing-guest migration/rollback evidence.
+**Next action:** Implement preview-bound package/config adaptation for the existing guest and expose the same shared operation through TUI, authenticated Web, and GTK; retain the guest identity and verify rollback before apply.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -131,6 +131,7 @@ Evidence:
 - [docs/evidence/2026-10-24-virgl-stopped-status-correction.md](evidence/2026-10-24-virgl-stopped-status-correction.md)
 - [docs/evidence/2026-10-24-native-package-candidate-recheck.md](evidence/2026-10-24-native-package-candidate-recheck.md)
 - [docs/evidence/2026-10-24-native-update-preview-lifecycle.md](evidence/2026-10-24-native-update-preview-lifecycle.md)
+- [docs/evidence/2026-10-24-p4-terminal-broker-and-install-preview.md](evidence/2026-10-24-p4-terminal-broker-and-install-preview.md)
 
 ## P5 — Distro and display compatibility profiles
 

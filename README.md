@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native core updates now have a saved, exact preview-and-apply CLI flow; 899 tests pass (1 skipped). Durable artifact snapshots, shared-client parity, and clean setup/migration gates remain open.
+P4 CLI now exposes a read-only, exact-identity adoption preview for the existing Debian guest; full Native suite passes 908 tests (1 skipped). Guest package/config migration, cross-client install parity, and clean-device replay remain open.
 
-**Next action:** Design a maintainable Native package artifact snapshot/retention strategy and shared-client package lifecycle, then continue clean-device replay and existing-guest migration/rollback evidence.
+**Next action:** Implement preview-bound package/config adaptation for the existing guest and expose the same shared operation through TUI, authenticated Web, and GTK; retain the guest identity and verify rollback before apply.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
@@ -60,7 +60,7 @@ The CLI, TUI, authenticated Web UI, and GTK app use shared typed management serv
 The following are implemented, with acceptance limited to the cited target and evidence:
 
 - **Native Termux workstation:** preview-first package installation, desktop start/stop/status, health and capability reporting, service/boot controls, management clients, and managed SSH.
-- **Debian PRoot integration:** explicit inventory and verification routes, managed session handoff, and an existing-guest adoption record. Adoption records Native-side ownership metadata and does not itself change guest files.
+- **Debian PRoot integration:** `tx install debian` previews and records the existing Ternux Debian Trixie guest in Native Ternuxx state, preserving its rootfs and guest files. This initial route does not install missing packages; that migration and package lifecycle remains open.
 - **Fresh Debian Trixie setup:** a separate explicitly named guest can be created from a pinned image and Debian APT snapshot. Package groups can be selected for a preview; `base` is required. The exact package-version inventory is recorded, and a matching failed package stage can be resumed through a new exact preview. A 2026-10-23 disposable replay completed while preserving the existing default Debian guest; see [replay evidence](docs/evidence/2026-10-23-disposable-debian-replay.md).
 - **Cross-client management:** supported lifecycle and terminal operations share a typed service across CLI, TUI, authenticated Web, and GTK. Full action parity remains open.
 - **GPU and audio routes:** provider-specific detection and selected guest paths exist, but a route or installed driver alone does not prove that every GUI application is accelerated. See [GPU qualification](docs/testing/GPU-ACCELERATION.md) and [PRoot graphics](docs/PROOT-GPU.md).

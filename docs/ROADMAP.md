@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Design a maintainable Native package artifact snapshot/retention strategy and shared-client package lifecycle, then continue clean-device replay and existing-guest migration/rollback evidence.
+**Next action:** Implement preview-bound package/config adaptation for the existing guest and expose the same shared operation through TUI, authenticated Web, and GTK; retain the guest identity and verify rollback before apply.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->
@@ -162,18 +162,21 @@ See [Doctor, management, and recovery](OPERATIONS.md), [shared management plan](
 
 **Depends on:** P4 accepted existing-Debian provider behavior.
 
-**Goal:** define a small, evidence-backed compatibility profile for the actual supported target. Do not turn every distro, Android release, display server, or ABI into a release promise.
+**Goal:** build a versioned compatibility registry for every distro target exposed by the selected `proot-distro` provider, implementing Debian first. The existing Debian guest is reused in place: `tx install debian` configures the Ternuxx-managed profile inside that guest and does not create a second Debian rootfs. Preserve its rootfs identity and user data; each bounded package/configuration change requires an exact preview and explicit apply. Other distros use separate, uniquely named guest profiles. Since upstream supports named plugins and generic OCI images, discovery is limited to reviewed recipes; arbitrary image strings never become implicit installs.
 
 **Deliverables:**
-- Versioned profile for this device/runtime: Android 16, `aarch64`, current Termux/Termux:X11, Native XFCE, and the owner-selected Debian Ternux provider. Record exact versions and date each time they are refreshed.
-- Matrix fields for host OS/API, Termux version, ABI, provider/rootfs identity, display, audio, storage, graphics API/backend, and known limits.
-- Explicitly label all other Android/Termux/distro/display combinations as candidate or untested until they pass the same profile gate.
-- Keep existing Debian detection/reuse separate from any future isolated-distro installer. Preview exact package transactions, rootfs target, storage basis, and rollback before any install/remove action.
+- A machine-readable registry for every distro/plugin target available from the supported `proot-distro` version, recording source/image, release, architecture, package manager, snapshot/version strategy, package groups, graphics/audio handoff, lifecycle, and rollback. Debian is the first fully implemented recipe; other entries remain candidate/unverified until their recipes pass checks.
+- Preview-first distro selection such as `tx install debian`, exact apply, and distinct target policy: reuse the existing Debian guest; create a separate guest only for another selected distro. Never reset, replace, or silently mutate an existing rootfs.
+- One shared operation and package/workload catalog for CLI, TUI, authenticated Web, and GTK, with consistent preview, consent, progress, result, and recovery semantics.
+- Selectable Native desktop profiles beyond XFCE, plus distro-specific guest desktop/window-manager choices where the reviewed recipe supports them. Keep Android X11 transport separate from a guest desktop/window manager; do not call a window manager a display manager.
+- Provider-specific CPU/GPU/NPU status. Acceleration is supported only when the actual profile/workload has evidence; otherwise mark it unavailable or unverified.
+- Compatibility fields for host/API, Termux version, ABI, provider/rootfs identity, desktop/window manager, display transport, audio, storage, graphics API/backend, and limits.
 
 **Exit gate:**
-- Every advertised combination has install/start/stop/recovery and display/audio evidence at its advertised scope.
-- The current Debian provider is detected and reused; profile selection cannot reinstall or replace it.
-- Untested combinations are not shown as supported one-click options. This phase does not require broad distro coverage.
+- Debian in-place configuration preview/apply/recovery is verified against the exact existing guest while preserving its rootfs identity and user data; fresh-device setup follows the same profile without creating duplicate Debian installations.
+- The registry enumerates every target supplied by the supported `proot-distro` release; unqualified profiles cannot use an unreviewed generic install path.
+- Native and distro-specific desktop choices have verified package availability and install/start/stop/recovery plus display/audio evidence.
+- CLI, TUI, Web, and GTK share the qualified Debian install semantics; other profiles become installable as their gates pass.
 
 ## P6 — CPU/GPU/NPU capability, optimization, and fallback
 

@@ -377,13 +377,57 @@ finally:
 PYRECORD
 }
 
+_nt_install_debian() {
+  local action=preview guest_user="" plan_id="" option confirmed=0
+  while [ "$#" -gt 0 ]; do
+    option="$1"; shift
+    case "$option" in
+      preview) action=preview ;;
+      apply) action=apply; [ "$#" -gt 0 ] || { nt_fail "Usage: tx install debian apply PLAN_ID --yes [--user NAME]"; return 2; }; plan_id="$1"; shift ;;
+      --user) [ "$#" -gt 0 ] || { nt_fail "--user requires a Debian guest username."; return 2; }; guest_user="$1"; shift ;;
+      --yes) confirmed=1 ;;
+      *) nt_fail "Unknown Debian integration option: $option"; return 2 ;;
+    esac
+  done
+  nt_require_termux || return 1
+  nt_require_command python3 || return 1
+  if [ -z "$guest_user" ]; then
+    guest_user="$(PYTHONPATH="$_TN_LIB_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -c 'import os,proot_diagnostics; print(proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=os.environ["PREFIX"]))' 2>/dev/null)" || {
+      nt_fail "Could not resolve one Debian guest user safely; retry with --user NAME."; return 1;
+    }
+  fi
+  local repo_root; repo_root="$(cd -- "$_TN_LIB_DIR/.." && pwd -P)" || return 1
+  local -a setup_args=("$_TN_LIB_DIR/proot_setup.py" --repo-root "$repo_root" --json)
+  if [ "$action" = preview ]; then
+    [ -z "$plan_id" ] || { nt_fail "Preview does not accept a plan ID."; return 2; }
+    [ "$confirmed" = 0 ] || { nt_fail "Preview does not accept --yes."; return 2; }
+    setup_args+=(adopt-preview --user "$guest_user")
+  else
+    [ -n "$plan_id" ] && [[ "$plan_id" =~ ^[0-9a-f]{64}$ ]] || { nt_fail "Apply requires the 64-character ID from the matching Debian preview."; return 2; }
+    [ "$confirmed" = 1 ] || { nt_fail "Apply requires explicit --yes after reviewing the exact preview."; return 2; }
+    setup_args+=(adopt --user "$guest_user" --yes --plan-id "$plan_id")
+  fi
+  local result; result="$(python3 "${setup_args[@]}")" || return $?
+  if [ "${TERNUXX_JSON:-0}" = 1 ]; then
+    printf '%s\n' "$result"
+  else
+    printf '%s\n' "$result" | python3 "$_TN_LIB_DIR/proot_setup_present.py"
+  fi
+}
+
 nt_cmd_install() {
-  local apply=0 consent=0 update=0 arg plan_id=""
+  if [ "${1:-}" = debian ]; then
+    shift
+    _nt_install_debian "$@"
+    return $?
+  fi
+  local apply=0 consent=0 update=0 verbose=0 arg plan_id=""
   while [ $# -gt 0 ]; do
     arg="$1"; shift
     case "$arg" in
       --yes) apply=1; consent=1 ;;
       --update) update=1 ;;
+      --verbose) verbose=1 ;;
       preview) ;;
       update) update=1 ;;
       apply)
@@ -443,20 +487,22 @@ nt_cmd_install() {
     return 0
   fi
 
-  if [ "$update" = "1" ]; then
-    nt_info "Ternuxx Native core package update preview (official Termux repositories only):"
-  else
-    nt_info "Ternuxx base workstation package preview (official Termux repositories only):"
-  fi
-  printf '  %s\n' "${_NT_PLAN_VERSIONS[@]}"
-  nt_info "Resolved APT transaction (all changed packages, including dependencies):"
-  printf '  %s\n' "${_NT_PLAN_TRANSACTION[@]}"
-  nt_info "APT simulation only; no package state has changed."
-  printf '%s\n' "$_NT_PLAN_SIMULATION"
-  if [ "$update" = "1" ]; then
-    nt_info "Only the displayed core-package updates and their exact simulated dependencies can change; removals, recommendations, and repository changes are refused."
-  else
-    nt_info "No upgrades, removals, recommendations, or repository changes are allowed by this plan."
+  if [ "$apply" = "1" ] || [ "$verbose" = "1" ]; then
+    if [ "$update" = "1" ]; then
+      nt_info "Ternuxx Native core package update preview (official Termux repositories only):"
+    else
+      nt_info "Ternuxx base workstation package preview (official Termux repositories only):"
+    fi
+    printf '  %s\n' "${_NT_PLAN_VERSIONS[@]}"
+    nt_info "Resolved APT transaction (all changed packages, including dependencies):"
+    printf '  %s\n' "${_NT_PLAN_TRANSACTION[@]}"
+    nt_info "APT simulation only; no package state has changed."
+    printf '%s\n' "$_NT_PLAN_SIMULATION"
+    if [ "$update" = "1" ]; then
+      nt_info "Only the displayed core-package updates and their exact simulated dependencies can change; removals, recommendations, and repository changes are refused."
+    else
+      nt_info "No upgrades, removals, recommendations, or repository changes are allowed by this plan."
+    fi
   fi
 
   if [ "$apply" != "1" ]; then
@@ -469,11 +515,20 @@ nt_cmd_install() {
     fi
     local plan_id
     plan_id="$( _nt_compute_plan_id )" || return 1
+    if [ "$verbose" != "1" ]; then
+      local operation_label="install"
+      [ "$update" = "1" ] && operation_label="update"
+      nt_info "Native package $operation_label preview"
+      nt_info "Requested packages: ${#_NT_PLAN_VERSIONS[@]} · Resolved changes: ${#_NT_PLAN_TRANSACTION[@]}"
+      nt_info "Scope: official Termux repositories; no removals, recommendations, or unrelated upgrades."
+      nt_info "Preview only; no package changes have been made."
+      nt_info "Run 'tx install $([ "$update" = "1" ] && printf 'update ')preview --verbose' to review package versions and the full APT simulation."
+    fi
     nt_info "Preview ID: $plan_id"
     if [ "$update" = "1" ]; then
-      nt_info "After reviewing this exact update, apply with: tx install --update --yes --plan-id $plan_id"
+      nt_info "Apply after review: tx install update apply $plan_id"
     else
-      nt_info "After reviewing this exact transaction, apply with: tx install --yes --plan-id $plan_id"
+      nt_info "Apply after review: tx install apply $plan_id"
     fi
     if [ "$TERNUXX_JSON" = "1" ]; then
       local package_json

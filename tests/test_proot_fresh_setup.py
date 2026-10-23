@@ -434,6 +434,30 @@ class FreshProotSetupTests(unittest.TestCase):
                 plan_id=preview["plan_id"], confirmed=True,
                 runner=lambda *_a, **_k: self.fail("CA drift must fail before any install command"))
 
+    def test_password_is_stdin_only_and_never_persisted(self):
+        calls = []
+        received = {}
+        base_runner = self._fixture_runner(calls)
+        def runner(args, **kwargs):
+            if args[-1] == "/usr/sbin/chpasswd":
+                received.update(kwargs)
+                calls.append(args)
+                return SimpleNamespace(returncode=0)
+            return base_runner(args, **kwargs)
+        secret = "S3cure-Guest-Pass"
+        with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False), \
+             patch.object(proot_fresh_setup.shutil, "which", return_value="/prefix/bin/proot-distro"):
+            plan = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="chosen-user")
+            proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="chosen-user",
+                plan_id=plan["plan_id"], confirmed=True, runner=runner, password=secret)
+        command = next(args for args in calls if args[-1] == "/usr/sbin/chpasswd")
+        self.assertNotIn(secret, " ".join(command))
+        self.assertEqual(received["input"], f"chosen-user:{secret}\n")
+        persisted = "".join(path.read_text(errors="ignore") for path in self.state.rglob("*") if path.is_file())
+        self.assertNotIn(secret, persisted)
+
     def test_changed_manifest_and_existing_unowned_alias_fail_closed(self):
         preview = proot_fresh_setup.preview(
             repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),

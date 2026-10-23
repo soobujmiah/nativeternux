@@ -56,7 +56,7 @@
       "title": "Existing Ternux PRoot feature-parity provider",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "Native core updates now have a saved, exact preview-and-apply CLI flow; 899 tests pass (1 skipped). Durable artifact snapshots, shared-client parity, and clean setup/migration gates remain open.",
+      "summary": "P4 CLI now exposes a read-only, exact-identity adoption preview for the existing Debian guest; full Native suite passes 908 tests (1 skipped). Guest package/config migration, cross-client install parity, and clean-device replay remain open.",
       "evidence": [
         "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
         "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
@@ -127,9 +127,10 @@
         "docs/evidence/2026-10-24-native-suite-and-url-verification.md",
         "docs/evidence/2026-10-24-virgl-stopped-status-correction.md",
         "docs/evidence/2026-10-24-native-package-candidate-recheck.md",
-        "docs/evidence/2026-10-24-native-update-preview-lifecycle.md"
+        "docs/evidence/2026-10-24-native-update-preview-lifecycle.md",
+        "docs/evidence/2026-10-24-p4-terminal-broker-and-install-preview.md"
       ],
-      "next_action": "Design a maintainable Native package artifact snapshot/retention strategy and shared-client package lifecycle, then continue clean-device replay and existing-guest migration/rollback evidence."
+      "next_action": "Implement preview-bound package/config adaptation for the existing guest and expose the same shared operation through TUI, authenticated Web, and GTK; retain the guest identity and verify rollback before apply."
     },
     {
       "id": "P5",

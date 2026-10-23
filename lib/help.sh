@@ -78,6 +78,7 @@ EOF
       cat <<'EOF'
 tx terminal serve — Run the Native Termux terminal broker in the foreground
 tx terminal service status|preview-install|install — Manage its previewed Runit service
+tx terminal service socket preview|recover — Inspect and recover an exact stale broker socket
 tx terminal status — Read the optional broker status
 tx terminal start — Preview, confirm, and attach to the fixed Debian login
 tx terminal attach SESSION_ID — Attach to one Ternuxx-owned session
@@ -89,6 +90,11 @@ same-UID peer, bounded terminal bytes, and exact preview-bound session actions.
 The attach key Ctrl-] detaches the client without closing the guest. Broker
 shutdown closes its PTY and records unknown state; it never signals the guest.
 PRoot remains optional and no current guest is adopted by this command.
+
+If the broker service cannot start because its private socket is stale, inspect
+the exact socket with `tx terminal service socket preview`, then remove only the
+unchanged refused socket with `tx terminal service socket recover --yes --plan-id ID`.
+Active listeners, unknown socket states, and changed identities are never removed.
 EOF
       ;;
 
@@ -536,17 +542,19 @@ EOF
       ;;
     install)
       cat <<'EOF'
-tx install — Preview, install, or update Native workstation prerequisites
+tx install — Manage Native prerequisites and integrate the existing Debian guest
 
-Short form: tx install preview
-Update preview: tx install update preview
-Apply a reviewed install: tx install apply PLAN_ID
-Apply a reviewed update: tx install update apply PLAN_ID
+Native package preview: tx install preview [--verbose]
+Native update preview: tx install update preview [--verbose]
+Apply Native plan: tx install apply PLAN_ID
+Apply Native update: tx install update apply PLAN_ID
+Debian integration preview: tx install debian [preview] [--user NAME]
+Record reviewed Debian integration: tx install debian apply PLAN_ID --yes [--user NAME]
 
 By default, validates recent official Termux package indexes and prints a
-constrained APT simulation. It does not refresh package indexes or change
-packages. The install plan includes the Native PRoot manager and base desktop
-package set; it does not install, replace, or modify a Debian rootfs. Install
+concise summary of a constrained APT simulation. Use --verbose for the full
+package list and simulation. It does not refresh indexes or change packages.
+The Native install plan includes the PRoot manager and desktop prerequisites; it does not modify a Debian rootfs. Debian integration previews and records the existing guest profile without changing guest files or packages; missing guest packages are not installed by this first integration path. Install
 refuses removals, upgrades, recommendations, or packages outside official repos.
 
 Use `tx install update preview` for upgrades of installed Ternuxx core packages.
@@ -555,6 +563,8 @@ dependency transaction, and require review plus the matching `apply PLAN_ID`.
 Update refuses removals, downgrades, and non-official package sources. The
 preview binds the current repository metadata and transaction; it is not a
 durable artifact mirror or a guarantee that old package files remain available.
+Both preview forms save the same complete record under the private Ternuxx
+state directory. Apply rebuilds the plan and requires an exact match.
 
 Each full dependency preview is saved under the private Ternuxx state directory
 at install-transactions/. Apply rebuilds the plan and requires an exact match to
