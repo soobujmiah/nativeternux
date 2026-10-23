@@ -46,11 +46,12 @@ Implementation is incremental. CLI, TUI, the authenticated loopback Web client, 
 - The TUI, Web UI, and Graphical UI work through the same operation contract without separate business rules or direct filesystem/shell access.
 - Routine setup and configuration can be completed without CLI knowledge, using clear preview, confirmation, progress, and recovery flows.
 - Native Termux and PRoot resources are presented together but remain explicitly provider-scoped; actions cannot silently cross provider boundaries.
-- Browser bootstrap and API mutation remain disabled until their end-to-end security and device acceptance gates pass.
+- Local browser bootstrap and authenticated API mutations are enabled only for individually reviewed scopes whose authentication, CSRF, idempotency, operation contract, and target acceptance have passed. The current loopback Web client supports one-use bootstrap and selected mutations; remaining mutation coverage, full four-client parity, and off-home transport remain separately gated.
 
 ## Evidence
 
 - [Master Phase 0 audit](../../evidence/PHASE-0-MASTER-AUDIT.md)
 - [Unified workstation proposal](../UNIFIED-WORKSTATION.md)
 - [Management API proposal](../MANAGEMENT-API.md)
+- [Current authenticated Web mutation scope](../MANAGEMENT-API.md) and [replay-guest Web lifecycle evidence](../../evidence/2026-10-22-web-replay-guest-retirement.md)
 - Current source locations: `bin/tx`, `lib/management_service.py`, and the client modules linked by the capability matrix.

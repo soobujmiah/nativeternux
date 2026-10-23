@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 442,
-  "read_count": 113,
+  "read_count": 114,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -387,18 +387,18 @@
     {
       "path": "docs/architecture/decisions/ADR-0004-three-interfaces-shared-management.md",
       "kind": "narrative",
-      "sha256": "0930b26f2d8082e1c8a37268bb8942612e4138d626cb01f541b52495c3a8136d",
-      "lines": 56,
+      "sha256": "c9e12d05da0be449193b2feeffbe5c986d9b6b511af1ce98df527a6b76a4a1fa",
+      "lines": 57,
       "read_status": "read",
-      "read_sha256": "0930b26f2d8082e1c8a37268bb8942612e4138d626cb01f541b52495c3a8136d"
+      "read_sha256": "c9e12d05da0be449193b2feeffbe5c986d9b6b511af1ce98df527a6b76a4a1fa"
     },
     {
       "path": "docs/architecture/decisions/ADR-0005-capability-permission-and-task-model.md",
       "kind": "narrative",
-      "sha256": "7fbeebf6fcbdeaab68b5588ad0f3bbdd97138e303e1a79d8333f8ec7633aa1b6",
+      "sha256": "c649a1a9084dc08ee2abaabc73877a08ae519c3abafa55349fea8be244b5354d",
       "lines": 65,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "c649a1a9084dc08ee2abaabc73877a08ae519c3abafa55349fea8be244b5354d"
     },
     {
       "path": "docs/architecture/decisions/ADR-0006-adapt-existing-ternux-provider.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "303ed12e99027946e17fc8561cd72c43b6f75323b0fb62c93559b1aaa8169d39",
-      "lines": 139,
+      "sha256": "a19735382e9f5266c146b036b1b855f36da4e838446daa4e2bcb1ff471a2d076",
+      "lines": 140,
       "read_status": "read",
-      "read_sha256": "303ed12e99027946e17fc8561cd72c43b6f75323b0fb62c93559b1aaa8169d39"
+      "read_sha256": "a19735382e9f5266c146b036b1b855f36da4e838446daa4e2bcb1ff471a2d076"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",

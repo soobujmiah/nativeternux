@@ -6,7 +6,7 @@
 
 ## Context
 
-The product may integrate native Termux, Android APIs, Termux:Boot, Shizuku, Accessibility, the independent Debian PRoot, AI providers, local models, and future extensions. An installed companion APK, detected device node, or successful setup screen does not prove that a specific operation is authorized or works. Long package/model/runtime/benchmark tasks need consistent progress, cancellation and recovery semantics in all three interfaces.
+The product may integrate native Termux, Android APIs, Termux:Boot, Shizuku, Accessibility, the independent Debian PRoot, AI providers, local models, and future extensions. An installed companion APK, detected device node, or successful setup screen does not prove that a specific operation is authorized or works. Long package/model/runtime/benchmark tasks need consistent progress, cancellation and recovery semantics across management clients (CLI, TUI, Web, and GTK).
 
 ## Proposed decision
 
