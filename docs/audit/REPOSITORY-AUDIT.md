@@ -93,6 +93,8 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 
 | A52 | Unified-workstation design proposal still presented 2026-10-17 plans as current, including no PRoot adapter, no GTK toolkit choice, and a blanket PRoot modification ban | Marked the old proposal baseline explicitly, linked current phase/capability/API authorities, updated Native/PRoot/GTK status, and clarified the active owner-approved guest-config scope and preserved rootfs/source-repository boundaries. AI/model and other unimplemented proposals remain labeled. |
 
+| A54 | Hybrid integration guide presented an unimplemented cross-provider SSH CLI and blanket read-only authorization gate as current, and omitted the owner-approved PRoot config scope | Labeled proposal/status boundaries, documented the implemented Native SSH command and honest PRoot limits, noted current db/droot routing, and clarified task-specific preview/rollback authorization while retaining Native-boot independence and independent guest SSH boundaries. |
+
 ## Continuation order
 
 1. Native UI/GTK SSH key-control remediation, install identity, Native read-only preview, push and CI are complete; the running 720×980 Services/SSH screens have now had a read-only visual pass. Key dialogs, action scrolling and smaller GTK viewports remain unverified; the Web UI now has visible Firefox acceptance.

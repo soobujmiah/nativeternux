@@ -1,5 +1,7 @@
 # Native and PRoot end-to-end integration
 
+**Document status (rechecked 2026-10-23):** This contains current provider-boundary requirements plus older proposed workflows. Follow current CLI help, phase status, and the capability matrix for implemented commands. The cross-provider SSH CLI and boot-profile sketches below are not current features. The owner-approved full-repository task separately permits exact, previewed, and reversible Native/existing-Debian config changes.
+
 Native Termux is the primary workstation and authoritative owner of native SSH, native services, boot recovery, lifecycle, and persistent continuity evidence. The existing Debian PRoot is an integrated but independently managed development/execution provider. They keep separate package managers, runtime libraries, configuration, and ownership; Ternuxx connects them through explicit, narrow interfaces. Native boot and recovery must work with PRoot stopped, unavailable, or without an agent running inside it.
 
 ## End-to-end flow
@@ -16,7 +18,7 @@ Native Termux manager ── native SSH, services, Doctor, continuity journal, r
           └── selected workspace + bounded, authorized workload requests
 ```
 
-Native recovery and selected native services run independently. A separate optional profile may request a desktop or PRoot workload after native readiness; failure of that optional work does not fail native SSH or continuity recording. The desktop choice is:
+Native recovery and selected native services run independently. A separate optional profile may request a desktop or PRoot workload after native readiness; failure of that optional work does not fail native SSH or continuity recording. The table shows design choices; PRoot/hybrid boot-profile support remains blocked pending ownership-safe startup integration. The desktop choice is:
 
 | Profile | Desktop owner | PRoot use | Display policy |
 |---|---|---|---|
@@ -30,7 +32,7 @@ The `proot` and `hybrid` rows describe optional workload/desktop choices, not bo
 
 | Boundary | Host-to-guest path | Guest-to-host return path | Rule |
 |---|---|---|---|
-| Boot and services | Termux:Boot starts the native orchestrator and native-owned services first; it may then request an explicitly selected PRoot workload | Native continuity/status is recorded even if PRoot is unavailable; optional guest results return with status, logs, exit code, and operation ID | PRoot never gates native recovery. Never run an interactive GUI launcher as a boot command. `tx db` is the managed CLI path; bare shell aliases may bypass it and are treated as external configuration. |
+| Boot and services | Termux:Boot starts the native orchestrator and native-owned services first; it may then request an explicitly selected PRoot workload | Native continuity/status is recorded even if PRoot is unavailable; optional guest results return with status, logs, exit code, and operation ID | PRoot never gates native recovery. Never run an interactive GUI launcher as a boot command. `tx db` is the managed CLI path; the current `db`/`droot` aliases delegate to it, while the `x`/`xgo` launch wrappers remain separately scoped. |
 | SSH access | Native Termux `sshd` and Debian PRoot `sshd` have separate service identities, configs, host keys, authorized-key files, ports, and boot settings | Each endpoint reports its own listener, auth mode, clients (when safely observable), logs, and lifecycle state | Same Android network namespace: reserve distinct ports and report bind address. Default loopback; LAN access is explicit opt-in. CLI and GUI use one shared manager. |
 | Commands and apps | Native CLI selects a provider and passes argv, work directory, and an allowlisted environment to a guest command | Streamed output, result files, exit status, and signal status return to the caller | No shell-string concatenation or arbitrary guest-to-host shell execution. |
 | Files | Bind only a Ternuxx workspace or a user-selected input/output path | Guest outputs land in the selected workspace; Termux:API can share a chosen file | No blanket `/sdcard`, Termux home, SSH key, or `.config` access. Bind read-only for inputs where practical. |
@@ -48,28 +50,21 @@ The Termux host SSH service and Debian guest SSH service are separate providers.
 
 ADB is also provider-scoped: the owner reports that its binaries are in PRoot, not native Termux, and that its Wireless Debugging connection plus a custom Shizuku watchdog currently restart Shizuku after reboot. This is owner-reported runtime behavior; exact fork/build and boot behavior have not been inspected. The future PRoot ADB server on TCP 5037 and Android's Wireless Debugging `adbd` endpoint are different connections: 5037 is the local ADB client-to-server port, while Wireless Debugging uses a separate device endpoint. So an ADB server on 5037 does not itself preserve the Wireless Debugging endpoint or replace Shizuku. The Ternuxx management TCP API is a third, separate service. ADB discovery must first inventory the selected guest read-only; if an ADB server is later enabled, its default is loopback-only, explicit opt-in, and no boot auto-start. Neither ADB reachability nor SSH login grants Ternuxx management authorization. See [ADR-0014](architecture/decisions/ADR-0014-proot-adb-and-management-tcp.md) for implementation gates and management service requirements.
 
-Planned CLI contract:
+Native SSH management currently uses the fixed Ternuxx service on loopback port 8023.
 
-```text
-ternuxx ssh status
-ternuxx ssh status --provider native
-ternuxx ssh status --provider proot
-ternuxx ssh start --provider native
-ternuxx ssh stop --provider proot
-ternuxx ssh logs --provider native
-ternuxx ssh boot enable --provider proot
-ternuxx ssh boot disable --provider native
-```
+Commands: tx ssh inspect; tx ssh start (read-only preview); tx ssh start --yes --plan-id PLAN_ID (apply the exact preview).
 
-The host CLI can inspect both providers and manage a guest service only through the ownership-aware PRoot adapter. A CLI running inside Debian defaults to guest-local status/control. A PRoot agent may reach native SSH for an explicitly authorized bounded diagnostic/management operation; it must not gain arbitrary host shell access from connectivity alone. Any cross-provider control names its target explicitly, verifies authorization at the target boundary, applies a timeout, and returns a structured result. If PRoot is unavailable, native SSH and services remain operational and only the guest operation fails. If an unmanaged `sshd` already owns a port or process, report it and refuse takeover until the user selects an explicit adoption/migration flow.
+Guest SSH on Debian remains separate; the cross-provider --provider commands proposed in the original design are not implemented. The Native CLI can inspect Native SSH and inventory/verify PRoot, but it does not adopt or manage an independently configured guest sshd. No CLI running inside Debian is a Ternuxx runtime dependency. Any future guest service control must use a fixed typed operation, exact target, authorization, timeout, and structured result.
 
-GUI settings and service pages call the same validated service manager as the CLI. They must show provider, service state, bind address, port, authentication mode, boot state, logs, and the last operation result. Start/stop/boot enablement has the same preview and confirmation in both interfaces. GUI buttons never run raw shell text or silently change configuration. Changes made in CLI appear in GUI status and vice versa.
+The current Web/TUI/GTK clients use shared typed services for implemented actions. Guest SSH settings, key/lifecycle controls, and parity across all clients remain separate P4 work.
 
-The default profile uses key authentication, denies root login, and binds loopback for local device access. A user can explicitly select LAN access after reviewing exposure and network binding; the manager must not enable a public listener by default. Host and guest keys are never copied or shared automatically. Do not put private keys, passwords, or pairing material in Ternuxx logs or backups. If OpenSSH is missing in a provider, keep local GUI/CLI control available and show the package preview for that provider without switching to the other SSH service.
+Current Native SSH controls use the shared typed service contract across supported clients. Any future Debian guest SSH page must show its provider, state, bind address, port, auth mode, boot policy, and last operation, and use exact preview/confirmation for changes. No GUI may run raw shell text or silently alter guest configuration.
+
+The fixed Ternuxx Native SSH service uses public-key authentication, denies root login, and binds to loopback. Its current profile does not configure Debian guest SSH. Host and guest keys must never be copied or shared automatically; any future LAN listener requires a separate explicit exposure review. Do not put private keys, passwords, or pairing material in Ternuxx logs or backups. If OpenSSH is missing in a provider, keep local GUI/CLI control available and show the package preview for that provider without switching to the other SSH service.
 
 ## Shared workspace contract
 
-The first bridge should be one clearly named Ternuxx workspace, not the whole Termux home. Commands name input/output paths below that root. A run record stores provider, argv as an array, working directory, environment allowlist, start time, exit result, and output paths. Secrets are not copied across by default. Users can add a deliberate mount later with a preview and read-only option.
+A future file/workspace bridge should use one clearly named Ternuxx workspace, not the whole Termux home. Commands name input/output paths below that root. A run record stores provider, argv as an array, working directory, environment allowlist, start time, exit result, and output paths. Secrets are not copied across by default. Users can add a deliberate mount later with a preview and read-only option.
 
 ## Continuity and resource ownership
 
@@ -85,7 +80,9 @@ The host owns the X11 server and optional host PulseAudio endpoint for a selecte
 
 PRoot does not provide the same PID, network, IPC, cgroup, or security isolation as a kernel container. The manager must describe this as a Linux userland/compatibility layer, not a sandbox boundary. It cannot promise that systemd works inside the guest.
 
-## Delivery sequence
+## Historical delivery proposal
+
+The following sequence is retained from the earlier architecture proposal and does not replace the current P0–P10 roadmap or its active P4 phase.
 
 1. **Boot and lifecycle:** native, PRoot, and hybrid profiles; owner tracking; one display/service owner; safe logs and recovery journal.
 2. **PRoot parity:** preserve the Ternux Debian rootfs and its exact verified graphics/session environment through a separate adapter; read-only discovery before any command.
@@ -93,7 +90,7 @@ PRoot does not provide the same PID, network, IPC, cgroup, or security isolation
 4. **Workflow routing:** app catalog and installer show provider; Doctor and optimization report each provider; hybrid workflow rules explain where commands and data run.
 5. **Capability proof:** run the same suitable workload in native and PRoot separately, record actual renderer/delegate, correctness, thermal/power state, and limitations. Do not infer parity from one successful layer.
 
-Each step is gated on a read-only compatibility check first. Device-changing work, installing add-on APKs, changing Android permissions, and testing boot settings require explicit owner authorization. Until then, implementation stays within repository changes or disposable fixtures.
+Each device-changing step needs an exact target/impact preview and rollback. The active full-repository task is explicit owner authorization for task-required Native and existing Debian configuration work under those bounds. Add-on APK installs, Android permission changes, and unrelated boot changes remain outside this task.
 
 
 ## Debian GUI modes managed by Ternuxx
