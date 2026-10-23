@@ -1,0 +1,7 @@
+event_id: commit-e246a8b96b77-4da2444d1ecd3b24
+repository: soobujmiah/ternuxx
+commit: e246a8b96b77d89ac6b434523695252041cbd89f
+kind: commit
+occurred_at: '2026-10-23T17:44:26Z'
+status: completed
+summary: 'docs: clarify installation reproducibility scope'
