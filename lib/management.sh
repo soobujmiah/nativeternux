@@ -9,7 +9,7 @@ nt_cmd_management() {
       case "$action" in
         status) python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.status --provider "$provider" --json ;;
         verify) python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.verify --provider "$provider" --graphics-api "$api" --display "$display" --json ;;
-        select) [ "$provider" = native ] || { nt_fail "Only Native Termux backend selection is managed; Debian remains under its existing Ternux configuration."; return 2; }; python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.select --provider native --graphics-backend "$api" --yes --json ;;
+        select) [ "$provider" = native ] || { nt_fail "Debian backend selection is not supported here; use Ternuxx Debian status and verification operations."; return 2; }; python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.select --provider native --graphics-backend "$api" --yes --json ;;
         *) nt_fail "Usage: tx mng graphics status {native|debian} | verify {native|debian} {opengl|gles|vulkan} [:N]"; return 2 ;;
       esac
       ;;

@@ -638,7 +638,7 @@ def check_proot_inventory() -> None:
     else:
         observed = "proot-distro inventory query failed or was unrecognized; provider inventory unknown"
     add("NTX-PROOT-001", "info", "proot-provider", observed,
-        "Installed distribution inventory does not prove Ternux ownership or a running guest; use an ownership-aware adapter before management.")
+        "Installed distribution inventory does not prove ownership of the rootfs or any running guest process; Ternuxx exposes only fixed, target-validated guest operations.")
 
 
 def graphics_probe() -> None:

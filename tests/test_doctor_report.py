@@ -331,7 +331,9 @@ class DoctorReportTest(unittest.TestCase):
         self.assertEqual(finding["severity"], "info")
         self.assertIn("debian", finding["observed"])
         self.assertIn("ownership unverified", finding["observed"])
-        self.assertIn("does not prove Ternux ownership", finding["suggested_action"])
+        self.assertIn("does not prove ownership of the rootfs", finding["suggested_action"])
+        self.assertIn("fixed, target-validated guest operations", finding["suggested_action"])
+        self.assertNotIn("use an ownership-aware adapter before management", finding["suggested_action"])
 
     def test_doctor_continues_when_optional_proot_manager_is_missing(self):
         doctor_report.FINDINGS.clear()
