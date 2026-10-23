@@ -1,0 +1,7 @@
+event_id: commit-f4b57dbbfc1b-604f108c5f2aac0b
+repository: soobujmiah/ternuxx
+commit: f4b57dbbfc1bd57576112b4e512b506d73461ef1
+kind: commit
+occurred_at: '2026-10-23T05:16:52Z'
+status: completed
+summary: 'fix: add _nt_use library loader to lib/core.sh'
