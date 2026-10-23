@@ -120,6 +120,7 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A76 | SSH lifecycle guide described 2026-10-22 inspection/authentication evidence as current even though the service wrapper was repaired on 2026-10-23 | Dated the observations and explicitly retained post-repair authenticated access as unverified; aligned current summary with Operations. |
 | A77 | PRoot session guidance repeated the normal-login hook's possible write effect and left owner-specific alias migration without a nearby evidence link | Kept the warning once, linked the dated Native alias migration evidence, and retained the distinction between tx db and the tracked broker profile. |
 | A78 | Interactive terminal P4 checklist still listed visible browser review as open after the recorded Firefox acceptance passed | Replaced the obsolete gate with the unclosed work: provider/configuration, clean-device/full-workstation reproducibility, preservation, and full Web mutation/client parity. |
+| A79 | Current handoff presented 2026-10-23 suite counts as latest after the 2026-10-24 Native run reached 894/1 skip | Labeled older runs as historical snapshots and added the latest full-suite and focused PRoot adoption results with their scope limit. |
 
 
 ## Continuation order
