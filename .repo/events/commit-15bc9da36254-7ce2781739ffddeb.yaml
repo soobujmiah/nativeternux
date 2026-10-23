@@ -1,0 +1,7 @@
+event_id: commit-15bc9da36254-7ce2781739ffddeb
+repository: soobujmiah/ternuxx
+commit: 15bc9da36254fd1958a50173ad06bed749e6d3d0
+kind: commit
+occurred_at: '2026-10-23T21:30:12Z'
+status: completed
+summary: 'fix(proot): follow manifest Turnip install paths'
