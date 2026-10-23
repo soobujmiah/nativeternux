@@ -1,0 +1,7 @@
+event_id: commit-2d0debf599b6-e04fc9f645d7f163
+repository: soobujmiah/ternuxx
+commit: 2d0debf599b69d5238d1be81ba755819f71a4c60
+kind: commit
+occurred_at: '2026-10-23T18:38:31Z'
+status: completed
+summary: 'docs: clarify Native independence from PRoot'
