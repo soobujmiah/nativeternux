@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 103,
+  "read_count": 104,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -235,10 +235,10 @@
     {
       "path": "docs/SOFTWARE-CATALOG.md",
       "kind": "narrative",
-      "sha256": "fb73adc5ec33eccb6f50e90d426948e77e5efa90e6f2dd77363949b0ee6642d5",
+      "sha256": "53ba6ed3e036312c72dc1e3170e5936ef576921a48c842b6c406344a31a3dc04",
       "lines": 107,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "53ba6ed3e036312c72dc1e3170e5936ef576921a48c842b6c406344a31a3dc04"
     },
     {
       "path": "docs/WINE-NATIVE.md",

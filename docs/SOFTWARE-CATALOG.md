@@ -71,7 +71,7 @@ The existing Ternux Debian guest is the first PRoot provider and remains indepen
 | Provider/profile | Current classification | Requirements before promotion |
 |---|---|---|
 | Termux-native | Primary native provider | Package source/version, ABI, desktop/runtime dependencies, Android integration limits, and a device launch record |
-| Existing Ternux Debian PRoot | Owner's established provider; integration is planned | Read-only identity/behavior check, exact launch environment, ownership-safe adapter, renderer/workload evidence, and parity check |
+| Existing Ternux Debian PRoot | Owner's established provider; Ternuxx has an implemented management adapter for inventory, verification, terminal, shortcuts, and selected configuration | Continue qualifying exact launch environments, renderer/workload evidence, and repeatable parity before claiming app-level support |
 | Additional Debian-based PRoot profile | Candidate only | Separate identity/rootfs, supported bootstrap source, measured size, install/recovery/upgrade/removal tests on a disposable profile |
 | Other PRoot distributions | Research only until individually qualified | Official bootstrap path, package lifecycle, architecture coverage, desktop/display/audio and accelerator test matrix |
 | Chroot/container/rooted providers | Outside initial scope | Separate security, privilege, boot, backup, and root-management design; never imply PRoot provides kernel isolation |
