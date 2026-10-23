@@ -1,0 +1,7 @@
+event_id: commit-789a94220043-ef10765f56960475
+repository: soobujmiah/ternuxx
+commit: 789a94220043ff02cbda7aa4f437f72356a8ab62
+kind: commit
+occurred_at: '2026-10-23T14:58:28Z'
+status: completed
+summary: 'docs: record verified managed SSH recovery'
