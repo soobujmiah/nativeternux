@@ -1,0 +1,7 @@
+event_id: commit-b9cc50fbefae-3ce3cd9cb1ad821c
+repository: soobujmiah/ternuxx
+commit: b9cc50fbefae956bb79d7e6284e7d91373d4be93
+kind: commit
+occurred_at: '2026-10-23T18:01:42Z'
+status: completed
+summary: 'docs: align API SSH status with delivered controls'
