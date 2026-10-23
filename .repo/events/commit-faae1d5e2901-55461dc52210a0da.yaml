@@ -1,0 +1,7 @@
+event_id: commit-faae1d5e2901-55461dc52210a0da
+repository: soobujmiah/ternuxx
+commit: faae1d5e2901ee76d81117bc9130633f9e7eed68
+kind: commit
+occurred_at: '2026-10-23T19:37:43Z'
+status: completed
+summary: 'fix(virgl): report stopped owner state consistently'
