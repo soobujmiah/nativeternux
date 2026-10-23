@@ -1,0 +1,7 @@
+event_id: commit-d07b52887589-8b5e3e3862e76ff8
+repository: soobujmiah/ternuxx
+commit: d07b5288758923fa1d810544f8c3e744f4060000
+kind: commit
+occurred_at: '2026-10-23T18:22:04Z'
+status: completed
+summary: 'ci: avoid duplicate pull request validation suite'
