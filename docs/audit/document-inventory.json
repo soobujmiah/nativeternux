@@ -523,18 +523,18 @@
     {
       "path": "docs/audit/PHASE-REVALIDATION.md",
       "kind": "narrative",
-      "sha256": "da4f3d15e651ec8df4784d7b3a4850c931a478520ccc30d5420771ca6c4f7cee",
+      "sha256": "a8e68856ce40634eda8d5c59d3de4d116e08dbfe28781b9e5a541e14fb32e2ee",
       "lines": 38,
       "read_status": "read",
-      "read_sha256": "da4f3d15e651ec8df4784d7b3a4850c931a478520ccc30d5420771ca6c4f7cee"
+      "read_sha256": "a8e68856ce40634eda8d5c59d3de4d116e08dbfe28781b9e5a541e14fb32e2ee"
     },
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "4fdb9d98e6b6a6fdbe350ec617deb331ab1261f8f6cd5081bfc322a28872959f",
-      "lines": 124,
+      "sha256": "a74f8822be2a9b25d18ecbe85989efd648071fa424f83b31c15784f73c0ee8f6",
+      "lines": 125,
       "read_status": "read",
-      "read_sha256": "4fdb9d98e6b6a6fdbe350ec617deb331ab1261f8f6cd5081bfc322a28872959f"
+      "read_sha256": "a74f8822be2a9b25d18ecbe85989efd648071fa424f83b31c15784f73c0ee8f6"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
