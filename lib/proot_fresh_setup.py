@@ -164,7 +164,7 @@ _PACKAGE_GROUPS = ("base", "desktop-compat", "development", "desktop-apps", "fon
 
 def _selected_groups(groups: list[str] | None) -> list[str]:
     if groups is None:
-        return list(_PACKAGE_GROUPS)
+        return ["base"]
     if not isinstance(groups, list) or not groups:
         raise FreshSetupError("select base and only known, non-duplicate Debian package groups")
     if any(not isinstance(group, str) or group not in _PACKAGE_GROUPS for group in groups):

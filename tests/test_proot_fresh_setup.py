@@ -405,6 +405,11 @@ class FreshProotSetupTests(unittest.TestCase):
 
     def test_package_groups_are_selectable_but_base_is_required(self):
         with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
+            default_plan = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj")
+            self.assertEqual(default_plan["operation"]["package_groups"], ["base"])
+            manifest = json.loads((self.repo / "config/proot/debian-trixie.json").read_text())
+            self.assertEqual(default_plan["operation"]["packages"], manifest["packages"]["base"])
             plan = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj", groups=["base", "fonts"])
             operation = plan["operation"]

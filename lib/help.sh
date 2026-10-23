@@ -460,9 +460,11 @@ non-root account from Debian passwd; unsafe paths or ambiguous accounts fail
 closed. The old Debian guest and Native Ternux CLI command files were retired after exact hash-bound previews. Their private snapshots were later purged at the owner's request; rollback is no longer available for those retired files. No PRoot signal or rootfs replacement occurred. The Ternuxx replacement is `tx proot verify` and the shared guest diagnostics. A prior-name recovery compatibility path was retained at that checkpoint. The Ternuxx-owned setup profile and read-only adoption record are managed with
 tx proot setup. Adoption writes only a private Native Ternuxx state record; it
 does not change guest files, packages, services, or desktop lifecycle. Fresh provisioning creates the default `debian` alias only when it is absent and never
-changes the existing `debian` rootfs. Preview lists package groups, image tag,
-space available, and exact plan ID. Apply creates the new alias, installs the
-manifest package groups, locale, and user, then records installed package
+changes the existing `debian` rootfs. Fresh previews default to the required
+`base` package group; select optional groups explicitly with `--groups`. A failed-plan
+resume inherits its recorded groups unless a new selection is supplied. Preview lists
+package groups, image tag, space available, and exact plan ID. Apply creates the new
+alias, installs the selected manifest packages, locale, and user, then records installed package
 version evidence. Fresh provisioning uses the pinned Debian image content and
 APT snapshot in the repository manifest; the installed package-version inventory
 is recorded for that run. Byte-identical guest rebuilds across different hosts

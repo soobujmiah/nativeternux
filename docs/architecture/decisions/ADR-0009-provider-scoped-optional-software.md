@@ -1,7 +1,7 @@
 # ADR-0009: Provider-scoped optional software selection
 
 - **Date:** 2026-10-17
-- **Status:** Owner requirement recorded; implementation pending
+- **Status:** Partial implementation — fresh Debian package groups are selectable in the CLI and were replayed on-device; Native optional workload selection and shared CLI/Web/GTK/TUI catalog parity remain open
 - **Type:** installation-and-package-management
 
 ## Context
@@ -28,12 +28,14 @@ Model optional software as catalogued, provider-scoped selections. Installation 
 
 ## Consequences
 
-This requires a maintained software catalog and provider package adapters, not just installer flags. It keeps package ownership clear and allows later UI parity. It also requires explicit definition of which PRoot instance is being targeted and safeguards against writing into the protected Ternux guest. Optional packages can fail independently, so the operation model must expose partial success and recovery guidance.
+The fresh Debian Trixie setup path supports package-group selection in its CLI preview and confirmed apply. A new plan defaults to `base` only; additional groups must be selected explicitly, and a failed-plan resume inherits its recorded group selection. The dated disposable replay selected all five groups and verified 50 requested packages on this device. This is not the shared provider-scoped optional catalog described above: Native optional workloads, saved desired profiles, and Web/GTK/TUI parity remain unimplemented. Existing-guest package migration remains separate and unimplemented. See the [2026-10-23 replay evidence](../../evidence/2026-10-23-disposable-debian-replay.md).
 
 ## Acceptance criteria
 
+The implementation status below is evaluated against current source and dated evidence; the acceptance criteria remain open unless explicitly qualified here.
+
 1. Install preview displays Native and PRoot changes separately, including repositories and dependency resolution where available.
-2. Core-only is the non-interactive default; optional software is selected explicitly per provider.
+2. Core-only is the non-interactive default; optional software is selected explicitly per provider. **PRoot fresh setup now defaults to `base` only**, but Native optional selection and cross-provider catalog selection remain open.
 3. A catalog ID cannot cause execution of arbitrary shell text or cross-provider fallback.
 4. Existing Ternux rootfs/launcher is never selected or modified implicitly.
 5. CLI, Web, and X11 interfaces produce the same plan from the same provider selections.
