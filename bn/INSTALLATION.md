@@ -88,10 +88,10 @@ cd "$HOME/ternuxx"
 শুধু সঠিক পূর্বরূপ ID নিয়ে ইনস্টল করুন:
 
 ```sh
-./tx proot setup fresh-install --user YOUR_DEBIAN_USERNAME --alias ternuxx-replay-demo --yes --plan-id PLAN_ID
+./tx proot setup fresh-install --yes --plan-id PLAN_ID
 ```
 
-ইনস্টল প্রয়োগের সময় নির্বাচিত guest ব্যবহারকারীর sudo password দুইবার গোপনে দিতে হবে। password শুধু stdin দিয়ে guest-এ পাঠানো হয়; command, preview, receipt বা log-এ রাখা হয় না। Native Termux বিদ্যমান Termux/Android app identity ব্যবহার করে; আলাদা Linux user বা sudo password তৈরি করে না। user ও password তৈরির এই ব্যবস্থা আপাতত শুধু fresh Debian Trixie provisioning-এ আছে। proot-distro-র অন্য distribution-গুলো এখনো Ternuxx দিয়ে provision করা যায় না। এতে আলাদা Debian কনটেইনারে প্যাকেজ ইনস্টল হবে; এটি সময় নিতে এবং অনেক জায়গা ব্যবহার করতে পারে। আগের `debian` পরিবেশ প্রতিস্থাপন করার কমান্ড নয়। নিজের ডিভাইস-এর পরিকল্পনা না বুঝলে প্রয়োগ করবেন না। ইনস্টল শেষে:
+পূর্বরূপে নির্বাচিত username ও alias নির্দিষ্ট plan-এর সঙ্গে বাঁধা থাকে। Apply-এর সময় saved plan থেকেই এগুলো নেওয়া হয়, তাই আবার লিখতে হয় না; চাইলে `--user` বা `--alias` দিলে শুধু plan-এর সঙ্গে মিল যাচাই হয়। ইনস্টল প্রয়োগের সময় নির্বাচিত guest ব্যবহারকারীর sudo password দুইবার গোপনে দিতে হবে। password শুধু stdin দিয়ে guest-এ পাঠানো হয়; command, preview, receipt বা log-এ রাখা হয় না। Native Termux বিদ্যমান Termux/Android app identity ব্যবহার করে; আলাদা Linux user বা sudo password তৈরি করে না। user ও password তৈরির এই ব্যবস্থা আপাতত শুধু fresh Debian Trixie provisioning-এ আছে। proot-distro-র অন্য distribution-গুলো এখনো Ternuxx দিয়ে provision করা যায় না। এতে আলাদা Debian কনটেইনারে প্যাকেজ ইনস্টল হবে; এটি সময় নিতে এবং অনেক জায়গা ব্যবহার করতে পারে। আগের `debian` পরিবেশ প্রতিস্থাপন করার কমান্ড নয়। নিজের ডিভাইস-এর পরিকল্পনা না বুঝলে প্রয়োগ করবেন না। ইনস্টল শেষে:
 
 ```sh
 ./tx proot status --json
@@ -111,7 +111,7 @@ cd "$HOME/ternuxx"
 
 ```sh
 ./tx proot setup fresh-resume-preview --user YOUR_DEBIAN_USERNAME --alias ternuxx-replay-demo --plan-id FAILED_PLAN_ID
-./tx proot setup fresh-install --user YOUR_DEBIAN_USERNAME --alias ternuxx-replay-demo --yes --plan-id RESUME_PLAN_ID
+./tx proot setup fresh-install --yes --plan-id RESUME_PLAN_ID
 ```
 
 Resume কেবল মিলে যাওয়া ব্যর্থ setup journal, একই নির্দিষ্ট image/snapshot/প্যাকেজ/গ্রাফিক্স profile, যাচাই করা rootfs পরিচয় এবং নিষ্ক্রিয় লক্ষ্য-এর জন্য অনুমোদিত হয়। পূর্বরূপে নতুন পরিকল্পনা ID মিলিয়ে তারপর চালান।

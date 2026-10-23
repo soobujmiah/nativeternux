@@ -129,11 +129,12 @@ class FreshProotSetupTests(unittest.TestCase):
         with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False), \
              patch.object(proot_fresh_setup.shutil, "which", return_value="/prefix/bin/proot-distro"):
             plan = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
-                home=str(self.home), state_dir=str(self.state), user="sbj", alias=alias)
+                home=str(self.home), state_dir=str(self.state), user="workuser", alias=alias)
             result = proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
-                home=str(self.home), state_dir=str(self.state), user="sbj", alias=alias,
+                home=str(self.home), state_dir=str(self.state),
                 plan_id=plan["plan_id"], confirmed=True, password="example-passphrase", runner=self._fixture_runner(calls))
         self.assertEqual(result["record"]["alias"], alias)
+        self.assertEqual(result["record"]["guest_user"], "workuser")
         self.assertEqual(marker.read_text(), "preserve")
         self.assertFalse((self.state / "proot-setup/fresh-provider.json").exists())
         for bad in ("ubuntu", "../debian", "ternuxx-replay-", "ternuxx-replay-../debian", "debian/other"):

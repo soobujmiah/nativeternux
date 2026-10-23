@@ -156,3 +156,5 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 6. Run a requirement-by-requirement completion audit; keep the overarching goal active until every explicit requirement is proven.
 
 Historical phase completion does not waive the current reproducibility objective. A green suite or inventory alone cannot close this audit.
+
+| A101 | Fresh Debian apply required the selected username and alias to be retyped after a preview, increasing mismatch risk despite exact plan binding | Apply now derives both values from the saved hash-verified plan; optional supplied values are checked against it. The hidden password prompt remains apply-time and sends its secret only over stdin. `workuser`/replay-alias fixture, 40 focused PRoot/CLI checks, and the 924-test Native suite pass. No live guest apply occurred; other distro/client setup remains open. See [dynamic account evidence](../evidence/2026-10-24-dynamic-proot-user-selection.md). |

@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "7b4b8f214768247814495552eb4fb1a8f6131ed0566ffa2d1b55622e74451266",
+      "sha256": "33ee110dfb6c9df3b9d97e66df0bfa11c6469f44208a4e8283a96db769a38b38",
       "lines": 69,
       "read_status": "pending",
       "read_sha256": null
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "44126d08e88167f4108926984f7f64e224b8d2027a1d38c9a2e891a2ce44aa49",
+      "sha256": "2b50e73278889d858e7698ff716cb65bd4aa6af686bcdb4f189d440d75788f84",
       "lines": 92,
       "read_status": "pending",
       "read_sha256": null
@@ -83,7 +83,7 @@
     {
       "path": "bn/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "5dae0305b04de16c902d1a9ac251fec7e0c6f0a5bdbf3b31b23fd71ac4f91ece",
+      "sha256": "1dacbb09eabc388d9cd87987cbeac4901e3dcf9cf1138d4fdf3b67b574a58ff3",
       "lines": 132,
       "read_status": "pending",
       "read_sha256": null
@@ -139,7 +139,7 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "2c69ed8a32c7c608d7b1697a33cc1ca71fd21ee02c99f2e73dfde27c9699985b",
+      "sha256": "f35009fb206553e8c85aef2de3044480a4ce36f7f1b2eb44bc75ba926765e4b6",
       "lines": 132,
       "read_status": "pending",
       "read_sha256": null
@@ -171,8 +171,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "d012c7a176063592827c5a6d13e065cb51c86e87f1d66eb3589747852e01ecab",
-      "lines": 195,
+      "sha256": "93b45ffe0e4a4c6425a4253aabd9129ddb13d9ee829a40ee12df0c4f36098f38",
+      "lines": 196,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "3b1f8c668f89aff185d33fea6dda07ba5b38208e0f19b7a3fd1ca64cf8f13e1b",
-      "lines": 158,
+      "sha256": "9e7cc5218844e5e88dc35f200ad9d1e5f79e0c17684c5772caed35c588a732fb",
+      "lines": 160,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2891,8 +2891,8 @@
     {
       "path": "docs/evidence/2026-10-24-dynamic-proot-user-selection.md",
       "kind": "narrative",
-      "sha256": "b77212f7fee8e31fa64ae5e95ce09c4f1e77e3941309cb01e67faa246b68ceaf",
-      "lines": 22,
+      "sha256": "67de90ffb02b615b5c3f6dc289adba3437a68af6f86e8d6e103ecc6cc2c96eb4",
+      "lines": 29,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3243,8 +3243,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "04addb9a1ce7ecd580c78c51d46d11363a8322287aaf2b7d23673b1614a5276c",
-      "lines": 210,
+      "sha256": "f281286994073a25c7eebef987ba47de0689e757744cdd779661336e26e7395e",
+      "lines": 211,
       "read_status": "pending",
       "read_sha256": null
     },

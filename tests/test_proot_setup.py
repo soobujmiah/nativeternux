@@ -303,6 +303,23 @@ class ProotSetupTests(unittest.TestCase):
         self.assertEqual(fresh_preview.call_args.kwargs["groups"], ["base", "fonts"])
         self.assertNotIn("resume_plan_id", fresh_preview.call_args.kwargs)
 
+    def test_fresh_apply_cli_uses_preview_bound_account_and_alias(self) -> None:
+        plan_id = "d" * 64
+        result = {"status": "installed", "record": {"guest_user": "workuser"}}
+        argv = ["proot_setup.py", "fresh-install", "--repo-root", str(self.repo),
+                "--prefix", str(self.prefix), "--home", str(self.home),
+                "--state-dir", str(self.state), "--plan-id", plan_id, "--yes"]
+        with patch.object(sys, "argv", argv), \
+             patch.object(proot_setup.getpass, "getpass", side_effect=["private-passphrase", "private-passphrase"]), \
+             patch.object(proot_setup.proot_fresh_setup, "apply", return_value=result) as fresh_apply, \
+             redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(proot_setup.main(), 0)
+        self.assertIsNone(fresh_apply.call_args.kwargs["user"])
+        self.assertIsNone(fresh_apply.call_args.kwargs["alias"])
+        self.assertEqual(fresh_apply.call_args.kwargs["plan_id"], plan_id)
+        self.assertEqual(fresh_apply.call_args.kwargs["password"], "private-passphrase")
+        self.assertNotIn("private-passphrase", output.getvalue())
+
     def test_fresh_resume_preview_cli_forwards_failed_plan_and_groups(self) -> None:
         failed_id = "b" * 64
         preview = {"status": "preview", "plan_id": "c" * 64}

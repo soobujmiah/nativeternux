@@ -220,9 +220,12 @@ nt_cmd_proot() {
         adopt-preview) [ -n "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
           nt_fail "Usage: tx proot setup adopt-preview --user NAME"; return 2;
         }; setup_args+=(--user "$user") ;;
-        adopt|fresh-install) [ -n "$user" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || {
-          nt_fail "Apply requires --user NAME --yes --plan-id ID from the matching setup preview."; return 2;
+        adopt) [ -n "$user" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || {
+          nt_fail "Adoption requires --user NAME --yes --plan-id ID from the matching preview."; return 2;
         }; setup_args+=(--user "$user" --yes --plan-id "$plan_id") ;;
+        fresh-install) [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || {
+          nt_fail "Fresh install requires --yes --plan-id ID from the matching preview."; return 2;
+        }; [ -z "$user" ] || setup_args+=(--user "$user"); setup_args+=(--yes --plan-id "$plan_id") ;;
         fresh-preview) [ -n "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
           nt_fail "Usage: tx proot setup fresh-preview --user NAME [--groups base,fonts]"; return 2;
         }; setup_args+=(--user "$user") ;;

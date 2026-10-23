@@ -15,7 +15,7 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Same-rootfs adoption metadata refresh has private exact-byte backup/rollback; current Native record is adopted and package baseline matches. Fresh Debian setup now follows manifest Turnip paths and requires the selected guest user's password. Guest migration, distro expansion, shared client parity, and clean-device replay remain open.
+Same-rootfs adoption metadata refresh has private exact-byte backup/rollback; current Native record is adopted and package baseline matches. Fresh Debian setup follows manifest Turnip paths; its exact preview binds the dynamic username/alias, and apply asks securely for that guest account password without requiring the username to be retyped. Guest migration, distro expansion, shared client parity, and clean-device replay remain open.
 
 **Next action:** Implement exact-preview, rollback-safe adaptation of the selected existing Debian package/config delta through the shared operation service and clients; verify on a disposable guest before any live guest apply.
 

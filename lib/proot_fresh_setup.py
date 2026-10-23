@@ -489,10 +489,9 @@ def _kgsl_accessible() -> bool:
     return path.is_char_device() and os.access(path, os.R_OK | os.W_OK)
 
 
-def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
-          plan_id: str, confirmed: bool, runner=subprocess.run, alias: str = ALIAS,
+def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str | None = None,
+          plan_id: str, confirmed: bool, runner=subprocess.run, alias: str | None = None,
           password: str | None = None) -> dict:
-    alias = _alias(alias)
     if confirmed is not True:
         raise FreshSetupError("fresh Debian install requires explicit confirmation")
     if password is None:
@@ -509,6 +508,13 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
     previews = state / "previews"
     plan_path = previews / f"fresh-{plan_id}.json"
     plan = _read_private(plan_path)
+    planned_user = plan.get("guest_user")
+    planned_alias = plan.get("alias")
+    user = planned_user if user is None else user
+    alias = planned_alias if alias is None else alias
+    if not isinstance(user, str) or not isinstance(alias, str):
+        raise FreshSetupError("fresh setup preview lacks its selected guest account or target")
+    alias = _alias(alias)
     identity = {key: value for key, value in plan.items() if key != "plan_id"}
     recalculated = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     if (plan.get("schema_version") != 2 or plan.get("operation") not in {

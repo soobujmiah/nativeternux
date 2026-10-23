@@ -20,3 +20,10 @@ No guest package, account, configuration, process, display, or service was chang
 ## Limits
 
 The unique-account resolver is implemented for the existing Debian interactive/GUI entrypoints. It intentionally fails closed for multiple ordinary guest users; an explicit shared-client account selector remains open. The fresh Debian Trixie installer accepts a user via `--user` and securely prompts for the sudo password during apply. Multi-distro account setup, selecting accounts from TUI/Web/GTK, and general existing-guest package/config migration remain unfinished. This evidence does not qualify visible GUI rendering, audio, GPU acceleration, or a clean install.
+
+
+## Fresh-install apply follow-up
+
+The fresh Debian installer still takes the username as an explicit preview input; it does not default to the device owner's name. Apply now resolves the username and target alias from that private, hash-checked saved preview, so the user does not have to repeat either value. Supplying `--user` or `--alias` remains an optional mismatch check. Apply continues to request the selected account's password twice through hidden input and sends it only over stdin. Native Termux continues to use its Android app identity and creates no Linux account.
+
+The plan-bound identity behavior passed a disposable fixture with username `workuser` and a separate replay alias. Focused PRoot/CLI tests passed 40/40; the full Native suite passed 924 tests with one skipped in 107.417 seconds. `bash -n lib/proot.sh` and `git diff --check` passed. No live guest apply or password change occurred. Other proot-distro account adapters and TUI/Web/GTK fresh-install controls remain unimplemented.

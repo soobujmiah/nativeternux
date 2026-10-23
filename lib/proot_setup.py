@@ -720,16 +720,16 @@ def main() -> int:
                                                alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS,
                                                resume_plan_id=args.plan_id, groups=groups)
         elif args.action == "fresh-install":
-            if not args.user or not args.plan_id or not args.yes or args.backup_id:
-                parser.error("fresh-install requires --user NAME --yes --plan-id ID")
-            password = getpass.getpass("Create Debian sudo password: ")
-            confirm_password = getpass.getpass("Confirm Debian sudo password: ")
+            if not args.plan_id or not args.yes or args.backup_id or args.groups:
+                parser.error("fresh-install requires --yes --plan-id ID; --user and --alias are optional checks against the saved preview")
+            password = getpass.getpass("Create sudo password for the selected Debian guest user: ")
+            confirm_password = getpass.getpass("Confirm guest sudo password: ")
             if password != confirm_password:
                 raise proot_fresh_setup.FreshSetupError("password entries did not match")
             result = proot_fresh_setup.apply(repo_root=args.repo_root, prefix=args.prefix,
-                                             home=args.home, state_dir=args.state_dir, user=args.user,
+                                             home=args.home, state_dir=args.state_dir, user=args.user or None,
                                              plan_id=args.plan_id, confirmed=True, password=password,
-                                             alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS)
+                                             alias=args.alias)
             password = confirm_password = ""
         else:
             if not args.user or not args.plan_id or not args.yes or args.backup_id:
