@@ -99,6 +99,10 @@ tx db [--user NAME|--root] [--distro NAME] [--display :N] [--backend zink|virgl]
 `tx db` is Ternuxx’s first-party command, distinct from a bare `db` shell alias.
 A bare `db` or `droot` alias may call `proot-distro` directly and bypass Ternuxx’s
 validated display/audio/environment handoff. Use `tx db` for the managed path.
+A normal login can run the package-owned proot-distro hook, which may write the
+guest profile and container sidecar. This immediate command does not preview or
+roll back that hook effect. The broker start flow previews it but cannot roll it
+back.
 
 Runs from Native Termux. Debian Zink/Turnip is the default and remains unchanged.
 Use --backend virgl to ensure Ternuxx's Native virgl_test_server_android is ready,
