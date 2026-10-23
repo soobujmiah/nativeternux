@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 448,
+  "document_count": 449,
   "read_count": 117,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "f9e70b43dddab034390cff5a9b946ea42df4cb84f24934ea149b154c10eeb7e7",
+      "sha256": "82e3d4a2ada6f431ca64774ce0f21a923079411b1d6f8ef79a40fa3954e17c5c",
       "lines": 69,
       "read_status": "pending",
       "read_sha256": null
@@ -83,7 +83,7 @@
     {
       "path": "bn/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "1507d3d1e0c624ca8c013e4857e808233e44418110627e688af1d4bacefb0580",
+      "sha256": "9359dbea10d48dc2cb2f1f9701572aed1f43ac221d83378297376f9e7a283a42",
       "lines": 132,
       "read_status": "pending",
       "read_sha256": null
@@ -139,7 +139,7 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "26bd2a673b51178a535161520b918b32d363464306a61c44cd7e68625c70b79b",
+      "sha256": "fc625a96cc5dad472b718edbd22c17a37c0a81c7160670b397a8421012d10289",
       "lines": 132,
       "read_status": "pending",
       "read_sha256": null
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "1136ebddc7a77002a4f577c7c129f82693cdaff761eef5b928cb907cf9f43fda",
-      "lines": 152,
+      "sha256": "d624402e7344332a9214ac863802986b0c9409841dd82abc956cc5adffbaa980",
+      "lines": 156,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2873,6 +2873,14 @@
       "read_sha256": "be9a5d59fa8bfbbae4a78fe81f76931573b7d73c0b27f4648ec6a2f4098ddd93"
     },
     {
+      "path": "docs/evidence/2026-10-24-debian-profile-state-audit.md",
+      "kind": "narrative",
+      "sha256": "b43acc878e0e3983ddfd8c054510c67e262bfd5158ca9664049e0792b1d0d4f5",
+      "lines": 31,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-24-dynamic-proot-user-selection.md",
       "kind": "narrative",
       "sha256": "b77212f7fee8e31fa64ae5e95ce09c4f1e77e3941309cb01e67faa246b68ceaf",
@@ -2907,8 +2915,8 @@
     {
       "path": "docs/evidence/2026-10-24-p4-terminal-broker-and-install-preview.md",
       "kind": "narrative",
-      "sha256": "945c9dbb843f56db2f5a965eebec400c7be9637a6b71d00cf693c3c03c1594e4",
-      "lines": 41,
+      "sha256": "eaf9e822cf095e4db4b010ff1893a5fd1fc1027d0b8c86e5e2758c59d22a10c3",
+      "lines": 46,
       "read_status": "pending",
       "read_sha256": null
     },

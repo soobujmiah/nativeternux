@@ -47,7 +47,50 @@ def summarize(result: object) -> list[str]:
         icd = icd_record.get("status", "unknown")
         if driver not in {"present", "missing"} or icd not in {"present", "missing"}:
             raise ValueError("graphics file status is unsupported")
-        lines.append(f"Turnip files: driver {driver}; ICD {icd} (file presence only)")
+        lines.append(f"Ternuxx Turnip files: driver {driver}; ICD {icd} (file presence only)")
+    other_icds = operation.get("observed_other_icd_configs", [])
+    if not isinstance(other_icds, list) or len(other_icds) > 64:
+        raise ValueError("other ICD inventory is malformed")
+    safe_names = []
+    for item in other_icds:
+        if not isinstance(item, dict) or not isinstance(item.get("name"), str):
+            raise ValueError("other ICD record is malformed")
+        name = item["name"]
+        if not re.fullmatch(r"[A-Za-z0-9_.+-]{1,128}\.json", name):
+            raise ValueError("other ICD filename is invalid")
+        safe_names.append(name)
+    if safe_names:
+        lines.append("Other ICD configs (not selected by Ternuxx): " + ", ".join(safe_names))
+    package_groups = operation.get("observed_package_groups", {})
+    if package_groups:
+        if not isinstance(package_groups, dict) or len(package_groups) > 32:
+            raise ValueError("package group inventory is malformed")
+        labels = {"base": "base", "desktop-compat": "desktop compatibility",
+                  "development": "development", "desktop-apps": "desktop apps", "fonts": "fonts"}
+        summaries = []
+        missing_names = []
+        held_names = []
+        for group, detail in package_groups.items():
+            if (not isinstance(group, str) or not re.fullmatch(r"[a-z][a-z0-9-]{0,31}", group)
+                    or not isinstance(detail, dict)
+                    or type(detail.get("requested")) is not int
+                    or type(detail.get("installed")) is not int
+                    or not isinstance(detail.get("missing"), list)
+                    or not isinstance(detail.get("held"), list)
+                    or not 0 <= detail["installed"] <= detail["requested"] <= 512):
+                raise ValueError("package group state is invalid")
+            summaries.append(f"{labels.get(group, group)} {detail['installed']}/{detail['requested']}")
+            for name in detail["missing"] + detail["held"]:
+                if not isinstance(name, str) or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]{0,127}", name):
+                    raise ValueError("package name in inventory is invalid")
+            missing_names.extend(detail["missing"])
+            held_names.extend(detail["held"])
+        lines.append("Manifest packages: " + "; ".join(summaries))
+        if missing_names:
+            lines.append("Not installed: " + ", ".join(missing_names[:16])
+                         + (f" (+{len(missing_names)-16} more)" if len(missing_names) > 16 else ""))
+        if held_names:
+            lines.append(f"APT-held manifest packages: {len(set(held_names))} (not upgraded)")
     changes = [
         operation.get("guest_mutations", []),
         operation.get("package_changes", []),
@@ -61,7 +104,14 @@ def summarize(result: object) -> list[str]:
     if status == "preview":
         if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
             raise ValueError("setup preview plan ID is invalid")
-        lines.extend((f"Plan ID: {plan_id}", f"Apply after review: tx install debian apply {plan_id} --yes"))
+        lines.append(f"Plan ID: {plan_id}")
+        blocked = operation.get("apply_blocked_reason")
+        if blocked is not None:
+            if not isinstance(blocked, str) or len(blocked) > 512:
+                raise ValueError("setup blocker is malformed")
+            lines.append("Apply blocked: existing adoption record preserved; rollback-safe refresh is not implemented")
+        else:
+            lines.append(f"Apply after review: tx install debian apply {plan_id} --yes")
     return lines
 
 

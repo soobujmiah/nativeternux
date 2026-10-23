@@ -62,6 +62,16 @@ class FreshProotSetupTests(unittest.TestCase):
         manifest = json.loads((self.repo / "config/proot/debian-trixie.json").read_text())
         return "".join("ii \t" + p + "=1.0\n" for p in proot_fresh_setup._packages(manifest))
 
+    def test_fresh_apply_requires_password_for_the_selected_guest_account(self):
+        with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
+            plan = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="workuser")
+        with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "requires a sudo password"):
+            proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="workuser",
+                plan_id=plan["plan_id"], confirmed=True,
+                runner=lambda *_a, **_k: self.fail("must reject before touching the guest"))
+
     def test_unowned_destination_does_not_become_resumable_after_refusal(self):
         with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
             plan = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
@@ -75,7 +85,7 @@ class FreshProotSetupTests(unittest.TestCase):
                     with self.subTest(attempt=attempt), self.assertRaises(proot_fresh_setup.FreshSetupError):
                         proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                             home=str(self.home), state_dir=str(self.state), user="sbj",
-                            plan_id=plan["plan_id"], confirmed=True,
+                            plan_id=plan["plan_id"], confirmed=True, password="example-passphrase",
                             runner=lambda *_a, **_k: self.fail("must never enter unowned guest"))
             self.assertEqual(marker.read_text(), "preserve")
 
@@ -87,7 +97,7 @@ class FreshProotSetupTests(unittest.TestCase):
                 home=str(self.home), state_dir=str(self.state), user="sbj")
             proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj",
-                plan_id=plan["plan_id"], confirmed=True, runner=self._fixture_runner(calls))
+                plan_id=plan["plan_id"], confirmed=True, password="example-passphrase", runner=self._fixture_runner(calls))
         script = next(args[-1] for args in calls if "/bin/bash" in args)
         # Run only the package/user tail, with every external command stubbed.
         # The guest APT source edits are never executed on the host.
@@ -122,7 +132,7 @@ class FreshProotSetupTests(unittest.TestCase):
                 home=str(self.home), state_dir=str(self.state), user="sbj", alias=alias)
             result = proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj", alias=alias,
-                plan_id=plan["plan_id"], confirmed=True, runner=self._fixture_runner(calls))
+                plan_id=plan["plan_id"], confirmed=True, password="example-passphrase", runner=self._fixture_runner(calls))
         self.assertEqual(result["record"]["alias"], alias)
         self.assertEqual(marker.read_text(), "preserve")
         self.assertFalse((self.state / "proot-setup/fresh-provider.json").exists())
@@ -145,7 +155,7 @@ class FreshProotSetupTests(unittest.TestCase):
             with self.assertRaises(proot_fresh_setup.FreshSetupError):
                 proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                     home=str(self.home), state_dir=str(self.state), user="sbj",
-                    plan_id=plan["plan_id"], confirmed=True, runner=fail_packages)
+                    plan_id=plan["plan_id"], confirmed=True, password="example-passphrase", runner=fail_packages)
             root = self.containers / "debian/rootfs"
             root.rename(self.containers / "debian/original-rootfs")
             root.mkdir()
@@ -153,7 +163,7 @@ class FreshProotSetupTests(unittest.TestCase):
             with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "identity"):
                 proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                     home=str(self.home), state_dir=str(self.state), user="sbj",
-                    plan_id=plan["plan_id"], confirmed=True,
+                    plan_id=plan["plan_id"], confirmed=True, password="example-passphrase",
                     runner=lambda *_a, **_k: self.fail("must not enter replacement"))
 
     def test_different_previews_for_same_alias_share_install_lock(self):
@@ -170,11 +180,11 @@ class FreshProotSetupTests(unittest.TestCase):
                     with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "another"):
                         proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                             home=str(self.home), state_dir=str(self.state), user="other",
-                            plan_id=second["plan_id"], confirmed=True, runner=base_runner)
+                            plan_id=second["plan_id"], confirmed=True, password="example-passphrase", runner=base_runner)
                 return base_runner(args, **kwargs)
             proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj",
-                plan_id=first["plan_id"], confirmed=True, runner=runner)
+                plan_id=first["plan_id"], confirmed=True, password="example-passphrase", runner=runner)
 
     def test_parent_symlink_is_refused_and_package_inventory_is_complete(self):
         for output in ("bash=1.0\n", "bash=1.0\\n", "bash=\n", "rc \tbash=1.0\nii \tlocales=2.41\n"):
@@ -245,7 +255,7 @@ class FreshProotSetupTests(unittest.TestCase):
             result = proot_fresh_setup.apply(
                 repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
                 state_dir=str(self.state), user="sbj", plan_id=preview["plan_id"],
-                confirmed=True, runner=runner)
+                confirmed=True, password="example-passphrase", runner=runner)
         self.assertEqual(result["status"], "installed")
         self.assertTrue(result["record"]["package_versions_recorded"])
         self.assertFalse(result["record"]["turnip_runtime_verified"])
@@ -289,10 +299,10 @@ class FreshProotSetupTests(unittest.TestCase):
             with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "package setup failed"):
                 proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                     home=str(self.home), state_dir=str(self.state), user="sbj",
-                    plan_id=preview["plan_id"], confirmed=True, runner=runner)
+                    plan_id=preview["plan_id"], confirmed=True, password="example-passphrase", runner=runner)
             result = proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj",
-                plan_id=preview["plan_id"], confirmed=True, runner=runner)
+                plan_id=preview["plan_id"], confirmed=True, password="example-passphrase", runner=runner)
         self.assertEqual(install_count, 1)
         self.assertEqual(result["status"], "installed")
 
@@ -332,7 +342,7 @@ class FreshProotSetupTests(unittest.TestCase):
             with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "package setup failed"):
                 proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                     home=str(self.home), state_dir=str(self.state), user="sbj",
-                    plan_id=first["plan_id"], confirmed=True, runner=runner)
+                    plan_id=first["plan_id"], confirmed=True, password="example-passphrase", runner=runner)
             manifest = json.loads(manifest_path.read_text())
             manifest["fresh_install"]["apt_snapshot"]["main_archive"] = "https://snapshot-cloudflare.debian.org/archive/debian/20261020T000000Z/"
             manifest["fresh_install"]["apt_snapshot"]["security_archive"] = "https://snapshot-cloudflare.debian.org/archive/debian-security/20261020T000000Z/"
@@ -344,7 +354,7 @@ class FreshProotSetupTests(unittest.TestCase):
             self.assertEqual(resumed["operation"]["resume_from_plan_id"], first["plan_id"])
             result = proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj",
-                plan_id=resumed["plan_id"], confirmed=True, runner=runner)
+                plan_id=resumed["plan_id"], confirmed=True, password="example-passphrase", runner=runner)
         self.assertEqual(result["status"], "installed")
         self.assertEqual(sum(call[1] == "install" for call in calls), 1)
         self.assertEqual(sum("apt-get -o Acquire::https::CaInfo=/tmp/ternuxx-native-ca.pem install -y" in call[-1] for call in calls if "/bin/bash" in call), 2)
@@ -363,7 +373,7 @@ class FreshProotSetupTests(unittest.TestCase):
             with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "KGSL capability changed"):
                 proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                     home=str(self.home), state_dir=str(self.state), user="sbj",
-                    plan_id=plan["plan_id"], confirmed=True, runner=lambda *_a, **_k: self.fail("must not execute"))
+                    plan_id=plan["plan_id"], confirmed=True, password="example-passphrase", runner=lambda *_a, **_k: self.fail("must not execute"))
 
     def test_image_content_mismatch_stops_before_package_configuration(self):
         with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
@@ -389,7 +399,7 @@ class FreshProotSetupTests(unittest.TestCase):
             with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "does not match the pinned"):
                 proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                     home=str(self.home), state_dir=str(self.state), user="sbj",
-                    plan_id=preview["plan_id"], confirmed=True, runner=runner)
+                    plan_id=preview["plan_id"], confirmed=True, password="example-passphrase", runner=runner)
         self.assertEqual(len(calls), 1)
         self.assertIn("install", calls[0])
 
@@ -431,7 +441,7 @@ class FreshProotSetupTests(unittest.TestCase):
         with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "CA bundle or HTTPS trust policy changed"):
             proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj",
-                plan_id=preview["plan_id"], confirmed=True,
+                plan_id=preview["plan_id"], confirmed=True, password="example-passphrase",
                 runner=lambda *_a, **_k: self.fail("CA drift must fail before any install command"))
 
     def test_password_is_stdin_only_and_never_persisted(self):
@@ -469,7 +479,7 @@ class FreshProotSetupTests(unittest.TestCase):
             with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "differs"):
                 proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
                     home=str(self.home), state_dir=str(self.state), user="sbj",
-                    plan_id=preview["plan_id"], confirmed=True)
+                    plan_id=preview["plan_id"], confirmed=True, password="example-passphrase")
         occupied = self.containers / "debian/rootfs"
         occupied.mkdir(parents=True)
         with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "already exists"):

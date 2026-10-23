@@ -39,3 +39,8 @@ On 2026-10-24, `./tx install debian preview` on Native Termux resolved the curre
 ## Verification after Debian CLI integration preview
 
 `bash scripts/repo_test.sh` ran in Native Termux on 2026-10-24: 908 tests passed, 1 skipped, in 119.225 seconds. This included the four new CLI adapter tests. Focused results: `test_proot_setup.py` 7/7, `test_package_plan.py` 16/16, and `test_debian_install_cli.py` 4/4. `python3 -m tools.repo_knowledge verify` reported 0 findings; `bash -n lib/phases.sh` and `git diff --check` passed. The existing guest preview was run twice with identical plan ID `f72a37a34569ddcc50d8e790fc18386205ed7bf9ca1976b86f6e684cf73b0b66`; no apply occurred. Full guest package migration, optional groups, desktop choices, all-distro recipes, and shared TUI/Web/GTK install parity remain open.
+
+
+## Correction: Debian graphics path and held packages
+
+A later exact-path review found that the earlier adoption presenter called the existing `/usr/local/share/vulkan/icd.d/ternux_freedreno_icd.json` file the expected Ternuxx ICD. The manifest actually selects `/usr/local/share/vulkan/icd.d/ternuxx_freedreno_icd.json`. The preview now checks the manifest path and reports the other filename separately; it does not overwrite or delete either file. The guest dpkg status uses `hold ok installed` for Mesa packages, which the first diagnostic parser did not count. A corrected read-only inventory confirms all 50 requested manifest packages installed across five groups; selected Mesa packages remain held. An isolated `apt-get --simulate --no-upgrade --no-remove` reported 0 changes. No guest mutation was applied. See [the profile-state audit](2026-10-24-debian-profile-state-audit.md).

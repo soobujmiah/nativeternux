@@ -36,6 +36,14 @@ class ProotSetupTests(unittest.TestCase):
             "",
         ])
         (self.root / "etc/passwd").write_text(passwd, encoding="utf-8")
+        status = self.root / "var/lib/dpkg/status"
+        status.parent.mkdir(parents=True)
+        status.write_text("\n\n".join([
+            "Package: ca-certificates\nStatus: install ok installed\nArchitecture: all\nVersion: 2025.1",
+            "Package: libgl1-mesa-dri:arm64\nStatus: hold ok installed\nArchitecture: arm64\nVersion: 25.0.7-2",
+            "Package: mesa-vulkan-drivers\nStatus: deinstall ok config-files\nArchitecture: arm64\nVersion: 25.0.7-2",
+            "",
+        ]), encoding="utf-8")
         self.repo = self.base / "repo"
         manifest = self.repo / "config/proot/debian-trixie.json"
         manifest.parent.mkdir(parents=True)
@@ -62,6 +70,11 @@ class ProotSetupTests(unittest.TestCase):
         operation = preview["operation"]
         self.assertEqual(operation["guest_mutations"], [])
         self.assertEqual(operation["package_changes"], [])
+        base_packages = operation["observed_package_groups"]["base"]
+        self.assertEqual(base_packages["installed"], 2)
+        self.assertEqual(base_packages["held"], ["libgl1-mesa-dri"])
+        self.assertIn("libvulkan1", base_packages["missing"])
+        self.assertRegex(operation["dpkg_status_sha256"], r"^[0-9a-f]{64}$")
         result = proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
                                             home=str(self.home), state_dir=str(self.state), user="sbj",
                                             plan_id=preview["plan_id"], confirmed=True)
@@ -69,6 +82,7 @@ class ProotSetupTests(unittest.TestCase):
         current = proot_setup.status(repo_root=str(self.repo), prefix=str(self.prefix),
                                      home=str(self.home), state_dir=str(self.state))
         self.assertEqual(current["status"], "adopted")
+        self.assertEqual(current["package_baseline"]["status"], "matches")
         record = self.state / "proot-setup/provider.json"
         self.assertEqual(stat.S_IMODE(record.stat().st_mode), 0o600)
         self.assertEqual(self._guest_digest(), before)
@@ -86,6 +100,39 @@ class ProotSetupTests(unittest.TestCase):
             proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
                                        state_dir=str(self.state), user="sbj", plan_id=preview["plan_id"],
                                        confirmed=True)
+
+    def test_adoption_status_reports_selected_package_drift_without_repair(self) -> None:
+        preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj",
+            plan_id=preview["plan_id"], confirmed=True)
+        status_file = self.root / "var/lib/dpkg/status"
+        original = status_file.read_bytes()
+        record_file = self.state / "proot-setup/provider.json"
+        receipt_before = record_file.read_bytes()
+        status_file.write_text(status_file.read_text().replace("25.0.7-2", "25.0.8-1"), encoding="utf-8")
+        result = proot_setup.status(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state))
+        self.assertEqual(result["package_baseline"]["status"], "changed")
+        self.assertEqual(result["package_baseline"]["changed_groups"], ["base"])
+        self.assertEqual(record_file.read_bytes(), receipt_before)
+        status_file.write_bytes(original)
+
+    def test_stale_adoption_record_is_bound_to_preview_and_never_overwritten(self) -> None:
+        record = self.state / "proot-setup/provider.json"
+        record.parent.mkdir(parents=True, mode=0o700)
+        original = b'{"schema_version":1,"profile_id":"ternuxx-debian-trixie-workstation","manifest_sha256":"old"}\n'
+        record.write_bytes(original)
+        record.chmod(0o600)
+        preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        self.assertTrue(preview["operation"]["apply_blocked_reason"])
+        with self.assertRaisesRegex(proot_setup.SetupError, "different manifest"):
+            proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj",
+                plan_id=preview["plan_id"], confirmed=True)
+        self.assertEqual(record.read_bytes(), original)
 
     def test_manifest_change_is_reported_without_claiming_guest_drift_or_mutating_it(self) -> None:
         preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
@@ -106,6 +153,42 @@ class ProotSetupTests(unittest.TestCase):
         self.assertIn("does not refresh adoption metadata", result["next_action"])
         self.assertEqual(self._guest_digest(), before)
         self.assertEqual(record.read_bytes(), record_before)
+
+    def test_adoption_checks_manifest_icd_path_and_reports_other_config_separately(self) -> None:
+        graphics = self.root / "usr/local/share/vulkan/icd.d"
+        graphics.mkdir(parents=True)
+        (graphics / "ternux_freedreno_icd.json").write_text("legacy icd", encoding="utf-8")
+        driver = self.root / "usr/local/lib/aarch64-linux-gnu/libvulkan_freedreno.so"
+        driver.parent.mkdir(parents=True)
+        driver.write_bytes(b"driver")
+        preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        operation = preview["operation"]
+        graphics_state = operation["observed_graphics_files"]
+        self.assertEqual(graphics_state["turnip_driver"]["status"], "present")
+        self.assertEqual(graphics_state["turnip_icd"]["path"],
+            "/usr/local/share/vulkan/icd.d/ternuxx_freedreno_icd.json")
+        self.assertEqual(graphics_state["turnip_icd"]["status"], "missing")
+        self.assertEqual(operation["observed_other_icd_configs"][0]["name"], "ternux_freedreno_icd.json")
+
+    def test_manifest_graphics_symlink_is_refused_without_following_it(self) -> None:
+        graphics = self.root / "usr/local/share/vulkan"
+        graphics.mkdir(parents=True)
+        outside = self.base / "outside-icd"
+        outside.mkdir()
+        (graphics / "icd.d").symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(proot_setup.SetupError, "symlink"):
+            proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj")
+
+    def test_package_status_database_symlink_is_refused(self) -> None:
+        status = self.root / "var/lib/dpkg/status"
+        saved = self.base / "status-saved"
+        status.rename(saved)
+        status.symlink_to(saved)
+        with self.assertRaisesRegex(proot_setup.SetupError, "status database is unsafe"):
+            proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj")
 
     def test_wrong_release_or_user_is_rejected(self) -> None:
         release = self.root / "usr/lib/os-release"

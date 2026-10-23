@@ -36,6 +36,34 @@ def _manifest(repo_root: Path) -> tuple[dict[str, object], str]:
     return data, hashlib.sha256(raw).hexdigest()
 
 
+def _read_stable_regular_file(path: Path, *, max_bytes: int, mode: int | None = None) -> bytes:
+    flags = os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(path, flags)
+    try:
+        before = os.fstat(fd)
+        if (not stat.S_ISREG(before.st_mode) or before.st_uid != os.getuid()
+                or before.st_size > max_bytes
+                or (mode is not None and stat.S_IMODE(before.st_mode) != mode)):
+            raise SetupError("file identity or permissions are unsafe")
+        chunks = []
+        remaining = max_bytes + 1
+        while remaining:
+            chunk = os.read(fd, min(65536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        after = os.fstat(fd)
+        identity_before = (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns)
+        identity_after = (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns)
+        data = b"".join(chunks)
+        if identity_before != identity_after or len(data) > max_bytes:
+            raise SetupError("file changed while it was being inspected")
+        return data
+    finally:
+        os.close(fd)
+
+
 def _safe_rootfs(prefix: str) -> tuple[Path, os.stat_result]:
     root = Path(prefix) / "var/lib/proot-distro/containers/debian/rootfs"
     try:
@@ -56,7 +84,103 @@ def _safe_rootfs(prefix: str) -> tuple[Path, os.stat_result]:
     return root, metadata
 
 
-def _guest_profile(root: Path, user: str) -> dict[str, object]:
+def _observe_guest_file(root: Path, guest_path: str) -> dict[str, object]:
+    if (not isinstance(guest_path, str) or len(guest_path) > 512
+            or not guest_path.startswith("/") or "\x00" in guest_path):
+        raise SetupError("managed guest graphics path is invalid")
+    relative = Path(guest_path)
+    if any(part in {".", ".."} for part in relative.parts[1:]):
+        raise SetupError("managed guest graphics path escapes the rootfs")
+    current = root
+    parts = relative.parts[1:]
+    if not parts or str(relative) != guest_path:
+        raise SetupError("managed guest graphics path is not canonical")
+    for index, part in enumerate(parts):
+        current = current / part
+        try:
+            metadata = current.lstat()
+        except FileNotFoundError:
+            return {"path": guest_path, "status": "missing"}
+        if stat.S_ISLNK(metadata.st_mode):
+            raise SetupError(f"guest graphics path contains a symlink: {guest_path}")
+        if index < len(parts) - 1 and not stat.S_ISDIR(metadata.st_mode):
+            raise SetupError(f"guest graphics path parent is not a directory: {guest_path}")
+    try:
+        content = _read_stable_regular_file(current, max_bytes=64 * 1024 * 1024)
+    except (OSError, SetupError) as exc:
+        raise SetupError(f"guest graphics file is unsafe: {guest_path}") from exc
+    return {"path": guest_path, "status": "present",
+            "sha256": hashlib.sha256(content).hexdigest()}
+
+
+def _guest_packages(root: Path, manifest: dict[str, object]) -> dict[str, object]:
+    database_dir = root / "var/lib/dpkg"
+    status_path = database_dir / "status"
+    try:
+        for directory in (root / "var", root / "var/lib", database_dir):
+            metadata = directory.lstat()
+            if not stat.S_ISDIR(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
+                raise SetupError("guest dpkg database path is unsafe")
+        try:
+            raw = _read_stable_regular_file(status_path, max_bytes=64 * 1024 * 1024)
+        except OSError as exc:
+            raise SetupError("guest dpkg status database is unsafe or unavailable") from exc
+        text = raw.decode("utf-8", "strict")
+    except SetupError:
+        raise
+    except (OSError, UnicodeError) as exc:
+        raise SetupError("guest dpkg package inventory is unavailable") from exc
+
+    installed: dict[str, list[dict[str, str]]] = {}
+    for paragraph in text.split("\n\n"):
+        fields: dict[str, str] = {}
+        for line in paragraph.splitlines():
+            if line and not line[0].isspace() and ":" in line:
+                key, value = line.split(":", 1)
+                fields[key] = value.strip()
+        state = fields.get("Status", "").split()
+        package = fields.get("Package", "")
+        architecture = fields.get("Architecture", "")
+        if (len(state) != 3 or state[1] != "ok" or state[2] != "installed"
+                or state[0] not in {"install", "hold"}
+                or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]{0,127}", package.split(":", 1)[0])
+                or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,31}", architecture)):
+            continue
+        name = package.split(":", 1)[0]
+        installed.setdefault(name, []).append({"architecture": architecture,
+            "version": fields.get("Version", "unknown"), "held": "true" if state[0] == "hold" else "false"})
+
+    architecture = manifest.get("architecture")
+    expected_arch = {"aarch64": "arm64", "x86_64": "amd64"}.get(architecture, architecture)
+    groups = manifest.get("packages")
+    if not isinstance(groups, dict) or not isinstance(expected_arch, str):
+        raise SetupError("guest package profile is invalid")
+    inventory: dict[str, object] = {}
+    for group, requested in groups.items():
+        if (not isinstance(group, str) or not re.fullmatch(r"[a-z][a-z0-9-]{0,31}", group)
+                or not isinstance(requested, list) or len(requested) > 512):
+            raise SetupError("guest package groups are malformed")
+        present: dict[str, dict[str, str]] = {}
+        missing: list[str] = []
+        held: list[str] = []
+        for package in requested:
+            if not isinstance(package, str) or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]{0,127}", package):
+                raise SetupError("guest package name is invalid")
+            candidates = installed.get(package, [])
+            candidates = [item for item in candidates if item["architecture"] in {expected_arch, "all"}]
+            if not candidates:
+                missing.append(package)
+                continue
+            selected = next((item for item in candidates if item["architecture"] == expected_arch), candidates[0])
+            present[package] = {"version": selected["version"], "architecture": selected["architecture"]}
+            if selected["held"] == "true":
+                held.append(package)
+        inventory[group] = {"requested": len(requested), "installed": len(present),
+                            "missing": missing, "held": held, "versions": present}
+    return {"groups": inventory, "dpkg_status_sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def _guest_profile(root: Path, user: str, manifest: dict[str, object]) -> dict[str, object]:
     if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", user):
         raise SetupError("guest username is invalid")
     try:
@@ -94,21 +218,57 @@ def _guest_profile(root: Path, user: str) -> dict[str, object]:
     except (OSError, UnicodeError) as exc:
         raise SetupError("could not read the fixed Debian profile files") from exc
 
-    graphics = {}
-    for key, relative in (
-        ("turnip_driver", "usr/local/lib/aarch64-linux-gnu/libvulkan_freedreno.so"),
-        ("turnip_icd", "usr/local/share/vulkan/icd.d/ternux_freedreno_icd.json"),
-    ):
-        path = root / relative
-        try:
-            metadata = path.lstat()
-        except FileNotFoundError:
-            graphics[key] = {"status": "missing"}
-            continue
-        if not stat.S_ISREG(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
-            raise SetupError(f"guest graphics path is unsafe: {relative}")
-        graphics[key] = {"status": "present", "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
-    return {"release": release_values, "account": accounts[0], "graphics_files": graphics}
+    packages = _guest_packages(root, manifest)
+    try:
+        paths = manifest["graphics"]["managed_install_paths"]
+        graphics = {
+            "turnip_driver": _observe_guest_file(root, paths["driver"]),
+            "turnip_icd": _observe_guest_file(root, paths["icd"]),
+        }
+    except (KeyError, TypeError) as exc:
+        raise SetupError("manifest managed graphics paths are invalid") from exc
+
+    other_icd_configs = []
+    icd_dir = root / "usr/local/share/vulkan/icd.d"
+    try:
+        directory_info = icd_dir.lstat()
+    except FileNotFoundError:
+        directory_info = None
+    if directory_info is not None:
+        if not stat.S_ISDIR(directory_info.st_mode) or stat.S_ISLNK(directory_info.st_mode):
+            raise SetupError("guest ICD directory is unsafe")
+        managed_name = Path(paths["icd"]).name
+        for index, candidate in enumerate(sorted(icd_dir.iterdir())):
+            if index >= 256:
+                raise SetupError("guest ICD directory has too many entries")
+            if candidate.name == managed_name or not candidate.name.endswith(".json"):
+                continue
+            info = candidate.lstat()
+            if stat.S_ISREG(info.st_mode) and info.st_size <= 64 * 1024:
+                other_icd_configs.append({"name": candidate.name,
+                    "sha256": hashlib.sha256(candidate.read_bytes()).hexdigest()})
+            elif stat.S_ISLNK(info.st_mode):
+                other_icd_configs.append({"name": candidate.name, "status": "symlink"})
+    return {"release": release_values, "account": accounts[0], "graphics_files": graphics,
+            "other_icd_configs": other_icd_configs, "packages": packages}
+
+
+def _existing_adoption(path: Path) -> tuple[bytes | None, dict[str, object] | None]:
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return None, None
+    try:
+        raw = _read_stable_regular_file(path, max_bytes=1024 * 1024, mode=0o600)
+    except (OSError, SetupError) as exc:
+        raise SetupError("existing adoption record identity or permissions are unsafe") from exc
+    try:
+        record = json.loads(raw.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise SetupError("existing adoption record is invalid; it was preserved") from exc
+    if not isinstance(record, dict):
+        raise SetupError("existing adoption record is invalid; it was preserved")
+    return raw, record
 
 
 def _state_paths(state_dir: str, home: str, *, create: bool) -> tuple[Path, Path, Path]:
@@ -161,7 +321,15 @@ def preview_adoption(*, repo_root: str, prefix: str, home: str,
                      state_dir: str, user: str) -> dict[str, object]:
     manifest, manifest_hash = _manifest(Path(repo_root))
     root, identity = _safe_rootfs(prefix)
-    guest = _guest_profile(root, user)
+    guest = _guest_profile(root, user, manifest)
+    _state_root, _previews, record_path = _state_paths(state_dir, home, create=True)
+    prior_bytes, prior_record = _existing_adoption(record_path)
+    prior_hash = hashlib.sha256(prior_bytes).hexdigest() if prior_bytes is not None else None
+    prior_matches = bool(prior_record and prior_record.get("profile_id") == manifest["profile_id"]
+        and prior_record.get("manifest_sha256") == manifest_hash
+        and prior_record.get("rootfs_device") == identity.st_dev
+        and prior_record.get("rootfs_inode") == identity.st_ino
+        and prior_record.get("guest_user") == user)
     operation = {
         "schema_version": 1,
         "operation": "adopt-existing-debian",
@@ -172,6 +340,12 @@ def preview_adoption(*, repo_root: str, prefix: str, home: str,
         "guest_user": user,
         "guest_release": guest["release"],
         "observed_graphics_files": guest["graphics_files"],
+        "observed_other_icd_configs": guest["other_icd_configs"],
+        "observed_package_groups": guest["packages"]["groups"],
+        "dpkg_status_sha256": guest["packages"]["dpkg_status_sha256"],
+        "prior_adoption_record_sha256": prior_hash,
+        "apply_blocked_reason": ("an existing adoption record belongs to a different manifest, rootfs, or account; preserve it until an exact rollback path is available"
+                                 if prior_bytes is not None and not prior_matches else None),
         "guest_mutations": [],
         "package_changes": [],
         "service_changes": [],
@@ -193,7 +367,10 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
     current = preview_adoption(repo_root=repo_root, prefix=prefix, home=home,
                                state_dir=state_dir, user=user)
     if current["plan_id"] != plan_id:
-        raise SetupError("current rootfs or manifest differs from the reviewed preview")
+        raise SetupError("current rootfs, manifest, package state, or prior adoption record differs from the reviewed preview")
+    operation = current["operation"]
+    if operation.get("apply_blocked_reason"):
+        raise SetupError(operation["apply_blocked_reason"])
     root, previews, record = _state_paths(state_dir, home, create=True)
     preview_path = previews / f"{plan_id}.json"
     try:
@@ -206,6 +383,16 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
         raise SetupError("saved adoption preview is unavailable") from exc
     if reviewed.get("plan_id") != plan_id:
         raise SetupError("saved adoption preview does not match its ID")
+    prior_bytes, prior_record = _existing_adoption(record)
+    if prior_bytes is not None:
+        if (prior_record.get("profile_id") == reviewed.get("profile_id")
+                and prior_record.get("manifest_sha256") == reviewed.get("manifest_sha256")
+                and prior_record.get("rootfs_device") == reviewed.get("rootfs_device")
+                and prior_record.get("rootfs_inode") == reviewed.get("rootfs_inode")
+                and prior_record.get("guest_user") == reviewed.get("guest_user")):
+            return {"status": "adopted", "record": prior_record,
+                    "guest_mutations": False, "native_metadata_changed": False}
+        raise SetupError("an existing adoption record cannot be replaced without a tested rollback path")
     payload = {
         "schema_version": 1,
         "profile_id": "ternuxx-debian-trixie-workstation",
@@ -215,6 +402,8 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
         "rootfs_inode": reviewed["rootfs_inode"],
         "guest_user": reviewed["guest_user"],
         "guest_release": reviewed["guest_release"],
+        "package_groups": reviewed["observed_package_groups"],
+        "dpkg_status_sha256": reviewed["dpkg_status_sha256"],
         "adopted_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
         "origin": "existing-rootfs-adoption",
     }
@@ -224,7 +413,7 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
 
 
 def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[str, object]:
-    _, manifest_hash = _manifest(Path(repo_root))
+    manifest, manifest_hash = _manifest(Path(repo_root))
     root, previews, record_path = _state_paths(state_dir, home, create=False)
     try:
         rootfs, identity = _safe_rootfs(prefix)
@@ -248,10 +437,30 @@ def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[st
                     "saved_profile": adoption.get("profile_id"),
                     "detail": "setup manifest differs from the adoption record; guest drift is not inferred",
                     "next_action": "review the recorded and current manifest hashes; status does not refresh adoption metadata or change guest files"}
+    package_baseline = {"status": "not_recorded", "changed_groups": []}
+    if adoption and isinstance(adoption.get("package_groups"), dict):
+        current_profile = _guest_profile(rootfs, adoption.get("guest_user", ""), manifest)
+        current_groups = current_profile["packages"]["groups"]
+        recorded_groups = adoption["package_groups"]
+        changed_groups = []
+        for group in manifest["packages"]:
+            recorded = recorded_groups.get(group)
+            current = current_groups.get(group)
+            if not isinstance(recorded, dict) or not isinstance(current, dict):
+                changed_groups.append(group)
+                continue
+            if (recorded.get("versions") != current.get("versions")
+                    or recorded.get("missing") != current.get("missing")
+                    or recorded.get("held") != current.get("held")):
+                changed_groups.append(group)
+        package_baseline = {"status": "matches" if not changed_groups else "changed",
+                            "changed_groups": changed_groups,
+                            "dpkg_status_sha256": current_profile["packages"]["dpkg_status_sha256"]}
     return {"status": "adopted" if adoption else "needs_adoption",
             "rootfs": str(rootfs), "rootfs_device": identity.st_dev, "rootfs_inode": identity.st_ino,
             "manifest_sha256": manifest_hash, "profile_id": "ternuxx-debian-trixie-workstation",
             "recorded_guest_user": adoption.get("guest_user") if adoption else None,
+            "package_baseline": package_baseline,
             "ternux_cli_dependency": False,
             "next_action": "none" if adoption else "preview and confirm read-only adoption"}
 

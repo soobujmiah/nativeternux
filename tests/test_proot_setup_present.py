@@ -20,13 +20,30 @@ class ProotSetupPresentationTests(unittest.TestCase):
                     "turnip_driver": {"status": "present"},
                     "turnip_icd": {"status": "missing"},
                 },
+                "observed_other_icd_configs": [{"name": "vendor-driver.json"}],
+                "observed_package_groups": {"base": {"requested": 14, "installed": 14,
+                    "missing": [], "held": ["libgl1-mesa-dri"], "versions": {}}},
                 "guest_mutations": [], "package_changes": [], "service_changes": [],
             },
         }
         summary = proot_setup_present.summarize(result)
-        self.assertIn("Turnip files: driver present; ICD missing (file presence only)", summary)
+        self.assertIn("Ternuxx Turnip files: driver present; ICD missing (file presence only)", summary)
+        self.assertIn("Other ICD configs (not selected by Ternuxx): vendor-driver.json", summary)
+        self.assertIn("Manifest packages: base 14/14", summary)
+        self.assertIn("APT-held manifest packages: 1 (not upgraded)", summary)
         self.assertTrue(any("unchanged" in line for line in summary))
         self.assertFalse(any("acceleration verified" in line for line in summary))
+
+    def test_stale_prior_record_suppresses_apply_command(self) -> None:
+        result = {"status": "preview", "plan_id": "b" * 64,
+            "operation": {"guest_release": {"VERSION_ID": "13", "VERSION_CODENAME": "trixie"},
+                "guest_user": "workuser", "rootfs": "/guest",
+                "apply_blocked_reason": "old record",
+                "observed_graphics_files": {}, "observed_package_groups": {},
+                "guest_mutations": [], "package_changes": [], "service_changes": []}}
+        summary = proot_setup_present.summarize(result)
+        self.assertTrue(any("Apply blocked" in line for line in summary))
+        self.assertFalse(any(line.startswith("Apply after review:") for line in summary))
 
     def test_invalid_user_plan_and_terminal_controls_are_rejected(self) -> None:
         base = {"status": "preview", "plan_id": "a" * 64,

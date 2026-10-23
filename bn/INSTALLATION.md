@@ -68,13 +68,13 @@ cd "$HOME/ternuxx"
 ./tx install debian
 ```
 
-এটি read-only পূর্বরূপ দেখায়: Debian সংস্করণ, account, rootfs পরিচয়, graphics driver ফাইল এবং plan ID। সব মিলিয়ে দেখে শুধু সেই পরিকল্পনা রেকর্ড করুন:
+এটি read-only পূর্বরূপ দেখায়: Debian সংস্করণ, account, rootfs পরিচয়, manifest-এর প্রতিটি package group-এর install/hold অবস্থা, Ternuxx-এর নির্দিষ্ট graphics ফাইল এবং অন্য ICD config আলাদা করে। Guest dpkg database শুধু পড়া হয়; guest-এ login বা পরিবর্তন হয় না। Preview-তে blocker না থাকলেই plan apply করুন:
 
 ```sh
 ./tx install debian apply PLAN_ID --yes
 ```
 
-এই প্রথম integration ধাপ Native পাশে ব্যক্তিগত profile record তৈরি করে; guest-এর ফাইল, package বা service বদলায় না এবং অনুপস্থিত package ইনস্টলও করে না। account নির্দিষ্ট করতে `--user YOUR_DEBIAN_USERNAME` দিন। নিচের low-level command-গুলো একই adoption প্রক্রিয়ার পুরোনো রূপ.
+এই প্রথম integration ধাপ Native পাশে ব্যক্তিগত profile record তৈরি করে; guest-এর ফাইল, package বা service বদলায় না এবং অনুপস্থিত package ইনস্টলও করে না। পুরোনো manifest/rootfs/account-এর adoption record থাকলে সেটি অক্ষত রেখে apply বন্ধ হয়; rollback-safe refresh এখনো তৈরি হয়নি। account নির্দিষ্ট করতে `--user YOUR_DEBIAN_USERNAME` দিন। নিচের low-level command-গুলো একই adoption প্রক্রিয়ার পুরোনো রূপ.
 ## ৫. বিদ্যমান Debian না ছুঁয়ে নতুন অতিথি পরিবেশ পরীক্ষা করুন
 
 আপনার আগে থেকেই Debian থাকলে নতুন পরীক্ষার জন্য অনন্য `ternuxx-replay-NAME` alias ব্যবহার করুন। `NAME`-এর জায়গায় ছোট ইংরেজি অক্ষর/সংখ্যা দিন; উদাহরণে `demo` ব্যবহার হয়েছে:
@@ -91,7 +91,7 @@ cd "$HOME/ternuxx"
 ./tx proot setup fresh-install --user YOUR_DEBIAN_USERNAME --alias ternuxx-replay-demo --yes --plan-id PLAN_ID
 ```
 
-ইনস্টল প্রয়োগের সময় নির্বাচিত guest ব্যবহারকারীর sudo password দুইবার গোপনে দিতে হবে। password শুধু stdin দিয়ে guest-এ পাঠানো হয়; command, preview, receipt বা log-এ রাখা হয় না। Native Termux-এ sudo password লাগে না। এতে আলাদা Debian কনটেইনারে প্যাকেজ ইনস্টল হবে; এটি সময় নিতে এবং অনেক জায়গা ব্যবহার করতে পারে। আগের `debian` পরিবেশ প্রতিস্থাপন করার কমান্ড নয়। নিজের ডিভাইস-এর পরিকল্পনা না বুঝলে প্রয়োগ করবেন না। ইনস্টল শেষে:
+ইনস্টল প্রয়োগের সময় নির্বাচিত guest ব্যবহারকারীর sudo password দুইবার গোপনে দিতে হবে। password শুধু stdin দিয়ে guest-এ পাঠানো হয়; command, preview, receipt বা log-এ রাখা হয় না। Native Termux বিদ্যমান Termux/Android app identity ব্যবহার করে; আলাদা Linux user বা sudo password তৈরি করে না। user ও password তৈরির এই ব্যবস্থা আপাতত শুধু fresh Debian Trixie provisioning-এ আছে। proot-distro-র অন্য distribution-গুলো এখনো Ternuxx দিয়ে provision করা যায় না। এতে আলাদা Debian কনটেইনারে প্যাকেজ ইনস্টল হবে; এটি সময় নিতে এবং অনেক জায়গা ব্যবহার করতে পারে। আগের `debian` পরিবেশ প্রতিস্থাপন করার কমান্ড নয়। নিজের ডিভাইস-এর পরিকল্পনা না বুঝলে প্রয়োগ করবেন না। ইনস্টল শেষে:
 
 ```sh
 ./tx proot status --json
