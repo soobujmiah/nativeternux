@@ -29,8 +29,8 @@ Do not claim independence or bidirectional integration until the applicable test
 | ID | Acceptance test | Passing evidence |
 |---|---|---|
 | NTA-01 | Native SSH and continuity recording while PRoot is not running | Native-only test record shows both successful; no guest process/dependency in the call path. |
-| NTA-02 | `db` compatibility | Invocation enters the existing PRoot and does not launch a GUI; captured behavior matches the pre-change baseline. |
-| NTA-03 | `xgo` compatibility | Existing graphical workflow is preserved and verified against a pre-change baseline. |
+| NTA-02 | `db` compatibility | Superseded by ADR-0016: `tx db` is Ternuxx's first-party command; legacy `db` behavior is not a compatibility gate. |
+| NTA-03 | `xgo` compatibility | Superseded by ADR-0016: legacy `xgo` behavior is not a Ternuxx acceptance gate. The separate Ternux source repository/launcher remains outside Ternuxx's change scope. |
 | NTA-04 | Authorized PRoot-to-native diagnostic | A scoped diagnostic succeeds through configured SSH; audit record identifies operation and providers without secrets. |
 | NTA-05 | Unauthorized cross-provider request | The same operation without the required authorization is denied at the native execution boundary. |
 | NTA-06 | Stop PRoot | Independent native services remain alive and healthy; only PRoot-owned processes/resources are stopped. |
@@ -46,7 +46,7 @@ Each test must state whether it is a mock, host integration, or owner-operated p
 - Cross-provider control requires a narrow adapter and explicit authorization instead of generic shell forwarding.
 - Task recovery is checkpoint-based and owner-mediated for PRoot-dependent continuation.
 - Service/process and wake-lock ownership must be recorded before implementing broad start/stop controls.
-- This decision preserves the existing Ternux `xgo` and `db` behavior; it does not authorize changes to their implementation.
+- The earlier `xgo`/`db` compatibility requirement is superseded by ADR-0016. That clarification does not authorize changes to the separate Ternux source repository/launcher, broad cleanup, or unpreviewed changes to the existing rootfs.
 
 ## Implementation status
 

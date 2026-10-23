@@ -126,6 +126,7 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A82 | Dated feature matrix claimed no boot-profile manager or lifecycle UI existed after CLI/TUI controls were implemented | Reconciled the row with current CLI/TUI implementation and source tests; kept PRoot/hybrid and actual Termux:Boot delivery limits explicit. |
 | A83 | ADR-0011/0012/0015 retained decision-time SSH/service status and a staged PRoot installer description as current | Dated the old context, reconciled current Native SSH/shared-service and completed disposable Trixie replay evidence, and retained post-repair auth, cold boot, guest migration/rollback, and workload limits. |
 | A84 | ADR-0004 still said browser bootstrap and all API mutation must remain disabled after scoped authenticated Web mutations passed acceptance | Replaced the blanket prohibition with per-operation security/acceptance gates, linked current API/replay evidence, and updated ADR-0005 to identify all four current clients. Full mutation parity and off-home transport remain open. |
+| A85 | ADR-0001/0010 could imply PRoot is part of the Native baseline and still listed legacy `db`/`xgo` compatibility as required | Clarified independent Native operation/optional PRoot and marked NTA-02/NTA-03 superseded by ADR-0016 while retaining separate Ternux source/rootfs protections. |
 
 
 ## Continuation order

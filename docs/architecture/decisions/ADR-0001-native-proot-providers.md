@@ -10,7 +10,7 @@ The owner wants a phone-first workstation that uses Termux-native applications a
 
 ## Decision
 
-Model native Termux and the existing Ternux Debian PRoot as separate, first-class providers. Keep Ternuxx's host management and guest workload adapters additive and opt-in. Hybrid mode routes selected work through scoped arguments, files, and display/audio endpoints. One owner controls each display/session. Preserve Ternux's launcher, rootfs, GPU environment, and lifecycle; use a separately reviewed adapter that tracks only processes it starts.
+Keep Native Termux independently usable without any PRoot workload. Treat Debian PRoot as an optional provider selected only for explicitly routed tasks. Model the Native host and guest workload as separate first-class providers; keep Ternuxx's host management and guest adapters additive and opt-in. Hybrid mode routes selected work through scoped arguments, files, and display/audio endpoints. One owner controls each display/session. Preserve Ternux's launcher, rootfs, GPU environment, and lifecycle; use a separately reviewed adapter that tracks only processes it starts.
 
 ## Alternatives considered
 
@@ -37,4 +37,5 @@ The project must manage two package/state namespaces, validate environment hando
 
 - Owner direction in the Ternuxx project brief.
 - Ternuxx `docs/ARCHITECTURE.md`, `docs/HYBRID-INTEGRATION.md`, and `docs/PROOT-GPU.md`.
+- Native independence and bounded PRoot scope are clarified by [ADR-0010](ADR-0010-native-termux-autonomy.md) and the superseding owner direction in [ADR-0006](ADR-0006-adapt-existing-ternux-provider.md).
 - Read-only inspection of the existing Ternux source and launcher, as summarized in Ternuxx research; no live PRoot renderer rerun was made for this decision.
