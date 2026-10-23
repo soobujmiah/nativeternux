@@ -1,0 +1,7 @@
+event_id: commit-899688adcefc-e01422433071880a
+repository: soobujmiah/ternuxx
+commit: 899688adcefc948c99032d0cd260a0e047dda368
+kind: commit
+occurred_at: '2026-10-23T14:52:57Z'
+status: completed
+summary: fix managed SSH wrapper JSON handshake
