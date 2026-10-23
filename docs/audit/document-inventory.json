@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 108,
+  "read_count": 109,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -405,8 +405,8 @@
       "kind": "narrative",
       "sha256": "b16ca8e0ec905c85edcedbfcb3d1e9324dbc3adc8c11783c6a62201680b1b99d",
       "lines": 55,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "b16ca8e0ec905c85edcedbfcb3d1e9324dbc3adc8c11783c6a62201680b1b99d"
     },
     {
       "path": "docs/architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md",
