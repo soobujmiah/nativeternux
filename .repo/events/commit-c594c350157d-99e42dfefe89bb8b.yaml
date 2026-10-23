@@ -1,0 +1,7 @@
+event_id: commit-c594c350157d-99e42dfefe89bb8b
+repository: soobujmiah/ternuxx
+commit: c594c350157d5bca4df6ea336f02e3b7175260af
+kind: commit
+occurred_at: '2026-10-23T18:05:56Z'
+status: completed
+summary: 'fix(proot): keep adoption status read-only'
