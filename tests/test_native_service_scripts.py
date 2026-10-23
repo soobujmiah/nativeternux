@@ -91,7 +91,7 @@ class NativeServiceScriptTests(unittest.TestCase):
                         self.fail(f"service exited early: {proc.communicate()}")
                     time.sleep(0.05)
                 self.assertTrue(events.exists())
-                self.assertIn("wakelock acquire native.sshd --persistent", events.read_text())
+                self.assertIn("--json wakelock acquire native.sshd --persistent", events.read_text())
                 self.assertIn(f"state={state}", events.read_text())
                 self.assertIn("daemon-started", events.read_text())
                 service_log = (state / "log/sshd-runit.log").read_text()
@@ -105,6 +105,31 @@ class NativeServiceScriptTests(unittest.TestCase):
                 if proc.poll() is None:
                     proc.kill()
                     proc.wait(timeout=2)
+
+    def test_service_wrapper_logs_wakelock_operation_error_without_starting_sshd(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="ternuxx-runit-wakelock-error-") as temp:
+            root = Path(temp)
+            prefix = root / "prefix"
+            home = root / "home"
+            state = home / ".local/share/ternuxx"
+            config = home / ".config/ternuxx/sshd_recovery.conf"
+            config.parent.mkdir(parents=True)
+            config.write_text("fixture\n")
+            events = root / "events.log"
+            executable(prefix / "bin/tx", "#!/bin/sh\necho \"$*\" >> '" + str(events) + "'\n" +
+                       "echo '{\"ok\":false,\"error\":{\"code\":\"operation_failed\",\"message\":\"private detail\"}}'\n")
+            executable(prefix / "bin/sshd", "#!/bin/sh\necho daemon-started >> '" + str(events) + "'\nexit 0\n")
+            (prefix / "bin/bash").symlink_to(shutil.which("bash"))
+            env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
+                   "TERMUX_VERSION": "fixture", "TERNUXX_STATE_DIR": str(state)}
+            result = subprocess.run(["bash", str(SERVICE_SCRIPT)], env=env,
+                                    capture_output=True, text=True, timeout=5)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("--json wakelock acquire native.sshd --persistent", events.read_text())
+            service_log = (state / "log/sshd-runit.log").read_text()
+            self.assertIn("wakelock-acquire=failed-code-operation_failed-at-", service_log)
+            self.assertNotIn("private detail", service_log)
+            self.assertNotIn("daemon-started", events.read_text())
 
     def test_service_wrapper_skips_disabled_persistent_lease_and_keeps_ssh_running(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ternuxx-runit-policy-script-") as temp:

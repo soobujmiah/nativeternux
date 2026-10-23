@@ -4,23 +4,21 @@
 
 ## GPU ও PRoot সম্পর্কে
 
-এই ডিভাইসে native Termux-এর পরীক্ষিত Turnip package Adreno 825-কে `VK_ERROR_INCOMPATIBLE_DRIVER` দিয়ে প্রত্যাখ্যান করেছে। এই ফল শুধু পরীক্ষিত native package/process-এর জন্য প্রযোজ্য। Existing Ternux-এর Debian PRoot-এ আলাদা Zink/Turnip graphics path আছে—সেটি Ternuxx থেকে নিয়ন্ত্রিত বা পুনরায় যাচাই করা হয়নি। বিস্তারিত: [PRoot GPU reuse](../docs/PROOT-GPU.md) এবং [Research & Evidence](../docs/RESEARCH.md)।
+Native Termux ও Debian PRoot আলাদা graphics provider; একটির ফল অন্যটির GPU support প্রমাণ করে না। Ternuxx-এর PRoot graphics check ও সীমা দেখুন [PRoot GPU reuse](../docs/PROOT-GPU.md) এবং [Research & Evidence](../docs/RESEARCH.md)-এ। তারিখযুক্ত GPU ফলকে বর্তমান package/version-এর নিশ্চয়তা ধরে নেবেন না।
 
 Shader cache folder থাকা একা GPU renderer প্রমাণ করে না। চলমান desktop-এ `glxinfo -B` থেকে Zink/Turnip renderer দেখা দরকার; `llvmpipe` হলে সেটি software rendering।
 
-Ternuxx কোনো অবস্থাতেই নিজে থেকে Ternux-এর `~/x.sh`, Debian rootfs, display/audio lifecycle বা cleanup পরিবর্তন/trim করবে না। ভবিষ্যৎ PRoot integration opt-in হবে, existing Ternux capability parity বজায় রাখবে এবং ownership-aware lifecycle না হওয়া পর্যন্ত আলাদা Ternuxx desktop একই display-তে চালানো হবে না। CPU baseline; GPU/NPU কেবল actual workload backend evidence থাকলেই supported বলা হবে।
+Ternuxx এখন Native Termux থেকে PRoot-Distro Debian-কে নিজস্ব typed adapter দিয়ে inspect ও পরিচালনা করে; আলাদা Ternux CLI runtime dependency নয়। প্রয়োজনীয় guest package/config পরিবর্তন কেবল নির্দিষ্ট guest, exact preview, explicit apply ও rollback সহ করতে হবে; rootfs reset/replace বা অচিহ্নিত cleanup নয়। একই display-তে desktop lifecycle চালাতে owner যাচাই দরকার। CPU baseline; GPU/NPU support actual workload evidence ছাড়া দাবি করা যাবে না।
 
 ## বর্তমান অবস্থা
 
 | সক্ষমতা | অবস্থা |
 |---|---|
-| Read-only CLI scaffold | আছে |
-| Native package installation | পরিকল্পিত; implement করা হয়নি |
-| Native XFCE lifecycle | পরিকল্পিত; implement করা হয়নি |
+| Native package ও desktop lifecycle | Implemented; বর্তমান parity/acceptance [phase status](../docs/PHASE-STATUS.md)-এ দেখুন |
 | পরীক্ষিত Adreno 825-এ native Turnip | পর্যবেক্ষিত package-এ ব্যর্থ |
-| Existing Ternux PRoot reuse | নকশা ও documentation আছে; adapter নেই |
+| Debian PRoot integration | Ternuxx-এর typed provider/management operations আছে; P4 feature parity ও acceptance চলমান |
 | CPU/GPU/NPU capability verification | পরিকল্পিত; NPU access এখনো প্রমাণিত নয় |
-| Hybrid workflow | ভবিষ্যৎ কাজ; Native ও PRoot-এর শক্তি safe handoff-এ একত্র করা |
+| Hybrid workflow | CLI/TUI/Web/GTK-তে অনেক shared lifecycle ও handoff আছে; অসম্পূর্ণ parity ও reproducibility audit চলমান |
 
 আরও দেখুন: [আমার vision](../docs/PRODUCT-VISION.md), [Architecture](../docs/ARCHITECTURE.md), [Roadmap](../docs/ROADMAP.md), [Installation status](../docs/INSTALLATION.md)।
 

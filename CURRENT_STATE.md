@@ -10,7 +10,7 @@ Git/CI facts belong to [generated status](.repo/STATUS.md); phase acceptance bel
 
 Native Termux owns boot/recovery, SSH, CLI, management, state, and native workloads. Debian PRoot is an optional provider. The four clients share typed services but still have different action coverage. See [product vision](docs/PRODUCT-VISION.md), [architecture](docs/ARCHITECTURE.md), and [client coverage](docs/architecture/CAPABILITY-MATRIX.md).
 
-Implement in Native `$HOME/ternuxx` over SSH 8022. The installed `tx` shim dispatches to this checkout. Port 8023 is the separate managed product service. Preserve both channels, Native Termux, and the owner's active Codex PRoot session. This task authorizes bounded development, required installs, GUI review, and reversible PRoot configuration work; it does not authorize replacing/pruning the existing rootfs or shutting down the workstation.
+Implement in Native `$HOME/ternuxx` over SSH 8022. The installed `tx` shim dispatches to this checkout. Port 8023 is the separate managed product service. Preserve both channels, Native Termux, and the owner's active Codex PRoot session. This task explicitly authorizes task-required Native Termux and existing Debian PRoot configuration changes, bounded installs, and Native GUI review. Guest changes must target the exact Ternuxx operation, preserve original state/user data, and have a tested rollback. Preserve the active workstation, 8023 service, and working guest; do not reset/replace/prune the rootfs, modify the separate Ternux source repository/launcher, or access unrelated personal/shared storage.
 
 ## Phase and qualification
 

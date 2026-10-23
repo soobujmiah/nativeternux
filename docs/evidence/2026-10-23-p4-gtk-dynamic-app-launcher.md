@@ -8,10 +8,6 @@ The GTK app launch flow now obtains its app list from `proot.shortcuts.list` thr
 
 The bridge returns 35 live available Debian desktop entries on this device. This is inventory evidence only; no app was launched and no guest file or configuration was changed during discovery.
 
-## Evidence
-
-## Evidence
-
 ## Verification
 
 - `clang -O2 -Wall -Wextra ... management-center.c`: passed with no warnings.

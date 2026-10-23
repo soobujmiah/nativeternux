@@ -3,18 +3,18 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 429,
-  "read_count": 95,
+  "document_count": 436,
+  "read_count": 105,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
     {
       "path": ".github/workflows/repo-contract.yml",
       "kind": "structured",
-      "sha256": "2b60ab1bc749a822c2f8007f7a93dd84b1b2579511d47cebb97baffe20768389",
-      "lines": 55,
-      "read_status": "read",
-      "read_sha256": "2b60ab1bc749a822c2f8007f7a93dd84b1b2579511d47cebb97baffe20768389"
+      "sha256": "2af026119422a88fd67ff89cf6593f45846f462d3ce1d31fc7b21a962df60208",
+      "lines": 57,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": ".github/workflows/repo-knowledge-sync.yml",
@@ -27,18 +27,18 @@
     {
       "path": "AI_ASSISTANT.md",
       "kind": "narrative",
-      "sha256": "2b6a31fde6f7ebcecebfd05eb6a5a8dfc588220ea28a9e734396328d5d70288c",
-      "lines": 66,
+      "sha256": "cee6def0213595eab38e56068f472b47efcba301dfe09496a6ee28a03fd981e2",
+      "lines": 70,
       "read_status": "read",
-      "read_sha256": "2b6a31fde6f7ebcecebfd05eb6a5a8dfc588220ea28a9e734396328d5d70288c"
+      "read_sha256": "cee6def0213595eab38e56068f472b47efcba301dfe09496a6ee28a03fd981e2"
     },
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "036e5771512f2a4c0270daa69435e74fca76b94eec00304333c709d94533f455",
-      "lines": 57,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "2daab19ca2b44e71e089c1cc93d7b73a55f37267d5d121586f4ccba70cd1793a",
+      "lines": 61,
+      "read_status": "read",
+      "read_sha256": "2daab19ca2b44e71e089c1cc93d7b73a55f37267d5d121586f4ccba70cd1793a"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,18 +59,18 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "81c052ba6d3a57f2c594990fc4e2b783cd9fe55cd8f681c01088184e3c549640",
+      "sha256": "40c07644c68db048f701f1b1e8607534774fd48e2730665e56e3cb7022ee6f6d",
       "lines": 82,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "40c07644c68db048f701f1b1e8607534774fd48e2730665e56e3cb7022ee6f6d"
     },
     {
       "path": "SECURITY.md",
       "kind": "narrative",
-      "sha256": "dbefaabbb10cb8187816a809b75223118b0061f650f22269ef6d1ea80d4c3e6e",
-      "lines": 57,
+      "sha256": "9d341f725da51074752c8d7629d8d66c8f704fd030f22c604ad10e16b613abe6",
+      "lines": 61,
       "read_status": "read",
-      "read_sha256": "dbefaabbb10cb8187816a809b75223118b0061f650f22269ef6d1ea80d4c3e6e"
+      "read_sha256": "9d341f725da51074752c8d7629d8d66c8f704fd030f22c604ad10e16b613abe6"
     },
     {
       "path": "SKB_KNOWLEDGE_SYNC.md",
@@ -83,10 +83,10 @@
     {
       "path": "bn/README.md",
       "kind": "narrative",
-      "sha256": "ccd002ad134dc819475e5b6fde52243551d6c63a71cf0c3432c8e7e67409074f",
-      "lines": 34,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "13cd3e25a7ee80041e9dcb136b1907555d0bf4b69faf4cbdc5af196689d4db64",
+      "lines": 32,
+      "read_status": "read",
+      "read_sha256": "13cd3e25a7ee80041e9dcb136b1907555d0bf4b69faf4cbdc5af196689d4db64"
     },
     {
       "path": "config/graphics/native-kgsl.json",
@@ -163,8 +163,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "5c528609148817b4b351893dc783b401edbd111b719a1cace502f679a31d408e",
-      "lines": 183,
+      "sha256": "c1669864b06a632d8c3722c693af5b0d6ff06f01c21a459ec1fd087c79e59649",
+      "lines": 186,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -181,8 +181,8 @@
       "kind": "narrative",
       "sha256": "47747d7d090d73f4bfd1c31ab18b5d3230f18a4a4a251ddca2817ff76e34c197",
       "lines": 52,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "47747d7d090d73f4bfd1c31ab18b5d3230f18a4a4a251ddca2817ff76e34c197"
     },
     {
       "path": "docs/PROOT-GUI-DISPLAY0.md",
@@ -201,6 +201,14 @@
       "read_sha256": "0c1932a9cad9c9f8c3bd89737119b40ceedcb4e6e984808c62b963130378b54b"
     },
     {
+      "path": "docs/README.md",
+      "kind": "narrative",
+      "sha256": "77672d3d723efc2c6bb59a3a7cb0f0bb69b4ea6180f617fb8e6ae5a544b52621",
+      "lines": 48,
+      "read_status": "read",
+      "read_sha256": "77672d3d723efc2c6bb59a3a7cb0f0bb69b4ea6180f617fb8e6ae5a544b52621"
+    },
+    {
       "path": "docs/RESEARCH.md",
       "kind": "narrative",
       "sha256": "29b8ec19e8f007de7affb7732364352244c95b307069e0cdfd5957aa457d9a88",
@@ -211,7 +219,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "1cb812d75b53a568d3972813487c382a9da12595ada9b5b0358d4e9313fc8644",
+      "sha256": "1260e88b8ebc25c5b306e8dd5e4d21c509fa880acc774fb34c43dd961326f839",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -515,10 +523,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "ee41f2b998a2d46b8e9dcf94c1ad74b03056fa522a745ea30ee601e1ceb56fbf",
-      "lines": 97,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "0c5ad0d561757c453b69a766e0c4cb741387a5f30ddedcf944b492452d1f82da",
+      "lines": 101,
+      "read_status": "read",
+      "read_sha256": "0c5ad0d561757c453b69a766e0c4cb741387a5f30ddedcf944b492452d1f82da"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2753,6 +2761,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-23-native-ssh-service-repair.md",
+      "kind": "narrative",
+      "sha256": "a7310f9d9f66ab1c5c8075ed4c8bad636c218225da46d6c990465e9db01aae0d",
+      "lines": 26,
+      "read_status": "read",
+      "read_sha256": "a7310f9d9f66ab1c5c8075ed4c8bad636c218225da46d6c990465e9db01aae0d"
+    },
+    {
       "path": "docs/evidence/2026-10-23-p4-broker-runtime-recheck.md",
       "kind": "narrative",
       "sha256": "502e40fb93152d5eb1c2fe61ff1f0260f1a800c527a0a6d36f9ec52537176b70",
@@ -2761,10 +2777,50 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-23-p4-dynamic-debian-app-discovery.md",
+      "kind": "narrative",
+      "sha256": "ecf2ff6967c49e9b11bc05b66cd02cf51bd6b686c6622b557afe5dad7512f85b",
+      "lines": 21,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md",
+      "kind": "narrative",
+      "sha256": "32736127d677b18731b5b04012630473b1b65e1cd4fba8d79c12ef0695b8cd4a",
+      "lines": 25,
+      "read_status": "read",
+      "read_sha256": "32736127d677b18731b5b04012630473b1b65e1cd4fba8d79c12ef0695b8cd4a"
+    },
+    {
+      "path": "docs/evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md",
+      "kind": "narrative",
+      "sha256": "4f91ed57db72cf421e7d5aeef803dce4c7998d22abdca6c5422062949fa273d6",
+      "lines": 26,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-23-p4-shortcut-serialization.md",
       "kind": "narrative",
       "sha256": "6ad9c966e5671158bc633067604a25bb95f97b757c194cf7dc79bc25a22c5e59",
       "lines": 18,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-23-p4-virgl-client-visibility.md",
+      "kind": "narrative",
+      "sha256": "c80e7f232b4d53e6644ec8578add0f3f15ac5549b89b0288de879bc20635ef68",
+      "lines": 24,
+      "read_status": "read",
+      "read_sha256": "c80e7f232b4d53e6644ec8578add0f3f15ac5549b89b0288de879bc20635ef68"
+    },
+    {
+      "path": "docs/evidence/2026-10-23-p4-virgl-socket-fix.md",
+      "kind": "narrative",
+      "sha256": "9c37c79bc396b658caa818b068efd7910ec11332944003d8af260417cf92ad77",
+      "lines": 44,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3037,8 +3093,8 @@
       "kind": "narrative",
       "sha256": "6b8259e0a61f0347cdb574286f62eeae545aedc0f6a484ec7c03fe50a39e3806",
       "lines": 87,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "6b8259e0a61f0347cdb574286f62eeae545aedc0f6a484ec7c03fe50a39e3806"
     },
     {
       "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",
@@ -3067,10 +3123,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "85407d19df70c69ed252a46c9617e69acf1b41be8bef54ee8246f1d47ba4223a",
-      "lines": 198,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "316767c38572aff35686d57c608893cb2fa9bb91386170a8c847af30e49ed294",
+      "lines": 201,
+      "read_status": "read",
+      "read_sha256": "316767c38572aff35686d57c608893cb2fa9bb91386170a8c847af30e49ed294"
     },
     {
       "path": "requirements-dev.txt",
@@ -3315,8 +3371,8 @@
     {
       "path": "schemas/proot-x11-shortcuts.schema.json",
       "kind": "structured",
-      "sha256": "3e3cfd884fd924c2124c8024c625a3fd643e6ff4af245b51c0c1c6ec059dea49",
-      "lines": 72,
+      "sha256": "d2f9e7804cc06c1d3420d5c330b9dc050fdb3bf4611e9272c4222ea7fd3d42f2",
+      "lines": 281,
       "read_status": "pending",
       "read_sha256": null
     },

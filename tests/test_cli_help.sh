@@ -58,6 +58,12 @@ grep -Fq 'graphics verification' <<<"$web_help"
 grep -Fq 'timezone' <<<"$web_help"
 grep -Fq 'cron executions list|show' <<<"$mng_help"
 grep -Fq 'does not run jobs' <<<"$mng_help"
+grep -Fq 'The inspect action does not read key or password files' <<<"$ssh_help"
+grep -Fq 'tx mng logs list|read SOURCE_ID - Read bounded Ternuxx-owned log tails' <<<"$mng_help"
+if grep -Fq $'\x14' <<<"$mng_help"; then
+  echo 'Control character found in management help' >&2
+  exit 1
+fi
 ! grep -Eq '^[[:space:]]+gui[[:space:]]' <<<"$root_help"
 grep -Fq 'Ternuxx v' <<<"$root_version"
 grep -Fq 'Ternuxx v' <<<"$bin_version"

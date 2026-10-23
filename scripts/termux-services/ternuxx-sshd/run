@@ -19,12 +19,36 @@ exec >>"$LOG_FILE" 2>&1
 printf 'wrapper-started-at=%s pid=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$"
 
 WAKELOCK_ACQUIRED=0
-acquire_response=$(TERNUXX_JSON=1 "$PREFIX/bin/bash" "$PREFIX/bin/tx" wakelock acquire native.sshd --persistent) || {
+acquire_response=$("$PREFIX/bin/bash" "$PREFIX/bin/tx" --json wakelock acquire native.sshd --persistent) || {
   printf 'wakelock-acquire=failed-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   exit 1
 }
-lease_state=$(printf '%s' "$acquire_response" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("data",{}).get("state", ""))') || exit 1
+lease_state=$(printf '%s' "$acquire_response" | python3 -c '
+import json, re, sys
+try:
+    response = json.load(sys.stdin)
+except (json.JSONDecodeError, TypeError):
+    raise SystemExit(1)
+if not isinstance(response, dict):
+    print("unverified")
+elif response.get("ok") is False:
+    error = response.get("error")
+    code = error.get("code") if isinstance(error, dict) else None
+    print("error:" + code if isinstance(code, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,63}", code) else "unverified")
+elif response.get("ok") is True:
+    data = response.get("data")
+    state = data.get("state") if isinstance(data, dict) else None
+    print(state if isinstance(state, str) else "unverified")
+else:
+    print("unverified")
+') || {
+  printf 'wakelock-acquire=response-invalid-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  exit 1
+}
 case "$lease_state" in
+  error:*)
+    printf 'wakelock-acquire=failed-code-%s-at-%s\n' "${lease_state#error:}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    exit 1 ;;
   acquired|already_acquired)
     WAKELOCK_ACQUIRED=1
     printf 'wakelock-acquire=ok-at-%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" ;;

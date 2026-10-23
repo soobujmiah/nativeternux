@@ -148,7 +148,7 @@ EOF
       cat <<'EOF'
 tx mng center [install] — Open/install the native GTK management app
 tx mng catalog list — Browse shared categories and resources
-tx mng logs list|read SOURCE_ID  Read bounded Ternuxx-owned log tails
+tx mng logs list|read SOURCE_ID - Read bounded Ternuxx-owned log tails
 tx mng proot status — Inspect installed guest and Ternuxx session ownership
 tx mng proot profiles list|show — Inspect validated headless and interactive profiles
 tx mng proot sessions list|show|health — Inspect owned sessions, liveness, exit and attachment capability
@@ -413,8 +413,7 @@ tx ssh inspect/keys-list/rollback-list/rollback-preview/rollback-apply/enroll-pr
 Reports whether OpenSSH/configuration is present, whether sshd accepts the
 current config, allowlisted effective authentication/bind policy, observed
 TCP listeners and whether procfs permitted reading them, process presence,
-Termux:Boot directory presence, and whether a runit command is available. It
-inspect does not read key or password files, display raw config, or test authenticated
+Termux:Boot directory presence, and whether a runit command is available. The inspect action does not read key or password files, display raw config, or test authenticated
 connectivity. keys-list reads only the fixed native authorized_keys file and returns key
 type, fingerprint, and sanitized comment; it never returns key bytes. Start/stop preview and apply control only the fixed Ternuxx
 Runit unit after exact service-definition identity verification. Apply requires
