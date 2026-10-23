@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native suite passed 894 tests (1 skipped) on 2026-10-24; focused PRoot adoption tests passed 7/7. A separate Debian Trixie replay from the pinned image and APT snapshot passed while preserving the existing guest. Native package candidate drift remains: 4/16 versions differ, no upgrades applied, and a durable version lock is still open.
+Native Termux suite passed 895 tests with 1 skip; pinned Debian replay verified 50 packages while preserving the existing guest. Native package candidates differ 4/16; no upgrades applied. Durable package lock, clean-device replay, guest migration/rollback and GUI acceptance remain open. Prohibited external X11 repository URL is absent from current main.
 
-**Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; finish P4 reproducibility, existing-guest migration and rollback evidence, then reconcile installed/runtime state and the remaining full-audit gates.
+**Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; close Native package lock/update lifecycle and exact existing-guest migration/rollback evidence, then reconcile installed/runtime state and remaining audit gates.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

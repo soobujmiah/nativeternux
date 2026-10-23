@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Native suite passed 894 tests (1 skipped) on 2026-10-24; focused PRoot adoption tests passed 7/7. A separate Debian Trixie replay from the pinned image and APT snapshot passed while preserving the existing guest. Native package candidate drift remains: 4/16 versions differ, no upgrades applied, and a durable version lock is still open.
+Native Termux suite passed 895 tests with 1 skip; pinned Debian replay verified 50 packages while preserving the existing guest. Native package candidates differ 4/16; no upgrades applied. Durable package lock, clean-device replay, guest migration/rollback and GUI acceptance remain open. Prohibited external X11 repository URL is absent from current main.
 
-**Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; finish P4 reproducibility, existing-guest migration and rollback evidence, then reconcile installed/runtime state and the remaining full-audit gates.
+**Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; close Native package lock/update lifecycle and exact existing-guest migration/rollback evidence, then reconcile installed/runtime state and remaining audit gates.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -127,6 +127,7 @@ Evidence:
 - [docs/evidence/2026-10-23-p4-virgl-client-visibility.md](evidence/2026-10-23-p4-virgl-client-visibility.md)
 - [docs/evidence/2026-10-23-disposable-debian-replay.md](evidence/2026-10-23-disposable-debian-replay.md)
 - [docs/evidence/2026-10-23-native-package-version-drift.md](evidence/2026-10-23-native-package-version-drift.md)
+- [docs/evidence/2026-10-24-native-suite-and-url-verification.md](evidence/2026-10-24-native-suite-and-url-verification.md)
 
 ## P5 — Distro and display compatibility profiles
 
