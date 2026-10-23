@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "eaa35877fff6886ff8b185cf1d39514082e04da200146856ac319eb50174ee3e",
-      "lines": 120,
+      "sha256": "c4457fea7a366f0c5bde70c507827ca33117200cef6f98d9429f8c9f2be5f998",
+      "lines": 121,
       "read_status": "read",
-      "read_sha256": "eaa35877fff6886ff8b185cf1d39514082e04da200146856ac319eb50174ee3e"
+      "read_sha256": "c4457fea7a366f0c5bde70c507827ca33117200cef6f98d9429f8c9f2be5f998"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -3131,10 +3131,10 @@
     {
       "path": "docs/testing/README.md",
       "kind": "narrative",
-      "sha256": "6b8259e0a61f0347cdb574286f62eeae545aedc0f6a484ec7c03fe50a39e3806",
+      "sha256": "0bde0aab303a03859570231128c0012d501d39f5662d4e10f60768540d24f56d",
       "lines": 87,
       "read_status": "read",
-      "read_sha256": "6b8259e0a61f0347cdb574286f62eeae545aedc0f6a484ec7c03fe50a39e3806"
+      "read_sha256": "0bde0aab303a03859570231128c0012d501d39f5662d4e10f60768540d24f56d"
     },
     {
       "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",
