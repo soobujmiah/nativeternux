@@ -231,15 +231,27 @@ def _lsof_socket_users(paths: dict[str, Path | str | int]) -> set[int]:
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise VirglError("could not inspect VirGL socket users; stop was refused") from exc
     diagnostic = result.stderr.lower()
-    if any(marker in diagnostic for marker in ("warning:", "permission denied", "output information may be incomplete")):
+    # Block only on errors or warnings that are specific to our socket.
+    # System-wide lsof warnings (e.g. erofs/fuse filesystems on Android) are
+    # emitted for every lsof call and do not indicate incomplete visibility
+    # for the targeted socket we are checking.
+    socket_errors = [m for m in diagnostic.splitlines()
+                     if str(sock) in m or m.strip().startswith("status error")]
+    if any(marker in "".join(socket_errors) for marker in
+           ("warning:", "permission denied", "output information may be incomplete")):
         raise VirglError("Native process visibility is incomplete; VirGL client ownership is unknown, so stop was refused")
     pids: set[int] = set()
     for line in result.stdout.splitlines():
         if not line.strip().isdigit():
             raise VirglError("lsof returned ambiguous VirGL socket ownership; stop was refused")
         pids.add(int(line.strip()))
-    if result.returncode == 1 and not pids:
-        raise VirglError("Android lsof could not map this Unix socket to its owner; client ownership is unknown")
+    # rc=1 with empty stdout and no socket-specific errors means no consumers
+    # are attached — the socket is idle. Only treat rc=1 as unknown when we
+    # have a socket-specific error we cannot map.
+    if result.returncode == 1:
+        if socket_errors:
+            raise VirglError("Android lsof could not map this Unix socket to its owner; client ownership is unknown")
+        return pids  # empty set = no clients = idle
     if result.returncode != 0:
         raise VirglError("could not inspect VirGL socket users; stop was refused")
     return pids

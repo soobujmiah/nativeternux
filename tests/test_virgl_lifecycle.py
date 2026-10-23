@@ -151,16 +151,27 @@ class VirglLifecycleTests(unittest.TestCase):
             self.assertEqual(json.loads(machine.getvalue())["client_visibility"], "unknown")
 
     def test_stop_refuses_when_android_lsof_cannot_map_socket_or_has_incomplete_visibility(self):
+        # rc=1 with empty stdout and NO socket-specific stderr = no consumers = idle (returns empty set)
         result = subprocess.CompletedProcess(["lsof"], 1, "", "")
         with patch.object(virgl_lifecycle.shutil, "which", return_value="/bin/lsof"), \
              patch.object(virgl_lifecycle.subprocess, "run", return_value=result):
+            pids = virgl_lifecycle._lsof_socket_users(self.paths)
+        self.assertEqual(pids, set())
+        # rc=1 with empty stdout and socket-specific error = cannot map
+        sock_err = subprocess.CompletedProcess(["lsof"], 1, "",
+                                               "lsof: status error on /tmp/test.sock: No such file\n")
+        paths_with_sock = {**self.paths, "socket": Path("/tmp/test.sock")}
+        with patch.object(virgl_lifecycle.shutil, "which", return_value="/bin/lsof"), \
+             patch.object(virgl_lifecycle.subprocess, "run", return_value=sock_err):
             with self.assertRaisesRegex(virgl_lifecycle.VirglError, "could not map this Unix socket"):
-                virgl_lifecycle._matches_lsof(self.paths, 1234)
-        warning = subprocess.CompletedProcess(["lsof"], 0, "1234\n", "WARNING: output information may be incomplete")
+                virgl_lifecycle._lsof_socket_users(paths_with_sock)
+        # rc=0 with socket-specific warning = visibility incomplete
+        warning = subprocess.CompletedProcess(["lsof"], 0, "1234\n",
+                                             "lsof: WARNING: permission denied on /tmp/test.sock\n")
         with patch.object(virgl_lifecycle.shutil, "which", return_value="/bin/lsof"), \
              patch.object(virgl_lifecycle.subprocess, "run", return_value=warning):
             with self.assertRaisesRegex(virgl_lifecycle.VirglError, "visibility is incomplete"):
-                virgl_lifecycle._matches_lsof(self.paths, 1234)
+                virgl_lifecycle._lsof_socket_users(paths_with_sock)
 
     def test_stop_refuses_unknown_or_active_clients_and_preserves_server(self):
         _, record = self.start_server()
