@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 436,
-  "read_count": 105,
+  "read_count": 108,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "2daab19ca2b44e71e089c1cc93d7b73a55f37267d5d121586f4ccba70cd1793a",
-      "lines": 61,
+      "sha256": "3d99e1ab8c8e74e70bf2b00f450c096c7146603b016b169b2195f2f560eb6ca5",
+      "lines": 63,
       "read_status": "read",
-      "read_sha256": "2daab19ca2b44e71e089c1cc93d7b73a55f37267d5d121586f4ccba70cd1793a"
+      "read_sha256": "3d99e1ab8c8e74e70bf2b00f450c096c7146603b016b169b2195f2f560eb6ca5"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -115,10 +115,10 @@
     {
       "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
       "kind": "narrative",
-      "sha256": "e9729568130f4c05e3ae9446c381a487a29a5458601e629cf182d1c7e57274d8",
+      "sha256": "026754c85093fd356d3d0b63303d7c11c8730c28b28397006d65e78bfb053a47",
       "lines": 35,
       "read_status": "read",
-      "read_sha256": "e9729568130f4c05e3ae9446c381a487a29a5458601e629cf182d1c7e57274d8"
+      "read_sha256": "026754c85093fd356d3d0b63303d7c11c8730c28b28397006d65e78bfb053a47"
     },
     {
       "path": "docs/HYBRID-INTEGRATION.md",
@@ -147,10 +147,10 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "c7f13c0a39f8ca105bd44d7200f62e7f013d9b885fec83d68851be6805d2bcf0",
+      "sha256": "fc6ae221c60eb61d255a2b5d819fd7fd4742c9f73768383dd9ae39e93826eb44",
       "lines": 189,
       "read_status": "read",
-      "read_sha256": "c7f13c0a39f8ca105bd44d7200f62e7f013d9b885fec83d68851be6805d2bcf0"
+      "read_sha256": "fc6ae221c60eb61d255a2b5d819fd7fd4742c9f73768383dd9ae39e93826eb44"
     },
     {
       "path": "docs/OPTIMIZATION.md",
@@ -163,10 +163,10 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "c1669864b06a632d8c3722c693af5b0d6ff06f01c21a459ec1fd087c79e59649",
+      "sha256": "0517e709d2bfbe6f62d924f8d56c83120804935922fd9160ec4f4a94cc1b3f60",
       "lines": 186,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "0517e709d2bfbe6f62d924f8d56c83120804935922fd9160ec4f4a94cc1b3f60"
     },
     {
       "path": "docs/PRODUCT-VISION.md",
@@ -347,10 +347,10 @@
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",
       "kind": "narrative",
-      "sha256": "bcef700219032cb5200850c6c881f646336e9c8c3563985d89097922a417f6e7",
+      "sha256": "55827bdc5d1e18ec3fd33e6210c603b595a894e83b3cd904e2f7cab522f8fcbf",
       "lines": 252,
       "read_status": "read",
-      "read_sha256": "bcef700219032cb5200850c6c881f646336e9c8c3563985d89097922a417f6e7"
+      "read_sha256": "55827bdc5d1e18ec3fd33e6210c603b595a894e83b3cd904e2f7cab522f8fcbf"
     },
     {
       "path": "docs/architecture/decisions/ADR-0001-native-proot-providers.md",
@@ -523,10 +523,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "0c5ad0d561757c453b69a766e0c4cb741387a5f30ddedcf944b492452d1f82da",
+      "sha256": "2da7210098725ad4d0d18d36e6ca89674ce4e5c122dee5336cbda400b78f6974",
       "lines": 101,
       "read_status": "read",
-      "read_sha256": "0c5ad0d561757c453b69a766e0c4cb741387a5f30ddedcf944b492452d1f82da"
+      "read_sha256": "2da7210098725ad4d0d18d36e6ca89674ce4e5c122dee5336cbda400b78f6974"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2963,18 +2963,18 @@
     {
       "path": "docs/readiness/PREMIUM-DISTRIBUTION.md",
       "kind": "narrative",
-      "sha256": "39a8e1016b8969cffa850840721dc8f808f5f4bf1e72475df0804fd1843f04fe",
+      "sha256": "d159edffc00c83389251fd1e04f3459d7bbfaefee8dab8a6d7b00c23ca0cda97",
       "lines": 103,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "d159edffc00c83389251fd1e04f3459d7bbfaefee8dab8a6d7b00c23ca0cda97"
     },
     {
       "path": "docs/readiness/PRODUCT-MARKET-COMMERCIAL.md",
       "kind": "narrative",
-      "sha256": "942eb9901a1ebe90b639f6e063ed2c8d47107ddb3ed701398f6d29d344606808",
+      "sha256": "9e0114e8e793acb6cfbe62da0cba036d08cd7811596f32acb57ed9137652271f",
       "lines": 101,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "9e0114e8e793acb6cfbe62da0cba036d08cd7811596f32acb57ed9137652271f"
     },
     {
       "path": "docs/readiness/PROJECT-IDENTITY.md",

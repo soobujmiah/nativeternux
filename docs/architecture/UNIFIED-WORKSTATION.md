@@ -1,6 +1,6 @@
 # Ternuxx unified workstation architecture
 
-**Status:** The shared CLI, interactive Terminal/TUI, Web UI, and Graphical UI management requirement is owner-accepted. The TUI now has shared-service views and a typed allowlisted operation runner with explicit mutation confirmation, including native desktop lifecycle operations. The local Web UI has authenticated read-only views. Broader client coverage remains incomplete and is not release-qualified. Optional AI/cloud/runtime aspects remain proposals.
+**Status (rechecked 2026-10-23):** CLI, TUI, Web, and GTK use shared typed management services, with many read and mutation flows implemented across clients. Coverage is still incomplete; P4 provider parity, reproducible setup, and the full repository audit remain in progress. Optional AI/cloud/runtime aspects remain proposals.
 **Basis:** repository audit at `1a891fa` (2026-10-17), existing architecture/ADRs, and the owner-confirmed shared-management direction on 2026-10-18.
 **Scope:** management architecture for native Termux, the independent existing Ternux Debian PRoot, local AI, optional cloud providers, CLI, interactive Terminal/TUI, Web UI, and Graphical UI.
 
@@ -106,10 +106,10 @@ Modules expose application-service interfaces and typed data, not terminal comma
 | Module | Responsibility | Free-core direction / current status |
 |---|---|---|
 | Environment & capability | Inspect Termux/Android/PRoot/runtime facts with provenance and age | Basic truthful diagnostics are free; current diagnostics are partial. |
-| Native lifecycle | Native desktop/services, dependencies, process ownership, clean shutdown | Essential safe management stays free; current desktop lifecycle is partial and unqualified. |
+| Native lifecycle | Native desktop/services, dependencies, process ownership, clean shutdown | Native desktop and managed SSH lifecycle are implemented and exercised; Android cold-boot delivery and remaining installed-state parity are not fully qualified. |
 | Launch registry/profiles | Named native, PRoot and shared-service targets; selected workspace/boot profiles; cross-provider resource reservation | Proposed in [ADR-0007](decisions/ADR-0007-launch-manager-and-display-ownership.md); no central registry or profile manager exists. |
 | Shell profiles and themes | Select Bash, Zsh, or Fish independently for Native Termux and PRoot; manage themes and shell config through shared CLI/GUI/Web services | Not implemented; installer preselection, package plans, adapters, managed overlays, validation, diff, backup and rollback are required. See [ADR-0008](decisions/ADR-0008-shell-profiles-and-managed-configuration.md) and [profile contract](../../schemas/shell-profile.schema.json). |
-| PRoot integration | Read status and, after a reviewed adapter exists, start only scoped guest workloads | Existing environment remains protected; adapter is not implemented. |
+| PRoot integration | Native Termux uses typed Ternuxx operations for inventory, guest verification, owned-session lifecycle, shortcuts, and selected configuration workflows | Existing Debian guest changes remain target-specific and preview-bound; broader P4 feature parity, shared-rootfs concurrency, and clean reproducibility remain in progress. The separate Ternux CLI is not a dependency. |
 | Package/catalog | Preview, consent, source, exact package set, transaction outcome and rollback limits | Basic install/update management remains free; no UI may bypass preview/consent. |
 | Model library | Explicit managed directory, metadata, checksum, license, compatibility, load/use references | Basic model management is a free-core target, not implemented. Never scan personal shared storage. |
 | Runtime/backend | CPU/GPU/NPU runtime availability, workload selection, fallback and evidence | CPU baseline and supported acceleration are free-core targets; no inference runtime exists. |

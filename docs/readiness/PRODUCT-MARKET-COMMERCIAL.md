@@ -4,7 +4,7 @@
 
 ## What the product is today
 
-**Current factual description:** Ternuxx is an early-stage Termux workstation manager. `ternuxx` is the only source-checkout command. The repository contains source for a package transaction, an ownership-aware desktop lifecycle, and a first continuity-recording slice, but those paths are not qualified on the target device. A PRoot adapter is not implemented; no public releases or release-qualified product tests exist.
+**Current factual description (rechecked 2026-10-23):** Ternuxx is an early-stage Native Termux workstation manager with a Debian PRoot provider. `./tx` in the source checkout and the installed `tx` command are canonical; the older `ternuxx` command is a compatibility entrypoint. The repository includes package transactions, native desktop/SSH lifecycle, typed Debian PRoot operations, and CLI/TUI/Web/GTK management surfaces. P4 provider parity, reproducible setup, and the full audit remain in progress; there are no public releases or release-qualified product tests. See [phase status](../PHASE-STATUS.md) and [the repository audit worklist](../audit/REPOSITORY-AUDIT.md).
 
 **Product promise to test:** give advanced Android users one evidence-led way to inspect and manage native Termux desktop workflows while preserving a separately working Linux PRoot environment and making future cross-layer handoffs explicit. The distinction between desired architecture and usable product must stay visible on all marketing pages.
 
