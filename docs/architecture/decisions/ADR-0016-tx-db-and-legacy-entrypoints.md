@@ -10,7 +10,7 @@ Ternuxx is the independent Native Termux-first product. Its public command is `t
 
 Older recommendations treated preservation of every Ternux-era alias as a product requirement. The owner has since clarified that `db`, `droot`, `x.sh`, `xgo`, and `killx` need not be retained for Ternuxx acceptance. This removes the blanket preservation requirement; it does not authorize broad cleanup, deletion of user files, or mutation of the existing Debian rootfs.
 
-## Current read-only inventory
+## Initial read-only inventory — 2026-10-22
 
 On the Native Termux host, the relevant interactive shell block currently defines:
 
@@ -22,12 +22,18 @@ The current `~/x.sh` is a 112-byte executable wrapper that invokes the repositor
 
 Machine-readable/current evidence: [entrypoint inventory](../../evidence/2026-10-22-legacy-entrypoint-inventory.md).
 
+## Owner-authorized alias migration — 2026-10-23
+
+The active full-repository task explicitly authorized adapting task-relevant Native and Debian integration configuration. A bounded preview identified two Native shell aliases that bypassed Ternuxx; the exact changes route the regular-user alias through tx db with its existing account selection and route the root alias through tx db --root. The existing x/xgo wrapper and the unrelated cache-cleanup function were left unchanged. No guest login, package/config mutation, process stop, or rootfs change was performed.
+
+The original mode-0600 shell startup file is retained in the Native user's private Ternuxx configuration-backup area with its exact pre-change hash. The replacement passed bash -n, both tx db help paths, post-write hash checks, and a disposable rollback fixture that restored the exact pre-state hash and mode. Already-open shells may retain their prior aliases until they reload the startup file or are restarted. See [alias migration evidence](../../evidence/2026-10-23-native-legacy-alias-migration.md).
+
 ## Decision
 
 1. `tx db` remains canonical, first-party, and distinct from bare shell `db`. Help, tests, installation docs, and migration guidance must state this clearly.
 2. Ternuxx has no blanket compatibility obligation to preserve `db`, `droot`, `x.sh`, `xgo`, or `killx`.
 3. Do not edit user shell configuration, delete a launcher, or alter guest state merely to remove a legacy name. First inventory real callers, dependencies, active workloads, and the exact target. Keep any useful entrypoint external until a replacement is verified.
-4. A future retirement may touch only the exact Ternuxx-owned integration through a preview that shows target, content diff, backup and rollback. User-owned shell configuration and the existing guest require a separate exact operation and explicit confirmation. Never run Ternux cleanup or terminate unknown processes.
+4. A future retirement may touch only the exact Ternuxx-owned integration through a preview that shows target, content diff, backup and rollback. User-owned shell configuration and the existing guest require a separate exact operation and explicit confirmation; the 2026-10-23 migration above is the owner-authorized bounded example. Never run Ternux cleanup or terminate unknown processes.
 5. Historical reports retain the names and behavior observed at their dates. Current docs must point to the live inventory instead of presenting historical behavior as current.
 
 ## Acceptance

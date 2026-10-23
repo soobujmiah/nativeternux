@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 436,
-  "read_count": 108,
+  "document_count": 437,
+  "read_count": 109,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -115,10 +115,10 @@
     {
       "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
       "kind": "narrative",
-      "sha256": "026754c85093fd356d3d0b63303d7c11c8730c28b28397006d65e78bfb053a47",
+      "sha256": "c5e62286ea9963e54b1a18b5cda3df4b1705f70887ab4f9998959b9789fc9fb8",
       "lines": 35,
       "read_status": "read",
-      "read_sha256": "026754c85093fd356d3d0b63303d7c11c8730c28b28397006d65e78bfb053a47"
+      "read_sha256": "c5e62286ea9963e54b1a18b5cda3df4b1705f70887ab4f9998959b9789fc9fb8"
     },
     {
       "path": "docs/HYBRID-INTEGRATION.md",
@@ -147,10 +147,10 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "fc6ae221c60eb61d255a2b5d819fd7fd4742c9f73768383dd9ae39e93826eb44",
+      "sha256": "95c3068e52e0ee6e2c0df34d6a5b64023fbdef9b876339e62e1f93e9cc2040b6",
       "lines": 189,
       "read_status": "read",
-      "read_sha256": "fc6ae221c60eb61d255a2b5d819fd7fd4742c9f73768383dd9ae39e93826eb44"
+      "read_sha256": "95c3068e52e0ee6e2c0df34d6a5b64023fbdef9b876339e62e1f93e9cc2040b6"
     },
     {
       "path": "docs/OPTIMIZATION.md",
@@ -195,10 +195,10 @@
     {
       "path": "docs/PROOT-SHARED-X11.md",
       "kind": "narrative",
-      "sha256": "44a78d1168d2b1497dd5852280f6bfb277c20b913b3ba725d158aff688652ffb",
+      "sha256": "7788aa8a0071d8a27711e82c6bafb06130c9dc67caa4282dd433b0dece1697b0",
       "lines": 112,
       "read_status": "read",
-      "read_sha256": "44a78d1168d2b1497dd5852280f6bfb277c20b913b3ba725d158aff688652ffb"
+      "read_sha256": "7788aa8a0071d8a27711e82c6bafb06130c9dc67caa4282dd433b0dece1697b0"
     },
     {
       "path": "docs/README.md",
@@ -347,10 +347,10 @@
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",
       "kind": "narrative",
-      "sha256": "55827bdc5d1e18ec3fd33e6210c603b595a894e83b3cd904e2f7cab522f8fcbf",
-      "lines": 252,
+      "sha256": "ba7e89aa5cb6a95a78db4475b2a77da7dd6df46fb75c8bca052939960b36c9ac",
+      "lines": 251,
       "read_status": "read",
-      "read_sha256": "55827bdc5d1e18ec3fd33e6210c603b595a894e83b3cd904e2f7cab522f8fcbf"
+      "read_sha256": "ba7e89aa5cb6a95a78db4475b2a77da7dd6df46fb75c8bca052939960b36c9ac"
     },
     {
       "path": "docs/architecture/decisions/ADR-0001-native-proot-providers.md",
@@ -475,10 +475,10 @@
     {
       "path": "docs/architecture/decisions/ADR-0016-tx-db-and-legacy-entrypoints.md",
       "kind": "narrative",
-      "sha256": "9df2fa7190de7b23b32b4c5a309d7b9eb2b1ea9fa87837faea3991bfe1198006",
-      "lines": 39,
+      "sha256": "a952b2dcb3d4e481c9aac8572a25052a33b0307b4538094b0104b60de461e088",
+      "lines": 45,
       "read_status": "read",
-      "read_sha256": "9df2fa7190de7b23b32b4c5a309d7b9eb2b1ea9fa87837faea3991bfe1198006"
+      "read_sha256": "a952b2dcb3d4e481c9aac8572a25052a33b0307b4538094b0104b60de461e088"
     },
     {
       "path": "docs/architecture/history/2026-10-22-capability-matrix.md",
@@ -523,10 +523,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "ff42b59df8fbc9237f35126bd331f7e845fb3deeb519ffca3aca0bd469d37d9a",
-      "lines": 103,
+      "sha256": "e37c964e5deb7a06001ec0131fc1226affc833bb5af3dad8fff9fba0462bdb79",
+      "lines": 105,
       "read_status": "read",
-      "read_sha256": "ff42b59df8fbc9237f35126bd331f7e845fb3deeb519ffca3aca0bd469d37d9a"
+      "read_sha256": "e37c964e5deb7a06001ec0131fc1226affc833bb5af3dad8fff9fba0462bdb79"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2759,6 +2759,14 @@
       "lines": 30,
       "read_status": "pending",
       "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-23-native-legacy-alias-migration.md",
+      "kind": "narrative",
+      "sha256": "5ee844174859907151ea6ed0cbe54556ac12b5b5c5f87e763204e1b631c4dced",
+      "lines": 23,
+      "read_status": "read",
+      "read_sha256": "5ee844174859907151ea6ed0cbe54556ac12b5b5c5f87e763204e1b631c4dced"
     },
     {
       "path": "docs/evidence/2026-10-23-native-ssh-service-repair.md",
