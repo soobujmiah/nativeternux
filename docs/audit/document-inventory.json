@@ -147,10 +147,10 @@
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
       "kind": "narrative",
-      "sha256": "cf4ebee8df7ad69ebd9795aa8711b06b9aa3759a12ad95c09b8815e9f6b6081f",
-      "lines": 67,
+      "sha256": "0b2983668fb89a22ec82701db03d94bfb43861b46a918c8b5d0246118e1b3e92",
+      "lines": 69,
       "read_status": "read",
-      "read_sha256": "cf4ebee8df7ad69ebd9795aa8711b06b9aa3759a12ad95c09b8815e9f6b6081f"
+      "read_sha256": "0b2983668fb89a22ec82701db03d94bfb43861b46a918c8b5d0246118e1b3e92"
     },
     {
       "path": "docs/OPERATIONS.md",
@@ -523,18 +523,18 @@
     {
       "path": "docs/audit/PHASE-REVALIDATION.md",
       "kind": "narrative",
-      "sha256": "a8e68856ce40634eda8d5c59d3de4d116e08dbfe28781b9e5a541e14fb32e2ee",
-      "lines": 38,
+      "sha256": "eb58b610b0bd896ea54a5498caa94e13df1661e4a79d863b0879d8453d48c607",
+      "lines": 42,
       "read_status": "read",
-      "read_sha256": "a8e68856ce40634eda8d5c59d3de4d116e08dbfe28781b9e5a541e14fb32e2ee"
+      "read_sha256": "eb58b610b0bd896ea54a5498caa94e13df1661e4a79d863b0879d8453d48c607"
     },
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "cb1f0e149ebbba641690e4c6b346073cc0e12c800a3486dbce2f1f518bfd0fe7",
+      "sha256": "3b425bace205dc2e469a35164ddeeb352ba65bfbe9fb02b31665f9f2d641e484",
       "lines": 138,
       "read_status": "read",
-      "read_sha256": "cb1f0e149ebbba641690e4c6b346073cc0e12c800a3486dbce2f1f518bfd0fe7"
+      "read_sha256": "3b425bace205dc2e469a35164ddeeb352ba65bfbe9fb02b31665f9f2d641e484"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",

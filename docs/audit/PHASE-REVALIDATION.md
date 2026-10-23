@@ -2,6 +2,10 @@
 
 This maps every exit criterion currently written in the [roadmap](../ROADMAP.md) to evidence and the work still needed for the full repository audit. It does not reopen or silently recertify historical phase transitions. [Phase state](../../project/phase-state.json) remains authoritative for those transitions.
 
+**Date basis:** phase-state `completed_on`/`skipped_on` values use UTC calendar dates from `tools/phase_docs.py`. Device observations may record Asia/Dhaka local time alongside UTC. Existing phase dates are preserved as recorded; any date-label discrepancy is reviewed as provenance metadata and does not independently pass or fail an acceptance gate.
+
+The P3 transition is a concrete boundary example: commit `b3f61d4` records `completed_on: 2026-10-21` and has commit time 2026-10-22 02:50:27 Asia/Dhaka, which is 2026-10-21 20:50:27 UTC. The linked [RB08 P3 evidence](../evidence/2026-10-22-p3-rb08-postboot-exit-audit.md) is dated October 22 in Dhaka-local naming. The dates are consistent under the declared UTC phase-state rule; preserve both records as written.
+
 **Reading rule:** a dated completion report is evidence of the recorded review. Current fixtures test source behavior in their covered cases. An installed-state query proves only the queried state. None substitutes for an unobserved transaction, fresh installation or device boot.
 
 ## P1 — three exit criteria

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record an explicitly reviewed phase transition and refresh generated docs."""
+"""Record a reviewed phase transition; generated phase dates use the UTC calendar."""
 
 from __future__ import annotations
 
@@ -23,6 +23,11 @@ ROADMAP_START = "<!-- generated:phase-table:start -->"
 ROADMAP_END = "<!-- generated:phase-table:end -->"
 ACTIVE_START = "<!-- generated:active-work:start -->"
 ACTIVE_END = "<!-- generated:active-work:end -->"
+
+
+def utc_date() -> str:
+    """Return the UTC calendar date used by phase completed_on/skipped_on fields."""
+    return dt.datetime.now(dt.timezone.utc).date().isoformat()
 
 
 def load_state() -> dict:
@@ -193,7 +198,7 @@ def skip_optional_phase(state: dict, phase_id: str, summary: str, evidence: list
     if phase.get("status") != "in_progress" or phase.get("optional") is not True:
         raise ValueError("Only the active phase explicitly marked optional can be skipped")
     phase.update(status="skipped",
-                 skipped_on=skipped_on or dt.datetime.now(dt.timezone.utc).date().isoformat(),
+                 skipped_on=skipped_on or utc_date(),
                  summary=summary, evidence=evidence)
     index = state["phases"].index(phase)
     next_phase = next((p for p in state["phases"][index + 1:] if p["status"] == "planned"), None)
@@ -279,7 +284,7 @@ def main() -> int:
             return 0
         phase.update(
             status="completed",
-            completed_on=dt.datetime.now(dt.timezone.utc).date().isoformat(),
+            completed_on=utc_date(),
             summary=summary,
             evidence=evidence,
         )

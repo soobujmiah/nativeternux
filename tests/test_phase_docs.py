@@ -1,8 +1,10 @@
 """Phase evidence workflow validation."""
 from __future__ import annotations
 
+import datetime as dt
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +13,20 @@ from tools import phase_docs  # noqa: E402
 
 
 class PhaseDocsTests(unittest.TestCase):
+    def test_phase_date_uses_utc_calendar_not_host_local_date(self):
+        real_datetime = dt.datetime
+        seen = []
+
+        class FixedDateTime:
+            @classmethod
+            def now(cls, tz=None):
+                seen.append(tz)
+                return real_datetime(2026, 10, 24, 0, 10, tzinfo=tz)
+
+        with patch.object(phase_docs.dt, "datetime", FixedDateTime):
+            self.assertEqual(phase_docs.utc_date(), "2026-10-24")
+        self.assertEqual(seen, [dt.timezone.utc])
+
     def test_incremental_evidence_can_record_a_blocked_gate(self):
         path = "docs/evidence/2026-10-19-native-ui-management-audit.md"
         recorded, resolved = phase_docs.evidence_path(path, "P3", completion=False)
