@@ -398,8 +398,26 @@ def _stage_turnip(manifest: dict, artifact_dir: Path) -> tuple[Path, Path]:
         os.close(lock_fd)
 
 
-def _guest_turnip_install(user: str, packages: list[str], driver: Path, icd: Path,
-                          manager: str, alias: str, runner) -> None:
+def _managed_turnip_paths(manifest: dict) -> tuple[str, str]:
+    try:
+        paths = manifest["graphics"]["managed_install_paths"]
+        driver = paths["driver"]
+        icd = paths["icd"]
+    except (KeyError, TypeError) as exc:
+        raise FreshSetupError("manifest managed Turnip paths are unavailable") from exc
+    for value, prefix in ((driver, "/usr/local/lib/"), (icd, "/usr/local/share/vulkan/icd.d/")):
+        if (not isinstance(value, str) or not value.startswith(prefix)
+                or "\x00" in value or any(part in {".", ".."} for part in Path(value).parts)
+                or str(Path(value)) != value or len(value) > 256):
+            raise FreshSetupError("manifest managed Turnip path is invalid")
+    if driver == icd or Path(driver).name in {"", ".", ".."} or Path(icd).name in {"", ".", ".."}:
+        raise FreshSetupError("manifest managed Turnip paths collide")
+    return driver, icd
+
+
+def _guest_turnip_install(packages: list[str], driver: Path, icd: Path,
+                          manager: str, alias: str, runner, manifest: dict) -> None:
+    driver_path, icd_path = _managed_turnip_paths(manifest)
     for source, name in ((driver, "ternuxx-turnip-driver.so"), (icd, "ternuxx-turnip-icd.json")):
         result = runner([manager, "copy", str(source), f"{alias}:/tmp/{name}"],
                         check=False, timeout=180)
@@ -408,13 +426,24 @@ def _guest_turnip_install(user: str, packages: list[str], driver: Path, icd: Pat
     icd_config = json.loads(icd.read_text(encoding="utf-8"))
     if not isinstance(icd_config, dict) or not isinstance(icd_config.get("ICD"), dict):
         raise FreshSetupError("Turnip ICD metadata is invalid")
-    icd_config["ICD"]["library_path"] = "/usr/local/lib/aarch64-linux-gnu/libvulkan_freedreno.so"
+    icd_config["ICD"]["library_path"] = driver_path
     icd_text = json.dumps(icd_config, sort_keys=True, separators=(",", ":"))
-    script = " && ".join([
+    driver_parent = shlex.quote(str(Path(driver_path).parent))
+    icd_parent = shlex.quote(str(Path(icd_path).parent))
+    quoted_driver = shlex.quote(driver_path)
+    quoted_icd = shlex.quote(icd_path)
+    driver_hash = shlex.quote(hashlib.sha256(driver.read_bytes()).hexdigest())
+    icd_hash = shlex.quote(hashlib.sha256(icd_text.encode()).hexdigest())
+    script = "\n".join([
         "set -eu",
-        "install -d -m 0755 /usr/local/lib/aarch64-linux-gnu /usr/local/share/vulkan/icd.d",
-        "install -m 0644 /tmp/ternuxx-turnip-driver.so /usr/local/lib/aarch64-linux-gnu/libvulkan_freedreno.so",
-        "printf %s " + shlex.quote(icd_text) + " > /usr/local/share/vulkan/icd.d/ternuxx_freedreno_icd.json",
+        f"install -d -m 0755 {driver_parent} {icd_parent}",
+        f"if [ -L {quoted_driver} ] || [ -L {quoted_icd} ]; then exit 1; fi",
+        'if [ -e ' + quoted_driver + ' ]; then set -- $(sha256sum < ' + quoted_driver
+        + '); [ "$1" = ' + driver_hash + ' ] || exit 1; fi',
+        'if [ -e ' + quoted_icd + ' ]; then set -- $(sha256sum < ' + quoted_icd
+        + '); [ "$1" = ' + icd_hash + ' ] || exit 1; fi',
+        f"install -m 0644 /tmp/ternuxx-turnip-driver.so {quoted_driver}",
+        f"printf %s {shlex.quote(icd_text)} > {quoted_icd}",
         "rm -f /tmp/ternuxx-turnip-driver.so /tmp/ternuxx-turnip-icd.json",
         "apt-mark hold " + " ".join(shlex.quote(p) for p in manifest_holds(packages)),
     ])
@@ -615,7 +644,7 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
             raise FreshSetupError("new guest release did not match Debian Trixie")
         if turnip_files:
             _verify_owned_target(prefix, alias, owned)
-            _guest_turnip_install(user, package_set, turnip_files[0], turnip_files[1], manager, alias, runner)
+            _guest_turnip_install(package_set, turnip_files[0], turnip_files[1], manager, alias, runner, manifest)
             expected_driver = manifest["graphics"]["turnip_archive"]["driver_sha256"]
             actual_driver = hashlib.sha256((rootfs / manifest["graphics"]["managed_install_paths"]["driver"].lstrip("/")).read_bytes()).hexdigest()
             if actual_driver != expected_driver:

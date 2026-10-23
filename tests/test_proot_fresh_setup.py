@@ -199,6 +199,34 @@ class FreshProotSetupTests(unittest.TestCase):
                 home=str(self.home), state_dir=str(self.home / "linked/state"), user="sbj")
         self.assertEqual(list(outside.iterdir()), [])
 
+    def test_fresh_turnip_install_uses_manifest_paths_and_rejects_conflicts(self):
+        import subprocess
+        manifest = json.loads((self.repo / "config/proot/debian-trixie.json").read_text())
+        manifest["graphics"]["managed_install_paths"] = {
+            "driver": "/usr/local/lib/ternuxx-test/libvulkan_freedreno.so",
+            "icd": "/usr/local/share/vulkan/icd.d/ternuxx-test.json",
+        }
+        driver = self.base / "driver.so"
+        icd = self.base / "icd.json"
+        driver.write_bytes(b"verified-driver")
+        icd.write_text('{"ICD":{"library_path":"unused"}}', encoding="utf-8")
+        calls = []
+        def runner(args, **kwargs):
+            calls.append((args, kwargs))
+            return SimpleNamespace(returncode=0)
+        proot_fresh_setup._guest_turnip_install(
+            ["mesa-vulkan-drivers"], driver, icd, "/fixture/proot-distro",
+            "ternuxx-replay-test", runner, manifest)
+        script = calls[-1][0][-1]
+        self.assertIn("/usr/local/lib/ternuxx-test/libvulkan_freedreno.so", script)
+        self.assertIn("/usr/local/share/vulkan/icd.d/ternuxx-test.json", script)
+        self.assertNotIn("/usr/local/share/vulkan/icd.d/ternux_freedreno_icd.json", script)
+        self.assertIn("[ -L /usr/local/lib/ternuxx-test/libvulkan_freedreno.so ]", script)
+        self.assertEqual(subprocess.run(["bash", "-n", "-c", script], check=False).returncode, 0)
+        manifest["graphics"]["managed_install_paths"]["icd"] = "/usr/local/share/vulkan/icd.d/../../etc/passwd"
+        with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "path is invalid"):
+            proot_fresh_setup._managed_turnip_paths(manifest)
+
     def test_graphics_artifacts_never_follow_symlinks_or_overwrite_other_bytes(self):
         outside = self.base / "owner-data"
         outside.write_bytes(b"preserve")

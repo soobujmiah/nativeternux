@@ -83,7 +83,7 @@ cd "$HOME/ternuxx"
 ./tx proot setup fresh-preview --user YOUR_DEBIAN_USERNAME --alias ternuxx-replay-demo
 ```
 
-পূর্বরূপে Debian image, তারিখ-নির্দিষ্ট snapshot, প্যাকেজের দল, খালি জায়গা, ব্যবহারকারী, গ্রাফিক্স-সংক্রান্ত সিদ্ধান্ত, লক্ষ্য alias এবং পরিকল্পনা ID—সবগুলো বিষয় যাচাই করুন। পূর্বনির্ধারিতভাবে manifest-এ থাকা সব প্যাকেজ নেওয়া হয়; কম প্যাকেজ চাইলে `--groups base,fonts` দিন। `base` দলটি আবশ্যক।
+পূর্বরূপে Debian image, তারিখ-নির্দিষ্ট snapshot, প্যাকেজের দল, খালি জায়গা, ব্যবহারকারী, গ্রাফিক্স-সংক্রান্ত সিদ্ধান্ত, লক্ষ্য alias এবং পরিকল্পনা ID—সবগুলো বিষয় যাচাই করুন। Turnip driver ও ICD-এর গন্তব্য manifest থেকে নেওয়া হয়; ICD একই manifest-এর driver path ব্যবহার করে। symlink বা আলাদা বিদ্যমান ফাইল থাকলে সেটি overwrite না করে setup বন্ধ হয়। পূর্বনির্ধারিতভাবে manifest-এ থাকা সব প্যাকেজ নেওয়া হয়; কম প্যাকেজ চাইলে `--groups base,fonts` দিন। `base` দলটি আবশ্যক।
 
 শুধু সঠিক পূর্বরূপ ID নিয়ে ইনস্টল করুন:
 

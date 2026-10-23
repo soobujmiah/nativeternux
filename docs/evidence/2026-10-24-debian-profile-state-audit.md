@@ -34,3 +34,8 @@ Native Termux keeps the app's existing Android/Termux identity and does not crea
 ## Follow-up: rollback-safe metadata refresh
 
 A subsequent change added private exact-byte backup and a separate exact rollback preview/apply for same-rootfs adoption metadata refresh. The 2026-10-24 full Native suite passed 922 tests with one skip in 145.509 seconds. The current Native record was refreshed through live preview 5639407fcb813a38a6d45678e8b850099a7353d0d78942d3b2758a023cdbb4c9; its old bytes are preserved under backup ID 0911df75f0a859bc0eec23d36d1dacdf5dab971a5fd64d55403f241f70d0e264. Status reports adopted, package baseline matches, and rootfs device/inode 65086/3240111. Rollback preview 550ba24b5c0b9810cde3572783844b37718d3278dcae79da1229bbd541983a0c succeeded but was not applied. No guest mutation occurred. Detailed evidence is in [adoption-record refresh evidence](2026-10-24-adoption-record-refresh.md).
+
+
+## Follow-up: fresh installer now follows the manifest ICD path
+
+A source audit found the fresh Debian helper used a legacy hard-coded ICD filename. It now validates and uses the manifest driver/ICD paths and refuses symlinks or conflicting files. The focused fresh setup suite passed 20/20. Read-only observations of existing replay aliases are recorded separately in [fresh Turnip path audit](2026-10-24-fresh-turnip-path-audit.md); no guest was changed.

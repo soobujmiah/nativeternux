@@ -56,7 +56,7 @@ Evidence:
 
 **Status:** in_progress
 
-Same-rootfs adoption metadata refresh now has private exact-byte backup and exact rollback; current Native record reports adopted and package baseline matches. Fresh provisioning remains Debian-only; guest package/config migration, four-client parity, and clean-device replay remain open.
+Same-rootfs adoption metadata refresh has private exact-byte backup/rollback; current Native record is adopted and package baseline matches. Fresh Debian setup now follows manifest Turnip paths and requires the selected guest user's password. Guest migration, distro expansion, shared client parity, and clean-device replay remain open.
 
 **Next action:** Implement exact-preview, rollback-safe adaptation of the selected existing Debian package/config delta through the shared operation service and clients; verify on a disposable guest before any live guest apply.
 
@@ -133,6 +133,7 @@ Evidence:
 - [docs/evidence/2026-10-24-native-update-preview-lifecycle.md](evidence/2026-10-24-native-update-preview-lifecycle.md)
 - [docs/evidence/2026-10-24-p4-terminal-broker-and-install-preview.md](evidence/2026-10-24-p4-terminal-broker-and-install-preview.md)
 - [docs/evidence/2026-10-24-adoption-record-refresh.md](evidence/2026-10-24-adoption-record-refresh.md)
+- [docs/evidence/2026-10-24-fresh-turnip-path-audit.md](evidence/2026-10-24-fresh-turnip-path-audit.md)
 
 ## P5 — Distro and display compatibility profiles
 
