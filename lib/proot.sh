@@ -157,11 +157,11 @@ nt_cmd_proot() {
     db) _nt_use launch; nt_cmd_db "$@" ;;
     gui)   _nt_proot_gui "$@" ;;
     setup)
-      local action="${1:-status}" user="" plan_id="" backup_id="" guest_alias="" confirmed=0 option
+      local action="${1:-status}" user="" plan_id="" backup_id="" guest_alias="" package_groups="" confirmed=0 option
       [ $# -eq 0 ] || shift
       case "$action" in
-        status|adopt-preview|adopt|fresh-preview|fresh-install|retire-preview|retire|restore-preview|restore) ;;
-        *) nt_fail "Use tx proot setup status|adopt-preview|adopt|fresh-preview|fresh-install|retire-preview|retire|restore-preview|restore."; return 2 ;;
+        status|adopt-preview|adopt|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore) ;;
+        *) nt_fail "Use tx proot setup status|adopt-preview|adopt|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore."; return 2 ;;
       esac
       while [ "$#" -gt 0 ]; do
         option="$1"; shift
@@ -171,6 +171,7 @@ nt_cmd_proot() {
             [ "$#" -gt 0 ] && [ -n "$1" ] || { nt_fail "--alias needs a value."; return 2; }
             guest_alias="$1"; shift ;;
           --plan-id) [ "$#" -gt 0 ] || { nt_fail "--plan-id needs a value."; return 2; }; plan_id="$1"; shift ;;
+          --groups) [ "$#" -gt 0 ] && [ -n "$1" ] || { nt_fail "--groups needs comma-separated package groups."; return 2; }; package_groups="$1"; shift ;;
           --backup-id) [ "$#" -gt 0 ] || { nt_fail "--backup-id needs a value."; return 2; }; backup_id="$1"; shift ;;
           --yes) confirmed=1 ;;
           --help|-h) nt_help proot; return 0 ;;
@@ -217,13 +218,22 @@ nt_cmd_proot() {
           nt_fail "Apply requires --user NAME --yes --plan-id ID from the matching setup preview."; return 2;
         }; setup_args+=(--user "$user" --yes --plan-id "$plan_id") ;;
         fresh-preview) [ -n "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
-          nt_fail "Usage: tx proot setup fresh-preview --user NAME"; return 2;
+          nt_fail "Usage: tx proot setup fresh-preview --user NAME [--groups base,fonts]"; return 2;
         }; setup_args+=(--user "$user") ;;
+        fresh-resume-preview) [ -n "$user" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
+          nt_fail "Usage: tx proot setup fresh-resume-preview --user NAME --plan-id FAILED_PLAN_ID [--groups base,fonts]"; return 2;
+        }; setup_args+=(--user "$user" --plan-id "$plan_id") ;;
       esac
+      if [ -n "$package_groups" ]; then
+        case "$action" in
+          fresh-preview|fresh-resume-preview) setup_args+=(--groups "$package_groups") ;;
+          *) nt_fail "--groups is supported only by fresh preview actions."; return 2 ;;
+        esac
+      fi
       if [ -n "$guest_alias" ]; then
         case "$action" in
-          fresh-preview|fresh-install) setup_args+=(--alias "$guest_alias") ;;
-          *) nt_fail "--alias is supported only by fresh-preview/fresh-install."; return 2 ;;
+          fresh-preview|fresh-resume-preview|fresh-install) setup_args+=(--alias "$guest_alias") ;;
+          *) nt_fail "--alias is supported only by fresh setup."; return 2 ;;
         esac
       fi
       python3 "$_TN_LIB_DIR/proot_setup.py" "${setup_args[@]}"

@@ -26,6 +26,9 @@ class FreshProotSetupTests(unittest.TestCase):
         self.prefix = self.base / "prefix"
         self.containers = self.prefix / "var/lib/proot-distro/containers"
         self.containers.mkdir(parents=True)
+        ca = self.prefix / "etc/tls/cert.pem"
+        ca.parent.mkdir(parents=True)
+        ca.write_bytes(b"-----BEGIN CERTIFICATE-----\n" + b"A" * 2048 + b"\n-----END CERTIFICATE-----\n")
         self.repo = self.base / "repo"
         (self.repo / "config/proot").mkdir(parents=True)
         shutil.copyfile(ROOT / "config/proot/debian-trixie.json",
@@ -88,7 +91,7 @@ class FreshProotSetupTests(unittest.TestCase):
         script = next(args[-1] for args in calls if "/bin/bash" in args)
         # Run only the package/user tail, with every external command stubbed.
         # The guest APT source edits are never executed on the host.
-        tail = script[script.index("apt-get -o Acquire::Check-Valid-Until=false update"):]
+        tail = script[script.index("apt-get -o Acquire::https::CaInfo=/tmp/ternuxx-native-ca.pem -o Acquire::Check-Valid-Until=false update"):]
         tail = tail.replace("/etc/locale.gen", str(self.base / "locale.gen"))
         stub = self.base / "stub"
         stub.mkdir()
@@ -249,11 +252,11 @@ class FreshProotSetupTests(unittest.TestCase):
         self.assertTrue(result["record"]["package_versions_file"].endswith("debian-package-versions.txt"))
         self.assertEqual(calls[0][0:6], ["/prefix/bin/proot-distro", "install", "--name",
                                          "debian", "--architecture", "aarch64"])
-        self.assertIn("--isolated", calls[1])
-        self.assertIn("apt-get install -y --no-install-recommends", calls[1][-1])
-        self.assertIn("snapshot.debian.org/archive/debian/20261020T000000Z", calls[1][-1])
-        self.assertEqual(calls[1][-3:], ["/bin/bash", "-lc", calls[1][-1]])
-        syntax = subprocess.run(["bash", "-n", "-c", calls[1][-1]], check=False)
+        self.assertIn("--isolated", calls[2])
+        self.assertIn("apt-get -o Acquire::https::CaInfo=/tmp/ternuxx-native-ca.pem install -y --no-install-recommends", calls[2][-1])
+        self.assertIn("snapshot-cloudflare.debian.org/archive/debian/20261020T000000Z", calls[2][-1])
+        self.assertEqual(calls[2][-3:], ["/bin/bash", "-lc", calls[2][-1]])
+        syntax = subprocess.run(["bash", "-n", "-c", calls[2][-1]], check=False)
         self.assertEqual(syntax.returncode, 0)
 
     def test_failed_package_setup_can_resume_only_with_matching_journal(self):
@@ -277,7 +280,7 @@ class FreshProotSetupTests(unittest.TestCase):
                     "image_config": {"architecture": "arm64", "created": "2026-10-05T00:00:00Z"}}))
             elif "/usr/bin/dpkg-query" in args:
                 return SimpleNamespace(returncode=0, stdout=self._version_output())
-            elif fail_once:
+            elif "/bin/bash" in args and fail_once:
                 fail_once = False
                 return SimpleNamespace(returncode=1)
             return SimpleNamespace(returncode=0)
@@ -292,6 +295,59 @@ class FreshProotSetupTests(unittest.TestCase):
                 plan_id=preview["plan_id"], confirmed=True, runner=runner)
         self.assertEqual(install_count, 1)
         self.assertEqual(result["status"], "installed")
+
+    def test_failed_partial_setup_can_resume_after_mirror_only_change(self):
+        manifest_path = self.repo / "config/proot/debian-trixie.json"
+        initial_manifest = json.loads(manifest_path.read_text())
+        initial_manifest["fresh_install"]["apt_snapshot"]["main_archive"] = "http://snapshot.debian.org/archive/debian/20261020T000000Z/"
+        initial_manifest["fresh_install"]["apt_snapshot"]["security_archive"] = "http://snapshot.debian.org/archive/debian-security/20261020T000000Z/"
+        initial_manifest["fresh_install"]["apt_snapshot"].pop("mirror", None)
+        manifest_path.write_text(json.dumps(initial_manifest, indent=2) + "\n")
+        with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
+            first = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj")
+        calls = []
+        fail_once = True
+        def runner(args, **kwargs):
+            nonlocal fail_once
+            calls.append(args)
+            if args[1] == "install":
+                root = self.containers / "debian/rootfs"
+                (root / "etc").mkdir(parents=True)
+                (root / "etc/os-release").write_text("ID=debian\nVERSION_CODENAME=trixie\n")
+                spec = json.loads((self.repo / "config/proot/debian-trixie.json").read_text())["fresh_install"]
+                (root.parent / "manifest.json").write_text(json.dumps({
+                    "image_ref": spec["base_image"], "arch": "aarch64",
+                    "manifest": {"config": {"digest": spec["config_digest"], "size": spec["config_size"]},
+                                 "layers": [{"digest": spec["layer_digest"], "size": spec["layer_size"]}]},
+                    "image_config": {"architecture": "arm64", "created": spec["image_created"]}}))
+            elif "/usr/bin/dpkg-query" in args:
+                return SimpleNamespace(returncode=0, stdout=self._version_output())
+            elif "/bin/bash" in args and fail_once:
+                fail_once = False
+                return SimpleNamespace(returncode=1)
+            return SimpleNamespace(returncode=0)
+        with patch.object(proot_fresh_setup.shutil, "which", return_value="/prefix/bin/proot-distro"), \
+             patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
+            with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "package setup failed"):
+                proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
+                    home=str(self.home), state_dir=str(self.state), user="sbj",
+                    plan_id=first["plan_id"], confirmed=True, runner=runner)
+            manifest = json.loads(manifest_path.read_text())
+            manifest["fresh_install"]["apt_snapshot"]["main_archive"] = "https://snapshot-cloudflare.debian.org/archive/debian/20261020T000000Z/"
+            manifest["fresh_install"]["apt_snapshot"]["security_archive"] = "https://snapshot-cloudflare.debian.org/archive/debian-security/20261020T000000Z/"
+            manifest["fresh_install"]["apt_snapshot"]["mirror"] = "snapshot-cloudflare.debian.org"
+            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+            resumed = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj", resume_plan_id=first["plan_id"])
+            self.assertEqual(resumed["operation"]["operation"], "resume-fresh-debian-trixie")
+            self.assertEqual(resumed["operation"]["resume_from_plan_id"], first["plan_id"])
+            result = proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj",
+                plan_id=resumed["plan_id"], confirmed=True, runner=runner)
+        self.assertEqual(result["status"], "installed")
+        self.assertEqual(sum(call[1] == "install" for call in calls), 1)
+        self.assertEqual(sum("apt-get -o Acquire::https::CaInfo=/tmp/ternuxx-native-ca.pem install -y" in call[-1] for call in calls if "/bin/bash" in call), 2)
 
     def test_turnip_package_selection_is_previewed_and_hardware_drift_is_rejected(self):
         with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=True):
@@ -346,6 +402,32 @@ class FreshProotSetupTests(unittest.TestCase):
             proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj")
         self.assertEqual(marker.read_text(), "legacy")
+
+    def test_package_groups_are_selectable_but_base_is_required(self):
+        with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
+            plan = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj", groups=["base", "fonts"])
+            operation = plan["operation"]
+            self.assertEqual(operation["package_groups"], ["base", "fonts"])
+            manifest = json.loads((self.repo / "config/proot/debian-trixie.json").read_text())
+            expected = manifest["packages"]["base"] + manifest["packages"]["fonts"]
+            self.assertEqual(operation["packages"], expected)
+            for invalid in (["fonts"], ["base", "unknown"], ["base", "base"], [], [{"group": "base"}]):
+                with self.subTest(groups=invalid), self.assertRaises(proot_fresh_setup.FreshSetupError):
+                    proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                        home=str(self.home), state_dir=str(self.state), user="sbj", groups=invalid)
+
+    def test_native_ca_bundle_change_invalidates_the_reviewed_preview(self):
+        with patch.object(proot_fresh_setup, "_kgsl_accessible", return_value=False):
+            preview = proot_fresh_setup.preview(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj")
+        ca = self.prefix / "etc/tls/cert.pem"
+        ca.write_bytes(ca.read_bytes() + b"changed")
+        with self.assertRaisesRegex(proot_fresh_setup.FreshSetupError, "CA bundle or HTTPS trust policy changed"):
+            proot_fresh_setup.apply(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj",
+                plan_id=preview["plan_id"], confirmed=True,
+                runner=lambda *_a, **_k: self.fail("CA drift must fail before any install command"))
 
     def test_changed_manifest_and_existing_unowned_alias_fail_closed(self):
         preview = proot_fresh_setup.preview(

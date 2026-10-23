@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 438,
-  "read_count": 105,
+  "document_count": 441,
+  "read_count": 97,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "2a48e49caab190afc2124f4fe0eb488c015019280e73830e1a9c9f00b8c5f5ab",
-      "lines": 63,
-      "read_status": "read",
-      "read_sha256": "2a48e49caab190afc2124f4fe0eb488c015019280e73830e1a9c9f00b8c5f5ab"
+      "sha256": "bfa1be41e75aadab243a9b8e638a22604c45f18c96c85a0cea27d47d808037b6",
+      "lines": 67,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "c076a371c1d74c44b1272ddee0aa828a76ca3c4767d3af8ad9eb764cc28ffab6",
-      "lines": 82,
-      "read_status": "read",
-      "read_sha256": "c076a371c1d74c44b1272ddee0aa828a76ca3c4767d3af8ad9eb764cc28ffab6"
+      "sha256": "abd962771d0df931cb6da0a7aa0b96bf8835b7a34ad38876b0dbbcf68a41ddfd",
+      "lines": 92,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "SECURITY.md",
@@ -81,12 +81,20 @@
       "read_sha256": "4bdb2de63df2521b52489db86a6beacd27f2dcd6df2805e6a15067f5659afd9d"
     },
     {
+      "path": "bn/INSTALLATION.md",
+      "kind": "narrative",
+      "sha256": "70954b64722cc1263c2a39550955ed346cffe277b8aa91edb3686f516154456e",
+      "lines": 133,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "bn/README.md",
       "kind": "narrative",
-      "sha256": "13cd3e25a7ee80041e9dcb136b1907555d0bf4b69faf4cbdc5af196689d4db64",
-      "lines": 32,
-      "read_status": "read",
-      "read_sha256": "13cd3e25a7ee80041e9dcb136b1907555d0bf4b69faf4cbdc5af196689d4db64"
+      "sha256": "736ac28edfee123d8773f46045394278709a6cad46e116f4a19813b68f3dcf8c",
+      "lines": 71,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "config/graphics/native-kgsl.json",
@@ -99,10 +107,10 @@
     {
       "path": "config/proot/debian-trixie.json",
       "kind": "structured",
-      "sha256": "7b83c7d070dc23caf2eefc6ef5d6af37481219e3c531b6d5c8c587a6a619ae11",
-      "lines": 150,
-      "read_status": "read",
-      "read_sha256": "7b83c7d070dc23caf2eefc6ef5d6af37481219e3c531b6d5c8c587a6a619ae11"
+      "sha256": "94209faa6ba1773ff0410256189f1d0064736bd3c44193f88815c5d7a1351b95",
+      "lines": 151,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -131,10 +139,10 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "e575482b93a95118857963c04a2a5daec20296eba925c55af7703ed92e008f81",
-      "lines": 70,
-      "read_status": "read",
-      "read_sha256": "e575482b93a95118857963c04a2a5daec20296eba925c55af7703ed92e008f81"
+      "sha256": "a65d67faad539b4887b1fa7cefaff07fc836e38d4f49f2e7d0cdcdffc69771d1",
+      "lines": 120,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
@@ -163,10 +171,10 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "359cc0c7c6d64f63fe838b4c304ef053452f5e0e75df42b41f1e6d45de8b2bef",
-      "lines": 186,
-      "read_status": "read",
-      "read_sha256": "359cc0c7c6d64f63fe838b4c304ef053452f5e0e75df42b41f1e6d45de8b2bef"
+      "sha256": "e2a84321477e77fa501743ff5add4a45e75f05a5850f86397a2b9805c7075956",
+      "lines": 188,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/PRODUCT-VISION.md",
@@ -203,10 +211,10 @@
     {
       "path": "docs/README.md",
       "kind": "narrative",
-      "sha256": "77672d3d723efc2c6bb59a3a7cb0f0bb69b4ea6180f617fb8e6ae5a544b52621",
-      "lines": 48,
-      "read_status": "read",
-      "read_sha256": "77672d3d723efc2c6bb59a3a7cb0f0bb69b4ea6180f617fb8e6ae5a544b52621"
+      "sha256": "42b44b35b25cf708df435c44b352485a25c59d55eb15dfba950bfb28805e444e",
+      "lines": 50,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/RESEARCH.md",
@@ -219,7 +227,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "1260e88b8ebc25c5b306e8dd5e4d21c509fa880acc774fb34c43dd961326f839",
+      "sha256": "56613bb897a0ee74cb249a549429bb6ea869fd35216aa7b257a8719b2db465e8",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -523,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "b941c3c3f69064529794ebbd4adff78c89c987fd2f07bae7cac265d630c85aae",
-      "lines": 111,
+      "sha256": "d0aec0f1789c6b19ba0b5bdd44a9be155ae5808cfa81df1362654a2c3f293685",
+      "lines": 115,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2745,6 +2753,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-23-disposable-debian-replay.md",
+      "kind": "narrative",
+      "sha256": "01bba9d0e2f5056c59ddb984eb828a39da35ccae447cc4ace9e3405e0c847a47",
+      "lines": 53,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-23-gtk-shortcut-friendly-selection.md",
       "kind": "narrative",
       "sha256": "c23ab2764096a60ce1f6e85e27ca70e7d28d60710a1698b5b8545ef7b68aee42",
@@ -2775,6 +2791,14 @@
       "lines": 23,
       "read_status": "read",
       "read_sha256": "5ee844174859907151ea6ed0cbe54556ac12b5b5c5f87e763204e1b631c4dced"
+    },
+    {
+      "path": "docs/evidence/2026-10-23-native-package-version-drift.md",
+      "kind": "narrative",
+      "sha256": "e4a0873f5667e1caa0d1edd30ee83ca96148a8efc363536996276206a4356a1c",
+      "lines": 59,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-23-native-ssh-service-repair.md",
@@ -3139,10 +3163,10 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "316767c38572aff35686d57c608893cb2fa9bb91386170a8c847af30e49ed294",
-      "lines": 201,
-      "read_status": "read",
-      "read_sha256": "316767c38572aff35686d57c608893cb2fa9bb91386170a8c847af30e49ed294"
+      "sha256": "70cd0540a8a4d82d1a31840094b3fd33b31c690052181cf71bb18f25a88a2d04",
+      "lines": 203,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "requirements-dev.txt",

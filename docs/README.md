@@ -5,6 +5,8 @@ Use this page to find the current product, operating, architecture, testing, aud
 ## Start here
 
 - [Product vision](PRODUCT-VISION.md)
+- [English quick start](../README.md)
+- [বাংলা পরিচিতি](../bn/README.md) · [বাংলা ইনস্টল নির্দেশিকা](../bn/INSTALLATION.md)
 - [Installation and upgrade](INSTALLATION.md)
 - [Operations and command reference](OPERATIONS.md)
 - [Architecture](ARCHITECTURE.md)

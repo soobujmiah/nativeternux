@@ -56,7 +56,7 @@
       "title": "Existing Ternux PRoot feature-parity provider",
       "status": "in_progress",
       "completed_on": null,
-      "summary": "VirGL status now reports client visibility and stop eligibility; global JSON forwarding is fixed across the Native CLI wrappers. Native full suite passed 887 tests (1 skipped), but Android lsof cannot identify the live :1 socket owner, so client state remains unknown and stop is refused.",
+      "summary": "Native suite passed 893 tests (1 skipped); the final focused setup suite passed 23/23. A separate Debian Trixie replay from the pinned image and APT snapshot passed while preserving the existing guest. Native package candidate drift remains: 4/16 versions differ, no upgrades applied, and a durable version lock is still open.",
       "evidence": [
         "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
         "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
@@ -121,9 +121,11 @@
         "docs/evidence/2026-10-23-gtk-shortcut-friendly-selection.md",
         "docs/evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md",
         "docs/evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md",
-        "docs/evidence/2026-10-23-p4-virgl-client-visibility.md"
+        "docs/evidence/2026-10-23-p4-virgl-client-visibility.md",
+        "docs/evidence/2026-10-23-disposable-debian-replay.md",
+        "docs/evidence/2026-10-23-native-package-version-drift.md"
       ],
-      "next_action": "Keep VirGL stop blocked until socket-owner visibility can be proven; qualify broken-rootfs recovery and cold boot on an isolated guest, then reconcile installed/runtime state and complete the full audit and owner-operated GTK review."
+      "next_action": "Keep VirGL stop blocked until socket-owner visibility is proven; finish P4 reproducibility, existing-guest migration and rollback evidence, then reconcile installed/runtime state and the remaining full-audit gates."
     },
     {
       "id": "P5",

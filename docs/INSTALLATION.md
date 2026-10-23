@@ -1,6 +1,49 @@
-# Installation status
+# Installation and upgrade guide
 
-Ternuxx is in active development. Its `install` command uses a saved, preview-first package transaction. Applying requires explicit `--yes` plus the plan ID printed by the reviewed preview; the current APT plan must still match that saved record. The approved 2026-10-18 XFCE install is recorded in [P2 transaction evidence](evidence/P2-termux-xfce-install-transaction-2026-10-18.json). New previews and successful applies persist their exact APT simulations and package/version closure under the private Ternuxx state directory. Native desktop start/stop has been exercised on-device; remaining phase gates are listed in the P2 evidence. Ternuxx now owns its Native-to-Debian PRoot display/audio/graphics handoff and does not require or invoke the separate Ternux CLI. Use the first-party `tx db` command for this managed shell path. New Native shells also route `db` and `droot` through Ternuxx's validated regular-user/root handoff; already-open shells may retain their older definitions until restarted. The existing Debian userland remains preserved; full PRoot lifecycle and clean-install qualification remain open. Do not treat these code paths as a supported installation release.
+Ternuxx installs its Native Termux workstation packages through a saved, preview-first transaction. The Native install does not create or replace a Debian rootfs. A Debian guest is a separate, explicitly selected setup path.
+
+## Quick install
+
+On a fresh Termux profile, enable the Termux X11 package repository, install Git, clone Ternuxx, and preview the Native transaction:
+
+```sh
+pkg update && pkg install x11-repo git && pkg update
+git clone https://github.com/soobujmiah/ternuxx.git "$HOME/ternuxx"
+cd "$HOME/ternuxx"
+./tx install --preview
+```
+
+Read the full package/dependency plan and exact preview ID. Apply only that saved plan:
+
+```sh
+./tx install --yes --plan-id PLAN_ID
+```
+
+The transaction refuses package removals and upgrades. It does not promise the same repository candidate versions across dates; see [Native package-version drift](evidence/2026-10-23-native-package-version-drift.md). Install the matching Termux:X11 Android app separately for a desktop.
+
+## First checks and desktop
+
+```sh
+./tx doctor
+./tx info
+./tx help
+```
+
+Open the Termux:X11 Android app, then start the Native desktop:
+
+```sh
+./tx start
+```
+
+For management, run `./tx tui`, `./tx web`, or `./tx mng center`. Their supported actions differ; see the [capability matrix](architecture/CAPABILITY-MATRIX.md).
+
+## Choose a Debian path
+
+- For a Debian Trixie guest you already use, inspect it and optionally create a Native-side adoption record. Adoption does not change guest files.
+- For a new guest beside an existing Debian installation, use a unique `ternuxx-replay-NAME` alias and the fresh-install flow below. The target is isolated from the default `debian` alias.
+- General package/config migration of an existing guest is not complete. Any authorized guest change must show its exact target/effects, preserve prior data, require explicit apply, and have a tested rollback.
+
+The details, verification commands, and failure recovery steps follow.
 
 ## Current repository state
 
@@ -13,7 +56,7 @@ Ternuxx is in active development. Its `install` command uses a saved, preview-fi
 
 `tx proot setup status` reports whether the installed Debian rootfs is recorded by Ternuxx. For an existing Debian Trixie rootfs, preview adoption with `tx proot setup adopt-preview --user NAME`, check the account, release, rootfs identity, and plan ID, then apply only that preview with `tx proot setup adopt --user NAME --yes --plan-id ID`. Adoption writes a private Native Ternuxx state record; it does not write to the guest.
 
-This adoption step does not install packages, migrate guest configuration, or retire old CLI files. On 2026-10-23 the exact Native and Debian Ternux CLI retirement previews found their fixed targets absent, so no removal was applied; see [legacy CLI inspection](evidence/2026-10-23-legacy-cli-absence.md). A separate fresh Trixie installer supports an explicitly named disposable target alongside the working Debian guest. The separate `ternuxx-replay-p4` replay installed successfully and passed scoped account/package/driver plus broker/CLI checks; it is not a clean-device or customized-workstation acceptance claim. Existing-guest package/config adaptation still needs an exact target preview, backup, and tested rollback. The active guest continues to work through its existing setup.
+This adoption step records the guest in private Native Ternuxx state. It does not install packages, migrate guest configuration, or retire files inside the guest. Legacy host/guest CLI targets are reviewed separately with exact previews and reversible operations; see [legacy CLI inspection](evidence/2026-10-23-legacy-cli-absence.md). A separate fresh Trixie installer supports a uniquely named disposable target beside the working Debian guest. The 2026-10-23 replay installed the pinned image/snapshot and verified its selected packages and account; it is not a clean-device, custom-workstation, GPU-rendering, or audio acceptance claim. See [fresh replay evidence](evidence/2026-10-23-disposable-debian-replay.md). General existing-guest package/config migration remains unfinished.
 
 ## Fresh Debian Trixie setup
 
@@ -29,9 +72,16 @@ Check the selected user, dated Debian image and APT snapshot, package groups, av
 ./tx proot setup fresh-install --user NAME --alias ternuxx-replay-example --yes --plan-id PLAN_ID
 ```
 
-The installer checks the pulled arm64 image content before guest configuration. It provisions the fixed workstation manifest, then verifies that every requested package is installed in the recorded dpkg inventory. Arbitrary aliases, occupied containers and symlinked destinations are refused. The working `debian` rootfs is not overwritten. A refused target does not gain ownership through a failure journal. Package-stage resume requires the same preview and verified container/rootfs device/inode identity; an unverified partial image remains for inspection. An uninstall/rollback action and Web/TUI/GTK setup flows remain open. No clean-device or post-install rendering acceptance is claimed.
+The installer checks the pulled arm64 image content before guest configuration. It uses the repository-pinned Debian image content and dated APT snapshot, provisions the selected manifest package groups, then verifies that every requested package is installed in the recorded dpkg inventory. The exact installed package versions are saved for that run. Arbitrary aliases, occupied containers and symlinked destinations are refused. The working `debian` rootfs is not overwritten. A refused target does not gain ownership through a failure journal. Package-stage retry can reuse the same failed preview and verified container/rootfs device/inode identity. If only the HTTPS mirror changes while the Debian snapshot, image, package profile and graphics decision remain compatible, create a new resume preview from the exact failed plan:
 
-See [completed setup and scoped live acceptance](evidence/2026-10-22-fresh-setup-and-probe-safety.md), [earlier guarded replay evidence](evidence/2026-10-22-guarded-fresh-replay.md) and the [earlier fixture snapshot](evidence/2026-10-20-proot-fresh-reproducibility.md).
+```sh
+./tx proot setup fresh-resume-preview --user NAME --alias ternuxx-replay-example --plan-id FAILED_PLAN_ID
+./tx proot setup fresh-install --user NAME --alias ternuxx-replay-example --yes --plan-id RESUME_PLAN_ID
+```
+
+The HTTPS bootstrap records the Native Termux CA bundle hash in the preview, stages that bundle temporarily in the guest, keeps Debian Release signature verification enabled, and removes the temporary copy when the guest setup shell exits, including package-stage failures. Fresh PRoot previews select groups with `--groups base,fonts`; `base` is required and omission selects the full manifest. The current Native preview avoids upgrades and detects a transaction, but it is not a permanent cross-date package-version lock; the Native version-lock/update lifecycle remains open. Existing Debian adoption remains available as a separate path. The Native core package set is fixed; optional Native workload selection and Web/TUI/GTK setup flows are open. Clean-device, rollback, and post-install rendering acceptance are not claimed.
+
+See [the 2026-10-23 disposable replay](evidence/2026-10-23-disposable-debian-replay.md), [completed setup and scoped live acceptance](evidence/2026-10-22-fresh-setup-and-probe-safety.md), [earlier guarded replay evidence](evidence/2026-10-22-guarded-fresh-replay.md) and the [earlier fixture snapshot](evidence/2026-10-20-proot-fresh-reproducibility.md).
 
 ## Timezone default and selection
 

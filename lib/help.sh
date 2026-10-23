@@ -430,7 +430,8 @@ tx proot verify --distro debian|ternuxx-replay-NAME (--guest-user USER|--guest-u
 tx proot setup status
 tx proot setup adopt-preview --user NAME
 tx proot setup adopt --user NAME --yes --plan-id PLAN_ID
-tx proot setup fresh-preview --user NAME [--alias ternuxx-replay-NAME]
+tx proot setup fresh-preview --user NAME [--alias ternuxx-replay-NAME] [--groups base,fonts]
+tx proot setup fresh-resume-preview --user NAME --plan-id FAILED_PLAN_ID [--alias ternuxx-replay-NAME] [--groups base,fonts]
 tx proot setup fresh-install --user NAME [--alias ternuxx-replay-NAME] --yes --plan-id PLAN_ID
 tx proot setup retire-preview --alias ternuxx-replay-NAME
 tx proot setup retire --alias ternuxx-replay-NAME --yes --plan-id PLAN_ID
@@ -458,9 +459,11 @@ does not change guest files, packages, services, or desktop lifecycle. Fresh pro
 changes the existing `debian` rootfs. Preview lists package groups, image tag,
 space available, and exact plan ID. Apply creates the new alias, installs the
 manifest package groups, locale, and user, then records installed package
-version evidence. The Debian image tag and APT versions are resolved at apply
-time; byte-identical rebuilds are not promised. Turnip rendering remains a
-separate verification gate. This route does not invoke the separate Ternux CLI.
+version evidence. Fresh provisioning uses the pinned Debian image content and
+APT snapshot in the repository manifest; the installed package-version inventory
+is recorded for that run. Byte-identical guest rebuilds across different hosts
+have not been established. Turnip rendering remains a separate verification
+gate. This route does not invoke the separate Ternux CLI.
 EOF
       ;;
     reboot)

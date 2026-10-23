@@ -95,6 +95,20 @@ def _read_private(path: Path) -> dict:
     return data
 
 
+def _native_ca_bundle(prefix: str) -> tuple[Path, str]:
+    path = Path(prefix) / "etc/tls/cert.pem"
+    try:
+        info = path.lstat()
+        if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)
+                or path.resolve(strict=True) != path.absolute()
+                or info.st_uid != os.getuid() or info.st_size < 1024 or info.st_size > 16 * 1024 * 1024):
+            raise FreshSetupError("Native Termux CA bundle identity is unsafe")
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError as exc:
+        raise FreshSetupError("Native Termux CA bundle is unavailable for verified HTTPS bootstrap") from exc
+    return path, digest
+
+
 def _root_identity(container: Path, rootfs: Path) -> dict:
     parent = _directory(container)
     child = _directory(rootfs)
@@ -145,12 +159,28 @@ def _private_write(path: Path, data: dict) -> None:
             pass
 
 
-def _packages(manifest: dict) -> list[str]:
+_PACKAGE_GROUPS = ("base", "desktop-compat", "development", "desktop-apps", "fonts")
+
+
+def _selected_groups(groups: list[str] | None) -> list[str]:
+    if groups is None:
+        return list(_PACKAGE_GROUPS)
+    if not isinstance(groups, list) or not groups:
+        raise FreshSetupError("select base and only known, non-duplicate Debian package groups")
+    if any(not isinstance(group, str) or group not in _PACKAGE_GROUPS for group in groups):
+        raise FreshSetupError("select base and only known, non-duplicate Debian package groups")
+    if "base" not in groups or len(set(groups)) != len(groups):
+        raise FreshSetupError("select base and only known, non-duplicate Debian package groups")
+    return [group for group in _PACKAGE_GROUPS if group in groups]
+
+
+def _packages(manifest: dict, selected: list[str] | None = None) -> list[str]:
     groups = manifest.get("packages")
     if not isinstance(groups, dict):
         raise FreshSetupError("Debian package groups are invalid")
+    chosen = _selected_groups(selected)
     result = []
-    for group in ("base", "desktop-compat", "development", "desktop-apps", "fonts"):
+    for group in chosen:
         values = groups.get(group)
         if not isinstance(values, list) or not values:
             raise FreshSetupError(f"Debian package group is missing: {group}")
@@ -163,7 +193,40 @@ def _packages(manifest: dict) -> list[str]:
     return result
 
 
-def preview(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str, alias: str = ALIAS) -> dict:
+def _assert_resume_compatible(previous: dict, current: dict) -> None:
+    keys = ("schema_version", "alias", "guest_user", "image", "image_pin",
+            "arch_manifest_digest", "config_digest", "layer_digest", "rootfs_target",
+            "package_groups", "packages",
+            "existing_debian_rootfs_changed")
+    if previous.get("schema_version") != 2 or previous.get("operation") not in {
+            "fresh-debian-trixie", "resume-fresh-debian-trixie"}:
+        raise FreshSetupError("previous setup plan is not a Ternuxx fresh-install plan")
+    if any(previous.get(key) != current.get(key) for key in keys):
+        raise FreshSetupError("current setup profile changes packages or pinned image; failed install cannot resume")
+    old_snapshot, new_snapshot = previous.get("apt_snapshot"), current.get("apt_snapshot")
+    snapshot_keys = ("snapshot_id", "suites", "components", "valid_until")
+    if (not isinstance(old_snapshot, dict) or not isinstance(new_snapshot, dict)
+            or any(old_snapshot.get(key) != new_snapshot.get(key) for key in snapshot_keys)):
+        raise FreshSetupError("failed install uses a different Debian snapshot; refusing resume")
+    old_graphics, new_graphics = previous.get("graphics"), current.get("graphics")
+    graphics_keys = ("kgsl_accessible_at_preview", "turnip_archive_sha256",
+                     "turnip_install_planned", "rendering_verified")
+    if (not isinstance(old_graphics, dict) or not isinstance(new_graphics, dict)
+            or any(old_graphics.get(key) != new_graphics.get(key) for key in graphics_keys)):
+        raise FreshSetupError("graphics capability or pinned driver changed; failed install cannot resume")
+
+
+def _assert_rootfs_idle_for_resume(state: Path, rootfs: Path) -> None:
+    try:
+        import proot_guest_retirement
+        proot_guest_retirement._assert_idle(state, rootfs)
+    except (OSError, ValueError) as exc:
+        raise FreshSetupError("failed replay guest is active or its process ownership cannot be verified") from exc
+
+
+def preview(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
+            alias: str = ALIAS, resume_plan_id: str | None = None,
+            groups: list[str] | None = None) -> dict:
     if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", user) or user == "root":
         raise FreshSetupError("provide an ordinary Debian guest username")
     repo = Path(repo_root)
@@ -175,9 +238,15 @@ def preview(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str
     alias = _alias(alias)
     container, rootfs = _target_paths(prefix, alias)
     containers = container.parent
-    if container.exists():
-        raise FreshSetupError("Ternuxx fresh container already exists; refusing overwrite")
-    packages = _packages(manifest)
+    state = _state_root(home, state_dir, create=True)
+    previews = state / "previews"
+    if groups is None and container.exists() and resume_plan_id is not None:
+        inherited = _read_private(previews / f"fresh-{resume_plan_id}.json")
+        groups = inherited.get("package_groups")
+    chosen_groups = _selected_groups(groups)
+    packages = _packages(manifest, chosen_groups)
+    ca_path, ca_sha256 = _native_ca_bundle(prefix)
+    guest_ca_path = "/tmp/ternuxx-native-ca.pem"
     kgsl = _kgsl_accessible()
     if kgsl:
         for name in manifest.get("graphics", {}).get("hold_packages", []):
@@ -191,9 +260,12 @@ def preview(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str
         "layer_digest": manifest["fresh_install"]["layer_digest"],
         "manifest_sha256": hashlib.sha256(raw).hexdigest(),
         "rootfs_target": str(rootfs), "guest_user": user,
-        "package_groups": ["base", "desktop-compat", "development", "desktop-apps", "fonts"],
+        "package_groups": chosen_groups,
         "packages": packages,
         "apt_snapshot": manifest["fresh_install"]["apt_snapshot"],
+        "https_bootstrap": {"source": str(ca_path), "sha256": ca_sha256,
+                            "guest_temporary_path": guest_ca_path,
+                            "release_signature_required": True},
         "package_versions": "pinned by the dated Debian snapshot archive",
         "existing_debian_rootfs_changed": False,
         "graphics": {
@@ -204,10 +276,31 @@ def preview(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str
         },
         "free_bytes_at_preview": shutil.disk_usage(containers).free,
     }
+    if container.exists():
+        if resume_plan_id is None or not re.fullmatch(r"[0-9a-f]{64}", resume_plan_id):
+            raise FreshSetupError("Ternuxx fresh container already exists; only an exact failed-plan resume is allowed")
+        previous = _read_private(previews / f"fresh-{resume_plan_id}.json")
+        journal_record = _read_private(state / f"fresh-{resume_plan_id}.journal.json")
+        previous_identity = {key: value for key, value in previous.items() if key != "plan_id"}
+        if (previous.get("plan_id") != resume_plan_id
+                or hashlib.sha256(json.dumps(previous_identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest() != resume_plan_id
+                or journal_record.get("plan_id") != resume_plan_id or journal_record.get("alias") != alias
+                or journal_record.get("state") != "failed" or not isinstance(journal_record.get("rootfs_identity"), dict)):
+            raise FreshSetupError("resume requires a matching failed Ternuxx setup journal")
+        rootfs_identity = journal_record["rootfs_identity"]
+        if _root_identity(container, rootfs) != rootfs_identity:
+            raise FreshSetupError("failed replay rootfs identity changed; refusing resume")
+        if previous.get("guest_user") != user or previous.get("alias") != alias:
+            raise FreshSetupError("resume target or guest account differs from the failed setup")
+        _assert_resume_compatible(previous, plan)
+        _assert_rootfs_idle_for_resume(state, rootfs)
+        plan["operation"] = "resume-fresh-debian-trixie"
+        plan["resume_from_plan_id"] = resume_plan_id
+        plan["rootfs_identity"] = rootfs_identity
+    elif resume_plan_id is not None:
+        raise FreshSetupError("failed replay target is missing; refusing resume")
     plan_id = hashlib.sha256(json.dumps(plan, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     plan["plan_id"] = plan_id
-    state = _state_root(home, state_dir, create=True)
-    previews = state / "previews"
     _private_write(previews / f"fresh-{plan_id}.json", plan)
     return {"status": "preview", "plan_id": plan_id, "operation": plan}
 
@@ -383,11 +476,23 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
     plan = _read_private(plan_path)
     identity = {key: value for key, value in plan.items() if key != "plan_id"}
     recalculated = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    if (plan.get("schema_version") != 2 or plan.get("plan_id") != plan_id or recalculated != plan_id
+    if (plan.get("schema_version") != 2 or plan.get("operation") not in {
+                "fresh-debian-trixie", "resume-fresh-debian-trixie"}
+            or plan.get("plan_id") != plan_id or recalculated != plan_id
             or plan.get("guest_user") != user or plan.get("alias") != alias
             or plan.get("manifest_sha256") != hashlib.sha256(raw).hexdigest()
             or plan.get("rootfs_target") != str(Path(prefix) / "var/lib/proot-distro/containers" / alias / "rootfs")):
         raise FreshSetupError("fresh setup preview differs from the reviewed plan or current profile")
+    ca_path, ca_sha256 = _native_ca_bundle(prefix)
+    guest_ca_path = "/tmp/ternuxx-native-ca.pem"
+    if plan.get("https_bootstrap") != {"source": str(ca_path), "sha256": ca_sha256,
+                                        "guest_temporary_path": guest_ca_path,
+                                        "release_signature_required": True}:
+        raise FreshSetupError("Native Termux CA bundle or HTTPS trust policy changed since setup preview")
+    if plan.get("operation") == "resume-fresh-debian-trixie":
+        previous_id = plan.get("resume_from_plan_id")
+        if not isinstance(previous_id, str) or not re.fullmatch(r"[0-9a-f]{64}", previous_id):
+            raise FreshSetupError("resume preview lacks its previous failed plan identity")
     manager = shutil.which("proot-distro")
     if not manager:
         raise FreshSetupError("proot-distro is unavailable")
@@ -414,15 +519,33 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
     try:
         container, rootfs = _target_paths(prefix, alias)
         if container.exists():
-            try:
-                prior = _read_private(journal)
-            except (OSError, ValueError) as exc:
-                raise FreshSetupError("fresh destination exists without a verified owned install journal") from exc
-            if (prior.get("plan_id") != plan_id or prior.get("alias") != alias
-                    or prior.get("state") != "failed" or not isinstance(prior.get("rootfs_identity"), dict)):
-                raise FreshSetupError("fresh destination is not a failed verified install from this exact preview")
-            owned = prior["rootfs_identity"]
-            _verify_owned_target(prefix, alias, owned)
+            if plan.get("operation") == "resume-fresh-debian-trixie":
+                previous_id = plan["resume_from_plan_id"]
+                previous_journal = _read_private(state / f"fresh-{previous_id}.journal.json")
+                previous_plan = _read_private(previews / f"fresh-{previous_id}.json")
+                if (previous_journal.get("plan_id") != previous_id
+                        or previous_journal.get("alias") != alias
+                        or previous_journal.get("state") != "failed"
+                        or previous_journal.get("rootfs_identity") != plan.get("rootfs_identity")
+                        or previous_plan.get("plan_id") != previous_id):
+                    raise FreshSetupError("resume source is no longer a matching failed setup")
+                _assert_resume_compatible(previous_plan, plan)
+                owned = plan["rootfs_identity"]
+                if _root_identity(container, rootfs) != owned:
+                    raise FreshSetupError("failed replay rootfs identity changed after resume preview")
+                _assert_rootfs_idle_for_resume(state, rootfs)
+            else:
+                try:
+                    prior = _read_private(journal)
+                except (OSError, ValueError) as exc:
+                    raise FreshSetupError("fresh destination exists without a verified owned install journal") from exc
+                if (prior.get("plan_id") != plan_id or prior.get("alias") != alias
+                        or prior.get("state") != "failed" or not isinstance(prior.get("rootfs_identity"), dict)):
+                    raise FreshSetupError("fresh destination is not a failed verified install from this exact preview")
+                owned = prior["rootfs_identity"]
+                _verify_owned_target(prefix, alias, owned)
+        elif plan.get("operation") == "resume-fresh-debian-trixie":
+            raise FreshSetupError("failed replay target disappeared after resume preview")
         turnip_files = None
         if plan["graphics"]["turnip_install_planned"]:
             turnip_files = _stage_turnip(manifest, state / "artifacts")
@@ -447,6 +570,12 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
             raise FreshSetupError("Turnip plan and verified artifact selection do not match")
         package_args = " ".join(shlex.quote(item) for item in package_set)
         guest_user = shlex.quote(user)
+        _verify_owned_target(prefix, alias, owned)
+        guest_ca_quoted = shlex.quote(guest_ca_path)
+        copied_ca = runner([manager, "copy", str(ca_path), f"{alias}:{guest_ca_path}"],
+                           check=False, timeout=180)
+        if copied_ca.returncode:
+            raise FreshSetupError("verified Native Termux CA bundle could not be staged in the new guest")
         snapshot = manifest["fresh_install"]["apt_snapshot"]
         sources = (
             "Types: deb\nURIs: " + snapshot["main_archive"] + "\nSuites: trixie trixie-updates\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\nCheck-Valid-Until: no\n\n"
@@ -454,9 +583,10 @@ def apply(*, repo_root: str, prefix: str, home: str, state_dir: str, user: str,
         )
         configure_sources = "rm -f /etc/apt/sources.list && find /etc/apt/sources.list.d -maxdepth 1 -type f \\( -name '*.sources' -o -name '*.list' \\) -delete && printf %s " + shlex.quote(sources) + " > /etc/apt/sources.list.d/ternuxx-snapshot.sources"
         script = "\n".join([
-            "set -eu", "export DEBIAN_FRONTEND=noninteractive", configure_sources,
-            "apt-get -o Acquire::Check-Valid-Until=false update",
-            f"apt-get install -y --no-install-recommends {package_args}",
+            "set -eu", f"trap 'rm -f {guest_ca_quoted}' EXIT", "export DEBIAN_FRONTEND=noninteractive", configure_sources,
+            f"apt-get -o Acquire::https::CaInfo={guest_ca_quoted} -o Acquire::Check-Valid-Until=false update",
+            f"apt-get -o Acquire::https::CaInfo={guest_ca_quoted} install -y --no-install-recommends {package_args}",
+            f"rm -f {guest_ca_quoted}",
             "printf '%s\\n' 'en_US.UTF-8 UTF-8' > /etc/locale.gen", "locale-gen",
             "if ! getent passwd " + guest_user + " >/dev/null; then useradd --create-home --shell /bin/bash " + guest_user + "; fi",
             f"usermod -aG sudo {guest_user}", "update-locale LANG=en_US.UTF-8",

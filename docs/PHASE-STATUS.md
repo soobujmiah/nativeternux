@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-VirGL status now reports client visibility and stop eligibility; global JSON forwarding is fixed across the Native CLI wrappers. Native full suite passed 888 tests (1 skipped) on 2026-10-23, but Android lsof cannot identify the live :1 socket owner, so client state remains unknown and stop is refused. The 2026-10-23 managed SSH wrapper JSON-handshake repair restored the fixed 8023 service; a stale restart plan was rejected after supervisor state changed; a fresh exact-plan restart then passed and the loopback banner became reachable after startup.
+Native suite passed 893 tests (1 skipped); the final focused setup suite passed 23/23. A separate Debian Trixie replay from the pinned image and APT snapshot passed while preserving the existing guest. Native package candidate drift remains: 4/16 versions differ, no upgrades applied, and a durable version lock is still open.
 
-**Next action:** Keep VirGL stop blocked until socket-owner visibility can be proven; qualify broken-rootfs recovery and cold boot on an isolated guest, then reconcile installed/runtime state and complete the full audit and owner-operated GTK review.
+**Next action:** Keep VirGL stop blocked until socket-owner visibility is proven; finish P4 reproducibility, existing-guest migration and rollback evidence, then reconcile installed/runtime state and the remaining full-audit gates.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -125,6 +125,8 @@ Evidence:
 - [docs/evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md](evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md)
 - [docs/evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md](evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md)
 - [docs/evidence/2026-10-23-p4-virgl-client-visibility.md](evidence/2026-10-23-p4-virgl-client-visibility.md)
+- [docs/evidence/2026-10-23-disposable-debian-replay.md](evidence/2026-10-23-disposable-debian-replay.md)
+- [docs/evidence/2026-10-23-native-package-version-drift.md](evidence/2026-10-23-native-package-version-drift.md)
 
 ## P5 — Distro and display compatibility profiles
 

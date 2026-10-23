@@ -1,32 +1,71 @@
-# Ternuxx — বাংলা
+# Ternuxx — পরিচিতি
 
-আমার phone-টাই pocket-er workstation হবে। Native Termux-er direct সুবিধা আর আমার Ternux PRoot-er Linux/GPU setup—দুটো একসাথে কাজে লাগাতে চাই। [আমার কথা](../docs/PRODUCT-VISION.md)। CPU baseline; GPU/NPU support actual workload-e verify korte hobe।
+Ternuxx হলো Termux-ভিত্তিক মোবাইল ওয়ার্কস্টেশন পরিচালনার প্রকল্প। এটি Native Termux-এ ডেস্কটপ চালু ও বন্ধ করা, স্বাস্থ্য পরীক্ষা, সার্ভিস পরিচালনা, SSH এবং ব্যবস্থাপনা ইন্টারফেস দেয়। Debian PRoot একটি ঐচ্ছিক পরিবেশ; Native ব্যবস্থাপনার জন্য এটি বাধ্যতামূলক নয়।
 
-## GPU ও PRoot সম্পর্কে
+[ইংরেজি পরিচিতি](../README.md) · [বাংলা ইনস্টল নির্দেশিকা](INSTALLATION.md) · [পণ্য-পরিকল্পনা](../docs/PRODUCT-VISION.md) · [রোডম্যাপ](../docs/ROADMAP.md)
 
-Native Termux ও Debian PRoot আলাদা graphics provider; একটির ফল অন্যটির GPU support প্রমাণ করে না। Ternuxx-এর PRoot graphics check ও সীমা দেখুন [PRoot GPU reuse](../docs/PROOT-GPU.md) এবং [Research & Evidence](../docs/RESEARCH.md)-এ। তারিখযুক্ত GPU ফলকে বর্তমান package/version-এর নিশ্চয়তা ধরে নেবেন না।
+## প্রকল্পের অবস্থা
 
-Shader cache folder থাকা একা GPU renderer প্রমাণ করে না। চলমান desktop-এ `glxinfo -B` থেকে Zink/Turnip renderer দেখা দরকার; `llvmpipe` হলে সেটি software rendering।
+Ternuxx এখনো সক্রিয় উন্নয়নাধীন। বিদ্যমান Debian PRoot-এর সঙ্গে সংযোগ ও খাপ খাওয়ানোর কাজ P4 পর্যায়ে চলছে। পরীক্ষা পাস করলেই সব ডিভাইস, গ্রাফিক্স ব্যবস্থা বা কাজের চাপ সমর্থিত—এমন দাবি করা হয় না। বর্তমান অবস্থা [পর্যায় প্রতিবেদন](../docs/PHASE-STATUS.md), [সক্ষমতার তালিকা](../docs/architecture/CAPABILITY-MATRIX.md) এবং [পরিচিত সীমাবদ্ধতা](../docs/testing/KNOWN-LIMITATIONS.md)-তে দেখুন।
 
-Ternuxx এখন Native Termux থেকে PRoot-Distro Debian-কে নিজস্ব typed adapter দিয়ে inspect ও পরিচালনা করে; আলাদা Ternux CLI runtime dependency নয়। প্রয়োজনীয় guest package/config পরিবর্তন কেবল নির্দিষ্ট guest, exact preview, explicit apply ও rollback সহ করতে হবে; rootfs reset/replace বা অচিহ্নিত cleanup নয়। একই display-তে desktop lifecycle চালাতে owner যাচাই দরকার। CPU baseline; GPU/NPU support actual workload evidence ছাড়া দাবি করা যাবে না।
+## দ্রুত শুরু
 
-## বর্তমান অবস্থা
+নিচের এক লাইনের কমান্ডটি Termux X11 প্যাকেজ সংগ্রহস্থল চালু করে, Git ইনস্টল করে, Ternuxx নামায় এবং Native প্যাকেজের পর্যালোচনাযোগ্য পরিকল্পনা দেখায়:
 
-| সক্ষমতা | অবস্থা |
-|---|---|
-| Native package ও desktop lifecycle | Implemented; বর্তমান parity/acceptance [phase status](../docs/PHASE-STATUS.md)-এ দেখুন |
-| পরীক্ষিত Adreno 825-এ native Turnip | পর্যবেক্ষিত package-এ ব্যর্থ |
-| Debian PRoot integration | Ternuxx-এর typed provider/management operations আছে; P4 feature parity ও acceptance চলমান |
-| CPU/GPU/NPU capability verification | পরিকল্পিত; NPU access এখনো প্রমাণিত নয় |
-| Hybrid workflow | CLI/TUI/Web/GTK-তে অনেক shared lifecycle ও handoff আছে; অসম্পূর্ণ parity ও reproducibility audit চলমান |
+```sh
+pkg update && pkg install x11-repo git && pkg update && git clone https://github.com/soobujmiah/ternuxx.git "$HOME/ternuxx" && cd "$HOME/ternuxx" && ./tx install --preview
+```
 
-আরও দেখুন: [আমার vision](../docs/PRODUCT-VISION.md), [Architecture](../docs/ARCHITECTURE.md), [Roadmap](../docs/ROADMAP.md), [Installation status](../docs/INSTALLATION.md)।
+পরিকল্পনায় প্যাকেজ ও নির্ভরতার পরিবর্তন দেখে নিন। ইনস্টল করতে চাইলে শুধু সেই পরিকল্পনায় দেখানো আইডি ব্যবহার করুন:
+
+```sh
+./tx install --yes --plan-id PLAN_ID
+```
+
+Native-এর এই ইনস্টল কোনো প্যাকেজ সরায় বা আপগ্রেড করে না এবং Debian rootfs তৈরি বা প্রতিস্থাপন করে না। ডেস্কটপ ব্যবহার করতে হলে Android-এর জন্য মেলে এমন **Termux:X11 অ্যাপ** আলাদাভাবে ইনস্টল করতে হবে। ধাপে ধাপে নির্দেশনার জন্য [বাংলা ইনস্টল নির্দেশিকা](INSTALLATION.md) দেখুন।
+
+## কাজের জন্য দরকারি কমান্ড
+
+```sh
+./tx help                 # কমান্ডের সাহায্য
+./tx doctor               # স্বাস্থ্য পরীক্ষা
+./tx info                 # পরিবেশ ও সক্ষমতা
+./tx start                # Native ডেস্কটপ চালু
+./tx tui                  # টার্মিনাল ব্যবস্থাপনা
+./tx web                  # প্রমাণীকৃত স্থানীয় ওয়েব ইন্টারফেস
+./tx mng center           # Native GTK ব্যবস্থাপনা অ্যাপ
+./tx db                   # Ternuxx-পরিচালিত Debian shell
+```
+
+সমর্থিত কাজগুলো CLI, TUI, প্রমাণীকৃত Web এবং GTK-তে একই ধরন-নিরাপদ ব্যবস্থাপনা সেবা ব্যবহার করে। তবে সব ইন্টারফেসে সব কাজ এখনো নেই। নির্দিষ্ট কাজের অবস্থা [সক্ষমতার তালিকা](../docs/architecture/CAPABILITY-MATRIX.md)-তে দেখুন।
+
+## বর্তমানে যা কাজ করে
+
+- **Native Termux ওয়ার্কস্টেশন:** পর্যালোচনাসাপেক্ষ প্যাকেজ ইনস্টল, ডেস্কটপ চালু/বন্ধ/অবস্থা, স্বাস্থ্য ও সক্ষমতা পরীক্ষা, সার্ভিস/বুট নিয়ন্ত্রণ, ব্যবস্থাপনা ইন্টারফেস এবং পরিচালিত SSH।
+- **ঐচ্ছিক Debian PRoot:** স্পষ্টভাবে লক্ষ্য করা তালিকা ও যাচাই, পরিচালিত অতিথি সেশন এবং বিদ্যমান অতিথি পরিবেশ গ্রহণের নথিভুক্তি। গ্রহণের নথি Native পাশে লেখা হয়; এতে অতিথি পরিবেশের ফাইল নিজে থেকে বদলায় না।
+- **নতুন Debian Trixie অতিথি পরিবেশ:** আলাদা নামের অতিথি পরিবেশ নির্দিষ্ট Debian image ও APT snapshot থেকে তৈরি করা যায়। প্যাকেজের দল বেছে ইনস্টল পরিকল্পনা তৈরি করা যায়; `base` আবশ্যক। ইনস্টল হওয়া সংস্করণের তালিকা রাখা হয় এবং ব্যর্থ প্যাকেজ ধাপ নতুন পর্যালোচিত পরিকল্পনায় আবার চালানো যায়। ২০২৬-১০-২৩ তারিখের অস্থায়ী অতিথি পরিবেশ পরীক্ষা সফল হয়েছে এবং আগের Debian পরিবেশ অক্ষত ছিল: [পরীক্ষার বিবরণ](../docs/evidence/2026-10-23-disposable-debian-replay.md)।
+- **একাধিক ব্যবস্থাপনা মাধ্যম:** CLI, TUI, প্রমাণীকৃত Web এবং GTK-তে ভাগ করা সেশন ও ব্যবস্থাপনার কাজ আছে; পূর্ণ সমতা এখনো বাকি।
+- **গ্রাফিক্স ও অডিও:** আলাদা পরিবেশ-ভিত্তিক যাচাই ও কিছু অতিথি পরিবেশের পথ আছে। ড্রাইভার ইনস্টল থাকা একা GUI-তে GPU-নির্ভর ছবি আঁকা প্রমাণ করে না। [GPU যাচাই](../docs/testing/GPU-ACCELERATION.md) ও [PRoot গ্রাফিক্স](../docs/PROOT-GPU.md) দেখুন।
+
+## এখনো সম্পূর্ণ হয়নি
+
+- **একেবারে নতুন ডিভাইসে পুনরুৎপাদন:** বর্তমান প্রমাণ আগে থেকেই কনফিগার করা Native Termux ও সেই ডিভাইসে তৈরি নতুন Debian অতিথি পরিবেশ থেকে। নতুন Android/Termux স্থাপনে যাচাই এখনো হয়নি।
+- **Native প্যাকেজ সংস্করণ-লক:** `tx install --preview` নির্ভরতার পরিকল্পনা দেখায়, কিন্তু সব তারিখে সংগ্রহস্থল থেকে একই প্যাকেজ সংস্করণ পাওয়া নিশ্চিত করে না। ২০২৬-১০-২৩ তারিখে ১৬টি সরাসরি/নির্ভরশীল প্যাকেজ সংস্করণের মধ্যে ৪টি বর্তমান স্বাক্ষরিত Termux সংস্করণ থেকে আলাদা পাওয়া গেছে। আপগ্রেড করা হয়নি। [সংস্করণ-ভিন্নতার প্রমাণ](../docs/evidence/2026-10-23-native-package-version-drift.md)।
+- **আগের Debian পরিবেশ রূপান্তর:** অতিথি পরিবেশ গ্রহণের নথি করা যায়, কিন্তু বিদ্যমান Debian পরিবেশের সাধারণ প্যাকেজ ও কনফিগারেশন রূপান্তর সম্পূর্ণ নয়। পরিবর্তনের আগে নির্দিষ্ট লক্ষ্য, পূর্বরূপ, আগের অবস্থা সংরক্ষণ, স্পষ্ট অনুমোদন এবং যাচাই করা rollback প্রয়োজন।
+- **ঐচ্ছিক সফটওয়্যার নির্বাচন:** নতুন Debian অতিথি পরিবেশে প্যাকেজ-দল বাছাই আছে। Native ও Debian-এর জন্য আলাদা সফটওয়্যার তালিকা এবং চারটি ইন্টারফেসে একই ইনস্টল সুবিধা এখনো তৈরি হয়নি।
+- **যন্ত্র ও প্রকাশনা যাচাই:** পরিষ্কার ডিভাইস, পূর্ণ rollback, GPU/Vulkan rendering, অডিও, NPU, সমর্থিত যন্ত্রের তালিকা এবং লাইসেন্স/প্রকাশনা যাচাই বাকি। স্থিতিশীল প্রকাশনা বা মুক্ত-ব্যবহারের লাইসেন্স দাবি করা হচ্ছে না।
+
+## সম্পূর্ণ হলে লক্ষ্য
+
+লক্ষ্য হলো পুনরুৎপাদনযোগ্য মোবাইল ওয়ার্কস্টেশন—যেখানে Native ও Debian কাজ আলাদাভাবে চলে, ইনস্টল/rollback স্পষ্ট, CLI/TUI/Web/GTK-তে একই নিরাপদ ব্যবস্থাপনা পাওয়া যায়, এবং নির্দিষ্ট কাজের জন্য CPU/GPU/NPU সমর্থন বাস্তবে যাচাই করা হয়। এগুলো ভবিষ্যৎ লক্ষ্য, বর্তমান সক্ষমতার দাবি নয়। বিস্তারিত [রোডম্যাপ](../docs/ROADMAP.md) ও [পণ্য-দৃষ্টি](../docs/PRODUCT-VISION.md)-তে।
 
 ## লাইসেন্স
 
-এই repository-তে license এখনো নির্ধারিত/যোগ করা হয়নি। আগের draft-এর license দাবি ও অনুপস্থিত license file-এর link-কে কার্যকর license হিসেবে ধরবেন না। Public release বা contribution নেওয়ার আগে owner-কে license নির্বাচন করে file যোগ করতে হবে।
+এই সংগ্রহস্থলে এখনো `LICENSE` ফাইল নেই। তাই কোনো অনুল্লিখিত লাইসেন্স ধরে ব্যবহার বা বিতরণের অনুমতি আছে বলে মনে করবেন না। [প্রকাশনার প্রস্তুতি](../docs/readiness/README.md) দেখুন।
 
-## Repository
+## আরও পড়ুন
 
-- Source: https://github.com/soobujmiah/ternuxx
-- Existing Ternux (independent): https://github.com/soobujmiah/ternux
+- [ধাপে ধাপে বাংলা ইনস্টল ও ব্যবহার](INSTALLATION.md)
+- [অপারেশন ও কমান্ড তালিকা](../docs/OPERATIONS.md)
+- [স্থাপত্য](../docs/ARCHITECTURE.md)
+- [পরীক্ষা ও প্রমাণ](../docs/testing/README.md)

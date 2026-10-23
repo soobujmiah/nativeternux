@@ -253,7 +253,7 @@ def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[st
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="tx proot setup")
-    parser.add_argument("action", choices=("status", "adopt-preview", "adopt", "fresh-preview", "fresh-install"))
+    parser.add_argument("action", choices=("status", "adopt-preview", "adopt", "fresh-preview", "fresh-resume-preview", "fresh-install"))
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--prefix", default=os.environ.get("PREFIX", ""))
     parser.add_argument("--home", default=os.environ.get("HOME", ""))
@@ -261,14 +261,18 @@ def main() -> int:
     parser.add_argument("--user", default="")
     parser.add_argument("--alias", help="fresh-only debian or ternuxx-replay-NAME target")
     parser.add_argument("--plan-id", default="")
+    parser.add_argument("--groups", help="comma-separated fresh Debian package groups; base is required")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     if not args.prefix or not args.home or not args.state_dir:
         parser.error("Native Termux PREFIX, HOME, and Ternuxx state directory are required")
     try:
-        if args.alias is not None and args.action not in {"fresh-preview", "fresh-install"}:
+        if args.alias is not None and args.action not in {"fresh-preview", "fresh-resume-preview", "fresh-install"}:
             parser.error("--alias is supported only by fresh setup")
+        if args.groups is not None and args.action not in {"fresh-preview", "fresh-resume-preview"}:
+            parser.error("--groups is supported only by fresh preview actions")
+        groups = None if args.groups is None else args.groups.split(",")
         if args.action == "status":
             result = status(repo_root=args.repo_root, prefix=args.prefix, home=args.home, state_dir=args.state_dir)
         elif args.action == "adopt-preview":
@@ -281,7 +285,15 @@ def main() -> int:
                 parser.error("fresh-preview requires --user NAME")
             result = proot_fresh_setup.preview(repo_root=args.repo_root, prefix=args.prefix,
                                                home=args.home, state_dir=args.state_dir, user=args.user,
-                                               alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS)
+                                               alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS,
+                                               groups=groups)
+        elif args.action == "fresh-resume-preview":
+            if not args.user or not args.plan_id or args.yes:
+                parser.error("fresh-resume-preview requires --user NAME --plan-id FAILED_PLAN_ID")
+            result = proot_fresh_setup.preview(repo_root=args.repo_root, prefix=args.prefix,
+                                               home=args.home, state_dir=args.state_dir, user=args.user,
+                                               alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS,
+                                               resume_plan_id=args.plan_id, groups=groups)
         elif args.action == "fresh-install":
             if not args.user or not args.plan_id or not args.yes:
                 parser.error("fresh-install requires --user NAME --yes --plan-id ID")

@@ -125,11 +125,11 @@
     "image_date": "2026-10-05",
     "architecture": "aarch64",
     "source": "official Debian Docker image index",
-    "package_versions": "resolved from current Debian repositories and recorded after install",
+    "package_versions": "resolved from the pinned Debian APT snapshot and recorded after install",
     "apt_snapshot": {
       "snapshot_id": "20261020T000000Z",
-      "main_archive": "http://snapshot.debian.org/archive/debian/20261020T000000Z/",
-      "security_archive": "http://snapshot.debian.org/archive/debian-security/20261020T000000Z/",
+      "main_archive": "https://snapshot-cloudflare.debian.org/archive/debian/20261020T000000Z/",
+      "security_archive": "https://snapshot-cloudflare.debian.org/archive/debian-security/20261020T000000Z/",
       "suites": [
         "trixie",
         "trixie-updates",
@@ -138,7 +138,8 @@
       "components": [
         "main"
       ],
-      "valid_until": "disabled for historical snapshots; signed Release metadata remains required"
+      "valid_until": "disabled for historical snapshots; signed Release metadata remains required",
+      "mirror": "snapshot-cloudflare.debian.org"
     },
     "arch_manifest_digest": "sha256:b55910b579d6eb05ebd79fbc8468b974fa39bb0610d52e1f1390bb2177ab7614",
     "config_digest": "sha256:4bb08c595249772893799a9189839e5a94900e8deaa14885896307e562b51e88",
