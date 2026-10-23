@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 105,
+  "read_count": 107,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -347,10 +347,10 @@
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
       "kind": "narrative",
-      "sha256": "a09fe2d7ae747835ac918090e03c437a1925a3651a5c2b4888458719e1a1795a",
+      "sha256": "8897225bf41aa5036f10201e2ae7a0852321801435ffd792701f64d863995b8e",
       "lines": 55,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "8897225bf41aa5036f10201e2ae7a0852321801435ffd792701f64d863995b8e"
     },
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "1125f5e7b1b883220d6401a47dca73d2264c0df8d56d3321970baa8b41d3a1fe",
-      "lines": 131,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "312ca6e5f2ed2254181005e7d8a547039a6f8538a36e68aa99cad2078010ebc3",
+      "lines": 132,
+      "read_status": "read",
+      "read_sha256": "312ca6e5f2ed2254181005e7d8a547039a6f8538a36e68aa99cad2078010ebc3"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
