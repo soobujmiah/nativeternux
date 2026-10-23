@@ -1,0 +1,7 @@
+event_id: commit-46d0cadf9b2b-1a87d9e55dd2ab76
+repository: soobujmiah/ternuxx
+commit: 46d0cadf9b2b217da5df9bb1dc0188074b083170
+kind: commit
+occurred_at: '2026-10-23T17:47:21Z'
+status: completed
+summary: 'docs: reconcile shortcut client coverage'
