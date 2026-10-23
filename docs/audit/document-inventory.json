@@ -139,10 +139,10 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "a65d67faad539b4887b1fa7cefaff07fc836e38d4f49f2e7d0cdcdffc69771d1",
+      "sha256": "e7b735b42a71d40613287e29976a5ffbcbaab450c1a5769de4c4184ef285ab6c",
       "lines": 120,
       "read_status": "read",
-      "read_sha256": "a65d67faad539b4887b1fa7cefaff07fc836e38d4f49f2e7d0cdcdffc69771d1"
+      "read_sha256": "e7b735b42a71d40613287e29976a5ffbcbaab450c1a5769de4c4184ef285ab6c"
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "978ffe125f2f9ad8787759d08c73882e4b5def392aef1065f7c006ade0954e1a",
-      "lines": 117,
+      "sha256": "26e315be3f0768983d44e839b52b742c51978de7f67a13038b91350fa359f1a8",
+      "lines": 118,
       "read_status": "pending",
       "read_sha256": null
     },

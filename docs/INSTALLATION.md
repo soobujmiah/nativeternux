@@ -19,7 +19,7 @@ Read the full package/dependency plan and exact preview ID. Apply only that save
 ./tx install --yes --plan-id PLAN_ID
 ```
 
-The transaction refuses package removals and upgrades. It does not promise the same repository candidate versions across dates; see [Native package-version drift](evidence/2026-10-23-native-package-version-drift.md). Install the matching Termux:X11 Android app separately for a desktop.
+The transaction refuses package removals and upgrades; this project does not yet provide a Native package upgrade/version-lock lifecycle. It does not promise the same repository candidate versions across dates; see [Native package-version drift](evidence/2026-10-23-native-package-version-drift.md). Install the matching Termux:X11 Android app separately for a desktop.
 
 ## First checks and desktop
 
@@ -117,4 +117,4 @@ The historical Native Turnip test failed with `VK_ERROR_INCOMPATIBLE_DRIVER` for
 
 ## Before an installation flow is published
 
-Before release, re-verify package metadata, retain preview and explicit consent, then validate fresh setup, startup/recovery, guest configuration rollback, existing workflow preservation, and old CLI removal on the target device. Never replace the existing rootfs or claim clean-install reproducibility until the staged Debian installer and its acceptance evidence exist.
+Before release, re-verify package metadata, retain preview and explicit consent, then validate fresh setup, startup/recovery, guest configuration rollback, existing workflow preservation, and old CLI removal on the target device. The 2026-10-23 disposable replay proves the pinned-image Debian package/setup path on the recorded Native Termux device only; it does not prove clean-device or complete Native-plus-PRoot workstation reproducibility. Do not replace the existing rootfs or broaden the replay result beyond its recorded scope.
