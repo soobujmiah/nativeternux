@@ -3,7 +3,7 @@
 See [phase state](../../project/phase-state.json), [client coverage](../architecture/CAPABILITY-MATRIX.md), and [the active audit](../audit/REPOSITORY-AUDIT.md). Historical evidence retains its date and scope.
 
 - Product unit/fixture tests exist and run on Native/CI. They do not qualify Android boot, fresh setup, GPU/NPU use, or complete live client parity.
-- SSH key generation/enrollment/removal, password/recovery controls, per-SSH boot policy, and selectable service Wake Lock policy remain incomplete.
+- SSH client-key generation, enrollment/revocation, exact rollback, managed-SSH autostart, and next-start Wake Lock preference now have shared four-client controls; disposable Native OpenSSH authentication qualification passed. No production authorized-key mutation was made. Password/recovery decision, authenticated access after the 2026-10-23 service repair, GTK key-dialog/small-viewport interaction, and Android cold-boot delivery remain open.
 - One CLI → authenticated Web API → TUI → GTK/VTE session passed I/O, resize, detach and exact close on a disposable guest. Full mutation parity, wider guest configuration/workload coverage, and lifecycle rollback remain open. Protect the owner's Codex guest.
 - Fresh Debian setup is fixture-tested and refuses the existing rootfs. A separate replay from the pinned Trixie image and APT snapshot installed and verified 50 requested packages; an earlier failed package stage resumed under a matching new preview. Clean-device setup, complete failure recovery, rollback, and customized-workstation reproduction remain unqualified.
 - Direct `:1`, standalone `:0`, and nested `:2` graphics are separate. Nested draw/presentation remains unqualified.
