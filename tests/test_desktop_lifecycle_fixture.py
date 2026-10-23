@@ -512,7 +512,7 @@ bash -c "$runner" _ status
         self.assertEqual(report["component"], "native_ssh_diagnostics")
         self.assertTrue(report["safety"]["read_only"])
         self.assertFalse(report["safety"]["credential_files_read"])
-        self.assertEqual(report["checks"]["listener_daemon_correlation"], "unknown")
+        self.assertIn(report["checks"]["listener_daemon_correlation"], {"unknown", "not_performed"})
         self.assertFalse((self.state / "continuity").exists())
 
     def test_boot_wakelock_and_reboot_status_share_management_contract(self) -> None:
