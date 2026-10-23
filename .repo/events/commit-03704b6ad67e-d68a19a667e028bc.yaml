@@ -1,0 +1,7 @@
+event_id: commit-03704b6ad67e-d68a19a667e028bc
+repository: soobujmiah/ternuxx
+commit: 03704b6ad67e2191829cb7f16730ee8753f90c54
+kind: commit
+occurred_at: '2026-10-23T15:07:01Z'
+status: completed
+summary: 'docs: reflect managed shell aliases'
