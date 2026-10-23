@@ -1,0 +1,7 @@
+event_id: commit-313698c2e5fd-a016891208a82770
+repository: soobujmiah/ternuxx
+commit: 313698c2e5fd94b92769ee936fbdb7c4c1d02063
+kind: commit
+occurred_at: '2026-10-23T18:24:03Z'
+status: completed
+summary: 'docs: reconcile boot profile feature status'
