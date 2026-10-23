@@ -179,10 +179,10 @@
     {
       "path": "docs/PRODUCT-VISION.md",
       "kind": "narrative",
-      "sha256": "9407cc4d484d5c519d06b29b3bd781a4597126d5ce4d2d4674c9c5df266bd06f",
+      "sha256": "5d5ff16d1fb8720f85e037569b7a3a085f44dc679ef297934eb7baa5c4476e06",
       "lines": 15,
       "read_status": "read",
-      "read_sha256": "9407cc4d484d5c519d06b29b3bd781a4597126d5ce4d2d4674c9c5df266bd06f"
+      "read_sha256": "5d5ff16d1fb8720f85e037569b7a3a085f44dc679ef297934eb7baa5c4476e06"
     },
     {
       "path": "docs/PROOT-GPU.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "c4457fea7a366f0c5bde70c507827ca33117200cef6f98d9429f8c9f2be5f998",
-      "lines": 121,
+      "sha256": "6d396c6c6f0db3a364ebbf5c1a49aa6cee999793e28ecc1faec0cbefa82a0f05",
+      "lines": 122,
       "read_status": "read",
-      "read_sha256": "c4457fea7a366f0c5bde70c507827ca33117200cef6f98d9429f8c9f2be5f998"
+      "read_sha256": "6d396c6c6f0db3a364ebbf5c1a49aa6cee999793e28ecc1faec0cbefa82a0f05"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
