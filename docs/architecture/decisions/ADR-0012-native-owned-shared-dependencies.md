@@ -1,7 +1,7 @@
 # ADR-0012: Native-owned shared dependencies and services
 
 - **Date:** 2026-10-17
-- **Status:** Owner requirement recorded; implementation pending
+- **Status:** Owner requirement accepted; implementation partial (current status reviewed 2026-10-24)
 - **Type:** provider-and-service-ownership
 
 ## Context
@@ -80,5 +80,6 @@ capability should be installed once on the host and consumed by the guest.
 6. No existing PRoot package, rootfs, launcher, graphics, or workload is
    changed implicitly.
 
-No service migration, package installation, or boot-policy change is
-implemented or device-qualified by this ADR.
+## Current implementation status
+
+This ADR records the ownership boundary; it does not itself qualify a runtime. Implemented slices include Native-managed SSH, the terminal broker, the idle GUI-monitor service, preview-first boot/service helpers, and Native PulseAudio consumed through the documented authenticated Debian handoff. Current per-client coverage and remaining gaps are in the [capability matrix](../CAPABILITY-MATRIX.md). Android cold-boot delivery, broader shared-service client lifecycle parity, and workload-level graphics/audio qualification remain incomplete; see [monitor replay evidence](../../evidence/2026-10-22-monitor-service-registration.md) and [P4 phase state](../../../project/phase-state.json).

@@ -1,12 +1,12 @@
 # ADR-0011: Unified Native SSH connection and lifecycle management
 
-- **Status:** Accepted owner requirement; contract documented, implementation pending
+- **Status:** Accepted owner requirement; implementation partial (current status reviewed 2026-10-24)
 - **Date:** 2026-10-17
 - **Type:** native-service-management
 
 ## Context
 
-Native Termux owns native SSH connectivity and must recover it without Debian PRoot or a guest agent. The owner also requires guided first-time setup, compatible migration from the existing manual SSH setup, secure identity/authentication handling, boot recovery, Wake Lock ownership, continuity evidence, and consistent CLI/Web/X11 management. The repository currently has SSH proposals but no shared SSH service implementation or management UI. The active manual server's configuration and ownership remain unknown until a redacted read-only inspection.
+Native Termux owns native SSH connectivity and must recover it without Debian PRoot or a guest agent. The owner also requires guided first-time setup, compatible migration from the existing manual SSH setup, secure identity/authentication handling, boot recovery, Wake Lock ownership, continuity evidence, and consistent CLI/Web/X11 management. At decision time (2026-10-17), the repository had SSH proposals but no shared SSH service implementation or management UI. The active manual server's configuration and ownership were unknown pending a redacted read-only inspection; this is historical context, not current implementation status.
 
 ## Decision
 
@@ -21,7 +21,7 @@ PRoot is an independent optional provider. Native SSH, boot, and continuity work
 - Web management authentication is distinct from SSH client authentication and the Android Termux login principal.
 - Termux:Boot is native-only and optional; Wake Locks default off and use per-owner leases.
 - Public docs and reports contain no secrets, key bytes, raw config, or private paths.
-- Acceptance remains pending until test fixtures/contracts and owner-operated physical-device checks pass.
+- Full acceptance remains partial: password-recovery scope, post-repair authenticated access, Android cold-boot delivery, and remaining GTK interaction review are still open; see the current status below.
 
 ## Alternatives rejected
 
@@ -33,4 +33,4 @@ PRoot is an independent optional provider. Native SSH, boot, and continuity work
 
 ## Evidence status
 
-No setup, SSH lifecycle, API, GUI, Web UI, boot, or Wake Lock operation is implemented or qualified by this ADR. The active manual setup must first be inspected read-only with sensitive values redacted. See the [phase roadmap](../../ROADMAP.md) for the implementation gate.
+This ADR records the architecture and owner requirements; it is not runtime acceptance evidence. As of 2026-10-24, the shared Native service and CLI/TUI/authenticated Web/GTK clients provide SSH inspection and scoped lifecycle/deployment, key inventory/enrollment/removal with exact rollback, recovery-key creation, autostart preference, and next-start Wake Lock preference. Disposable authentication qualification passed before the 2026-10-23 service-wrapper repair; authenticated access after that repair remains unverified. Password-recovery scope, GTK key-dialog/small-viewport interaction, and Android cold-boot delivery remain open. See [the capability matrix](../CAPABILITY-MATRIX.md), [SSH lifecycle contract](../SSH-LIFECYCLE.md), and [the active audit](../../audit/REPOSITORY-AUDIT.md).

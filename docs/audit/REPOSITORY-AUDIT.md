@@ -41,8 +41,6 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 
 | A15 | Phase date basis was implicit while device evidence also used local dates | Documented UTC calendar dates for phase state, reconciled P3’s UTC Oct 21 state date with its Oct 22 Dhaka-local commit/evidence timestamp, preserved both records, and added a deterministic UTC-date regression. Date-label mismatch alone does not alter gate acceptance. See [phase date reconciliation](PHASE-REVALIDATION.md). |
 | A16 | Two GitHub workflows independently ran the full suite for pull requests | Removed the PR trigger from Repository Knowledge Sync and kept PR validation in Repository State Contract; pushes/manual dispatch use Knowledge Sync. Documented event ownership in [knowledge synchronization](../KNOWLEDGE-SYNC.md). |
-| A81 | Contract workflow comment claimed PRs could not land on failed checks although GitHub had no branch protection or ruleset | Changed the comment and docs to distinguish validation from merge enforcement; live settings were checked read-only on 2026-10-24. Repository enforcement remains absent. |
-| A82 | Dated feature matrix claimed no boot-profile manager or lifecycle UI existed after CLI/TUI controls were implemented | Reconciled the row with current CLI/TUI implementation and source tests; kept PRoot/hybrid and actual Termux:Boot delivery limits explicit. |
 
 | A17 | GUI monitor scheduler existed only in source | Native CLI registration and idle live deployment now verified; private fresh Runit replay delivered two 30-second Linux-only ticks. Shared-client service registration controls remain open |
 
@@ -124,6 +122,9 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A78 | Interactive terminal P4 checklist still listed visible browser review as open after the recorded Firefox acceptance passed | Replaced the obsolete gate with the unclosed work: provider/configuration, clean-device/full-workstation reproducibility, preservation, and full Web mutation/client parity. |
 | A79 | Current handoff presented 2026-10-23 suite counts as latest after the 2026-10-24 Native run reached 894/1 skip | Labeled older runs as historical snapshots and added the latest full-suite and focused PRoot adoption results with their scope limit. |
 | A80 | Typed management catalog claimed the live generated Termux:Boot profile was a source mismatch | Aligned ownership/identity metadata with the profile planner and read-only live result; added a regression and dated evidence. Android delivery and cold boot remain unverified. See [reconciliation evidence](../evidence/2026-10-24-boot-profile-catalog-reconciliation.md). |
+| A81 | Contract workflow comment claimed PRs could not land on failed checks although GitHub had no branch protection or ruleset | Changed the comment and docs to distinguish validation from merge enforcement; live settings were checked read-only on 2026-10-24. Repository enforcement remains absent. |
+| A82 | Dated feature matrix claimed no boot-profile manager or lifecycle UI existed after CLI/TUI controls were implemented | Reconciled the row with current CLI/TUI implementation and source tests; kept PRoot/hybrid and actual Termux:Boot delivery limits explicit. |
+| A83 | ADR-0011/0012/0015 retained decision-time SSH/service status and a staged PRoot installer description as current | Dated the old context, reconciled current Native SSH/shared-service and completed disposable Trixie replay evidence, and retained post-repair auth, cold boot, guest migration/rollback, and workload limits. |
 
 
 ## Continuation order

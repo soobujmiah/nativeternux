@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 442,
-  "read_count": 111,
+  "read_count": 113,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -443,18 +443,18 @@
     {
       "path": "docs/architecture/decisions/ADR-0011-unified-ssh-lifecycle.md",
       "kind": "narrative",
-      "sha256": "8a3865a7fe7b27de8093041d8f626b0e49b7d81662b779092ab36463ecc40e63",
+      "sha256": "9b9683f08a556ea59fba025756ad34940b6a08f5bfba62383f56e61dd5ea8c72",
       "lines": 36,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "9b9683f08a556ea59fba025756ad34940b6a08f5bfba62383f56e61dd5ea8c72"
     },
     {
       "path": "docs/architecture/decisions/ADR-0012-native-owned-shared-dependencies.md",
       "kind": "narrative",
-      "sha256": "e7fd2054cb7e065a926085f33723352fac73d9455801ed0d4c451e4567817a2f",
-      "lines": 84,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "d9b1a6737f3e29fe02d00e60459dcb584ca25dace33b5673136df460bc8e0d7e",
+      "lines": 85,
+      "read_status": "read",
+      "read_sha256": "d9b1a6737f3e29fe02d00e60459dcb584ca25dace33b5673136df460bc8e0d7e"
     },
     {
       "path": "docs/architecture/decisions/ADR-0013-owner-controlled-remote-access.md",
@@ -475,10 +475,10 @@
     {
       "path": "docs/architecture/decisions/ADR-0015-ternuxx-owned-existing-proot.md",
       "kind": "narrative",
-      "sha256": "b20566ad43d6c0dd026ed9bf9fa3e40aebf00e642bcddad122eeacccd4f53975",
+      "sha256": "84b867ae50553dcb54d70ab89394919b68be672686c262f56193a28a7f1b5fa2",
       "lines": 35,
       "read_status": "read",
-      "read_sha256": "b20566ad43d6c0dd026ed9bf9fa3e40aebf00e642bcddad122eeacccd4f53975"
+      "read_sha256": "84b867ae50553dcb54d70ab89394919b68be672686c262f56193a28a7f1b5fa2"
     },
     {
       "path": "docs/architecture/decisions/ADR-0016-tx-db-and-legacy-entrypoints.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "3b425bace205dc2e469a35164ddeeb352ba65bfbe9fb02b31665f9f2d641e484",
-      "lines": 138,
+      "sha256": "303ed12e99027946e17fc8561cd72c43b6f75323b0fb62c93559b1aaa8169d39",
+      "lines": 139,
       "read_status": "read",
-      "read_sha256": "3b425bace205dc2e469a35164ddeeb352ba65bfbe9fb02b31665f9f2d641e484"
+      "read_sha256": "303ed12e99027946e17fc8561cd72c43b6f75323b0fb62c93559b1aaa8169d39"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",

@@ -1,7 +1,7 @@
 # ADR-0015: Ternuxx owns the existing Debian PRoot setup
 
 - **Date:** 2026-10-20
-- **Status:** accepted by owner; implementation in progress
+- **Status:** accepted by owner; implementation partial (current status reviewed 2026-10-24)
 - **Alias-preservation clauses:** superseded by [ADR-0016](ADR-0016-tx-db-and-legacy-entrypoints.md); existing-rootfs preservation and scoped adaptation remain active
 - **Type:** provider-integration and install-reproducibility
 
@@ -32,4 +32,4 @@ The baseline setup contract is in config/proot/debian-trixie.json. It records De
 
 ## Current implementation state
 
-The versioned profile exists. Ternuxx already calls proot-distro directly for its session and read-only graphics checks. The current-rootfs adoption record is implemented in Native private state. The staged fresh installer, guest config migration, and safe legacy CLI removal remain in progress. Do not treat this ADR or manifest alone as proof that a fresh install is ready.
+The versioned profile and Native-side current-rootfs adoption record exist. Ternuxx calls proot-distro directly for bounded guest sessions and graphics operations; status and inventory are read-only, while explicit guest verification may write proot-distro-generated login-profile settings. A separately named Debian Trixie replay completed pinned image/snapshot package setup and verified all 50 requested packages on the recorded Native device on 2026-10-23; the pinned Turnip artifact installed, but its runtime did not qualify. This is not clean-device or full-workstation reproducibility. Existing-guest configuration migration, complete setup rollback, visible GUI/audio/Turnip workload acceptance, and broader Native/PRoot configuration parity remain open. Fixed legacy Ternux CLI paths were absent in the 2026-10-23 read-only check, so no removal operation ran; see [legacy CLI absence evidence](../../evidence/2026-10-23-legacy-cli-absence.md). Guest verification may trigger generated login-profile writes; see [PRoot verification boundaries](../../PROOT-GPU.md). See also the [completed replay evidence](../../evidence/2026-10-23-disposable-debian-replay.md) and [current audit](../../audit/REPOSITORY-AUDIT.md). This ADR or manifest alone does not prove fresh-install readiness.
