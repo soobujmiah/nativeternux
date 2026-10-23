@@ -6,6 +6,13 @@ SOURCE = (ROOT / "apps/management-center/management-center.c").read_text()
 
 
 class ManagementCenterReplayGuestUiTests(unittest.TestCase):
+    def test_debian_icd_migration_uses_preview_and_confirmation_controls(self):
+        self.assertIn("Migrate or roll back Debian Vulkan ICD", SOURCE)
+        self.assertIn('run_bridge(c,"guest-lifecycle-preview",bridge_kind,alias,', SOURCE)
+        self.assertIn("The exact existing Debian alias is required.", SOURCE)
+        self.assertIn("Apply ICD migration", SOURCE)
+        self.assertIn("Only the exact ICD file rename is changed", SOURCE)
+
     def test_replay_guest_resource_explains_its_action(self):
         self.assertIn('g_strcmp0(r->id, "proot.replay-guests") == 0', SOURCE)
         self.assertIn('Retire or restore an exact, idle Ternuxx replay guest', SOURCE)

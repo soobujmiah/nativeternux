@@ -445,6 +445,10 @@ tx proot setup adoption-rollback --backup-id BACKUP_ID --yes --plan-id PLAN_ID
 tx proot setup fresh-preview --user NAME [--alias ternuxx-replay-NAME] [--groups base,fonts]
 tx proot setup fresh-resume-preview --user NAME --plan-id FAILED_PLAN_ID [--alias ternuxx-replay-NAME] [--groups base,fonts]
 tx proot setup fresh-install --yes --plan-id PLAN_ID [--user NAME] [--alias ternuxx-replay-NAME]
+tx proot setup icd-migrate-preview --alias debian
+tx proot setup icd-migrate --alias debian --yes --plan-id PLAN_ID
+tx proot setup icd-rollback-preview --operation-id MIGRATION_ID
+tx proot setup icd-rollback --operation-id MIGRATION_ID --yes --plan-id PLAN_ID
 tx proot setup retire-preview --alias ternuxx-replay-NAME
 tx proot setup retire --alias ternuxx-replay-NAME --yes --plan-id PLAN_ID
 tx proot setup restore-preview --alias ternuxx-replay-NAME --backup-id BACKUP_ID

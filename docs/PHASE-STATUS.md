@@ -56,9 +56,9 @@ Evidence:
 
 **Status:** in_progress
 
-Same-rootfs adoption metadata refresh has private exact-byte backup/rollback; current Native record is adopted and package baseline matches. Fresh Debian setup follows manifest Turnip paths; its exact preview binds the dynamic username/alias, and apply asks securely for that guest account password without requiring the username to be retyped. Guest migration, distro expansion, shared client parity, and clean-device replay remain open.
+Legacy Debian ICD rename is preview-bound and rollback-capable through shared CLI, TUI, Web, and GTK source; no live guest changes made.
 
-**Next action:** Implement exact-preview, rollback-safe adaptation of the selected existing Debian package/config delta through the shared operation service and clients; verify on a disposable guest before any live guest apply.
+**Next action:** Validate the exact ICD rename, interrupted apply recovery, and rollback on an idle disposable Debian guest; keep the existing default guest untouched.
 
 Evidence:
 - [docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md](evidence/P4-ternux-source-capability-matrix-2026-10-18.md)
@@ -135,6 +135,7 @@ Evidence:
 - [docs/evidence/2026-10-24-adoption-record-refresh.md](evidence/2026-10-24-adoption-record-refresh.md)
 - [docs/evidence/2026-10-24-fresh-turnip-path-audit.md](evidence/2026-10-24-fresh-turnip-path-audit.md)
 - [docs/evidence/2026-10-24-dynamic-proot-user-selection.md](evidence/2026-10-24-dynamic-proot-user-selection.md)
+- [docs/evidence/2026-10-24-p4-managed-icd-migration.md](evidence/2026-10-24-p4-managed-icd-migration.md)
 
 ## P5 — Distro and display compatibility profiles
 

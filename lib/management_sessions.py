@@ -38,6 +38,8 @@ MUTATING_OPERATIONS = frozenset({
     "cron.jobs.mutation.preview", "cron.jobs.mutation.apply",
     "proot.start", "proot.stop", "proot.recovery.reconcile",
     "proot.setup.retire.preview", "proot.setup.retire.apply", "proot.setup.restore.preview", "proot.setup.restore.apply",
+    "proot.setup.icd-migrate.preview", "proot.setup.icd-migrate.apply",
+    "proot.setup.icd-migrate.rollback.preview", "proot.setup.icd-migrate.rollback.apply",
     "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",
     "boot.helpers.preview", "boot.helpers.apply",
     "terminal.start.preview", "terminal.start", "terminal.channel.issue",

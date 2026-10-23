@@ -157,11 +157,11 @@ nt_cmd_proot() {
     db) _nt_use launch; nt_cmd_db "$@" ;;
     gui)   _nt_proot_gui "$@" ;;
     setup)
-      local action="${1:-status}" user="" plan_id="" backup_id="" guest_alias="" package_groups="" confirmed=0 option
+      local action="${1:-status}" user="" plan_id="" backup_id="" guest_alias="" package_groups="" migration_id="" confirmed=0 option
       [ $# -eq 0 ] || shift
       case "$action" in
-        status|adopt-preview|adopt|adoption-rollback-preview|adoption-rollback|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore) ;;
-        *) nt_fail "Use tx proot setup status|adopt-preview|adopt|adoption-rollback-preview|adoption-rollback|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore."; return 2 ;;
+        status|adopt-preview|adopt|adoption-rollback-preview|adoption-rollback|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore|icd-migrate-preview|icd-migrate|icd-rollback-preview|icd-rollback) ;;
+        *) nt_fail "Use tx proot setup status|adopt-preview|adopt|fresh-preview|fresh-install|icd-migrate-preview|icd-migrate|icd-rollback-preview|icd-rollback|retire-preview|retire|restore-preview|restore."; return 2 ;;
       esac
       while [ "$#" -gt 0 ]; do
         option="$1"; shift
@@ -173,6 +173,7 @@ nt_cmd_proot() {
           --plan-id) [ "$#" -gt 0 ] || { nt_fail "--plan-id needs a value."; return 2; }; plan_id="$1"; shift ;;
           --groups) [ "$#" -gt 0 ] && [ -n "$1" ] || { nt_fail "--groups needs comma-separated package groups."; return 2; }; package_groups="$1"; shift ;;
           --backup-id) [ "$#" -gt 0 ] || { nt_fail "--backup-id needs a value."; return 2; }; backup_id="$1"; shift ;;
+          --operation-id) [ "$#" -gt 0 ] || { nt_fail "--operation-id needs a value."; return 2; }; migration_id="$1"; shift ;;
           --yes) confirmed=1 ;;
           --help|-h) nt_help proot; return 0 ;;
           *) nt_fail "Unknown PRoot setup option: $option"; return 2 ;;
@@ -181,6 +182,31 @@ nt_cmd_proot() {
       nt_require_termux || return 1
       nt_require_command python3 || return 1
       local repo_root="${_TN_LIB_DIR%/lib}"
+      if [[ "$action" == icd-migrate-preview || "$action" == icd-migrate || "$action" == icd-rollback-preview || "$action" == icd-rollback ]]; then
+        local operation
+        local -a operation_args=()
+        case "$action" in
+          icd-migrate-preview)
+            [ "$guest_alias" = debian ] && [ -z "$migration_id$plan_id$backup_id" ] && [ "$confirmed" -eq 0 ] || { nt_fail "Usage: tx proot setup icd-migrate-preview --alias debian"; return 2; }
+            operation="proot.setup.icd-migrate.preview" ;;
+          icd-migrate)
+            [ "$guest_alias" = debian ] && [ -z "$migration_id$backup_id" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || { nt_fail "ICD migration requires --alias debian, --yes, and exact --plan-id."; return 2; }
+            operation="proot.setup.icd-migrate.apply" ;;
+          icd-rollback-preview)
+            [ -n "$migration_id" ] && [ -z "$guest_alias$plan_id$backup_id" ] && [ "$confirmed" -eq 0 ] || { nt_fail "Usage: tx proot setup icd-rollback-preview --operation-id MIGRATION_ID"; return 2; }
+            operation="proot.setup.icd-migrate.rollback.preview" ;;
+          icd-rollback)
+            [ -n "$migration_id" ] && [ -n "$plan_id" ] && [ -z "$guest_alias$backup_id" ] && [ "$confirmed" -eq 1 ] || { nt_fail "ICD rollback requires --operation-id, --yes, and exact --plan-id."; return 2; }
+            operation="proot.setup.icd-migrate.rollback.apply" ;;
+        esac
+        operation_args=(--operation "$operation" --json)
+        [ -z "$guest_alias" ] || operation_args+=(--alias "$guest_alias")
+        [ -z "$migration_id" ] || operation_args+=(--operation-id "$migration_id")
+        [ -z "$plan_id" ] || operation_args+=(--plan-id "$plan_id")
+        [ "$confirmed" -eq 0 ] || operation_args+=(--yes)
+        python3 "$repo_root/lib/management_service.py" "${operation_args[@]}"
+        return $?
+      fi
       if [[ "$action" == retire-preview || "$action" == retire || "$action" == restore-preview || "$action" == restore ]]; then
         [ -n "$guest_alias" ] && [ -z "$user" ] || { nt_fail "Replay retirement requires --alias ternuxx-replay-NAME."; return 2; }
         local retirement_action

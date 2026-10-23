@@ -304,13 +304,18 @@ def main(argv: list[str]) -> int:
         return 0 if result.get("ok") else 1
     if action == "guest-lifecycle-preview" and len(argv) == 4:
         kind, alias, backup_id = argv[1:]
-        if not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_replay_alias"}}))
-            return 2
+        if kind in {"retire", "restore"} and not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_replay_alias"}})); return 2
+        if kind in {"migrate", "rollback"} and alias != "debian":
+            print(json.dumps({"ok": False, "error": {"code": "invalid_debian_alias"}})); return 2
         if kind == "retire" and backup_id == "-":
             result = call("proot.setup.retire.preview", {"alias": alias})
         elif kind == "restore" and re.fullmatch(r"[0-9a-f]{32}", backup_id):
             result = call("proot.setup.restore.preview", {"alias": alias, "backup_id": backup_id})
+        elif kind == "migrate" and backup_id == "-":
+            result = call("proot.setup.icd-migrate.preview", {"alias": alias})
+        elif kind == "rollback" and re.fullmatch(r"[0-9a-f]{64}", backup_id):
+            result = call("proot.setup.icd-migrate.rollback.preview", {"migration_id": backup_id})
         else:
             print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_target"}}))
             return 2
@@ -325,17 +330,23 @@ def main(argv: list[str]) -> int:
         return 0
     if action == "guest-lifecycle-apply" and len(argv) == 5:
         kind, alias, backup_id, plan_id = argv[1:]
-        if (kind not in {"retire", "restore"}
-                or not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias)
-                or not re.fullmatch(r"[0-9a-f]{64}", plan_id)
-                or (kind == "retire" and backup_id != "-")
-                or (kind == "restore" and not re.fullmatch(r"[0-9a-f]{32}", backup_id))):
+        replay = kind in {"retire", "restore"} and re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias)
+        debian = kind in {"migrate", "rollback"} and alias == "debian"
+        if (not (replay or debian) or not re.fullmatch(r"[0-9a-f]{64}", plan_id)
+                or (kind in {"retire", "migrate"} and backup_id != "-")
+                or (kind == "restore" and not re.fullmatch(r"[0-9a-f]{32}", backup_id))
+                or (kind == "rollback" and not re.fullmatch(r"[0-9a-f]{64}", backup_id))):
             print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_target"}})); return 2
         if kind == "retire":
             result = call("proot.setup.retire.apply", {"alias": alias, "confirmed": True, "plan_id": plan_id})
-        else:
+        elif kind == "restore":
             result = call("proot.setup.restore.apply", {"alias": alias, "backup_id": backup_id,
                                                          "confirmed": True, "plan_id": plan_id})
+        elif kind == "migrate":
+            result = call("proot.setup.icd-migrate.apply", {"alias": alias, "confirmed": True, "plan_id": plan_id})
+        else:
+            result = call("proot.setup.icd-migrate.rollback.apply", {"migration_id": backup_id,
+                "confirmed": True, "plan_id": plan_id})
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
     if action == "shortcut-sync-rollback-list" and len(argv) == 1:

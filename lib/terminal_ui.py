@@ -268,6 +268,37 @@ def _attached_terminal(screen, client, *, session_id=None, plan_id=None):
         screen.refresh()
 
 
+def _manage_icd_migration(screen: "curses._CursesWindow") -> dict[str, object]:
+    action = _choose(screen, "Debian Vulkan configuration", [
+        ("migrate", "Preview legacy ICD filename migration"),
+        ("rollback", "Preview migration rollback"),
+    ])
+    if action == "migrate":
+        alias = _prompt(screen, "Exact Debian guest alias", 64) or "debian"
+        preview = _call("proot.setup.icd-migrate.preview", {"alias": alias})
+    elif action == "rollback":
+        migration_id = _prompt(screen, "Migration ID (64 lowercase hex characters)", 64)
+        if not re.fullmatch(r"[0-9a-f]{64}", migration_id):
+            return {"ok": False, "error": {"code": "invalid_migration_id"}}
+        preview = _call("proot.setup.icd-migrate.rollback.preview", {"migration_id": migration_id})
+    else:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    if not preview.get("ok"):
+        return preview
+    data = preview.get("data", {})
+    plan_id = data.get("plan_id") if isinstance(data, dict) else None
+    if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        return {"ok": False, "error": {"code": "invalid_icd_migration_preview"}}
+    _show_details(screen, preview)
+    if _prompt(screen, "Apply this exact guest file rename? Type yes").lower() != "yes":
+        return {"ok": False, "error": {"code": "cancelled"}}
+    if action == "migrate":
+        return _call("proot.setup.icd-migrate.apply", {
+            "alias": alias, "confirmed": True, "plan_id": plan_id})
+    return _call("proot.setup.icd-migrate.rollback.apply", {
+        "migration_id": migration_id, "confirmed": True, "plan_id": plan_id})
+
+
 def _manage_replay_guest(screen: "curses._CursesWindow") -> dict[str, object]:
     action = _choose(screen, "Ternuxx replay guest", [
         ("retire", "Retire an idle replay guest (keeps exact backup)"),
@@ -769,6 +800,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
         labels.append("preview and manage PRoot app shortcut")
         labels.append("review and restore a saved PRoot app menu")
         labels.append("inspect, start attached login, or manage bounded PRoot sessions")
+        if "proot.setup.icd-migrate.preview" in operations:
+            labels.append("preview and roll back Debian Vulkan ICD migration")
     elif resource_id == "network.ssh.managed-8023":
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)"),
@@ -1264,13 +1297,15 @@ def _run(screen: "curses._CursesWindow") -> int:
                     ("shortcut", "Add or remove named shortcut"), ("sync", "Sync discovered Debian apps"),
                     ("rollback", "Review and restore saved shortcut sync"),
                     ("sessions", "Inspect or manage sessions"),
-                    ("guest", "Retire or restore a Ternuxx replay guest")]).lower()
+                    ("guest", "Retire or restore a Ternuxx replay guest"),
+                    ("icd", "Preview Debian Vulkan ICD migration or rollback")]).lower()
                 report = (_launch_proot_app(screen) if choice == "launch" else
                           _manage_proot_shortcut(screen) if choice == "shortcut" else
                           _manage_proot_shortcut_sync(screen) if choice == "sync" else
                           _manage_proot_shortcut_rollback(screen) if choice == "rollback" else
                           _manage_proot_sessions(screen) if choice == "sessions" else
                           _manage_replay_guest(screen) if choice == "guest" else
+                          _manage_icd_migration(screen) if choice == "icd" else
                           {"ok": False, "error": {"code": "cancelled"}})
             elif resource["id"] == "network.ssh.managed-8023":
                 report = _managed_ssh_action(screen, resource)

@@ -6,6 +6,7 @@ It never writes to the guest or consults the legacy Ternux CLI.
 from __future__ import annotations
 
 import argparse
+import ctypes
 import fcntl
 import hashlib
 import getpass
@@ -613,6 +614,279 @@ def _apply_adoption_rollback_locked(*, prefix: str, home: str, state_dir: str,
             "restored_record_sha256": hashlib.sha256(previous_bytes).hexdigest(),
             "guest_mutations": False, "native_metadata_changed": True}
 
+
+
+_LEGACY_ICD_PATH = "/usr/local/share/vulkan/icd.d/ternux_freedreno_icd.json"
+
+
+def _guest_icd_path(root: Path, absolute: str) -> Path:
+    candidate = Path(absolute)
+    if (not candidate.is_absolute() or str(candidate) != absolute
+            or any(part in {".", ".."} for part in candidate.parts[1:])):
+        raise SetupError("guest ICD path is not canonical")
+    current = root
+    for index, part in enumerate(candidate.parts[1:]):
+        current = current / part
+        try:
+            info = current.lstat()
+        except FileNotFoundError:
+            if index < len(candidate.parts[1:]) - 1:
+                raise SetupError("guest ICD directory is incomplete")
+            return current
+        if stat.S_ISLNK(info.st_mode):
+            raise SetupError("guest ICD path contains a symbolic link")
+        if index < len(candidate.parts[1:]) - 1 and not stat.S_ISDIR(info.st_mode):
+            raise SetupError("guest ICD parent is not a directory")
+    return current
+
+
+def _read_guest_icd(path: Path) -> tuple[bytes, os.stat_result]:
+    try:
+        before = path.lstat()
+        if (not stat.S_ISREG(before.st_mode) or stat.S_ISLNK(before.st_mode)
+                or before.st_uid != os.getuid() or before.st_nlink != 1
+                or before.st_size > 64 * 1024):
+            raise SetupError("legacy guest ICD file identity is unsafe")
+        fd = os.open(path, os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(fd, "rb") as stream:
+            opened = os.fstat(stream.fileno())
+            if (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino):
+                raise SetupError("legacy guest ICD changed while opening")
+            raw = stream.read(64 * 1024 + 1)
+            after = os.fstat(stream.fileno())
+        if (len(raw) > 64 * 1024 or
+                (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns)
+                != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns)
+                or len(raw) != before.st_size):
+            raise SetupError("legacy guest ICD changed while reading")
+        return raw, before
+    except OSError as exc:
+        raise SetupError("legacy guest ICD file could not be read safely") from exc
+
+
+def _icd_semantics_match(raw: bytes, manifest: dict[str, object]) -> bool:
+    try:
+        config = json.loads(raw.decode("utf-8"))
+        graphics = manifest["graphics"]
+        driver = graphics["managed_install_paths"]["driver"]
+        return (isinstance(config, dict)
+                and set(config) == {"file_format_version", "ICD"}
+                and config.get("file_format_version") == "1.0.1"
+                and isinstance(config.get("ICD"), dict)
+                and set(config["ICD"]) == {"api_version", "library_arch", "library_path"}
+                and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", config["ICD"].get("api_version", ""))
+                and config["ICD"].get("library_arch") == "64"
+                and config["ICD"].get("library_path") == driver)
+    except (UnicodeError, json.JSONDecodeError, KeyError, TypeError):
+        return False
+
+
+def _guest_rootfs_for_alias(prefix: str, alias: str) -> tuple[Path, os.stat_result]:
+    try:
+        container, rootfs = proot_fresh_setup._target_paths(prefix, alias)
+        if not rootfs.is_dir() or rootfs.is_symlink():
+            raise SetupError("selected Debian rootfs is unavailable or unsafe")
+        identity = proot_fresh_setup._root_identity(container, rootfs)
+        if rootfs.resolve(strict=True) != rootfs.absolute():
+            raise SetupError("selected Debian rootfs resolves through a symbolic link")
+        return rootfs, rootfs.stat()
+    except (OSError, proot_fresh_setup.FreshSetupError) as exc:
+        raise SetupError("selected Ternuxx Debian rootfs identity is unsafe") from exc
+
+
+def _assert_guest_icd_idle(state_root: Path, rootfs: Path) -> None:
+    try:
+        import proot_guest_retirement
+        proot_guest_retirement._assert_idle(state_root, rootfs)
+    except (OSError, ValueError) as exc:
+        raise SetupError("selected guest is active or its process ownership cannot be verified") from exc
+
+
+def _guest_icd_container_lock(alias: str):
+    try:
+        import proot_guest_retirement
+        return proot_guest_retirement._container_lock(alias)
+    except (ImportError, AttributeError) as exc:
+        raise SetupError("selected PRoot container lock is unavailable") from exc
+
+
+def preview_icd_migration(*, repo_root: str, prefix: str, home: str, state_dir: str,
+                          alias: str = "debian") -> dict[str, object]:
+    manifest, manifest_hash = _manifest(Path(repo_root))
+    rootfs, identity = _guest_rootfs_for_alias(prefix, alias)
+    source = _guest_icd_path(rootfs, _LEGACY_ICD_PATH)
+    target_guest_path = manifest["graphics"]["managed_install_paths"]["icd"]
+    target = _guest_icd_path(rootfs, target_guest_path)
+    if not source.exists():
+        raise SetupError("known legacy ICD source is absent; no migration is needed")
+    if target.exists():
+        raise SetupError("Ternuxx ICD destination already exists; neither file was changed")
+    raw, source_info = _read_guest_icd(source)
+    if not _icd_semantics_match(raw, manifest):
+        raise SetupError("legacy ICD content does not match the selected Ternuxx Debian profile")
+    source_hash = hashlib.sha256(raw).hexdigest()
+    state_root, previews, _record = _state_paths(state_dir, home, create=True)
+    _assert_guest_icd_idle(state_root, rootfs)
+    operation: dict[str, object] = {
+        "schema_version": 1, "operation": "migrate-legacy-turnip-icd",
+        "alias": alias, "rootfs": str(rootfs), "rootfs_device": identity.st_dev,
+        "rootfs_inode": identity.st_ino, "manifest_sha256": manifest_hash,
+        "source_path": _LEGACY_ICD_PATH, "target_path": target_guest_path,
+        "source_sha256": source_hash, "source_device": source_info.st_dev,
+        "source_inode": source_info.st_ino, "source_mode": stat.S_IMODE(source_info.st_mode),
+        "source_size": source_info.st_size, "target_absent": True,
+        "package_changes": [], "guest_user_changes": [], "graphics_claim": "configuration-only; renderer not verified",
+    }
+    plan_id = hashlib.sha256(json.dumps(operation, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    operation["plan_id"] = plan_id
+    _atomic_private_json(previews / f"icd-{plan_id}.json", operation)
+    return {"status": "preview", "plan_id": plan_id, "operation": operation}
+
+
+def _rename_no_replace(source: Path, target: Path) -> None:
+    try:
+        libc = ctypes.CDLL(None, use_errno=True)
+        renameat2 = libc.renameat2
+        renameat2.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint)
+        renameat2.restype = ctypes.c_int
+        result = renameat2(-100, os.fsencode(source), -100, os.fsencode(target), 1)
+        if result != 0:
+            error = ctypes.get_errno()
+            raise OSError(error, os.strerror(error), str(target))
+        for directory in {source.parent, target.parent}:
+            fd = os.open(directory, os.O_RDONLY | os.O_CLOEXEC)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+    except (AttributeError, OSError) as exc:
+        raise SetupError("could not move the exact ICD file without replacing another path") from exc
+
+
+def apply_icd_migration(*, repo_root: str, prefix: str, home: str, state_dir: str,
+                        alias: str = "debian", plan_id: str, confirmed: bool) -> dict[str, object]:
+    if confirmed is not True or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        raise SetupError("ICD migration requires confirmation and a valid preview ID")
+    state_root, _previews, _record = _state_paths(state_dir, home, create=True)
+    with _adoption_lock(state_root), _guest_icd_container_lock(alias):
+        current = preview_icd_migration(repo_root=repo_root, prefix=prefix, home=home,
+                                        state_dir=state_dir, alias=alias)
+        if current["plan_id"] != plan_id:
+            raise SetupError("guest, manifest, or legacy ICD changed after preview")
+        operation = current["operation"]
+        rootfs, identity = _guest_rootfs_for_alias(prefix, alias)
+        _assert_guest_icd_idle(state_root, rootfs)
+        source = _guest_icd_path(rootfs, operation["source_path"])
+        target = _guest_icd_path(rootfs, operation["target_path"])
+        raw, source_info = _read_guest_icd(source)
+        if (hashlib.sha256(raw).hexdigest() != operation["source_sha256"]
+                or source_info.st_dev != operation["source_device"]
+                or source_info.st_ino != operation["source_inode"]
+                or identity.st_dev != operation["rootfs_device"]
+                or identity.st_ino != operation["rootfs_inode"]):
+            raise SetupError("legacy ICD or rootfs identity changed after preview")
+        backup_dir = state_root / "icd-backups"
+        backup_dir.mkdir(mode=0o700, exist_ok=True)
+        info = backup_dir.lstat()
+        if (stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode)
+                or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700):
+            raise SetupError("private ICD backup directory is unsafe")
+        backup = backup_dir / f"{plan_id}.json"
+        try:
+            _create_private_backup(backup, raw)
+        except FileExistsError:
+            if _read_stable_regular_file(backup, max_bytes=64 * 1024, mode=0o600) != raw:
+                raise SetupError("existing ICD backup does not match the exact source bytes")
+        receipt = {"schema_version": 1, "plan_id": plan_id, "alias": alias,
+                   "rootfs_device": identity.st_dev, "rootfs_inode": identity.st_ino,
+                   "source_path": operation["source_path"], "target_path": operation["target_path"],
+                   "source_sha256": operation["source_sha256"], "source_device": source_info.st_dev,
+                   "source_inode": source_info.st_ino, "source_mode": operation["source_mode"],
+                   "backup_path": str(backup), "state": "prepared"}
+        receipt_path = state_root / f"icd-{plan_id}.receipt.json"
+        _atomic_private_json(receipt_path, receipt)
+        _rename_no_replace(source, target)
+        moved, moved_info = _read_guest_icd(target)
+        if (moved != raw or moved_info.st_ino != source_info.st_ino or source.exists()):
+            try:
+                _rename_no_replace(target, source)
+            except SetupError:
+                pass
+            raise SetupError("ICD move did not preserve the exact source inode and bytes")
+        receipt["state"] = "migrated"
+        _atomic_private_json(receipt_path, receipt)
+        return {"status": "migrated", "receipt": receipt,
+                "guest_file_changed": True, "package_changes": []}
+
+
+def preview_icd_rollback(*, prefix: str, home: str, state_dir: str,
+                          plan_id: str) -> dict[str, object]:
+    if not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        raise SetupError("valid ICD migration ID is required")
+    state_root, previews, _record = _state_paths(state_dir, home, create=False)
+    receipt_path = state_root / f"icd-{plan_id}.receipt.json"
+    try:
+        receipt = json.loads(_read_stable_regular_file(receipt_path, max_bytes=65536, mode=0o600))
+    except (OSError, UnicodeError, json.JSONDecodeError, SetupError) as exc:
+        raise SetupError("ICD migration receipt is unavailable or unsafe") from exc
+    if receipt.get("plan_id") != plan_id or receipt.get("state") not in {"migrated", "prepared"}:
+        raise SetupError("ICD migration receipt is not eligible for rollback")
+    alias = receipt.get("alias")
+    if not isinstance(alias, str):
+        raise SetupError("ICD migration receipt has no target alias")
+    rootfs, identity = _guest_rootfs_for_alias(prefix, alias)
+    if (identity.st_dev != receipt.get("rootfs_device")
+            or identity.st_ino != receipt.get("rootfs_inode")):
+        raise SetupError("Debian rootfs identity differs from the migration receipt")
+    target = _guest_icd_path(rootfs, receipt.get("target_path"))
+    source = _guest_icd_path(rootfs, receipt.get("source_path"))
+    if source.exists():
+        raise SetupError("legacy ICD source path is occupied; rollback will not replace it")
+    raw, target_info = _read_guest_icd(target)
+    backup = Path(receipt.get("backup_path", ""))
+    backup_raw = _read_stable_regular_file(backup, max_bytes=64 * 1024, mode=0o600)
+    if (hashlib.sha256(raw).hexdigest() != receipt.get("source_sha256")
+            or raw != backup_raw or target_info.st_ino != receipt.get("source_inode")):
+        raise SetupError("managed ICD or exact backup changed; rollback is blocked")
+    _assert_guest_icd_idle(state_root, rootfs)
+    operation = {"schema_version": 1, "operation": "rollback-legacy-turnip-icd-migration",
+                 "migration_id": plan_id, "alias": receipt["alias"], "rootfs": str(rootfs),
+                 "rootfs_device": identity.st_dev, "rootfs_inode": identity.st_ino,
+                 "source_path": receipt["source_path"], "target_path": receipt["target_path"],
+                 "managed_sha256": hashlib.sha256(raw).hexdigest(),
+                 "managed_inode": target_info.st_ino, "backup_sha256": hashlib.sha256(backup_raw).hexdigest()}
+    rollback_id = hashlib.sha256(json.dumps(operation, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    operation["plan_id"] = rollback_id
+    _atomic_private_json(previews / f"icd-rollback-{rollback_id}.json", operation)
+    return {"status": "preview", "plan_id": rollback_id, "operation": operation}
+
+
+def apply_icd_rollback(*, prefix: str, home: str, state_dir: str, migration_id: str,
+                       plan_id: str, confirmed: bool) -> dict[str, object]:
+    if confirmed is not True or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        raise SetupError("ICD rollback requires confirmation and a valid preview ID")
+    state_root, _previews, _record = _state_paths(state_dir, home, create=True)
+    preflight = preview_icd_rollback(prefix=prefix, home=home, state_dir=state_dir,
+                                     plan_id=migration_id)
+    alias = preflight["operation"]["alias"]
+    with _adoption_lock(state_root), _guest_icd_container_lock(alias):
+        current = preview_icd_rollback(prefix=prefix, home=home, state_dir=state_dir,
+                                       plan_id=migration_id)
+        if current["plan_id"] != plan_id:
+            raise SetupError("guest ICD or rootfs changed after rollback preview")
+        operation = current["operation"]
+        rootfs, identity = _guest_rootfs_for_alias(prefix, operation["alias"])
+        _assert_guest_icd_idle(state_root, rootfs)
+        target = _guest_icd_path(rootfs, operation["target_path"])
+        source = _guest_icd_path(rootfs, operation["source_path"])
+        _rename_no_replace(target, source)
+        receipt_path = state_root / f"icd-{migration_id}.receipt.json"
+        receipt = json.loads(_read_stable_regular_file(receipt_path, max_bytes=65536, mode=0o600))
+        receipt["state"] = "rolled_back"
+        receipt["rollback_plan_id"] = plan_id
+        _atomic_private_json(receipt_path, receipt)
+        return {"status": "rolled_back", "migration_id": migration_id,
+                "rootfs_device": identity.st_dev, "rootfs_inode": identity.st_ino}
 
 def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[str, object]:
     manifest, manifest_hash = _manifest(Path(repo_root))

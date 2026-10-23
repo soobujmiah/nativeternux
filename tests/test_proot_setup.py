@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import os
 import shutil
 import stat
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import nullcontext, redirect_stdout
 from unittest.mock import patch
 from pathlib import Path
 
@@ -288,6 +289,74 @@ class ProotSetupTests(unittest.TestCase):
         with self.assertRaisesRegex(proot_setup.SetupError, "selected guest account is missing"):
             proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
                                          state_dir=str(self.state), user="missing")
+
+    def test_legacy_icd_move_is_exact_previewed_and_reversible(self) -> None:
+        guest_dir = self.root / "usr/local/share/vulkan/icd.d"
+        guest_dir.mkdir(parents=True)
+        source = guest_dir / "ternux_freedreno_icd.json"
+        target = guest_dir / "ternuxx_freedreno_icd.json"
+        original = json.dumps({
+            "file_format_version": "1.0.1",
+            "ICD": {"api_version": "1.4.359", "library_arch": "64",
+                    "library_path": "/usr/local/lib/aarch64-linux-gnu/libvulkan_freedreno.so"},
+        }, indent=2).encode()
+        source.write_bytes(original)
+        source.chmod(0o644)
+        with patch.object(proot_setup, "_assert_guest_icd_idle"), \
+             patch("proot_guest_retirement._container_lock", return_value=nullcontext()):
+            preview = proot_setup.preview_icd_migration(
+                repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
+                state_dir=str(self.state), alias="debian")
+            operation = preview["operation"]
+            self.assertEqual(operation["source_path"], "/usr/local/share/vulkan/icd.d/ternux_freedreno_icd.json")
+            self.assertEqual(operation["target_path"], "/usr/local/share/vulkan/icd.d/ternuxx_freedreno_icd.json")
+            self.assertEqual(source.read_bytes(), original)
+            self.assertFalse(target.exists())
+            applied = proot_setup.apply_icd_migration(
+                repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
+                state_dir=str(self.state), alias="debian", plan_id=preview["plan_id"], confirmed=True)
+            self.assertFalse(source.exists())
+            self.assertEqual(target.read_bytes(), original)
+            self.assertEqual(target.stat().st_ino, operation["source_inode"])
+            backup = Path(applied["receipt"]["backup_path"])
+            self.assertEqual(backup.read_bytes(), original)
+            rollback = proot_setup.preview_icd_rollback(
+                prefix=str(self.prefix), home=str(self.home), state_dir=str(self.state),
+                plan_id=preview["plan_id"])
+            result = proot_setup.apply_icd_rollback(
+                prefix=str(self.prefix), home=str(self.home), state_dir=str(self.state),
+                migration_id=preview["plan_id"], plan_id=rollback["plan_id"], confirmed=True)
+        self.assertEqual(result["status"], "rolled_back")
+        self.assertEqual(source.read_bytes(), original)
+        self.assertFalse(target.exists())
+
+    def test_legacy_icd_migration_refuses_conflicts_and_unexpected_content(self) -> None:
+        guest_dir = self.root / "usr/local/share/vulkan/icd.d"
+        guest_dir.mkdir(parents=True)
+        source = guest_dir / "ternux_freedreno_icd.json"
+        target = guest_dir / "ternuxx_freedreno_icd.json"
+        source.write_text("{}", encoding="utf-8")
+        with patch.object(proot_setup, "_assert_guest_icd_idle"), \
+             patch("proot_guest_retirement._container_lock", return_value=nullcontext()):
+            with self.assertRaisesRegex(proot_setup.SetupError, "does not match"):
+                proot_setup.preview_icd_migration(
+                    repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
+                    state_dir=str(self.state), alias="debian")
+        source.unlink()
+        source.write_text(json.dumps({"file_format_version": "1.0.1", "ICD": {
+            "api_version": "1.4.359", "library_arch": "64",
+            "library_path": "/usr/local/lib/aarch64-linux-gnu/libvulkan_freedreno.so"}}), encoding="utf-8")
+        target.write_text("preserve", encoding="utf-8")
+        with patch.object(proot_setup, "_assert_guest_icd_idle"), \
+             patch("proot_guest_retirement._container_lock", return_value=nullcontext()), \
+             self.assertRaisesRegex(proot_setup.SetupError, "destination already exists"):
+            proot_setup.preview_icd_migration(
+                repo_root=str(self.repo), prefix=str(self.prefix), home=str(self.home),
+                state_dir=str(self.state), alias="debian")
+        self.assertEqual(source.read_text(), json.dumps({"file_format_version": "1.0.1", "ICD": {
+            "api_version": "1.4.359", "library_arch": "64",
+            "library_path": "/usr/local/lib/aarch64-linux-gnu/libvulkan_freedreno.so"}}))
+        self.assertEqual(target.read_text(), "preserve")
 
     def test_fresh_preview_cli_forwards_provider_and_package_group_selection(self) -> None:
         preview = {"status": "preview", "plan_id": "a" * 64}

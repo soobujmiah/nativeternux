@@ -39,6 +39,26 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.env.stop()
 
+    def test_debian_icd_migration_preview_and_apply_use_shared_service(self) -> None:
+        preview = {"ok": True, "data": {"plan_id": "a" * 64, "operation": {"impact": "Rename one exact file"}}}
+        with mock.patch.object(bridge, "call", return_value=preview) as dispatch, redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["guest-lifecycle-preview", "migrate", "debian", "-"]), 0)
+        dispatch.assert_called_once_with("proot.setup.icd-migrate.preview", {"alias": "debian"})
+        self.assertIn("G\tmigrate\t" + "a" * 64 + "\tdebian\t-", output.getvalue())
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"status": "migrated"}}) as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["guest-lifecycle-apply", "migrate", "debian", "-", "a" * 64]), 0)
+        dispatch.assert_called_once_with("proot.setup.icd-migrate.apply", {
+            "alias": "debian", "confirmed": True, "plan_id": "a" * 64})
+
+    def test_debian_icd_rollback_requires_exact_migration_id(self) -> None:
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
+                "plan_id": "b" * 64, "operation": {"impact": "Restore original filename"}}}) as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["guest-lifecycle-preview", "rollback", "debian", "c" * 64]), 0)
+        dispatch.assert_called_once_with("proot.setup.icd-migrate.rollback.preview", {"migration_id": "c" * 64})
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["guest-lifecycle-preview", "rollback", "debian", "bad"]), 2)
+        dispatch.assert_not_called()
+
     def test_ssh_key_previews_and_applies_use_shared_service_with_exact_plan(self) -> None:
         preview = {"ok": True, "data": {"plan_id": "a" * 24,
                   "fingerprint": "SHA256:" + "b" * 43}}

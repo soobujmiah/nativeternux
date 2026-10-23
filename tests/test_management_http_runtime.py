@@ -50,6 +50,13 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("password login is disabled", ui)
         self.assertNotIn("Keep password recovery", ui)
 
+    def test_web_has_exact_preview_controls_for_debian_icd_migration(self) -> None:
+        ui = (ROOT / "lib" / "management_web_ui.html").read_text()
+        self.assertIn("Preview ICD change", ui)
+        self.assertIn('proot.setup.icd-migrate.preview', ui)
+        self.assertIn('proot.setup.icd-migrate.rollback.apply', ui)
+        self.assertIn("An active or unverifiable guest blocks apply.", ui)
+
     def test_web_resource_detail_uses_actions_instead_of_duplicate_capability_lists(self) -> None:
         ui = (ROOT / "lib" / "management_web_ui.html").read_text()
         self.assertIn('id="resource-actions"', ui)

@@ -14,6 +14,13 @@ import terminal_ui
 
 
 class TerminalUISharedServiceTests(unittest.TestCase):
+    def test_debian_icd_migration_action_is_catalog_bound_and_preview_first(self) -> None:
+        resource = {"id": "proot.debian.workloads", "supported_operations": [
+            "proot.setup.icd-migrate.preview"]}
+        self.assertIn("preview and roll back Debian Vulkan ICD migration",
+                      terminal_ui._available_action_labels(resource))
+        self.assertIn('proot.setup.icd-migrate.preview', (ROOT / "lib" / "terminal_ui.py").read_text())
+
     def test_stop_preview_preserves_signal_name_for_people(self):
         report=management_presentation.format_report({"ok":True,"data":{
             "signal":"SIGHUP","impact":"Hang up one owned terminal."}})

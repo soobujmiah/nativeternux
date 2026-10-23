@@ -51,6 +51,7 @@ import terminal_broker
 import timezone_support
 
 import proot_guest_retirement as retire_fresh_guest
+import proot_setup
 
 
 API_VERSION = 1
@@ -125,6 +126,10 @@ OPERATIONS = {
     "proot.setup.retire.apply": {"args": {"alias", "confirmed", "plan_id"}},
     "proot.setup.restore.preview": {"args": {"alias", "backup_id"}},
     "proot.setup.restore.apply": {"args": {"alias", "backup_id", "confirmed", "plan_id"}},
+    "proot.setup.icd-migrate.preview": {"args": {"alias"}},
+    "proot.setup.icd-migrate.apply": {"args": {"alias", "confirmed", "plan_id"}},
+    "proot.setup.icd-migrate.rollback.preview": {"args": {"migration_id"}},
+    "proot.setup.icd-migrate.rollback.apply": {"args": {"migration_id", "confirmed", "plan_id"}},
     "terminal.broker.status": {"args": set()},
     "terminal.start.preview": {"args": set()},
     "terminal.start": {"args": {"confirmed", "plan_id"}},
@@ -246,6 +251,14 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "invalid_arguments", "restore preview requires an exact replay alias and backup ID")
     if operation == "proot.setup.restore.apply" and (set(args) != {"alias", "backup_id", "confirmed", "plan_id"} or not isinstance(args.get("alias"), str) or not isinstance(args.get("backup_id"), str) or args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
         return _error(request_id, "confirmation_required", "restore apply requires an exact preview plan and confirmation")
+    if operation == "proot.setup.icd-migrate.preview" and (set(args) != {"alias"} or not isinstance(args.get("alias"), str)):
+        return _error(request_id, "invalid_arguments", "ICD migration preview requires one guest alias")
+    if operation == "proot.setup.icd-migrate.apply" and (set(args) != {"alias", "confirmed", "plan_id"} or not isinstance(args.get("alias"), str) or args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
+        return _error(request_id, "confirmation_required", "ICD migration apply requires the exact preview and confirmation")
+    if operation == "proot.setup.icd-migrate.rollback.preview" and (set(args) != {"migration_id"} or not isinstance(args.get("migration_id"), str)):
+        return _error(request_id, "invalid_arguments", "ICD rollback preview requires the migration ID")
+    if operation == "proot.setup.icd-migrate.rollback.apply" and (set(args) != {"migration_id", "confirmed", "plan_id"} or not isinstance(args.get("migration_id"), str) or args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
+        return _error(request_id, "confirmation_required", "ICD rollback apply requires the exact preview and confirmation")
     if operation == "timezone.set" and (set(args) != {"timezone"} or not isinstance(args.get("timezone"), str)):
         return _error(request_id, "invalid_arguments", "timezone.set requires one IANA timezone name")
     if operation == "cron.jobs.validate":
@@ -640,6 +653,23 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
                     **shortcut_args, state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"),
                     confirmed=confirmed, plan_id=plan_id,
                 )
+        elif operation in {"proot.setup.icd-migrate.preview", "proot.setup.icd-migrate.apply",
+                           "proot.setup.icd-migrate.rollback.preview", "proot.setup.icd-migrate.rollback.apply"}:
+            common = {"repo_root": os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                      "prefix": process_env["PREFIX"], "home": home,
+                      "state_dir": state_dir or os.path.join(home, ".local/share/ternuxx")}
+            if operation == "proot.setup.icd-migrate.preview":
+                data = proot_setup.preview_icd_migration(**common, alias=args["alias"])
+            elif operation == "proot.setup.icd-migrate.apply":
+                data = proot_setup.apply_icd_migration(**common, alias=args["alias"],
+                                                       plan_id=args["plan_id"], confirmed=True)
+            elif operation == "proot.setup.icd-migrate.rollback.preview":
+                rollback_common = {key: common[key] for key in ("prefix", "home", "state_dir")}
+                data = proot_setup.preview_icd_rollback(**rollback_common, plan_id=args["migration_id"])
+            else:
+                rollback_common = {key: common[key] for key in ("prefix", "home", "state_dir")}
+                data = proot_setup.apply_icd_rollback(**rollback_common, migration_id=args["migration_id"],
+                                                      plan_id=args["plan_id"], confirmed=True)
         elif operation in {"proot.setup.retire.preview", "proot.setup.retire.apply", "proot.setup.restore.preview", "proot.setup.restore.apply"}:
             common = {"prefix": process_env["PREFIX"], "home": home,
                       "state_dir": state_dir or os.path.join(home, ".local/share/ternuxx"),
@@ -925,6 +955,8 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "proot_operation_failed", str(exc))
     except retire_fresh_guest.RetirementError as exc:
         return _error(request_id, "proot_guest_retirement_failed", str(exc))
+    except proot_setup.SetupError as exc:
+        return _error(request_id, "proot_setup_failed", str(exc))
     except proot_shortcuts.ShortcutError as exc:
         return _error(request_id, "shortcut_operation_failed", str(exc))
     except ssh_key_manager.SshKeyMutationError as exc:
@@ -1251,6 +1283,18 @@ def main(argv: list[str] | None = None) -> int:
     elif args.operation == "proot.setup.restore.apply":
         if not args.alias or not args.backup_id or not args.yes or not args.plan_id: raise SystemExit("restore apply requires --alias, --backup-id, --yes and exact --plan-id")
         payload = {"alias": args.alias, "backup_id": args.backup_id, "confirmed": True, "plan_id": args.plan_id}
+    elif args.operation == "proot.setup.icd-migrate.preview":
+        if not args.alias: raise SystemExit("ICD migration preview requires --alias")
+        payload = {"alias": args.alias}
+    elif args.operation == "proot.setup.icd-migrate.apply":
+        if not args.alias or not args.yes or not args.plan_id: raise SystemExit("ICD migration apply requires --alias, --yes and exact --plan-id")
+        payload = {"alias": args.alias, "confirmed": True, "plan_id": args.plan_id}
+    elif args.operation == "proot.setup.icd-migrate.rollback.preview":
+        if not args.operation_id: raise SystemExit("ICD rollback preview requires --operation-id MIGRATION_ID")
+        payload = {"migration_id": args.operation_id}
+    elif args.operation == "proot.setup.icd-migrate.rollback.apply":
+        if not args.operation_id or not args.yes or not args.plan_id: raise SystemExit("ICD rollback apply requires --operation-id MIGRATION_ID, --yes and exact --plan-id")
+        payload = {"migration_id": args.operation_id, "confirmed": True, "plan_id": args.plan_id}
     elif args.operation == "timezone.set":
         if not args.timezone:
             response = _error(request_id, "invalid_arguments", "--timezone is required")

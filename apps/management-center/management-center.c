@@ -587,6 +587,8 @@ static void show_resource(Center *c, Resource *r) {
     gboolean replay_guests = g_strcmp0(r->id, "proot.replay-guests") == 0;
     gtk_widget_set_visible(c->proot_guest_button, proot_apps || replay_guests);
     gtk_widget_set_visible(c->replay_guest_actions, proot_apps || replay_guests);
+    gtk_button_set_label(GTK_BUTTON(c->proot_guest_button),
+                         proot_apps ? "Migrate or roll back Debian Vulkan ICD..." : "Retire or restore replay guest...");
     gtk_widget_set_visible(c->action_scroll, !replay_guests);
     gtk_widget_set_visible(c->proot_sessions_button, proot_apps);
     gtk_widget_set_visible(c->proot_recovery_button, proot_apps);
@@ -971,31 +973,46 @@ static void replay_guest_preview_clicked(GtkButton *button, gpointer data) {
     const gchar *alias=gtk_editable_get_text(GTK_EDITABLE(alias_widget));
     const gchar *kind=gtk_string_list_get_string(GTK_STRING_LIST(gtk_drop_down_get_model(GTK_DROP_DOWN(kind_widget))),gtk_drop_down_get_selected(GTK_DROP_DOWN(kind_widget)));
     const gchar *backup=gtk_editable_get_text(GTK_EDITABLE(backup_widget));
-    if (!alias || !g_regex_match_simple("^ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}$",alias,0,0)) {
+    gboolean migration=g_strcmp0(kind,"migrate")==0 || g_strcmp0(kind,"rollback")==0;
+    if (migration) {
+        if (!alias || g_strcmp0(alias,"debian")!=0) {
+            gtk_label_set_text(GTK_LABEL(c->notice),"The exact existing Debian alias is required."); return;
+        }
+    } else if (!alias || !g_regex_match_simple("^ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}$",alias,0,0)) {
         gtk_label_set_text(GTK_LABEL(c->notice),"Enter an exact ternuxx-replay-NAME alias."); return;
     }
     if (g_strcmp0(kind,"restore")==0 && (!backup || !g_regex_match_simple("^[0-9a-f]{32}$",backup,0,0))) {
         gtk_label_set_text(GTK_LABEL(c->notice),"Restore requires the 32-character private backup ID."); return;
     }
-    run_bridge(c,"guest-lifecycle-preview",g_strcmp0(kind,"retire")==0?"retire":"restore",alias,
-               g_strcmp0(kind,"restore")==0?backup:"-",NULL,NULL);
+    if (g_strcmp0(kind,"rollback")==0 && (!backup || !g_regex_match_simple("^[0-9a-f]{64}$",backup,0,0))) {
+        gtk_label_set_text(GTK_LABEL(c->notice),"Rollback requires the 64-character migration ID."); return;
+    }
+    const gchar *bridge_kind=kind;
+    run_bridge(c,"guest-lifecycle-preview",bridge_kind,alias,
+               (g_strcmp0(kind,"restore")==0 || g_strcmp0(kind,"rollback")==0)?backup:"-",NULL,NULL);
     gtk_window_destroy(GTK_WINDOW(window));
 }
 static void manage_replay_guest(GtkButton *button, gpointer data) {
     (void)button; Center *c=data; GtkWidget *window=gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(window),"Retire or restore a replay guest");
+    gboolean migration=g_strcmp0(c->selected_resource_id,"proot.debian.workloads")==0;
+    gtk_window_set_title(GTK_WINDOW(window),migration?"Migrate Debian Vulkan configuration":"Retire or restore a replay guest");
     gtk_window_set_transient_for(GTK_WINDOW(window),GTK_WINDOW(c->window)); gtk_window_set_modal(GTK_WINDOW(window),TRUE);
     gtk_window_set_default_size(GTK_WINDOW(window),420,300);
     GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_margin_top(box,14);
     gtk_widget_set_margin_bottom(box,14); gtk_widget_set_margin_start(box,14); gtk_widget_set_margin_end(box,14);
     gtk_window_set_child(GTK_WINDOW(window),box);
-    GtkWidget *explanation=gtk_label_new("Only a receipt-verified ternuxx-replay-* guest can be changed. Existing Debian is protected. Retirement preserves the exact directory for restore.");
+    GtkWidget *explanation=gtk_label_new(migration
+        ? "Preview a byte-preserving rename of the known legacy Vulkan ICD file in the existing Debian guest. Active or unverifiable sessions block apply; package state is unchanged. Rollback is available from the exact migration receipt."
+        : "Only a receipt-verified ternuxx-replay-* guest can be changed. Existing Debian is protected. Retirement preserves the exact directory for restore.");
     gtk_label_set_wrap(GTK_LABEL(explanation),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(explanation),PANGO_WRAP_WORD_CHAR);
     gtk_label_set_max_width_chars(GTK_LABEL(explanation),46); gtk_widget_set_halign(explanation,GTK_ALIGN_START);
     gtk_box_append(GTK_BOX(box),explanation);
-    const gchar *choices[]={"retire","restore",NULL}; GtkWidget *kind=gtk_drop_down_new_from_strings(choices);
-    GtkWidget *alias=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(alias),"Exact alias: ternuxx-replay-NAME");
-    GtkWidget *backup=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(backup),"Backup ID (restore only)");
+    const gchar *migration_choices[]={"migrate","rollback",NULL};
+    const gchar *guest_choices[]={"retire","restore",NULL};
+    GtkWidget *kind=gtk_drop_down_new_from_strings(migration?migration_choices:guest_choices);
+    GtkWidget *alias=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(alias),migration?"Exact alias: debian":"Exact alias: ternuxx-replay-NAME");
+    if (migration) gtk_editable_set_text(GTK_EDITABLE(alias),"debian");
+    GtkWidget *backup=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(backup),migration?"Migration ID (rollback only)":"Backup ID (restore only)");
     gtk_box_append(GTK_BOX(box),kind); gtk_box_append(GTK_BOX(box),alias); gtk_box_append(GTK_BOX(box),backup);
     GtkWidget *row=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,8); GtkWidget *cancel=gtk_button_new_with_label("Cancel");
     GtkWidget *preview=gtk_button_new_with_label("Preview exact change"); gtk_box_append(GTK_BOX(row),cancel);
@@ -1035,15 +1052,21 @@ static void replay_guest_confirmation_cancel(GtkButton *button, gpointer data) {
 static void ask_guest_lifecycle_confirmation(Center *c,const gchar *kind,const gchar *alias,
                                               const gchar *backup_id,const gchar *plan_id,const gchar *impact) {
     gboolean retiring = g_strcmp0(kind, "retire") == 0;
+    gboolean migrating = g_strcmp0(kind, "migrate") == 0;
+    gboolean rolling_back = g_strcmp0(kind, "rollback") == 0;
     g_free(c->replay_guest_pending_kind); c->replay_guest_pending_kind = g_strdup(kind);
     g_free(c->replay_guest_pending_alias); c->replay_guest_pending_alias = g_strdup(alias);
     g_free(c->replay_guest_pending_backup); c->replay_guest_pending_backup = g_strdup(backup_id ? backup_id : "-");
     g_free(c->replay_guest_pending_plan); c->replay_guest_pending_plan = g_strdup(plan_id);
-    gchar *message = g_strdup_printf("Target: %s\n\n%s\n\nNo guest files will be deleted. The exact directory moves atomically and can be restored from its private backup.",
-        alias, impact && *impact ? impact : "Apply only the exact replay guest change shown.");
+    gchar *message = g_strdup_printf("Target: %s\n\n%s\n\n%s",
+        alias, impact && *impact ? impact : "Apply only the exact reviewed change.",
+        migrating || rolling_back ? "Only the exact ICD file rename is changed; packages and user accounts remain untouched."
+                                 : "No guest files are deleted. The exact directory can be restored from its private backup.");
     gtk_label_set_text(GTK_LABEL(c->replay_guest_confirmation_label), message);
     gtk_button_set_label(GTK_BUTTON(c->replay_guest_apply_button),
-                         retiring ? "Retire this replay guest" : "Restore this replay guest");
+                         retiring ? "Retire this replay guest" :
+                         migrating ? "Apply ICD migration" :
+                         rolling_back ? "Roll back ICD migration" : "Restore this replay guest");
     gtk_widget_remove_css_class(c->replay_guest_apply_button, retiring ? "suggested-action" : "destructive-action");
     gtk_widget_add_css_class(c->replay_guest_apply_button, retiring ? "destructive-action" : "suggested-action");
     gtk_widget_set_visible(c->replay_guest_confirmation, TRUE);

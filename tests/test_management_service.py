@@ -47,6 +47,49 @@ class ManagementServiceTests(unittest.TestCase):
             "alias": "ternuxx-replay-p4", "confirmed": False, "plan_id": "a" * 64}), env=env)
         self.assertFalse(denied_unconfirmed["ok"])
         self.assertEqual(denied_unconfirmed["error"]["code"], "confirmation_required")
+    def test_icd_migration_uses_shared_preview_apply_and_rollback_operations(self) -> None:
+        env = {**NATIVE_ENV, "HOME": "/tmp/icd-home",
+               "TERNUXX_STATE_DIR": "/tmp/icd-home/.local/share/ternuxx"}
+        with patch.object(management_service.proot_setup, "preview_icd_migration",
+                          return_value={"status": "preview", "plan_id": "a" * 64}) as preview:
+            result = management_service.dispatch(request("proot.setup.icd-migrate.preview", {
+                "alias": "debian"}), env=env)
+        self.assertTrue(result["ok"])
+        preview.assert_called_once_with(repo_root=str(ROOT), prefix=NATIVE_ENV["PREFIX"],
+                                        home="/tmp/icd-home",
+                                        state_dir=env["TERNUXX_STATE_DIR"], alias="debian")
+        bad_apply = management_service.dispatch(request("proot.setup.icd-migrate.apply", {
+            "alias": "debian", "confirmed": False, "plan_id": "a" * 64}), env=env)
+        self.assertFalse(bad_apply["ok"])
+        self.assertEqual(bad_apply["error"]["code"], "confirmation_required")
+        with patch.object(management_service.proot_setup, "apply_icd_migration",
+                          return_value={"status": "migrated"}) as apply:
+            result = management_service.dispatch(request("proot.setup.icd-migrate.apply", {
+                "alias": "debian", "confirmed": True, "plan_id": "a" * 64}), env=env)
+        self.assertTrue(result["ok"])
+        apply.assert_called_once_with(repo_root=str(ROOT), prefix=NATIVE_ENV["PREFIX"],
+                                      home="/tmp/icd-home", state_dir=env["TERNUXX_STATE_DIR"],
+                                      alias="debian", plan_id="a" * 64, confirmed=True)
+
+    def test_icd_rollback_operations_route_without_manifest_arguments(self) -> None:
+        env = {**NATIVE_ENV, "HOME": "/tmp/icd-rollback-home",
+               "TERNUXX_STATE_DIR": "/tmp/icd-rollback-home/.local/share/ternuxx"}
+        with patch.object(management_service.proot_setup, "preview_icd_rollback",
+                          return_value={"status": "preview", "plan_id": "b" * 64}) as preview:
+            result = management_service.dispatch(request("proot.setup.icd-migrate.rollback.preview", {
+                "migration_id": "c" * 64}), env=env)
+        self.assertTrue(result["ok"])
+        preview.assert_called_once_with(prefix=NATIVE_ENV["PREFIX"], home="/tmp/icd-rollback-home",
+                                        state_dir=env["TERNUXX_STATE_DIR"], plan_id="c" * 64)
+        with patch.object(management_service.proot_setup, "apply_icd_rollback",
+                          return_value={"status": "rolled_back"}) as apply:
+            result = management_service.dispatch(request("proot.setup.icd-migrate.rollback.apply", {
+                "migration_id": "c" * 64, "confirmed": True, "plan_id": "b" * 64}), env=env)
+        self.assertTrue(result["ok"])
+        apply.assert_called_once_with(prefix=NATIVE_ENV["PREFIX"], home="/tmp/icd-rollback-home",
+                                      state_dir=env["TERNUXX_STATE_DIR"], migration_id="c" * 64,
+                                      plan_id="b" * 64, confirmed=True)
+
     def test_ssh_key_inventory_is_a_separate_read_only_shared_operation(self) -> None:
         import tempfile
         with tempfile.TemporaryDirectory(prefix="ssh-keys-read-") as temp:
