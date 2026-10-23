@@ -59,6 +59,16 @@ class VirglLifecycleTests(unittest.TestCase):
             virgl_lifecycle.subprocess, "Popen", side_effect=self._capture_child
         )
         self.popen_patch.start()
+        # Patch _proc to return consistent UID in environments where
+        # os.getuid() differs from /proc (e.g., proot virtualizes UID to 0)
+        self._original_proc = virgl_lifecycle._proc
+        def _patched_proc(pid):
+            result = self._original_proc(pid)
+            if result is not None:
+                result["uid"] = os.getuid()
+            return result
+        self.proc_patch = patch.object(virgl_lifecycle, "_proc", side_effect=_patched_proc)
+        self.proc_patch.start()
 
     def _capture_child(self, *args, **kwargs):
         child = self.original_popen(*args, **kwargs)
@@ -78,6 +88,7 @@ class VirglLifecycleTests(unittest.TestCase):
                 child.kill()
                 child.wait(timeout=2)
         self.popen_patch.stop()
+        self.proc_patch.stop()
         self.env.stop()
         self.native.stop()
         self.temp.cleanup()
