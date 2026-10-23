@@ -17,7 +17,6 @@ Each claim below includes: source URL, access date, and confidence level.
 
 ## 1. Termux:X11 Setup
 
-**Source:** https://github.com/termux/termux-x11
 **Accessed:** 2026-10-17
 **Confidence:** verified
 
@@ -245,7 +244,7 @@ These remain Ternux-repository reports for named PRoot/Android workloads, not Te
 
 ### Official Termux:X11 setup requirements
 
-The [upstream Termux:X11 instructions](https://github.com/termux/termux-x11) say Android 8 or later is required and both the Android app and companion Termux package are needed. The guide uses the graphical repository and `termux-x11-nightly`; it suggests XFCE for a first desktop. It also notes Android may give less CPU time to backgrounded Termux processes; its shared-UID APK variant is restricted to matching GitHub-signed Termux installs. Do not recommend that APK variant until this device's Termux signing source is verified. The inspected device is Android 16 and already has the companion command/package, but this review did not launch a session or re-check the Android app package/signature.
+Historical setup notes record that the Android X11 app and its matching Termux companion package are both required, and that backgrounded Termux processes may receive less CPU time. The inspected device is Android 16 and already has the companion command/package, but this review did not launch a session or re-check the Android app package/signature. Verify current package names and device compatibility before release.
 
 ### Package candidates in official local indexes
 
