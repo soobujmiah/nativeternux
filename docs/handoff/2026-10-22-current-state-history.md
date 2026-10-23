@@ -603,7 +603,7 @@ Current follow-up from the timezone foundation: Native Termux $HOME/ternuxx, mai
 Verification: focused cross-layer tests 95/95 in 1.379 s; full suite 464/464 in 82.567 s; compile/syntax/schema checks, diff check and repo knowledge verification passed. Live status showed an empty registry/ledger and scheduler not installed. No job, service, GUI, PRoot session, Hermes task, boot hook or listener was touched. P3 remains in progress; P4 remains unqualified.
 
 
-## 2026-10-19  Cron runtime and constrained PRoot probe
+## 2026-10-19 — Cron runtime and constrained PRoot probe
 
 Current implementation update (not a rewrite): the scheduler runtime is now
 explicitly startable through tx mng cron start, with an exact-owner confirmed

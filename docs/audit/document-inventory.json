@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 438,
-  "read_count": 108,
+  "read_count": 105,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -267,7 +267,7 @@
     {
       "path": "docs/architecture/CRON-JOBS.md",
       "kind": "narrative",
-      "sha256": "7094dbe34a93d0416c496c2d573bfb1845242c74175b2560f94e03be2a444886",
+      "sha256": "9e1fc60885e9d74ebbbe8e4aab6d0e714ece07bb8af6a92a2dfc7638172172c5",
       "lines": 126,
       "read_status": "pending",
       "read_sha256": null
@@ -331,10 +331,10 @@
     {
       "path": "docs/architecture/SHARED-MANAGEMENT-PLAN.md",
       "kind": "narrative",
-      "sha256": "0f66b11f1182955024366d8ab50296f088bcf64165098f581fbc6d76a3909694",
+      "sha256": "5980a16b263e85ffa4e520c03397e0e09d1ca13bab1e206dc42e6871bfb2ff54",
       "lines": 69,
-      "read_status": "read",
-      "read_sha256": "0f66b11f1182955024366d8ab50296f088bcf64165098f581fbc6d76a3909694"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
@@ -523,8 +523,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "93357a7697dfa78211e1b319fae686635ba58dd6f0cb02dc6027893d4413bd59",
-      "lines": 110,
+      "sha256": "b941c3c3f69064529794ebbd4adff78c89c987fd2f07bae7cac265d630c85aae",
+      "lines": 111,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -1603,7 +1603,7 @@
     {
       "path": "docs/evidence/2026-10-19-cron-runtime-proot-probe.md",
       "kind": "narrative",
-      "sha256": "07cf4d3a9e61c85e0ed73ff3db1c90bab6d5d7e8833763bcf4440c66a34e3907",
+      "sha256": "05975e6075bc85af710310731873285c5b05fd80ccf204113857c7d45d387083",
       "lines": 82,
       "read_status": "pending",
       "read_sha256": null
@@ -2307,10 +2307,10 @@
     {
       "path": "docs/evidence/2026-10-22-managed-ssh-wakelock-policy.md",
       "kind": "narrative",
-      "sha256": "38d9c529ce6af33b68b9162f0c8322300bca5074574dd1e66995f7e12bac3142",
+      "sha256": "d930044b7a690cd02a0576025f267be368d340c8e47739d6f294cd6aa3e9386e",
       "lines": 22,
-      "read_status": "read",
-      "read_sha256": "38d9c529ce6af33b68b9162f0c8322300bca5074574dd1e66995f7e12bac3142"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-22-management-center-visual-review.md",
@@ -2563,10 +2563,10 @@
     {
       "path": "docs/evidence/2026-10-22-ssh-disposable-auth-qualification.md",
       "kind": "narrative",
-      "sha256": "ff5d9748893e1c33a88284aa9630104204c2040df75633aaedc8f90783d01893",
+      "sha256": "086a1b648de99e23d4ff8675c0a1aeb6dc1faaefeb17a0446b5988faaeb0535e",
       "lines": 18,
-      "read_status": "read",
-      "read_sha256": "ff5d9748893e1c33a88284aa9630104204c2040df75633aaedc8f90783d01893"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-22-ssh-gtk-key-controls.md",
@@ -2955,7 +2955,7 @@
     {
       "path": "docs/handoff/2026-10-22-current-state-history.md",
       "kind": "narrative",
-      "sha256": "3c84c65bf0de3ac13459bc0004701e34cb2a5d4368d6dd28a67b4809fca1db76",
+      "sha256": "c0c9bb29e2c1c1891a842c9ba9de18fb0767664d3cd96cb792c3d4969b144790",
       "lines": 841,
       "read_status": "pending",
       "read_sha256": null

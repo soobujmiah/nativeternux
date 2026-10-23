@@ -1,4 +1,4 @@
-# Disposable SSH authentication qualification  2026-10-22
+# Disposable SSH authentication qualification — 2026-10-22
 
 ## Setup
 

@@ -1,4 +1,4 @@
-# Cron runtime and PRoot isolated probe evidence  2026-10-19
+# Cron runtime and PRoot isolated probe evidence — 2026-10-19
 
 Phase: `P3`
 
@@ -20,7 +20,7 @@ Implemented:
 - lib/cron_daemon.py adds an explicitly started native-Termux daemon, bounded polling, a detached process, and graceful SIGTERM shutdown. It is not registered with Termux:Boot and does not start from a status/UI query.
 - lib/cron_scheduler.py reports process liveness, lease ownership, and recent dispatch health separately. The daemon holds the existing advisory lease and private PID/process-start/instance record. Polls validate the lease before dispatch.
 - A due schedule is resolved using the existing registry/timezone engine and its stable event identity; an atomic claim is acquired before the existing typed action executor runs.
-- tx mng cron start requires --yes because enabling polling can run already-enabled jobs. The poll interval is bounded to 160 seconds. tx mng cron stop requires --yes and verifies the recorded instance marker, command, PID start time, lease and instance before signalling. Shutdown is graceful; no force-kill path exists.
+- tx mng cron start requires --yes because enabling polling can run already-enabled jobs. The poll interval is bounded to 1-to-60 seconds. tx mng cron stop requires --yes and verifies the recorded instance marker, command, PID start time, lease and instance before signalling. Shutdown is graceful; no force-kill path exists.
 - cron.scheduler.start/stop use the shared management service and the narrow cron.scheduler.manage scope in authenticated transports. Current Web bootstrap does not grant this scope. Web, TUI and GTK remain read-only for scheduler lifecycle.
 
 Isolated runtime proof:
@@ -59,8 +59,8 @@ Policy limits:
 
 ## Tests and verification
 
-- Focused command: python3 -m unittest tests/test_cron_daemon.py tests/test_cron_scheduler.py tests/test_cron_execution.py tests/test_proot_sessions.py tests/test_management_service.py tests/test_management_sessions.py tests/test_launch_commands.py -q  71 passed, 11.161 seconds, exit 0.
-- Full command: bash scripts/repo_test.sh  478 passed, 119.507 seconds, exit 0.
+- Focused command: python3 -m unittest tests/test_cron_daemon.py tests/test_cron_scheduler.py tests/test_cron_execution.py tests/test_proot_sessions.py tests/test_management_service.py tests/test_management_sessions.py tests/test_launch_commands.py -q — 71 passed, 11.161 seconds, exit 0.
+- Full command: bash scripts/repo_test.sh — 478 passed, 119.507 seconds, exit 0.
 - Also passed: python3 -m compileall -q lib tests; bash -n lib/management.sh; bash -n lib/help.sh; JSON parsing for all 39 schema files; git diff --check; python3 -m tools.repo_knowledge verify (0 findings).
 - The CLI invalid-start check tx mng cron start --poll-seconds 5 (without --yes) returned the confirmation message and exit 2 without starting the scheduler.
 - Live final read-only status: Cron scheduler stopped, lease not held, dispatch unhealthy/unqualified, 0 jobs and 0 execution records; PRoot Ternuxx session list empty, existing Debian PID 12830 visible.

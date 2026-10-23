@@ -1,4 +1,4 @@
-# Managed SSH Wake Lock policy evidence  2026-10-22
+# Managed SSH Wake Lock policy evidence — 2026-10-22
 
 ## Behavior
 
@@ -8,10 +8,10 @@ The service wrapper accepts policy_disabled while still starting SSH, and releas
 
 ## Verification
 
-- Full Native suite: bash scripts/repo_test.sh  exit 0; 824 tests passed in 93.800 seconds.
-- Focused feature suite  105 tests passed.
-- Changed Python compile checks, bash -n on lib/reboot.sh and the service wrapper, and git diff --check  passed.
-- python3 -m tools.repo_knowledge verify  0 findings.
+- Full Native suite: bash scripts/repo_test.sh — exit 0; 824 tests passed in 93.800 seconds.
+- Focused feature suite — 105 tests passed.
+- Changed Python compile checks, bash -n on lib/reboot.sh and the service wrapper, and git diff --check — passed.
+- python3 -m tools.repo_knowledge verify — 0 findings.
 - Native read-only status: enabled=true, configured=false, default=true, current lease unchanged, platform lock state unknown.
 - Native wrapper source and installed run definition SHA-256 both 50efdce270fbc46566df0c0e83bd8cd520567aa9cdd8c18f1622dc0d07fcf59c. sv status reports existing PID 21035; no restart occurred.
 - GTK source hash 85887331ddbb965f3450c0d8e5cc26e71bea924733bffc8ab1b43d739b82132a matches install identity. Installed binary hash 8ff68ed3abbe30508ceba3e45e08236931f6d7ff498b7378381a284698c91eb5, launcher, desktop entry, and checkout bridge hash match identity records.

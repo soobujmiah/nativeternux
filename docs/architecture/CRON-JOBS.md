@@ -92,14 +92,14 @@ The real bounded subprocess runner was exercised only through a new registered n
 
 Dispatch health is based on recent successful polls, separate from process liveness and lease ownership. CLI/API provide explicit scheduler start/stop, but no boot service or persistent production process was enabled. Automatic retry, queue-one, cancellation, catch-up delivery, device boot and scheduler recovery adapters are not implemented. Unresolved claimed/running records remain uncertain and are not automatically retried. A crash after an action side effect but before durable completion remains an uncertain boundary; duplicate event claims are suppressed but arbitrary external effects are not exactly-once.
 
-Current PRoot status remains read-only inventory. Debian is installed, but process ownership is unverified. No Ternuxx-owned PRoot session registry or lifecycle control was added in this increment. The active Debian development session and floating X11 GUI remain untouched. Do not expose start/stop until Ternuxx can launch a separately identified session and verify that exact identity before stop.
+PRoot status update (2026-10-23): Ternuxx now has a bounded session registry and typed start/attach/detach/stop operations for sessions it launches, plus exact-session recovery and retirement plans. CLI-to-Web-to-TUI-to-GTK continuity and disposable replay-session retirement/restore have passed. This does not establish ownership of the pre-existing Debian rootfs or any independently started guest process; the active Codex/development guest remains untouched. Do not stop an external or ownership-unverified process. Same-rootfs concurrency and cold-boot startup remain unqualified; see [interactive PRoot terminal contract](INTERACTIVE-PROOT-TERMINALS.md), [cross-client continuity evidence](../evidence/2026-10-22-cross-client-terminal-handoff.md), and [replay retirement evidence](../evidence/2026-10-22-replay-guest-retirement.md).
 
 
 ## Scheduler runtime increment (2026-10-19)
 
 The source now includes an explicitly started Termux-compatible daemon. It
 holds an advisory OS lease, records a private PID/start-time/instance identity,
-polls at a bounded 160 second interval, resolves due times through the same
+polls at a bounded 1-to-60-second interval, resolves due times through the same
 registry/timezone engine, claims stable event IDs before using the existing
 typed action executor, and writes poll/dispatch health. It is not installed as
 a boot service and is not started by status or UI requests. Use tx mng cron
