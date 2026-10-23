@@ -634,9 +634,9 @@ features:
     qualification: DETECTED
     requirements: [Termux:Boot availability, owner first-launch initialization, dependency and Android background validation]
     security_constraints: [Manual start remains available; never start all services/models by default]
-    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../readiness/THREAT-MODEL.md]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../OPERATIONS.md, ../../lib/boot_profiles.py, ../../lib/terminal_ui.py, ../../tests/test_boot_profiles.py, ../../tests/test_terminal_ui.py]
     release_qualified: false
-    limitations: [Owner opened Termux:Boot once; actual receiver execution after a real Android reboot is unverified; no general boot-profile manager or lifecycle UI exists]
+    limitations: [CLI and TUI expose preview-first cli-only/native profile controls; PRoot and hybrid profiles remain fail-closed; Termux:Boot receiver execution after reboot and Android background behavior are unverified]
     next_action: Owner performs the manual reboot using REBOOT-RECOVERY-GUIDE.md; verify saved evidence before qualifying recovery.
     owner_decision_required: true
 
