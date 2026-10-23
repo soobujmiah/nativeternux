@@ -1,0 +1,7 @@
+event_id: commit-7a4f809a56ba-23a56d9aa2c44ffd
+repository: soobujmiah/ternuxx
+commit: 7a4f809a56bac8b7413afd675b0bc8aa3fa07909
+kind: commit
+occurred_at: '2026-10-23T00:14:40Z'
+status: completed
+summary: 'audit: fix doc_bridge paragraph, move virgl to virgl.sh, clarify ssh diagnostics'
