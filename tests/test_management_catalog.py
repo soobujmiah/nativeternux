@@ -58,6 +58,10 @@ class ManagementCatalogTests(unittest.TestCase):
         self.assertEqual(accelerator["supported_operations"], ["doctor.report"])
         self.assertTrue(accelerator["security"]["read_only"])
         self.assertIn("Native Termux and Debian PRoot remain separate", accelerator["description"])
+        boot_profile = by_id["boot.termux.profile"]
+        self.assertEqual(boot_profile["ownership"]["status"], "managed-generated-script-identity-queried")
+        self.assertEqual(boot_profile["identity"]["installed"], "live-query-required")
+        self.assertNotIn("mismatch", boot_profile["identity"]["installed"])
         for resource in resources:
             self.assertTrue(set(resource["supported_operations"]).issubset(management_service.OPERATIONS))
             self.assertEqual(set(resource["operation_capabilities"]), set(resource["supported_operations"]))
