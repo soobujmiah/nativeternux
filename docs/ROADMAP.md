@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Implement a preview-first Native package version/update lifecycle that binds exact candidates and fails closed on unavailable locks; specify artifact retention limits, then continue clean-device replay and existing-guest migration/rollback evidence.
+**Next action:** Design a maintainable Native package artifact snapshot/retention strategy and shared-client package lifecycle, then continue clean-device replay and existing-guest migration/rollback evidence.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

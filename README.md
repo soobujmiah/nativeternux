@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-Native suite passed 896 tests with 1 skip. Latest local signed Termux indexes (22 Oct) still show four upgrades across the 16-package core; read-only APT simulation resolved 4 upgrades, 0 installs/removals, none applied. Rolling-release metadata cannot guarantee historical artifact retrieval; package update/lock workflow, clean replay, migration/rollback, and GUI gates remain open.
+Native core updates now have a saved, exact preview-and-apply CLI flow; 899 tests pass (1 skipped). Durable artifact snapshots, shared-client parity, and clean setup/migration gates remain open.
 
-**Next action:** Implement a preview-first Native package version/update lifecycle that binds exact candidates and fails closed on unavailable locks; specify artifact retention limits, then continue clean-device replay and existing-guest migration/rollback evidence.
+**Next action:** Design a maintainable Native package artifact snapshot/retention strategy and shared-client package lifecycle, then continue clean-device replay and existing-guest migration/rollback evidence.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

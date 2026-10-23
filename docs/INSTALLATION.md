@@ -10,16 +10,28 @@ On a fresh Termux profile, enable the Termux X11 package repository, install Git
 pkg update && pkg install x11-repo git && pkg update
 git clone https://github.com/soobujmiah/ternuxx.git "$HOME/ternuxx"
 cd "$HOME/ternuxx"
-./tx install --preview
+./tx install preview
 ```
 
 Read the full package/dependency plan and exact preview ID. Apply only that saved plan:
 
 ```sh
-./tx install --yes --plan-id PLAN_ID
+./tx install apply PLAN_ID
 ```
 
-The transaction refuses package removals and upgrades; this project does not yet provide a Native package upgrade/version-lock lifecycle. It does not promise the same repository candidate versions across dates; see [Native package-version drift](evidence/2026-10-23-native-package-version-drift.md). Install the matching Termux:X11 Android app separately for a desktop.
+The install transaction refuses package removals and upgrades. To preview upgrades of installed Ternuxx core packages, run:
+
+```sh
+./tx install update preview
+```
+
+Review the full changed-package and dependency transaction, then apply only its saved preview ID:
+
+```sh
+./tx install update apply PLAN_ID
+```
+
+Update refuses removals, downgrades, and packages outside official Termux repositories. The saved preview binds the current package-index state and exact candidate transaction, but it is not a durable artifact mirror and cannot guarantee old package files remain downloadable. Cross-date exact replay requires retaining the package artifacts/repository snapshot. See [Native package-version drift](evidence/2026-10-23-native-package-version-drift.md). Install the matching Termux:X11 Android app separately for a desktop.
 
 ## First checks and desktop
 
@@ -48,7 +60,7 @@ The details, verification commands, and failure recovery steps follow.
 ## Current repository state
 
 - `tx check`, `info`, `doctor`, and `help` are inspection/documentation commands.
-- `tx install` previews the complete constrained APT transaction, including dependencies. The preview is recorded under `install-transactions/`; `--yes --plan-id ID` rebuilds the package closure and applies only when it exactly matches the private saved preview identified by ID, then asks APT for the full version-pinned package closure; success writes an `applied` record. If APT fails partway, some packages may already be installed; Ternuxx does not automatically remove them. Inspect APT output/history, then review a fresh preview before retrying.
+- `tx install preview` previews the complete constrained APT transaction, including dependencies. `tx install update preview` previews upgrades for installed Ternuxx core packages. Each preview is saved under `install-transactions/`; `tx install apply ID` and `tx install update apply ID` rebuild the transaction and proceed only on an exact match. The older `--yes --plan-id ID` forms remain available. If APT fails partway, some packages may already be changed; Ternuxx does not automatically roll them back. Inspect APT output/history, then review a fresh preview before retrying.
 - `tx start`, `stop`, `restart`, and `status` have an ownership-aware implementation in `lib/desktop.sh` and `lib/desktop-supervisor.sh`. The attached Android 16 / aarch64 target has completed start, repeated start, injected startup failure, stop, repeated stop, and preservation checks for the active PRoot login; the owner confirmed the `:1` desktop was visible and heard the audio test. These observations qualify only the recorded target and do not certify other builds. P2's acceptance gate is completed with a new target-native exact-preview validation; the original XFCE pre-consent console capture remains explicitly incomplete. See the [P2 completion evidence](evidence/P2-phase-completion-2026-10-18.md).
 - Device package installation remains an explicit, owner-authorized mutation. Run `tx install --preview`, review the full saved transaction and its plan ID, then apply only that unchanged plan with `tx install --yes --plan-id ID`.
 

@@ -33,6 +33,80 @@ class PackagePlanTest(unittest.TestCase):
         finally:
             temporary.cleanup()
 
+    def _update_plan(self, simulation, installed_versions=None):
+        temporary = tempfile.TemporaryDirectory(prefix="ternuxx-apt-update-plan-")
+        fixture_bin = Path(temporary.name)
+        apt_get = fixture_bin / "apt-get"
+        apt_get.write_text(
+            "#!/bin/sh\ncat <<'APT_SIMULATION'\n" + simulation.rstrip() + "\nAPT_SIMULATION\n",
+            encoding="utf-8",
+        )
+        apt_get.chmod(0o700)
+        versions = installed_versions or {
+            "python": "3.14.6-1", "pulseaudio": "17.0-4",
+            "xfce4-session": "4.20.4-1", "python-ensurepip-wheels": "3.14.6-1",
+        }
+        query = fixture_bin / "dpkg-query"
+        query.write_text(
+            "#!/bin/sh\n"
+            "format= package=\n"
+            "for arg in \"$@\"; do case \"$arg\" in -f=*) format=${arg#-f=} ;; *) package=$arg ;; esac; done\n"
+            "if [ \"$format\" = '${Version}' ]; then\n"
+            "  case \"$package\" in\n" +
+            "\n".join(f"    {name}) printf '%s\\n' '{version}' ;;" for name, version in versions.items()) +
+            "\n    *) exit 1 ;;\n  esac\n"
+            "else printf 'install ok installed\\n'; fi\n",
+            encoding="utf-8",
+        )
+        query.chmod(0o700)
+        command = "\n".join([
+            'source "$1"',
+            '_NT_BASE_PACKAGES=(python pulseaudio xfce4-session)',
+            '_nt_package_installed() { return 0; }',
+            '_nt_package_candidate_from_official_repo() { case "$1" in python) printf "3.14.8\\n";; pulseaudio) printf "17.0-5\\n";; xfce4-session) printf "4.20.4-1\\n";; esac; }',
+            'if _nt_make_update_plan; then plan_rc=0; else plan_rc=$?; fi',
+            'printf "MODE %s\\n" "$_NT_PLAN_MODE"',
+            'printf "REQUEST %s\\n" "${_NT_PLAN_VERSIONS[*]}"',
+            'printf "TRANSACTION %s\\n" "${_NT_PLAN_TRANSACTION[*]}"',
+            'exit "$plan_rc"',
+        ])
+        result = subprocess.run(
+            ["bash", "-c", command, "bash", str(PHASES)],
+            env={**os.environ, "PATH": f"{fixture_bin}:{os.environ['PATH']}"},
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+        )
+        return temporary, result
+
+    def test_update_plan_pins_direct_candidates_and_parses_upgrade_closure(self):
+        simulation = "\n".join([
+            "Inst python [3.14.6-1] (3.14.8 termux-main stable/main [aarch64])",
+            "Inst pulseaudio [17.0-4] (17.0-5 termux-main stable/main [aarch64])",
+            "Inst python-ensurepip-wheels [3.14.6-1] (3.14.8 termux-main stable/main [all])",
+            "0 upgraded, 4 newly installed, 0 to remove and 0 not upgraded.",
+        ])
+        temporary, result = self._update_plan(simulation)
+        try:
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("MODE update", result.stdout)
+            self.assertIn("REQUEST python=3.14.8 pulseaudio=17.0-5", result.stdout)
+            self.assertIn("TRANSACTION python=3.14.8 pulseaudio=17.0-5 python-ensurepip-wheels=3.14.8", result.stdout)
+        finally:
+            temporary.cleanup()
+
+    def test_update_plan_rejects_removal_and_nonofficial_dependency(self):
+        cases = [
+            ("Inst python [3.14.6-1] (3.14.8 termux-main stable/main [aarch64])\nRemv unrelated [1] [1]", "removes packages"),
+            ("Inst python [3.14.6-1] (3.14.8 termux-main stable/main [aarch64])\nInst dep (1 tur-packages/tur [aarch64])", "outside the official Termux repositories"),
+        ]
+        for simulation, expected_error in cases:
+            with self.subTest(expected_error=expected_error):
+                temporary, result = self._update_plan(simulation)
+                try:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(expected_error, result.stderr)
+                finally:
+                    temporary.cleanup()
+
     def test_base_workstation_plan_includes_only_the_proot_manager_from_termux_main(self):
         temporary = tempfile.TemporaryDirectory(prefix="ternuxx-proot-manager-plan-")
         fixture_bin = Path(temporary.name)
@@ -196,12 +270,12 @@ echo 'install ok installed'
     def test_preview_id_applies_only_exact_full_closure_in_fixture(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-install-flow-") as temporary:
             env, capture = self._install_command_fixture(temporary)
-            preview = subprocess.run(["bash", "-c", 'source "$1"; nt_require_termux() { return 0; }; nt_cmd_install --preview', "bash", str(PHASES)], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            preview = subprocess.run(["bash", "-c", 'source "$1"; nt_require_termux() { return 0; }; nt_cmd_install preview', "bash", str(PHASES)], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
             self.assertEqual(preview.returncode, 0, preview.stderr)
             import re
             match = re.search(r"Preview ID: ([0-9a-f]{64})", preview.stderr)
             self.assertIsNotNone(match, preview.stderr)
-            applied = subprocess.run(["bash", "-c", 'source "$1"; nt_require_termux() { return 0; }; nt_cmd_install --yes --plan-id "$2"', "bash", str(PHASES), match.group(1)], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            applied = subprocess.run(["bash", "-c", 'source "$1"; nt_require_termux() { return 0; }; nt_cmd_install apply "$2"', "bash", str(PHASES), match.group(1)], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
             self.assertEqual(applied.returncode, 0, applied.stderr)
             self.assertIn("install", capture.read_text(encoding="utf-8"))
             self.assertIn("xfce4-session=4.20.4-1", capture.read_text(encoding="utf-8"))
@@ -233,6 +307,20 @@ echo 'install ok installed'
             self.assertIn("xfce4-session=4.20.4-1", result.stdout)
             self.assertIn("dep-a=2", result.stdout)
             self.assertIn("--no-upgrade", result.stdout)
+
+    def test_update_apply_uses_only_the_exact_reviewed_transaction(self):
+        with tempfile.TemporaryDirectory(prefix="ternuxx-apt-update-apply-") as temporary:
+            fixture_bin = Path(temporary)
+            apt_get = fixture_bin / "apt-get"
+            apt_get.write_text("#!/bin/sh\nprintf '%s\\n' \"$@\"\n", encoding="utf-8")
+            apt_get.chmod(0o700)
+            command = 'source "$1"; _NT_PLAN_MODE=update; _NT_PLAN_TRANSACTION=(python=3.14.8 dependency=2); _nt_apply_install_transaction'
+            result = subprocess.run(["bash", "-c", command, "bash", str(PHASES)], env={**os.environ, "PATH": f"{fixture_bin}:{os.environ['PATH']}"}, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("python=3.14.8", result.stdout)
+            self.assertIn("dependency=2", result.stdout)
+            self.assertIn("--no-remove", result.stdout)
+            self.assertNotIn("--no-upgrade", result.stdout)
 
     def test_install_plan_fails_closed_without_inst_records(self):
         simulation = "Reading package lists... Done\n0 upgraded, 0 newly installed, 0 to remove."

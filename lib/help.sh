@@ -536,19 +536,32 @@ EOF
       ;;
     install)
       cat <<'EOF'
-tx install — Preview or install Native workstation prerequisites
+tx install — Preview, install, or update Native workstation prerequisites
+
+Short form: tx install preview
+Update preview: tx install update preview
+Apply a reviewed install: tx install apply PLAN_ID
+Apply a reviewed update: tx install update apply PLAN_ID
 
 By default, validates recent official Termux package indexes and prints a
 constrained APT simulation. It does not refresh package indexes or change
-packages. The plan includes the Native PRoot manager and base desktop package set; it
-does not install, replace, or modify a Debian rootfs. It refuses removals,
-upgrades, recommendations, or packages sourced outside official Termux repos.
+packages. The install plan includes the Native PRoot manager and base desktop
+package set; it does not install, replace, or modify a Debian rootfs. Install
+refuses removals, upgrades, recommendations, or packages outside official repos.
+
+Use `tx install update preview` for upgrades of installed Ternuxx core packages.
+Both paths pin exact candidate versions, include the complete simulated
+dependency transaction, and require review plus the matching `apply PLAN_ID`.
+Update refuses removals, downgrades, and non-official package sources. The
+preview binds the current repository metadata and transaction; it is not a
+durable artifact mirror or a guarantee that old package files remain available.
 
 Each full dependency preview is saved under the private Ternuxx state directory
-at install-transactions/. --yes rebuilds the plan, displays it, then applies it;
-a successful apply gets its own record. APT may leave some packages installed
-if an install fails. Ternuxx does not automatically remove packages or claim a
-rollback; inspect APT output/history and review a fresh preview before retrying.
+at install-transactions/. Apply rebuilds the plan and requires an exact match to
+the selected saved preview; a successful apply gets its own record. APT may
+leave some packages changed if an operation fails. Ternuxx does not automatically
+remove packages or claim a rollback; inspect APT output/history and review a
+fresh preview before retrying.
 This changes the Termux environment. Install the Termux:X11 Android app separately.
 EOF
       ;;

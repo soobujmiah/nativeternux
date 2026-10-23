@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 445,
-  "read_count": 121,
+  "document_count": 446,
+  "read_count": 120,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "3b262387653a8754250ae7efa3900e07da111ffe5413c9af247eacb983e516e4",
+      "sha256": "81981407be08529ec0c230035eebe98bebec1222a8da74e9e2e446c59ae30f1e",
       "lines": 92,
       "read_status": "pending",
       "read_sha256": null
@@ -139,10 +139,10 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "9111f524071f0610fed7d7b71d4afeb64da4930fe3fe87f2d250b47a2c5a1c63",
-      "lines": 120,
-      "read_status": "read",
-      "read_sha256": "9111f524071f0610fed7d7b71d4afeb64da4930fe3fe87f2d250b47a2c5a1c63"
+      "sha256": "2a05b40b8f1080ca3a516a8078052466fac4fcc4c440e6db4cd12b6b0d4e9118",
+      "lines": 132,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
@@ -171,8 +171,8 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "dc848b6fce27eeb248c2c90d71ef66598fb3cbb3605da5e367596bb905436a7e",
-      "lines": 191,
+      "sha256": "ed32fb954162ef835ef23e7caaa33e4747f145cdf8b77ed5bb20ee856dfe6af3",
+      "lines": 192,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -227,7 +227,7 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "60600df51851da9163cde26455645de6152135a6651bc3806ec05feb2a54de34",
+      "sha256": "23f4b486eb5d0b662eba2b7f9aef5f228e564687b1c3fda752b4163bd73383c4",
       "lines": 311,
       "read_status": "pending",
       "read_sha256": null
@@ -531,7 +531,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "a7401d4677917a1ce12817f50c006200ab619364f5372dcfe3798ca1cbf25dce",
+      "sha256": "8c72e84bb6861f070a991c73892ed679510aa3c2be44bcc68914e91812a51d4b",
       "lines": 148,
       "read_status": "pending",
       "read_sha256": null
@@ -2889,6 +2889,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-24-native-update-preview-lifecycle.md",
+      "kind": "narrative",
+      "sha256": "3a826e6be472dddcf189f669c7dce6a4dfd4fa1805ea337eeac77b86d3f63ed6",
+      "lines": 27,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-24-virgl-stopped-status-correction.md",
       "kind": "narrative",
       "sha256": "5ec560ffee7664c3f3ff3115bf060e6335a4bf9dfd9ba8b328c51a4a8fa7fb7c",
@@ -3195,8 +3203,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "07e11dabd57f43ae7f4c94bbe8fefe9c55b97bc2db39db7ed346fd71c76aa6dd",
-      "lines": 206,
+      "sha256": "eb4b004c0bc5a5b14841478f98bcb6b3a622446265d9fcefba9420a37c15b060",
+      "lines": 207,
       "read_status": "pending",
       "read_sha256": null
     },
