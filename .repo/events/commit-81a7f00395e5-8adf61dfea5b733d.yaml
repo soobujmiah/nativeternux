@@ -1,0 +1,7 @@
+event_id: commit-81a7f00395e5-8adf61dfea5b733d
+repository: soobujmiah/ternuxx
+commit: 81a7f00395e57430f28db0a4acab34195c5616bb
+kind: commit
+occurred_at: '2026-10-23T20:58:31Z'
+status: completed
+summary: 'fix(proot): resolve guest accounts dynamically'
