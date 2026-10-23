@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 97,
+  "read_count": 102,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -61,8 +61,8 @@
       "kind": "narrative",
       "sha256": "763990f2219e5bdaaa8e1df60752144102b273a90541bb0b9f674bfa96c9dea4",
       "lines": 92,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "763990f2219e5bdaaa8e1df60752144102b273a90541bb0b9f674bfa96c9dea4"
     },
     {
       "path": "SECURITY.md",
@@ -85,16 +85,16 @@
       "kind": "narrative",
       "sha256": "70954b64722cc1263c2a39550955ed346cffe277b8aa91edb3686f516154456e",
       "lines": 133,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "70954b64722cc1263c2a39550955ed346cffe277b8aa91edb3686f516154456e"
     },
     {
       "path": "bn/README.md",
       "kind": "narrative",
       "sha256": "736ac28edfee123d8773f46045394278709a6cad46e116f4a19813b68f3dcf8c",
       "lines": 71,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "736ac28edfee123d8773f46045394278709a6cad46e116f4a19813b68f3dcf8c"
     },
     {
       "path": "config/graphics/native-kgsl.json",
@@ -141,8 +141,8 @@
       "kind": "narrative",
       "sha256": "a65d67faad539b4887b1fa7cefaff07fc836e38d4f49f2e7d0cdcdffc69771d1",
       "lines": 120,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "a65d67faad539b4887b1fa7cefaff07fc836e38d4f49f2e7d0cdcdffc69771d1"
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
@@ -213,8 +213,8 @@
       "kind": "narrative",
       "sha256": "42b44b35b25cf708df435c44b352485a25c59d55eb15dfba950bfb28805e444e",
       "lines": 50,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "42b44b35b25cf708df435c44b352485a25c59d55eb15dfba950bfb28805e444e"
     },
     {
       "path": "docs/RESEARCH.md",
@@ -531,7 +531,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "d0aec0f1789c6b19ba0b5bdd44a9be155ae5808cfa81df1362654a2c3f293685",
+      "sha256": "ee50faf4dbb2d49fea181ee37067c48234ffca00ebc33ee2daf4a8825ae321c9",
       "lines": 115,
       "read_status": "pending",
       "read_sha256": null
