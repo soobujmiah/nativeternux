@@ -13,6 +13,18 @@ Ternuxx uses related records, each with one owner. This keeps product decisions,
 
 `docs/PHASE-STATUS.md` is the human-readable milestone view. `.repo/STATUS.md` is deterministic repository state. They answer different questions and must not be merged into a second generated status document. `CURRENT_STATE.md` is the concise narrative about decisions, evidence, known defects, and next work; it must link to generated status instead of copying its SHAs or CI result.
 
+## Workflow event ownership
+
+The two GitHub Actions workflows each own one event class so they do not run the full suite twice for the same event:
+
+| Event | Workflow | Work |
+|---|---|---|
+| Pull request targeting `main` | `Repository State Contract` | Shell/help contract, full repository suite, deterministic-state and README bridge validation, project classification, and required-document checks |
+| Push to `main` outside `.repo/**` | `Repository Knowledge Sync` | Deterministic-state and README bridge validation, full repository suite, then honest `.repo/` state synchronization |
+| Manual dispatch | `Repository Knowledge Sync` | Explicit validation and repository-state synchronization |
+
+Keep pull-request validation in the contract workflow. The state-sync workflow must not add a pull-request trigger: its pull-request job duplicated the full suite and schema checks while the contract workflow already performed them. CI concurrency is repository-event scoped; the GitHub Actions token writes only generated state in this repository. A live GitHub settings check on 2026-10-24 found no `main` branch protection and no repository rulesets, so these checks currently report validation but do not enforce merge blocking.
+
 ## Automatic repository status
 
 The repository slug is persisted separately from the stable internal project ID. After an owner-authorized same-owner GitHub rename, update `origin` and run `python3 -m tools.repo_knowledge migrate-repository --from-repository OLD --to-repository NEW`. This explicit transaction updates current `.repo/project.yaml` identity, regenerates `STATUS.md`, preserves prior build/test facts and event bytes, and appends one migration event. It refuses owner transfers, an origin mismatch, or a stale source identity. Never edit generated `.repo/project.yaml`, `.repo/STATUS.md`, or historical event files by hand. `verify`, `collect`, and `sync` report an origin/persisted-identity mismatch until migration is performed.

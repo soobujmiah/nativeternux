@@ -6,8 +6,6 @@ on:
   push:
     branches: [main]
     paths-ignore: ['.repo/**']
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -40,12 +38,8 @@ jobs:
           else
             echo 'status=failed' >> "$GITHUB_OUTPUT"
           fi
-      - name: Require tests on pull requests
-        if: github.event_name == 'pull_request' && steps.tests.outputs.status != 'passed'
-        run: exit 1
 
   sync:
-    if: github.event_name != 'pull_request'
     needs: validate
     runs-on: ubuntu-latest
     permissions:

@@ -40,7 +40,8 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A14 | Historical ADR/architecture implementation paragraphs and structured feature matrices can read as current | SSH/continuity architecture corrected; old narratives preserved losslessly as history. Remaining full ADR/matrix review open |
 
 | A15 | Phase date basis is implicit: tool records UTC dates while some historical local-date corrections exist | Open reconciliation; date mismatch alone is not a new gate failure |
-| A16 | Two GitHub workflows independently run the full suite | Open CI efficiency/authority review |
+| A16 | Two GitHub workflows independently ran the full suite for pull requests | Removed the PR trigger from Repository Knowledge Sync and kept PR validation in Repository State Contract; pushes/manual dispatch use Knowledge Sync. Documented event ownership in [knowledge synchronization](../KNOWLEDGE-SYNC.md). |
+| A81 | Contract workflow comment claimed PRs could not land on failed checks although GitHub had no branch protection or ruleset | Changed the comment and docs to distinguish validation from merge enforcement; live settings were checked read-only on 2026-10-24. Repository enforcement remains absent. |
 
 | A17 | GUI monitor scheduler existed only in source | Native CLI registration and idle live deployment now verified; private fresh Runit replay delivered two 30-second Linux-only ticks. Shared-client service registration controls remain open |
 

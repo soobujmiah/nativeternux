@@ -4,25 +4,25 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 442,
-  "read_count": 108,
+  "read_count": 109,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
     {
       "path": ".github/workflows/repo-contract.yml",
       "kind": "structured",
-      "sha256": "2af026119422a88fd67ff89cf6593f45846f462d3ce1d31fc7b21a962df60208",
-      "lines": 57,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "cd4aa5cbc826781bc20138c700045cb9a6d43a330fb61d449d530866cfe1b796",
+      "lines": 56,
+      "read_status": "read",
+      "read_sha256": "cd4aa5cbc826781bc20138c700045cb9a6d43a330fb61d449d530866cfe1b796"
     },
     {
       "path": ".github/workflows/repo-knowledge-sync.yml",
       "kind": "structured",
-      "sha256": "25729d45c2a525c053e4040e961bf50219d156f4c83138feae0858a64c0139c8",
-      "lines": 89,
+      "sha256": "324eb248b9c08cd9296c90e603420a4b7093e9b2271d7d71698401f717e1d74b",
+      "lines": 83,
       "read_status": "read",
-      "read_sha256": "25729d45c2a525c053e4040e961bf50219d156f4c83138feae0858a64c0139c8"
+      "read_sha256": "324eb248b9c08cd9296c90e603420a4b7093e9b2271d7d71698401f717e1d74b"
     },
     {
       "path": "AI_ASSISTANT.md",
@@ -147,10 +147,10 @@
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
       "kind": "narrative",
-      "sha256": "ccea0d564df8744abc272ac6b05ee63b31a8c2ebfb23c20a08a1b3264875734a",
-      "lines": 55,
+      "sha256": "cf4ebee8df7ad69ebd9795aa8711b06b9aa3759a12ad95c09b8815e9f6b6081f",
+      "lines": 67,
       "read_status": "read",
-      "read_sha256": "ccea0d564df8744abc272ac6b05ee63b31a8c2ebfb23c20a08a1b3264875734a"
+      "read_sha256": "cf4ebee8df7ad69ebd9795aa8711b06b9aa3759a12ad95c09b8815e9f6b6081f"
     },
     {
       "path": "docs/OPERATIONS.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "afbdca37f05256489b9df95588ec2bf2dc004fb8e0d1b85a73c750ea3c376f97",
-      "lines": 136,
+      "sha256": "925ae081bf9ab0188adbb7fa0807d928126bb073a3f89bab595f0784fe4895d6",
+      "lines": 137,
       "read_status": "read",
-      "read_sha256": "afbdca37f05256489b9df95588ec2bf2dc004fb8e0d1b85a73c750ea3c376f97"
+      "read_sha256": "925ae081bf9ab0188adbb7fa0807d928126bb073a3f89bab595f0784fe4895d6"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
