@@ -94,6 +94,8 @@ class ProotSetupTests(unittest.TestCase):
                                    home=str(self.home), state_dir=str(self.state), user="sbj",
                                    plan_id=preview["plan_id"], confirmed=True)
         before = self._guest_digest()
+        record = self.state / "proot-setup/provider.json"
+        record_before = record.read_bytes()
         manifest = self.repo / "config/proot/debian-trixie.json"
         manifest.write_text(manifest.read_text(encoding="utf-8") + " ", encoding="utf-8")
         result = proot_setup.status(repo_root=str(self.repo), prefix=str(self.prefix),
@@ -101,8 +103,9 @@ class ProotSetupTests(unittest.TestCase):
         self.assertEqual(result["status"], "profile_changed")
         self.assertNotEqual(result["manifest_sha256"], result["recorded_manifest_sha256"])
         self.assertIn("guest drift is not inferred", result["detail"])
-        self.assertIn("does not modify guest files", result["next_action"])
+        self.assertIn("does not refresh adoption metadata", result["next_action"])
         self.assertEqual(self._guest_digest(), before)
+        self.assertEqual(record.read_bytes(), record_before)
 
     def test_wrong_release_or_user_is_rejected(self) -> None:
         release = self.root / "usr/lib/os-release"

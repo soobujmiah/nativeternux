@@ -139,10 +139,10 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "e143694f3a3099c4088145607a792429865bf76152266f24b9390c335912def5",
+      "sha256": "23a538d4104515355273b5847bc7e27d7441dd88017ada9b5598182dea9007ba",
       "lines": 120,
       "read_status": "read",
-      "read_sha256": "e143694f3a3099c4088145607a792429865bf76152266f24b9390c335912def5"
+      "read_sha256": "23a538d4104515355273b5847bc7e27d7441dd88017ada9b5598182dea9007ba"
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "cbb10a05179bdec3cc18814f57cf7db7da91285e8c3d6e1edbbf3aebe9c5b101",
+      "sha256": "d1f494b428679dd7f4e91f0ff36b365e1dd316a557d49f02b261c97c271b36c8",
       "lines": 128,
       "read_status": "read",
-      "read_sha256": "cbb10a05179bdec3cc18814f57cf7db7da91285e8c3d6e1edbbf3aebe9c5b101"
+      "read_sha256": "d1f494b428679dd7f4e91f0ff36b365e1dd316a557d49f02b261c97c271b36c8"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
