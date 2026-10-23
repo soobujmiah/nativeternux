@@ -817,6 +817,8 @@ def inspect_native(
         checks["listener_daemon_correlation"] = "unknown"
 
     if not sshd or not config.is_file():
+        # Correlation could not complete: no sshd binary or no native config.
+        checks["listener_daemon_correlation"] = "unknown"
         return report
 
     syntax = _run_readonly(runner, [sshd, "-t", "-f", str(config)])
