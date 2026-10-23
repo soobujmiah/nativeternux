@@ -1,0 +1,7 @@
+event_id: commit-bb377ed144e2-fa7f92f404da2af7
+repository: soobujmiah/ternuxx
+commit: bb377ed144e25e5ef2b12199f64cc4185fe0d1fd
+kind: commit
+occurred_at: '2026-10-23T18:27:38Z'
+status: completed
+summary: 'docs: define UTC phase date semantics'
