@@ -47,7 +47,7 @@ Android receives the one-time code through clipboard stdin. Native/PRoot form ha
 
 ## Related contracts and open work
 
-- [SSH lifecycle](SSH-LIFECYCLE.md): 8023 is the fixed managed service; 8022 is the preserved owner development channel. Credential/recovery and per-service boot/Wake Lock controls remain incomplete.
+- [SSH lifecycle](SSH-LIFECYCLE.md): 8023 is the fixed managed service; 8022 is the preserved owner development channel. Key generation/enrollment/revocation, exact rollback, managed-service autostart and next-start Wake Lock preferences have shared four-client controls; disposable authentication passed. Password/recovery decisions, post-repair live authentication, GTK visual interaction and cold-boot delivery remain open.
 - [PRoot sessions](PROOT-SESSIONS.md): ownership, bounded profiles, exact stop plans and safe reconciliation. Interactive close discloses terminal hangup and verified private-session job groups; it never uses a force signal.
 - [Cron registry](CRON-JOBS.md): saved definitions and shared preview/apply/history. Scheduler lifecycle, retry/cancellation/delivery and recovery have separate qualification.
 - [Continuity](CONTINUITY-IMPLEMENTATION.md): observed boot, current readiness and private checkpoint status are distinct.
