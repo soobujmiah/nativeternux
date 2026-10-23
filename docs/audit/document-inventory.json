@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 104,
+  "read_count": 106,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "bfa1be41e75aadab243a9b8e638a22604c45f18c96c85a0cea27d47d808037b6",
+      "sha256": "5c56ee07d70e3f86a9dffe95734cd33ca4249c6b372cc7af5d51c685c62dc541",
       "lines": 67,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "5c56ee07d70e3f86a9dffe95734cd33ca4249c6b372cc7af5d51c685c62dc541"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -227,10 +227,10 @@
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "56613bb897a0ee74cb249a549429bb6ea869fd35216aa7b257a8719b2db465e8",
+      "sha256": "c51c9b68e9e6c96a39c284ba5cb20b3eaed85a29cfdea90da54cf804bec51006",
       "lines": 311,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "c51c9b68e9e6c96a39c284ba5cb20b3eaed85a29cfdea90da54cf804bec51006"
     },
     {
       "path": "docs/SOFTWARE-CATALOG.md",
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "9bac08a2bbeafcdc8fa6e3c6d2c85be9466837d0bd84881a4a64d304aae8b2bb",
-      "lines": 115,
+      "sha256": "978ffe125f2f9ad8787759d08c73882e4b5def392aef1065f7c006ade0954e1a",
+      "lines": 117,
       "read_status": "pending",
       "read_sha256": null
     },
