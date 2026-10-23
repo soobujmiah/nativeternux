@@ -21,7 +21,7 @@ Shell setup must be previewable, idempotent, and reversible. Write Ternuxx-owned
 
 Profiles are declarative allowlists of launch targets. `full_workstation` starts only selected and authorized components; it does not imply every model, agent, service, or GUI. `services_only` contains no graphical target. Boot is a separate opt-in profile invoking the same manager, with runtime capability/dependency checks and no implicit privilege escalation.
 
-The aliases `x`, `xgo`, `xn`, `xa`, and `xstop` are proposals only. Preserve current Ternux aliases and `ternux start/stop` behavior until a migration is approved. Prefer namespaced commands (`ternuxx launch ...`) as the stable interface. Do not overwrite aliases or launcher files during migration. `x`, `xgo`, `killx`, `db`, and `droot` currently belong to the existing Ternux workflow and must not be captured by Ternuxx installation.
+The aliases `x`, `xgo`, `xn`, `xa`, and `xstop` were proposal-time ideas; the compatibility requirement to preserve or migrate legacy aliases was superseded by [ADR-0016](ADR-0016-tx-db-and-legacy-entrypoints.md). No legacy short alias is required for Ternuxx. Prefer namespaced commands (`ternuxx launch ...`) as the stable interface. This ADR does not authorize edits to the separate Ternux source repository or its launcher; those boundaries remain governed by the current owner decision and project instructions.
 
 Display ownership must be allocated across providers under one lock/registry before launch. A display number such as `:0` or `:1` identifies an X server display endpoint; it does not by itself select a distinct Android physical/virtual display. Termux:X11 documentation demonstrates invocation with `:1`, but that does not verify two concurrent servers, two independent Android activities, window placement, or dual-session stability on this device. Until device testing proves otherwise, permit one managed Termux:X11 server and offer separate native/PRoot sessions sequentially or as windows in that session. Do not hard-code the proposed two-display mapping.
 
@@ -58,7 +58,7 @@ recovery:
   rollback_scope: ternuxx_owned_state
 ```
 
-The sample is a schema sketch, not an implemented launch record or promise that a management GUI exists.
+The sample is a schema sketch, not an implemented launch record. A Native GTK management center exists; its presence does not establish a generic launch registry or prove that this proposed target is registered or launchable.
 
 ## Alternatives considered
 

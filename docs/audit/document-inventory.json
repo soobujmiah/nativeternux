@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 442,
-  "read_count": 115,
+  "read_count": 116,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -411,10 +411,10 @@
     {
       "path": "docs/architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md",
       "kind": "narrative",
-      "sha256": "ae10d38dd7d197d65ddb6754ac4462e558f5c55b19dd8c0dad14333d8ff8238c",
+      "sha256": "bfd37e250aa0cc96f7f93ec72d980e7fb569f0a80e8463bf3536921d85bd300e",
       "lines": 97,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "bfd37e250aa0cc96f7f93ec72d980e7fb569f0a80e8463bf3536921d85bd300e"
     },
     {
       "path": "docs/architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "e2d649e54b9a42a2dae97839f9cae2297f9f3f450292f72343320a8b46d25b5a",
-      "lines": 141,
+      "sha256": "6613a3bc72a9156d8223717d60e24012ebb664c52f7242100231271159cb129a",
+      "lines": 142,
       "read_status": "read",
-      "read_sha256": "e2d649e54b9a42a2dae97839f9cae2297f9f3f450292f72343320a8b46d25b5a"
+      "read_sha256": "6613a3bc72a9156d8223717d60e24012ebb664c52f7242100231271159cb129a"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
