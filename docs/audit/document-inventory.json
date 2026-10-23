@@ -59,7 +59,7 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "abd962771d0df931cb6da0a7aa0b96bf8835b7a34ad38876b0dbbcf68a41ddfd",
+      "sha256": "763990f2219e5bdaaa8e1df60752144102b273a90541bb0b9f674bfa96c9dea4",
       "lines": 92,
       "read_status": "pending",
       "read_sha256": null
@@ -2755,8 +2755,8 @@
     {
       "path": "docs/evidence/2026-10-23-disposable-debian-replay.md",
       "kind": "narrative",
-      "sha256": "01bba9d0e2f5056c59ddb984eb828a39da35ccae447cc4ace9e3405e0c847a47",
-      "lines": 53,
+      "sha256": "774a87017759002fef4d243c3309bdb26cc678dc075f5f7aace03e676c88b58d",
+      "lines": 52,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2795,8 +2795,8 @@
     {
       "path": "docs/evidence/2026-10-23-native-package-version-drift.md",
       "kind": "narrative",
-      "sha256": "e4a0873f5667e1caa0d1edd30ee83ca96148a8efc363536996276206a4356a1c",
-      "lines": 59,
+      "sha256": "13206a3f2d7411b6138b56d7a730f100190fd2f46dd5b4176b1ecbf2b9e763e2",
+      "lines": 58,
       "read_status": "pending",
       "read_sha256": null
     },
