@@ -1,11 +1,13 @@
 name: Repository State Contract
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+# Push events are handled by repo-knowledge-sync.yml to avoid running the
+# full test suite twice on every push. The contract workflow ensures PRs
+# cannot land without passing all validation gates.
 
 permissions:
   contents: read
