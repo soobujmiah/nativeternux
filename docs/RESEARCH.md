@@ -176,7 +176,7 @@ This source and its documentation support the conclusion that the **existing Ter
 
 ## 10. Ternuxx scope and evidence limits
 
-This section supersedes the 2026-10-17 audit snapshot. Ternuxx now verifies the selected Debian guest and hands off Native :1 display/audio plus Zink/Turnip settings without calling the separate Ternux CLI. Full interactive lifecycle, generic workload routing, and guest package installation remain unqualified or unimplemented.
+This section supersedes the 2026-10-17 audit snapshot. Ternuxx now verifies the selected Debian guest and hands off Native :1 display/audio plus Zink/Turnip settings without calling the separate Ternux CLI. Since this section's original snapshot, same-session terminal operation passed across CLI, authenticated Web API, TUI, and installed GTK/VTE; receipt-bound replay-guest retirement/restore also passed. On 2026-10-23, the pinned Debian Trixie package/setup replay verified all 50 selected packages while preserving the existing default guest. General workload routing, existing-guest package/config migration, clean-device reproduction, complete setup rollback, and GUI/audio/Turnip workload qualification remain open. See [four-client evidence](evidence/2026-10-22-gtk-vte-same-session.md), [retirement evidence](evidence/2026-10-22-replay-guest-retirement.md), and [fresh setup replay](evidence/2026-10-23-disposable-debian-replay.md).
 
 ## Evidence ledger
 
@@ -269,9 +269,9 @@ The [upstream Termux:X11 instructions](https://github.com/termux/termux-x11) say
 
 The device has the `termux-api` command package and `termux-share`; the package alone does not prove the Termux:API Android add-on is installed or that each Android permission is granted. The official [Termux:API project](https://github.com/termux/termux-api) describes Android device functions exposed to scripts, while Termux's [filesystem/API guidance](https://github.com/termux/termux-packages/wiki/Termux-file-system-layout) documents explicit permission boundaries for external command access. Treat API actions and file sharing as opt-in, user-triggered workflows; do not scan shared storage or assume broad access.
 
-### Native desktop candidate flow (not implemented)
+### Native desktop implementation follow-up (2026-10-23)
 
-The upstream X11 guide's session example is `termux-x11 :1 -xstartup "dbus-launch --exit-with-session xfce4-session"`. The device already has the command prerequisites noted above. Ternuxx still needs to implement ownership-aware display allocation and lifecycle management, then obtain an owner-authorized physical-device run before claiming XFCE starts reliably. It must not start a second session while Ternux owns its current display/audio lifecycle.
+At the time of the 2026-10-17 package survey, the upstream X11 session example was `termux-x11 :1 -xstartup "dbus-launch --exit-with-session xfce4-session"`, and the Native lifecycle was still a candidate. Since then, Ternuxx implemented preview-first Native package setup and ownership-aware desktop start/stop/status; the P2 device acceptance passed on the recorded Android 16 / aarch64 profile, with display :1 and owner-confirmed XFCE/audio behavior. This does not certify other devices or make package candidates permanent across dates. The existing Ternux-owned :0 desktop remains separately managed; Ternuxx controls only its validated Native :1 session. See [P2 completion evidence](evidence/P2-phase-completion-2026-10-18.md), [current installation limits](INSTALLATION.md), and the [active phase status](PHASE-STATUS.md).
 
 **Evidence classification:** package names, versions, source priority, and dependency plans were observed from the device's signed local APT indexes on the date above; install simulations were read-only. Upstream setup/API requirements were checked against official documentation. Native XFCE launch, application compatibility, Android add-on state, API permissions, and package-size totals remain untested.
 
