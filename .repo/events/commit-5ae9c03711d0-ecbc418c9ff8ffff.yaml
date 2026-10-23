@@ -1,0 +1,7 @@
+event_id: commit-5ae9c03711d0-ecbc418c9ff8ffff
+repository: soobujmiah/ternuxx
+commit: 5ae9c03711d088cf88180c3866f112b872b3df99
+kind: commit
+occurred_at: '2026-10-23T15:05:44Z'
+status: completed
+summary: 'docs: record owner-authorized Ternuxx alias migration'
