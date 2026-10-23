@@ -242,7 +242,11 @@ def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[st
                     "manifest_sha256": manifest_hash, "saved_profile": adoption.get("profile_id")}
         if adoption.get("manifest_sha256") != manifest_hash:
             return {"status": "profile_changed", "rootfs": str(rootfs),
-                    "manifest_sha256": manifest_hash, "saved_profile": adoption.get("profile_id")}
+                    "manifest_sha256": manifest_hash,
+                    "recorded_manifest_sha256": adoption.get("manifest_sha256"),
+                    "saved_profile": adoption.get("profile_id"),
+                    "detail": "setup manifest differs from the adoption record; guest drift is not inferred",
+                    "next_action": "review and confirm a new adoption preview to refresh Native metadata; this does not modify guest files"}
     return {"status": "adopted" if adoption else "needs_adoption",
             "rootfs": str(rootfs), "rootfs_device": identity.st_dev, "rootfs_inode": identity.st_ino,
             "manifest_sha256": manifest_hash, "profile_id": "ternuxx-debian-trixie-workstation",

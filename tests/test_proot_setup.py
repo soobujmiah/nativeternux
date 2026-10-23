@@ -87,6 +87,23 @@ class ProotSetupTests(unittest.TestCase):
                                        state_dir=str(self.state), user="sbj", plan_id=preview["plan_id"],
                                        confirmed=True)
 
+    def test_manifest_change_is_reported_without_claiming_guest_drift_or_mutating_it(self) -> None:
+        preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+                                                home=str(self.home), state_dir=str(self.state), user="sbj")
+        proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+                                   home=str(self.home), state_dir=str(self.state), user="sbj",
+                                   plan_id=preview["plan_id"], confirmed=True)
+        before = self._guest_digest()
+        manifest = self.repo / "config/proot/debian-trixie.json"
+        manifest.write_text(manifest.read_text(encoding="utf-8") + " ", encoding="utf-8")
+        result = proot_setup.status(repo_root=str(self.repo), prefix=str(self.prefix),
+                                    home=str(self.home), state_dir=str(self.state))
+        self.assertEqual(result["status"], "profile_changed")
+        self.assertNotEqual(result["manifest_sha256"], result["recorded_manifest_sha256"])
+        self.assertIn("guest drift is not inferred", result["detail"])
+        self.assertIn("does not modify guest files", result["next_action"])
+        self.assertEqual(self._guest_digest(), before)
+
     def test_wrong_release_or_user_is_rejected(self) -> None:
         release = self.root / "usr/lib/os-release"
         release.write_text("\n".join(["ID=ubuntu", "VERSION_ID=24.04", "VERSION_CODENAME=noble", ""]),

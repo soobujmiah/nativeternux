@@ -113,6 +113,7 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A69 | Phase revalidation called a dated 732-test report current and described cross-client terminal evidence too broadly as an unqualified lifecycle | Labeled the report as a 2026-10-22 snapshot and stated precisely that the later CLI/Web API/TUI/GTK-VTE result proves sequential terminal continuity, not full client mutation parity. |
 | A70 | Owner-prohibited external code-host references remained in installation, research, architecture, historical evidence, and readiness docs | Removed those links and source attributions while retaining relevant local device/package-index boundaries. |
 | A71 | Current known-limitations guide still called shared SSH key, rollback, autostart, and Wake Lock controls unimplemented after later evidence showed those slices delivered | Updated the current known-limitations and API-contract summaries to record the four-client controls and disposable authentication result while retaining the production-recovery, post-repair authentication, visual-interaction, and cold-boot gaps. |
+| A72 | Live existing-Debian status returned `profile_changed` after only fresh-installer snapshot metadata changed, without explaining that this says nothing about guest drift | Kept strict manifest binding and added explicit hash/detail/next-action output that calls for a preview-confirmed Native metadata refresh; added a fixture proving the guest tree remains unchanged, and documented the state. |
 
 
 ## Continuation order
