@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 437,
-  "read_count": 109,
+  "document_count": 438,
+  "read_count": 110,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -131,10 +131,10 @@
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "04efa94e5c53c7f66779bd758e7ac435330161781838c84a643cf286ac466d43",
+      "sha256": "e575482b93a95118857963c04a2a5daec20296eba925c55af7703ed92e008f81",
       "lines": 70,
       "read_status": "read",
-      "read_sha256": "04efa94e5c53c7f66779bd758e7ac435330161781838c84a643cf286ac466d43"
+      "read_sha256": "e575482b93a95118857963c04a2a5daec20296eba925c55af7703ed92e008f81"
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
@@ -475,10 +475,10 @@
     {
       "path": "docs/architecture/decisions/ADR-0016-tx-db-and-legacy-entrypoints.md",
       "kind": "narrative",
-      "sha256": "a952b2dcb3d4e481c9aac8572a25052a33b0307b4538094b0104b60de461e088",
+      "sha256": "2edbbc49aabf6a931e6cf42df0a0486881f328acb5f133b3bf4b46c0268bef7d",
       "lines": 45,
       "read_status": "read",
-      "read_sha256": "a952b2dcb3d4e481c9aac8572a25052a33b0307b4538094b0104b60de461e088"
+      "read_sha256": "2edbbc49aabf6a931e6cf42df0a0486881f328acb5f133b3bf4b46c0268bef7d"
     },
     {
       "path": "docs/architecture/history/2026-10-22-capability-matrix.md",
@@ -523,10 +523,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "4a40405b6f004cff51c85910cc8279f366f6fb6c69c389569435a904111d7639",
+      "sha256": "3ddca253d3b44ce9c6704bac78a3ec60f2e151608e8bac385c7a74451205bc71",
       "lines": 107,
       "read_status": "read",
-      "read_sha256": "4a40405b6f004cff51c85910cc8279f366f6fb6c69c389569435a904111d7639"
+      "read_sha256": "3ddca253d3b44ce9c6704bac78a3ec60f2e151608e8bac385c7a74451205bc71"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2759,6 +2759,14 @@
       "lines": 30,
       "read_status": "pending",
       "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-23-legacy-cli-absence.md",
+      "kind": "narrative",
+      "sha256": "747e47ec6ad9a9c377dc6b2c12a60a50b4edf895d384d3ea06a866ca91635e26",
+      "lines": 15,
+      "read_status": "read",
+      "read_sha256": "747e47ec6ad9a9c377dc6b2c12a60a50b4edf895d384d3ea06a866ca91635e26"
     },
     {
       "path": "docs/evidence/2026-10-23-native-legacy-alias-migration.md",
