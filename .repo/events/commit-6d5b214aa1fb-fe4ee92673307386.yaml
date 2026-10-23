@@ -1,0 +1,7 @@
+event_id: commit-6d5b214aa1fb-fe4ee92673307386
+repository: soobujmiah/ternuxx
+commit: 6d5b214aa1fbaf386d730f19946dc4a4262bea6d
+kind: commit
+occurred_at: '2026-10-23T10:05:32Z'
+status: completed
+summary: 'fix(virgl): allow stop when lsof returns rc=1 with no socket-specific errors'
