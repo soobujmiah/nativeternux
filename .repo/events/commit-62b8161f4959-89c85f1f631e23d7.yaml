@@ -1,0 +1,7 @@
+event_id: commit-62b8161f4959-89c85f1f631e23d7
+repository: soobujmiah/ternuxx
+commit: 62b8161f4959aaeb3d96e8661cc31d2888dc1782
+kind: commit
+occurred_at: '2026-10-23T21:38:01Z'
+status: completed
+summary: 'fix(proot): bind account identity to install preview'
