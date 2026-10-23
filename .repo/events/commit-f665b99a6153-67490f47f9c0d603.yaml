@@ -1,0 +1,7 @@
+event_id: commit-f665b99a6153-67490f47f9c0d603
+repository: soobujmiah/ternuxx
+commit: f665b99a6153af3e4372cfb1b23602a5241e889c
+kind: commit
+occurred_at: '2026-10-23T17:36:19Z'
+status: completed
+summary: reconcile PRoot integration docs with live replay
