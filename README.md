@@ -61,7 +61,7 @@ Follow [the full installation guide](docs/INSTALLATION.md) for provider setup, A
 tx pgui                   # guest desktop route, when qualified
 ```
 
-Use `./tx db` for Ternuxx-managed environment handoff; it is a first-party command, distinct from any legacy bare `db` alias. PRoot actions target only the explicitly selected guest. See [operations and command reference](docs/OPERATIONS.md).
+Use `./tx db` for Ternuxx-managed environment handoff. New Native shells also route `db` and `droot` through the managed regular-user and root paths; already-open shells may need a restart to load the aliases. See [operations and command reference](docs/OPERATIONS.md).
 
 ## What it manages
 

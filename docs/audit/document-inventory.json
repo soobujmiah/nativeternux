@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "b7edcdca62f12d53b42fddd97fceeb7b1cb9661e9f3a9ddb8a4b8cb58a725d10",
+      "sha256": "2a48e49caab190afc2124f4fe0eb488c015019280e73830e1a9c9f00b8c5f5ab",
       "lines": 63,
       "read_status": "read",
-      "read_sha256": "b7edcdca62f12d53b42fddd97fceeb7b1cb9661e9f3a9ddb8a4b8cb58a725d10"
+      "read_sha256": "2a48e49caab190afc2124f4fe0eb488c015019280e73830e1a9c9f00b8c5f5ab"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,10 +59,10 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "40c07644c68db048f701f1b1e8607534774fd48e2730665e56e3cb7022ee6f6d",
+      "sha256": "c076a371c1d74c44b1272ddee0aa828a76ca3c4767d3af8ad9eb764cc28ffab6",
       "lines": 82,
       "read_status": "read",
-      "read_sha256": "40c07644c68db048f701f1b1e8607534774fd48e2730665e56e3cb7022ee6f6d"
+      "read_sha256": "c076a371c1d74c44b1272ddee0aa828a76ca3c4767d3af8ad9eb764cc28ffab6"
     },
     {
       "path": "SECURITY.md",
@@ -123,18 +123,18 @@
     {
       "path": "docs/HYBRID-INTEGRATION.md",
       "kind": "narrative",
-      "sha256": "a0381c1aafe20f78c513b43ba674d6a497712917fa7cc691048b10cfc80934e3",
+      "sha256": "f42a2c95e18f2da75d8b256f4336119555758b7a056f23b27ce7bf3c6381d4e5",
       "lines": 101,
       "read_status": "read",
-      "read_sha256": "a0381c1aafe20f78c513b43ba674d6a497712917fa7cc691048b10cfc80934e3"
+      "read_sha256": "f42a2c95e18f2da75d8b256f4336119555758b7a056f23b27ce7bf3c6381d4e5"
     },
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "5e3b27d1588cff08f52e12f073825988e4debd6830bd66008637cced9e6e02bc",
+      "sha256": "04efa94e5c53c7f66779bd758e7ac435330161781838c84a643cf286ac466d43",
       "lines": 70,
       "read_status": "read",
-      "read_sha256": "5e3b27d1588cff08f52e12f073825988e4debd6830bd66008637cced9e6e02bc"
+      "read_sha256": "04efa94e5c53c7f66779bd758e7ac435330161781838c84a643cf286ac466d43"
     },
     {
       "path": "docs/KNOWLEDGE-SYNC.md",
