@@ -440,6 +440,8 @@ tx proot verify --distro debian|ternuxx-replay-NAME (--guest-user USER|--guest-u
 tx proot setup status
 tx proot setup adopt-preview --user NAME
 tx proot setup adopt --user NAME --yes --plan-id PLAN_ID
+tx proot setup adoption-rollback-preview --backup-id BACKUP_ID
+tx proot setup adoption-rollback --backup-id BACKUP_ID --yes --plan-id PLAN_ID
 tx proot setup fresh-preview --user NAME [--alias ternuxx-replay-NAME] [--groups base,fonts]
 tx proot setup fresh-resume-preview --user NAME --plan-id FAILED_PLAN_ID [--alias ternuxx-replay-NAME] [--groups base,fonts]
 tx proot setup fresh-install --user NAME [--alias ternuxx-replay-NAME] --yes --plan-id PLAN_ID

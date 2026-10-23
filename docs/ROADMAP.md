@@ -25,7 +25,7 @@ This roadmap defines the product sequence, acceptance gates, and safety boundari
 <!-- generated:active-work:start -->
 **Active phase:** P4 — Existing Ternux PRoot feature-parity provider
 
-**Next action:** Implement preview-bound package/config adaptation for the existing guest and expose the same shared operation through TUI, authenticated Web, and GTK; retain the guest identity and verify rollback before apply.
+**Next action:** Implement exact-preview, rollback-safe adaptation of the selected existing Debian package/config delta through the shared operation service and clients; verify on a disposable guest before any live guest apply.
 
 Complete this item and update its evidence before moving to the next item or phase.
 <!-- generated:active-work:end -->

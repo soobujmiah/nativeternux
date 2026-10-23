@@ -6,6 +6,7 @@ It never writes to the guest or consults the legacy Ternux CLI.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import getpass
 import json
@@ -15,6 +16,7 @@ import re
 import stat
 import sys
 import tempfile
+from contextlib import contextmanager
 
 import desktop_session_state
 import proot_fresh_setup
@@ -271,6 +273,65 @@ def _existing_adoption(path: Path) -> tuple[bytes | None, dict[str, object] | No
     return raw, record
 
 
+@contextmanager
+def _adoption_lock(state_root: Path):
+    path = state_root / "adoption.lock"
+    if path.is_symlink():
+        raise SetupError("adoption lock is a symbolic link")
+    fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        info = os.fstat(fd)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid()
+                or stat.S_IMODE(info.st_mode) != 0o600):
+            raise SetupError("adoption lock identity or permissions are unsafe")
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+
+
+def _adoption_backup_dir(state_root: Path, *, create: bool) -> Path:
+    path = state_root / "adoption-backups"
+    if path.is_symlink():
+        raise SetupError("adoption backup directory is a symbolic link")
+    if create:
+        path.mkdir(mode=0o700, exist_ok=True)
+    try:
+        info = path.lstat()
+    except FileNotFoundError as exc:
+        raise SetupError("adoption backup directory is unavailable") from exc
+    if (not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode)
+            or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700):
+        raise SetupError("adoption backup directory identity or permissions are unsafe")
+    return path
+
+
+def _create_private_backup(path: Path, payload: bytes) -> None:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC
+                 | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+            raise SetupError("adoption backup file identity is unsafe")
+        view = memoryview(payload)
+        while view:
+            written = os.write(fd, view)
+            if written <= 0:
+                raise SetupError("could not write complete adoption backup")
+            view = view[written:]
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    directory_fd = os.open(path.parent, os.O_RDONLY | os.O_CLOEXEC)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+
+
 def _state_paths(state_dir: str, home: str, *, create: bool) -> tuple[Path, Path, Path]:
     state = Path(state_dir)
     desktop_session_state.ensure_state_dir(Path(home), state)
@@ -292,6 +353,28 @@ def _state_paths(state_dir: str, home: str, *, create: bool) -> tuple[Path, Path
                 or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o077):
             raise SetupError("private PRoot setup preview directory is unsafe")
     return root, previews, root / "provider.json"
+
+
+def _atomic_private_bytes(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=".setup-", dir=path.parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        try:
+            os.unlink(name)
+        except FileNotFoundError:
+            pass
 
 
 def _atomic_private_json(path: Path, payload: dict[str, object]) -> None:
@@ -325,10 +408,12 @@ def preview_adoption(*, repo_root: str, prefix: str, home: str,
     _state_root, _previews, record_path = _state_paths(state_dir, home, create=True)
     prior_bytes, prior_record = _existing_adoption(record_path)
     prior_hash = hashlib.sha256(prior_bytes).hexdigest() if prior_bytes is not None else None
-    prior_matches = bool(prior_record and prior_record.get("profile_id") == manifest["profile_id"]
-        and prior_record.get("manifest_sha256") == manifest_hash
+    prior_rootfs_matches = bool(prior_record
         and prior_record.get("rootfs_device") == identity.st_dev
-        and prior_record.get("rootfs_inode") == identity.st_ino
+        and prior_record.get("rootfs_inode") == identity.st_ino)
+    prior_matches = bool(prior_rootfs_matches
+        and prior_record.get("profile_id") == manifest["profile_id"]
+        and prior_record.get("manifest_sha256") == manifest_hash
         and prior_record.get("guest_user") == user)
     operation = {
         "schema_version": 1,
@@ -344,8 +429,10 @@ def preview_adoption(*, repo_root: str, prefix: str, home: str,
         "observed_package_groups": guest["packages"]["groups"],
         "dpkg_status_sha256": guest["packages"]["dpkg_status_sha256"],
         "prior_adoption_record_sha256": prior_hash,
-        "apply_blocked_reason": ("an existing adoption record belongs to a different manifest, rootfs, or account; preserve it until an exact rollback path is available"
-                                 if prior_bytes is not None and not prior_matches else None),
+        "apply_blocked_reason": ("the existing adoption record belongs to a different rootfs identity; preserve it because rollback to that rootfs cannot be verified"
+                                 if prior_bytes is not None and not prior_rootfs_matches else None),
+        "refresh_existing_record": bool(prior_bytes is not None and not prior_matches and prior_rootfs_matches),
+        "rollback_backup_id": prior_hash if prior_bytes is not None and not prior_matches and prior_rootfs_matches else None,
         "guest_mutations": [],
         "package_changes": [],
         "service_changes": [],
@@ -364,6 +451,19 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
         raise SetupError("adoption requires explicit confirmation")
     if not re.fullmatch(r"[0-9a-f]{64}", plan_id):
         raise SetupError("a valid preview plan ID is required")
+    state_root, _previews, _record = _state_paths(state_dir, home, create=True)
+    with _adoption_lock(state_root):
+        return _apply_adoption_locked(repo_root=repo_root, prefix=prefix, home=home,
+                                      state_dir=state_dir, user=user, plan_id=plan_id,
+                                      confirmed=confirmed)
+
+
+def _apply_adoption_locked(*, repo_root: str, prefix: str, home: str,
+                            state_dir: str, user: str, plan_id: str, confirmed: bool) -> dict[str, object]:
+    if not confirmed:
+        raise SetupError("adoption requires explicit confirmation")
+    if not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        raise SetupError("a valid preview plan ID is required")
     current = preview_adoption(repo_root=repo_root, prefix=prefix, home=home,
                                state_dir=state_dir, user=user)
     if current["plan_id"] != plan_id:
@@ -374,13 +474,10 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
     root, previews, record = _state_paths(state_dir, home, create=True)
     preview_path = previews / f"{plan_id}.json"
     try:
-        info = preview_path.lstat()
-        if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)
-                or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600):
-            raise SetupError("saved preview identity or permissions are unsafe")
-        reviewed = json.loads(preview_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise SetupError("saved adoption preview is unavailable") from exc
+        preview_bytes = _read_stable_regular_file(preview_path, max_bytes=1024 * 1024, mode=0o600)
+        reviewed = json.loads(preview_bytes.decode("utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError, SetupError) as exc:
+        raise SetupError("saved adoption preview is unavailable or unsafe") from exc
     if reviewed.get("plan_id") != plan_id:
         raise SetupError("saved adoption preview does not match its ID")
     prior_bytes, prior_record = _existing_adoption(record)
@@ -392,7 +489,20 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
                 and prior_record.get("guest_user") == reviewed.get("guest_user")):
             return {"status": "adopted", "record": prior_record,
                     "guest_mutations": False, "native_metadata_changed": False}
-        raise SetupError("an existing adoption record cannot be replaced without a tested rollback path")
+        if (hashlib.sha256(prior_bytes).hexdigest() != reviewed.get("prior_adoption_record_sha256")
+                or prior_record.get("rootfs_device") != reviewed.get("rootfs_device")
+                or prior_record.get("rootfs_inode") != reviewed.get("rootfs_inode")):
+            raise SetupError("the prior adoption record changed or belongs to another rootfs; it was preserved")
+        backup_id = reviewed.get("rollback_backup_id")
+        if not isinstance(backup_id, str) or not re.fullmatch(r"[0-9a-f]{64}", backup_id):
+            raise SetupError("refresh preview lacks a rollback backup identity")
+        backup_path = _adoption_backup_dir(root, create=True) / f"{backup_id}.record"
+        try:
+            _create_private_backup(backup_path, prior_bytes)
+        except FileExistsError:
+            backup_bytes = _read_stable_regular_file(backup_path, max_bytes=1024 * 1024, mode=0o600)
+            if backup_bytes != prior_bytes:
+                raise SetupError("existing rollback backup differs from the exact prior record")
     payload = {
         "schema_version": 1,
         "profile_id": "ternuxx-debian-trixie-workstation",
@@ -407,9 +517,101 @@ def apply_adoption(*, repo_root: str, prefix: str, home: str,
         "adopted_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
         "origin": "existing-rootfs-adoption",
     }
+    if prior_bytes is not None:
+        payload["rollback_backup_id"] = reviewed["rollback_backup_id"]
+        payload["previous_record_sha256"] = reviewed["prior_adoption_record_sha256"]
+        payload["previous_record_backup"] = str(backup_path)
     _atomic_private_json(record, payload)
     preview_path.unlink()
     return {"status": "adopted", "record": payload, "guest_mutations": False}
+
+
+def preview_adoption_rollback(*, prefix: str, home: str, state_dir: str,
+                              backup_id: str) -> dict[str, object]:
+    if not re.fullmatch(r"[0-9a-f]{64}", backup_id):
+        raise SetupError("a valid adoption rollback backup ID is required")
+    root, identity = _safe_rootfs(prefix)
+    state, previews, record_path = _state_paths(state_dir, home, create=False)
+    current_bytes, current = _existing_adoption(record_path)
+    if current_bytes is None or current is None:
+        raise SetupError("there is no current adoption record to roll back")
+    if current.get("rollback_backup_id") != backup_id:
+        raise SetupError("current adoption record does not reference this rollback backup")
+    backup_path = _adoption_backup_dir(state, create=False) / f"{backup_id}.record"
+    try:
+        previous_bytes = _read_stable_regular_file(backup_path, max_bytes=1024 * 1024, mode=0o600)
+        previous = json.loads(previous_bytes.decode("utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError, SetupError) as exc:
+        raise SetupError("exact previous adoption record backup is unavailable or invalid") from exc
+    if (not isinstance(previous, dict)
+            or hashlib.sha256(previous_bytes).hexdigest() != current.get("previous_record_sha256")
+            or previous.get("rootfs_device") != identity.st_dev
+            or previous.get("rootfs_inode") != identity.st_ino
+            or current.get("rootfs_device") != identity.st_dev
+            or current.get("rootfs_inode") != identity.st_ino):
+        raise SetupError("rollback backup, current record, and installed rootfs identities do not match")
+    operation = {
+        "schema_version": 1, "operation": "rollback-existing-debian-adoption",
+        "backup_id": backup_id, "rootfs": str(root), "rootfs_device": identity.st_dev,
+        "rootfs_inode": identity.st_ino,
+        "current_record_sha256": hashlib.sha256(current_bytes).hexdigest(),
+        "restore_record_sha256": hashlib.sha256(previous_bytes).hexdigest(),
+        "guest_mutations": [], "package_changes": [], "service_changes": [],
+    }
+    plan_id = hashlib.sha256(json.dumps(operation, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    operation["plan_id"] = plan_id
+    _atomic_private_json(previews / f"rollback-{plan_id}.json", operation)
+    return {"status": "preview", "plan_id": plan_id, "operation": operation}
+
+
+def apply_adoption_rollback(*, prefix: str, home: str, state_dir: str,
+                            backup_id: str, plan_id: str, confirmed: bool) -> dict[str, object]:
+    if not confirmed:
+        raise SetupError("adoption rollback requires explicit confirmation")
+    if (not re.fullmatch(r"[0-9a-f]{64}", backup_id)
+            or not re.fullmatch(r"[0-9a-f]{64}", plan_id)):
+        raise SetupError("valid rollback backup and preview IDs are required")
+    state_root, _previews, _record = _state_paths(state_dir, home, create=True)
+    with _adoption_lock(state_root):
+        return _apply_adoption_rollback_locked(prefix=prefix, home=home, state_dir=state_dir,
+                                               backup_id=backup_id, plan_id=plan_id,
+                                               confirmed=confirmed)
+
+
+def _apply_adoption_rollback_locked(*, prefix: str, home: str, state_dir: str,
+                                     backup_id: str, plan_id: str, confirmed: bool) -> dict[str, object]:
+    if not confirmed:
+        raise SetupError("adoption rollback requires explicit confirmation")
+    if not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+        raise SetupError("a valid rollback preview plan ID is required")
+    current = preview_adoption_rollback(prefix=prefix, home=home, state_dir=state_dir,
+                                        backup_id=backup_id)
+    if current["plan_id"] != plan_id:
+        raise SetupError("current adoption record or rootfs differs from the reviewed rollback preview")
+    state, previews, record_path = _state_paths(state_dir, home, create=False)
+    preview_path = previews / f"rollback-{plan_id}.json"
+    try:
+        reviewed = json.loads(_read_stable_regular_file(preview_path, max_bytes=1024 * 1024, mode=0o600))
+    except (OSError, UnicodeError, json.JSONDecodeError, SetupError) as exc:
+        raise SetupError("saved adoption rollback preview is unavailable") from exc
+    if reviewed.get("plan_id") != plan_id or reviewed.get("backup_id") != backup_id:
+        raise SetupError("saved adoption rollback preview does not match its ID")
+    backup_path = _adoption_backup_dir(state, create=False) / f"{backup_id}.record"
+    previous_bytes = _read_stable_regular_file(backup_path, max_bytes=1024 * 1024, mode=0o600)
+    current_bytes, _current_record = _existing_adoption(record_path)
+    if (current_bytes is None
+            or hashlib.sha256(previous_bytes).hexdigest() != reviewed.get("restore_record_sha256")
+            or hashlib.sha256(current_bytes).hexdigest() != reviewed.get("current_record_sha256")):
+        raise SetupError("adoption record or rollback backup changed after preview")
+    root, identity = _safe_rootfs(prefix)
+    if (str(root) != reviewed.get("rootfs")
+            or identity.st_dev != reviewed.get("rootfs_device")
+            or identity.st_ino != reviewed.get("rootfs_inode")):
+        raise SetupError("installed Debian rootfs identity changed after rollback preview")
+    _atomic_private_bytes(record_path, previous_bytes)
+    return {"status": "rolled_back", "backup_id": backup_id,
+            "restored_record_sha256": hashlib.sha256(previous_bytes).hexdigest(),
+            "guest_mutations": False, "native_metadata_changed": True}
 
 
 def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[str, object]:
@@ -420,13 +622,8 @@ def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[st
     except SetupError as exc:
         return {"status": "missing_or_unavailable", "detail": str(exc),
                 "manifest_sha256": manifest_hash, "fresh_setup_profile": "debian-trixie-workstation"}
-    adoption = None
-    if record_path.exists():
-        info = record_path.lstat()
-        if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode)
-                or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600):
-            raise SetupError("saved Ternuxx PRoot setup record is unsafe")
-        adoption = json.loads(record_path.read_text(encoding="utf-8"))
+    adoption_bytes, adoption = _existing_adoption(record_path)
+    if adoption is not None:
         if (adoption.get("rootfs_device"), adoption.get("rootfs_inode")) != (identity.st_dev, identity.st_ino):
             return {"status": "adoption_stale", "rootfs": str(rootfs),
                     "manifest_sha256": manifest_hash, "saved_profile": adoption.get("profile_id")}
@@ -467,7 +664,7 @@ def status(*, repo_root: str, prefix: str, home: str, state_dir: str) -> dict[st
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="tx proot setup")
-    parser.add_argument("action", choices=("status", "adopt-preview", "adopt", "fresh-preview", "fresh-resume-preview", "fresh-install"))
+    parser.add_argument("action", choices=("status", "adopt-preview", "adopt", "adoption-rollback-preview", "adoption-rollback", "fresh-preview", "fresh-resume-preview", "fresh-install"))
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--prefix", default=os.environ.get("PREFIX", ""))
     parser.add_argument("--home", default=os.environ.get("HOME", ""))
@@ -475,6 +672,7 @@ def main() -> int:
     parser.add_argument("--user", default="")
     parser.add_argument("--alias", help="fresh-only debian or ternuxx-replay-NAME target")
     parser.add_argument("--plan-id", default="")
+    parser.add_argument("--backup-id", default="")
     parser.add_argument("--groups", help="comma-separated fresh Debian package groups; base is required")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -488,28 +686,41 @@ def main() -> int:
             parser.error("--groups is supported only by fresh preview actions")
         groups = None if args.groups is None else args.groups.split(",")
         if args.action == "status":
+            if args.backup_id or args.plan_id or args.user or args.yes:
+                parser.error("status does not accept setup options")
             result = status(repo_root=args.repo_root, prefix=args.prefix, home=args.home, state_dir=args.state_dir)
+        elif args.action == "adoption-rollback-preview":
+            if not args.backup_id or args.plan_id or args.yes or args.user or args.alias or args.groups:
+                parser.error("adoption-rollback-preview requires --backup-id only")
+            result = preview_adoption_rollback(prefix=args.prefix, home=args.home,
+                                               state_dir=args.state_dir, backup_id=args.backup_id)
+        elif args.action == "adoption-rollback":
+            if not args.backup_id or not args.plan_id or not args.yes or args.user or args.alias or args.groups:
+                parser.error("adoption-rollback requires --backup-id --plan-id ID --yes")
+            result = apply_adoption_rollback(prefix=args.prefix, home=args.home,
+                                            state_dir=args.state_dir, backup_id=args.backup_id,
+                                            plan_id=args.plan_id, confirmed=True)
         elif args.action == "adopt-preview":
-            if not args.user:
+            if not args.user or args.backup_id or args.plan_id or args.yes:
                 parser.error("adopt-preview requires --user NAME")
             result = preview_adoption(repo_root=args.repo_root, prefix=args.prefix, home=args.home,
                                       state_dir=args.state_dir, user=args.user)
         elif args.action == "fresh-preview":
-            if not args.user or args.plan_id or args.yes:
+            if not args.user or args.plan_id or args.yes or args.backup_id:
                 parser.error("fresh-preview requires --user NAME")
             result = proot_fresh_setup.preview(repo_root=args.repo_root, prefix=args.prefix,
                                                home=args.home, state_dir=args.state_dir, user=args.user,
                                                alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS,
                                                groups=groups)
         elif args.action == "fresh-resume-preview":
-            if not args.user or not args.plan_id or args.yes:
+            if not args.user or not args.plan_id or args.yes or args.backup_id:
                 parser.error("fresh-resume-preview requires --user NAME --plan-id FAILED_PLAN_ID")
             result = proot_fresh_setup.preview(repo_root=args.repo_root, prefix=args.prefix,
                                                home=args.home, state_dir=args.state_dir, user=args.user,
                                                alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS,
                                                resume_plan_id=args.plan_id, groups=groups)
         elif args.action == "fresh-install":
-            if not args.user or not args.plan_id or not args.yes:
+            if not args.user or not args.plan_id or not args.yes or args.backup_id:
                 parser.error("fresh-install requires --user NAME --yes --plan-id ID")
             password = getpass.getpass("Create Debian sudo password: ")
             confirm_password = getpass.getpass("Confirm Debian sudo password: ")
@@ -521,7 +732,7 @@ def main() -> int:
                                              alias=args.alias if args.alias is not None else proot_fresh_setup.ALIAS)
             password = confirm_password = ""
         else:
-            if not args.user or not args.plan_id or not args.yes:
+            if not args.user or not args.plan_id or not args.yes or args.backup_id:
                 parser.error("adopt requires --user NAME --yes --plan-id ID")
             result = apply_adoption(repo_root=args.repo_root, prefix=args.prefix, home=args.home,
                                     state_dir=args.state_dir, user=args.user,

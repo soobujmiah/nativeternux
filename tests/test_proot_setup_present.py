@@ -45,6 +45,18 @@ class ProotSetupPresentationTests(unittest.TestCase):
         self.assertTrue(any("Apply blocked" in line for line in summary))
         self.assertFalse(any(line.startswith("Apply after review:") for line in summary))
 
+    def test_refresh_preview_and_record_show_rollback_path(self) -> None:
+        preview = {"status": "preview", "plan_id": "a" * 64, "operation": {
+            "guest_release": {}, "guest_user": "workuser", "rootfs": "/guest",
+            "refresh_existing_record": True, "rollback_backup_id": "b" * 64,
+            "guest_mutations": [], "package_changes": [], "service_changes": []}}
+        summary = proot_setup_present.summarize(preview)
+        self.assertTrue(any("exact prior bytes will be backed up" in line for line in summary))
+        self.assertTrue(any(line.startswith("Apply after review:") for line in summary))
+        recorded = {"status": "adopted", "record": {"rollback_backup_id": "b" * 64}}
+        summary = proot_setup_present.summarize(recorded)
+        self.assertTrue(any(line.startswith("Rollback preview:") for line in summary))
+
     def test_invalid_user_plan_and_terminal_controls_are_rejected(self) -> None:
         base = {"status": "preview", "plan_id": "a" * 64,
                 "operation": {"guest_release": {}, "guest_user": "sbj", "rootfs": "/guest"}}

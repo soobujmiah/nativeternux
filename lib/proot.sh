@@ -160,8 +160,8 @@ nt_cmd_proot() {
       local action="${1:-status}" user="" plan_id="" backup_id="" guest_alias="" package_groups="" confirmed=0 option
       [ $# -eq 0 ] || shift
       case "$action" in
-        status|adopt-preview|adopt|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore) ;;
-        *) nt_fail "Use tx proot setup status|adopt-preview|adopt|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore."; return 2 ;;
+        status|adopt-preview|adopt|adoption-rollback-preview|adoption-rollback|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore) ;;
+        *) nt_fail "Use tx proot setup status|adopt-preview|adopt|adoption-rollback-preview|adoption-rollback|fresh-preview|fresh-resume-preview|fresh-install|retire-preview|retire|restore-preview|restore."; return 2 ;;
       esac
       while [ "$#" -gt 0 ]; do
         option="$1"; shift
@@ -211,6 +211,12 @@ nt_cmd_proot() {
         status) [ -z "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
           nt_fail "Usage: tx proot setup status"; return 2;
         } ;;
+        adoption-rollback-preview) [ -n "$backup_id" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
+          nt_fail "Usage: tx proot setup adoption-rollback-preview --backup-id BACKUP_ID"; return 2;
+        }; setup_args+=(--backup-id "$backup_id") ;;
+        adoption-rollback) [ -n "$backup_id" ] && [ -n "$plan_id" ] && [ "$confirmed" -eq 1 ] || {
+          nt_fail "Adoption rollback requires --backup-id, --yes, and --plan-id from the exact preview."; return 2;
+        }; setup_args+=(--backup-id "$backup_id" --yes --plan-id "$plan_id") ;;
         adopt-preview) [ -n "$user" ] && [ -z "$plan_id" ] && [ "$confirmed" -eq 0 ] || {
           nt_fail "Usage: tx proot setup adopt-preview --user NAME"; return 2;
         }; setup_args+=(--user "$user") ;;

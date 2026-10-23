@@ -74,7 +74,7 @@ cd "$HOME/ternuxx"
 ./tx install debian apply PLAN_ID --yes
 ```
 
-এই প্রথম integration ধাপ Native পাশে ব্যক্তিগত profile record তৈরি করে; guest-এর ফাইল, package বা service বদলায় না এবং অনুপস্থিত package ইনস্টলও করে না। পুরোনো manifest/rootfs/account-এর adoption record থাকলে সেটি অক্ষত রেখে apply বন্ধ হয়; rollback-safe refresh এখনো তৈরি হয়নি। account নির্দিষ্ট করতে `--user YOUR_DEBIAN_USERNAME` দিন। নিচের low-level command-গুলো একই adoption প্রক্রিয়ার পুরোনো রূপ.
+এই প্রথম integration ধাপ Native পাশে ব্যক্তিগত profile record তৈরি করে; guest-এর ফাইল, package বা service বদলায় না এবং অনুপস্থিত package ইনস্টলও করে না। একই rootfs-এর পুরোনো adoption record হলে preview metadata refresh দেখাবে; apply-এর আগে আগের record-এর exact bytes backup হবে। অন্য rootfs-এর record থাকলে apply বন্ধ থাকবে। Apply ফলের backup ID দিয়ে tx proot setup adoption-rollback-preview --backup-id BACKUP_ID দেখুন; exact plan যাচাই করে tx proot setup adoption-rollback --backup-id BACKUP_ID --yes --plan-id PLAN_ID চালালে আগের record ফিরবে। account নির্দিষ্ট করতে `--user YOUR_DEBIAN_USERNAME` দিন। নিচের low-level command-গুলো একই adoption প্রক্রিয়ার পুরোনো রূপ.
 ## ৫. বিদ্যমান Debian না ছুঁয়ে নতুন অতিথি পরিবেশ পরীক্ষা করুন
 
 আপনার আগে থেকেই Debian থাকলে নতুন পরীক্ষার জন্য অনন্য `ternuxx-replay-NAME` alias ব্যবহার করুন। `NAME`-এর জায়গায় ছোট ইংরেজি অক্ষর/সংখ্যা দিন; উদাহরণে `demo` ব্যবহার হয়েছে:

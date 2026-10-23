@@ -109,9 +109,17 @@ def summarize(result: object) -> list[str]:
         if blocked is not None:
             if not isinstance(blocked, str) or len(blocked) > 512:
                 raise ValueError("setup blocker is malformed")
-            lines.append("Apply blocked: existing adoption record preserved; rollback-safe refresh is not implemented")
+            lines.append("Apply blocked: the saved record belongs to a different rootfs identity")
         else:
+            if operation.get("refresh_existing_record"):
+                lines.append("Native adoption record: refresh; exact prior bytes will be backed up")
             lines.append(f"Apply after review: tx install debian apply {plan_id} --yes")
+    backup_id = record.get("rollback_backup_id")
+    if status == "adopted" and backup_id is not None:
+        if not isinstance(backup_id, str) or not re.fullmatch(r"[0-9a-f]{64}", backup_id):
+            raise ValueError("adoption rollback backup ID is invalid")
+        lines.append(f"Rollback backup ID: {backup_id}")
+        lines.append(f"Rollback preview: tx proot setup adoption-rollback-preview --backup-id {backup_id}")
     return lines
 
 

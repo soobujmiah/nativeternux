@@ -15,9 +15,9 @@
 
 **Progress:** 4/11 phases resolved (4 completed, 0 skipped)
 
-P4 CLI now exposes a read-only, exact-identity adoption preview for the existing Debian guest; full Native suite passes 908 tests (1 skipped). Guest package/config migration, cross-client install parity, and clean-device replay remain open.
+Same-rootfs adoption metadata refresh now has private exact-byte backup and exact rollback; current Native record reports adopted and package baseline matches. Fresh provisioning remains Debian-only; guest package/config migration, four-client parity, and clean-device replay remain open.
 
-**Next action:** Implement preview-bound package/config adaptation for the existing guest and expose the same shared operation through TUI, authenticated Web, and GTK; retain the guest identity and verify rollback before apply.
+**Next action:** Implement exact-preview, rollback-safe adaptation of the selected existing Debian package/config delta through the shared operation service and clients; verify on a disposable guest before any live guest apply.
 
 [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->

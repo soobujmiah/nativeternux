@@ -128,11 +128,97 @@ class ProotSetupTests(unittest.TestCase):
         preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
             home=str(self.home), state_dir=str(self.state), user="sbj")
         self.assertTrue(preview["operation"]["apply_blocked_reason"])
-        with self.assertRaisesRegex(proot_setup.SetupError, "different manifest"):
+        with self.assertRaisesRegex(proot_setup.SetupError, "different rootfs identity"):
             proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
                 home=str(self.home), state_dir=str(self.state), user="sbj",
                 plan_id=preview["plan_id"], confirmed=True)
         self.assertEqual(record.read_bytes(), original)
+
+    def test_stale_same_rootfs_adoption_refresh_has_exact_rollback(self):
+        original_preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj",
+            plan_id=original_preview["plan_id"], confirmed=True)
+        record = self.state / "proot-setup/provider.json"
+        original_bytes = record.read_bytes()
+        before_guest = self._guest_digest()
+        manifest = self.repo / "config/proot/debian-trixie.json"
+        manifest.write_text(manifest.read_text(encoding="utf-8") + " ", encoding="utf-8")
+
+        refresh = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        operation = refresh["operation"]
+        self.assertTrue(operation["refresh_existing_record"])
+        self.assertIsNone(operation["apply_blocked_reason"])
+        backup_id = operation["rollback_backup_id"]
+        result = proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj",
+            plan_id=refresh["plan_id"], confirmed=True)
+        self.assertEqual(result["status"], "adopted")
+        self.assertEqual(result["record"]["rollback_backup_id"], backup_id)
+        backup = self.state / "proot-setup/adoption-backups" / f"{backup_id}.record"
+        self.assertEqual(backup.read_bytes(), original_bytes)
+        self.assertNotEqual(record.read_bytes(), original_bytes)
+        self.assertEqual(self._guest_digest(), before_guest)
+
+        rollback = proot_setup.preview_adoption_rollback(prefix=str(self.prefix), home=str(self.home),
+            state_dir=str(self.state), backup_id=backup_id)
+        rolled_back = proot_setup.apply_adoption_rollback(prefix=str(self.prefix), home=str(self.home),
+            state_dir=str(self.state), backup_id=backup_id, plan_id=rollback["plan_id"], confirmed=True)
+        self.assertEqual(rolled_back["status"], "rolled_back")
+        self.assertEqual(record.read_bytes(), original_bytes)
+        self.assertEqual(self._guest_digest(), before_guest)
+
+    def test_rollback_refuses_a_changed_current_record_after_preview(self):
+        first = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj",
+            plan_id=first["plan_id"], confirmed=True)
+        original = (self.state / "proot-setup/provider.json").read_bytes()
+        manifest = self.repo / "config/proot/debian-trixie.json"
+        manifest.write_text(manifest.read_text(encoding="utf-8") + " ", encoding="utf-8")
+        refresh = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj",
+            plan_id=refresh["plan_id"], confirmed=True)
+        backup_id = refresh["operation"]["rollback_backup_id"]
+        rollback = proot_setup.preview_adoption_rollback(prefix=str(self.prefix), home=str(self.home),
+            state_dir=str(self.state), backup_id=backup_id)
+        record = self.state / "proot-setup/provider.json"
+        changed = record.read_bytes() + b" "
+        record.write_bytes(changed)
+        record.chmod(0o600)
+        with self.assertRaisesRegex(proot_setup.SetupError, "differs from the reviewed rollback preview"):
+            proot_setup.apply_adoption_rollback(prefix=str(self.prefix), home=str(self.home),
+                state_dir=str(self.state), backup_id=backup_id, plan_id=rollback["plan_id"], confirmed=True)
+        self.assertEqual(record.read_bytes(), changed)
+        self.assertNotEqual(record.read_bytes(), original)
+
+    def test_symlinked_adoption_backup_directory_is_refused(self):
+        first = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj",
+            plan_id=first["plan_id"], confirmed=True)
+        record = self.state / "proot-setup/provider.json"
+        original = record.read_bytes()
+        manifest = self.repo / "config/proot/debian-trixie.json"
+        manifest.write_text(manifest.read_text(encoding="utf-8") + " ", encoding="utf-8")
+        refresh = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+            home=str(self.home), state_dir=str(self.state), user="sbj")
+        backup_dir = self.state / "proot-setup/adoption-backups"
+        outside = self.base / "outside-backups"
+        outside.mkdir(mode=0o700)
+        backup_dir.symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(proot_setup.SetupError, "backup directory is a symbolic link"):
+            proot_setup.apply_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
+                home=str(self.home), state_dir=str(self.state), user="sbj",
+                plan_id=refresh["plan_id"], confirmed=True)
+        self.assertEqual(record.read_bytes(), original)
+        self.assertEqual(list(outside.iterdir()), [])
 
     def test_manifest_change_is_reported_without_claiming_guest_drift_or_mutating_it(self) -> None:
         preview = proot_setup.preview_adoption(repo_root=str(self.repo), prefix=str(self.prefix),
