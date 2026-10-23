@@ -44,3 +44,8 @@ On 2026-10-24, `./tx install debian preview` on Native Termux resolved the curre
 ## Correction: Debian graphics path and held packages
 
 A later exact-path review found that the earlier adoption presenter called the existing `/usr/local/share/vulkan/icd.d/ternux_freedreno_icd.json` file the expected Ternuxx ICD. The manifest actually selects `/usr/local/share/vulkan/icd.d/ternuxx_freedreno_icd.json`. The preview now checks the manifest path and reports the other filename separately; it does not overwrite or delete either file. The guest dpkg status uses `hold ok installed` for Mesa packages, which the first diagnostic parser did not count. A corrected read-only inventory confirms all 50 requested manifest packages installed across five groups; selected Mesa packages remain held. An isolated `apt-get --simulate --no-upgrade --no-remove` reported 0 changes. No guest mutation was applied. See [the profile-state audit](2026-10-24-debian-profile-state-audit.md).
+
+
+## Fresh-plan repeat preview check
+
+On Native Termux, two read-only `fresh-preview` calls used the same Debian image/snapshot, manifest, package group (`base`), account, alias, and KGSL result. Their plan IDs differed (`9997dec45c6545635d8ad073dbc5319beffc106dfcdb15566d184eacb38bb00a` and `8850ffcbb47d17ee35470ac117a48e23b970dbd2d659ccd51e22010fe02cc561`) because the bound free-space observation changed from 70,740,664,320 to 70,740,652,032 bytes. The target alias remained absent, and no guest was installed. This is the expected exact-preview behavior; these IDs are not a durable cross-run reproducibility identifier. The image digest and dated signed APT snapshot are the pinned inputs.
