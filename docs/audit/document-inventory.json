@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 442,
-  "read_count": 120,
+  "read_count": 125,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -155,26 +155,26 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "986f28cbc48d9d3c81f80bc49b1051f55e82f9c5f728d25701a3265137214ee6",
+      "sha256": "d39e0d8f92e7ee74d795e8c05e37bc8b6b29d2f747dc837a358847a2e3120680",
       "lines": 189,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "d39e0d8f92e7ee74d795e8c05e37bc8b6b29d2f747dc837a358847a2e3120680"
     },
     {
       "path": "docs/OPTIMIZATION.md",
       "kind": "narrative",
       "sha256": "3a73d06060072ad5ee6b6a353b30ef423bdae4b37d1bef1781ea553929923ad7",
       "lines": 51,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "3a73d06060072ad5ee6b6a353b30ef423bdae4b37d1bef1781ea553929923ad7"
     },
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
       "sha256": "d23df1e94015032669102bd457aff1c830600092850497b859c0ab8bbc5d9f2a",
       "lines": 188,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "d23df1e94015032669102bd457aff1c830600092850497b859c0ab8bbc5d9f2a"
     },
     {
       "path": "docs/PRODUCT-VISION.md",
@@ -195,10 +195,10 @@
     {
       "path": "docs/PROOT-GUI-DISPLAY0.md",
       "kind": "narrative",
-      "sha256": "3bba0acb734a3c0b6f15caeb4f0ea51236fa0af0f5fc1d96491d4e480a59becc",
-      "lines": 36,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "20fccb23e5ed65521ad1034664c06c418581cc30fd595045155d9b391a6c0fc8",
+      "lines": 25,
+      "read_status": "read",
+      "read_sha256": "20fccb23e5ed65521ad1034664c06c418581cc30fd595045155d9b391a6c0fc8"
     },
     {
       "path": "docs/PROOT-SHARED-X11.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "05c53807589a38630d5764a27340d5426e9b36b4749bc61a837fdbba9a21bad4",
-      "lines": 145,
+      "sha256": "9297490ec367b745ba791b52093401d30ad7fd00e0a83541f23aaed24ed82420",
+      "lines": 146,
       "read_status": "read",
-      "read_sha256": "05c53807589a38630d5764a27340d5426e9b36b4749bc61a837fdbba9a21bad4"
+      "read_sha256": "9297490ec367b745ba791b52093401d30ad7fd00e0a83541f23aaed24ed82420"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -1973,8 +1973,8 @@
       "kind": "narrative",
       "sha256": "4f5b62863c99b67e85c6af885faf1084b984de9feb90a5a4da7d42f93452662c",
       "lines": 93,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "4f5b62863c99b67e85c6af885faf1084b984de9feb90a5a4da7d42f93452662c"
     },
     {
       "path": "docs/evidence/2026-10-20-proot-lifecycle.md",

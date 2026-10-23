@@ -1,21 +1,10 @@
-# Independent PRoot GUI session on display :0
+# Historical PRoot GUI experiment on display :0
 
-Start the existing Debian PRoot XFCE session using the already-open Termux:X11 app for dual-app user 999. Native Termux cannot launch an activity across Android users, so open the clone before starting:
+This page records the 2026-10-18 dual-app Android user 999 experiment. That cloned-Activity path was deferred after the owner reported that the PRoot desktop was not visible there. Do not use the old direct script examples below as the current launch interface.
 
-```sh
-bash ~/ternuxx/scripts/proot-gui0.sh start
-```
+For the current interactive full Debian XFCE route, use `tx pgui start`: with Native XFCE running on `:1`, it starts nested Xephyr `:2`; with Native XFCE stopped, it selects standalone `:0`. `tx pgui status` inspects state and `tx pgui stop` stops only a verified standalone session; close nested mode from its owning terminal. Individual Debian GUI applications can instead open on the Native desktop through the shared `tx mng app launch` route. The nested GLES context reported Zink/Turnip, but nested GLX/DRI3 draw and visible presentation remain unverified; see [2026-10-20 full PRoot GUI evidence](evidence/2026-10-20-proot-full-gui.md) and [operations guidance](OPERATIONS.md).
 
-Inspect and stop it with:
-
-```sh
-bash ~/ternuxx/scripts/proot-gui0.sh status
-bash ~/ternuxx/scripts/proot-gui0.sh stop
-```
-
-The session is supervised independently under `~/.local/share/ternuxx/proot-display0/`; its XFCE config, cache, data and runtime paths are isolated inside the guest. Stop signals only the recorded supervisor, which stops only its own X11 and PRoot process groups. It does not invoke `xgo`, `~/x.sh`, broad process cleanup or PulseAudio cleanup. It leaves the native `:1` session and the current agent PRoot session alone.
-
-Display `:0` lock/socket recovery is allowed only when the lock PID is absent and the socket refuses a connection. Unknown or live ownership fails closed. Android activity visibility is separate from process readiness; confirm XFCE is visible in the floating Termux:X11 app. The Android user can be overridden with `--android-user ID`; no existing shell aliases are changed.
+The 2026-10-18 standalone test used private supervisor state under `~/.local/share/ternuxx/proot-display0/` and isolated XFCE config, cache, data, and runtime paths in the guest. Its stop path signaled only the recorded supervisor and owned process groups. The test did not invoke `xgo`, `~/x.sh`, broad process cleanup, or PulseAudio cleanup. The old direct script examples are retained only as historical record; use the current `tx pgui` command contract above.
 
 ## Device check — 2026-10-18
 
@@ -33,4 +22,4 @@ The test session was stopped with `proot-gui0.sh stop`. Post-stop process inspec
 
 ## Decision — 2026-10-18
 
-The cloned Android user 999 path is deferred. The owner reported that the PRoot GUI did not appear in that floating clone Activity. The `:0` experiment remains historical evidence only and is not wired to the active shell aliases. Current work uses one native Termux:X11 app and routes PRoot GUI applications to the active native display; see [PRoot GUI apps in the native desktop](PROOT-SHARED-X11.md).
+The cloned Android user 999 path is deferred. The owner reported that the PRoot GUI did not appear in that floating clone Activity. The Android user 999 clone Activity path remains deferred and is not wired to the active shell aliases. Later work added explicit standalone `:0` and nested Xephyr `:2` launch modes through `tx pgui`; see [current GUI qualification evidence](evidence/2026-10-20-proot-full-gui.md). That evidence records process/audio/GLES context checks but leaves nested GLX draw, visible presentation, and clean-guest reproduction unverified. Specific PRoot applications use the active Native display as documented in [PRoot GUI apps in the native desktop](PROOT-SHARED-X11.md).
