@@ -1,0 +1,7 @@
+event_id: commit-c94155b9d969-f6816c6d949924db
+repository: soobujmiah/ternuxx
+commit: c94155b9d969da0787d9b5d8e96078f15c6ef4f7
+kind: commit
+occurred_at: '2026-10-23T20:46:09Z'
+status: completed
+summary: 'feat(proot): improve Debian install UX and account setup'
