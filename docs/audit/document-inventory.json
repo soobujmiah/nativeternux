@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 106,
+  "read_count": 107,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "26e315be3f0768983d44e839b52b742c51978de7f67a13038b91350fa359f1a8",
-      "lines": 118,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "e993f921b88f0c04ef231ac7b7ab5de210cadf57aaebb88528c57ccafa283d62",
+      "lines": 119,
+      "read_status": "read",
+      "read_sha256": "e993f921b88f0c04ef231ac7b7ab5de210cadf57aaebb88528c57ccafa283d62"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
