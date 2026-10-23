@@ -118,6 +118,7 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A74 | P4 phase state and generated README/status retained the previous 893-test count after an added regression fixture raised the live suite to 894 | Recorded the 2026-10-24 894-pass/1-skip suite and 7/7 focused PRoot adoption tests in phase state, then regenerated phase docs from that authority. |
 | A75 | Current SSH lifecycle guide contradicted itself by calling durable key rollback incomplete after documenting its verified implementation | Removed rollback from the open-work list; retained password-recovery, post-action, caller-correlation, cold-boot, and GTK visual review gaps. Dated evidence remains unchanged. |
 | A76 | SSH lifecycle guide described 2026-10-22 inspection/authentication evidence as current even though the service wrapper was repaired on 2026-10-23 | Dated the observations and explicitly retained post-repair authenticated access as unverified; aligned current summary with Operations. |
+| A77 | PRoot session guidance repeated the normal-login hook's possible write effect and left owner-specific alias migration without a nearby evidence link | Kept the warning once, linked the dated Native alias migration evidence, and retained the distinction between tx db and the tracked broker profile. |
 
 
 ## Continuation order
