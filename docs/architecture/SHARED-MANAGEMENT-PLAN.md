@@ -6,7 +6,7 @@
 
 ## Product requirement
 
-CLI, X11 GUI, and local Web UI must manage the same Ternuxx resources through the same application-service operations and provider-aware configuration. Routine setup, status, configuration, launch, recovery, and removal must be understandable without CLI knowledge. CLI remains available when graphical services are stopped.
+CLI, TUI, GTK, and authenticated Web UI should manage Ternuxx resources through shared application services and provider-aware configuration. Routine setup, status, configuration, launch, recovery, and removal should be understandable without CLI knowledge. CLI remains available when graphical services are stopped; operation parity across clients remains an acceptance target.
 
 “One system” means one management experience and one Ternuxx-owned state model. It does not merge the native Termux filesystem with the independent Debian PRoot, grant one provider the other's permissions, or let Ternuxx modify the separate Ternux project/rootfs outside an approved adapter.
 
@@ -36,15 +36,15 @@ CLI, X11 GUI, and local Web UI must manage the same Ternuxx resources through th
 
 **First registry contract implemented:** `management.catalog` now inventories SSH/Runit, native and PRoot runtime, Doctor, autoboot/background, recovery, add-on/tool and API-backend domains with maturity and provider labels. `doctor.report` joins the same read-only service. PRoot shortcut operations remain the first complete app-management slice. Later operations are explicitly marked planned rather than represented as available.
 
-The product scope also includes PRoot guest lifecycle: adapt/verify the already-installed Debian first; then add preview-first selective distro install/removal (Ubuntu and other supported images) and selectable desktop environments (XFCE4 and alternatives). These lifecycle adapters are not implemented yet. They must preserve the existing guest by default and require explicit distro/desktop choice, plan, confirmation, and recovery. Add-on/plugin and cloud API backends are catalogued as planned; cloud calls stay disabled and secrets are never stored in the catalog.
+The product scope includes PRoot guest lifecycle. Bounded existing-Debian inventory, verification, selected guest operations, replay retire/restore, and a preview-first Debian Trixie fresh installer are implemented and device-checked; a 50-package replay passed. Clean-device qualification, full rollback, existing-guest configuration migration, GUI/audio/Turnip integration, and additional distro/desktop profiles remain open. Preserve existing guests by default and require explicit choices, plans, confirmation, and recovery. Add-on/plugin and cloud API backends remain planned; cloud calls stay disabled and secrets are never stored in the catalog.
 
 ### M2 — Finish the first shared GUI-app slice
 
-**Source complete; device GUI confirmation pending.** PRoot app launch, shortcut inventory, preview, and apply are provider-aware service operations. CLI, generated desktop entries, and the X11 manager use them. Guest launch, menu registration, and native desktop lifecycle remain separately typed. The previous configured guest account is resolved from Ternux private state at runtime. Fixture tests cover exact confirmation, stale plans, legacy adoption, unowned/symlink preservation, and the rule that removing a launcher does not stop apps. No shortcut was changed during this repository work; the live list reports customized conflicts and preserves them.
+**Source and selected device checks complete; broader clean-device and GUI acceptance remain open.** PRoot app launch, shortcut inventory, preview, and apply are provider-aware service operations. CLI, generated desktop entries, and the X11 manager use them. Guest launch, menu registration, and native desktop lifecycle remain separately typed. The previous configured guest account is resolved from Ternux private state at runtime. Fixture tests cover exact confirmation, stale plans, legacy adoption, unowned/symlink preservation, and the rule that removing a launcher does not stop apps. No shortcut was changed during this repository work; the live list reports customized conflicts and preserves them.
 
-### M3 — Non-CLI Web/X11 read-only client
+### M3 - Web and native graphical client coverage
 
-**Status: partial.** The tx web command starts the authenticated loopback server, opens the Android browser, and provides catalog/status views plus reviewed preview-confirmed actions after a one-time terminal-delivered secret. The TUI also provides shared-service views and an allowlisted operation runner, but browser onboarding, X11 Applications-menu entry, general graphical management, and broad client parity remain open.
+**Status: partial.** The authenticated Web UI and GTK management client provide selected actions, and TUI management is available. Browser onboarding without terminal secrets, a Web X11 menu entry, full operation parity, and broader live qualification remain open.
 
 Serve a small accessible Web client from the same-origin loopback server. Show native and PRoot status with provider labels, evidence age/source, and clear unsupported/unavailable states. Add an X11 Applications-menu entry that starts the on-demand client safely. Design a user-visible bootstrap flow that does not require terminal copy/paste and does not weaken same-origin/session protections. Grant mutation scopes only to reviewed shared-service operations with exact previews, CSRF, idempotency, and client-side confirmation.
 

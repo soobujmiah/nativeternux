@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 441,
-  "read_count": 110,
+  "read_count": 111,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -339,10 +339,10 @@
     {
       "path": "docs/architecture/SHARED-MANAGEMENT-PLAN.md",
       "kind": "narrative",
-      "sha256": "5980a16b263e85ffa4e520c03397e0e09d1ca13bab1e206dc42e6871bfb2ff54",
+      "sha256": "ca9b90252423360f7b3039ccc32ac11d078a1334cf3411d89de358f4eb47c3f2",
       "lines": 69,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "ca9b90252423360f7b3039ccc32ac11d078a1334cf3411d89de358f4eb47c3f2"
     },
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
