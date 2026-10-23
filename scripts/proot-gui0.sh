@@ -25,6 +25,10 @@ if [ "$ACTION" = start ]; then
       *) echo "Unknown pgui start option: $1" >&2; exit 2 ;;
     esac
   done
+  [[ "$MODE" = auto || "$MODE" = standalone || "$MODE" = nested ]] || { echo "--mode must be auto, standalone, or nested." >&2; exit 2; }
+  if [ "$ACTION" = start ]; then
+    guest_user="$(PYTHONPATH="$ROOT/lib" python3 -c 'import os,proot_diagnostics; print(proot_diagnostics.resolve_proot_guest_user(distro="debian",prefix=os.environ["PREFIX"]))')" 2>/dev/null || { echo "Could not resolve one ordinary Debian guest account; no desktop was started." >&2; exit 1; }
+  fi
 fi
 
 usage() { cat <<'USAGE'
@@ -87,7 +91,7 @@ case "$ACTION" in
       [ "$native_state" = running ] || { echo "Nested PRoot GUI requires the verified Native desktop to be running." >&2; exit 1; }
       native_display="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("display",""))' <<<"$native_report")"
       [ "$native_display" = :1 ] || { echo "Nested PRoot GUI currently requires Native display :1; found $native_display." >&2; exit 1; }
-      PYTHONPATH="$ROOT/lib" python3 -c 'import os,proot_diagnostics; proot_diagnostics.resolve_proot_guest_shell(distro="debian",user="sbj",prefix=os.environ["PREFIX"])' >/dev/null 2>&1 || { echo "The existing Debian PRoot user profile is unavailable; no setup changes were made." >&2; exit 1; }
+      PYTHONPATH="$ROOT/lib" python3 -c 'import os,sys,proot_diagnostics; proot_diagnostics.resolve_proot_guest_shell(distro="debian",user=sys.argv[1],prefix=os.environ["PREFIX"])' "$guest_user" >/dev/null 2>&1 || { echo "The selected Debian guest account profile is unavailable; no setup changes were made." >&2; exit 1; }
       "$ROOT/tx" audio start >/dev/null || { echo "Ternuxx Native PulseAudio could not be made ready; no Debian GUI was started." >&2; exit 1; }
       cookie="$(PYTHONPATH="$ROOT/lib" python3 -c 'import proot_diagnostics; print(proot_diagnostics._native_pulse_cookie_path() or "")' 2>/dev/null)"
       [ -n "$cookie" ] && [ -f "$cookie" ] && [ ! -L "$cookie" ] || { echo "Ternuxx Native PulseAudio cookie is unavailable; no PRoot GUI was started." >&2; exit 1; }
@@ -125,7 +129,7 @@ xfce_pid=$!
 wait "$xfce_pid"
 GUEST
 )
-      args=(login debian --shared-tmp --user sbj
+      args=(login debian --shared-tmp --user "$guest_user"
         --bind "$cookie:/tmp/.ternuxx-pulse-cookie"
         --env DISPLAY=:1 --env PULSE_SERVER=tcp:127.0.0.1:4713 --env PULSE_COOKIE=/tmp/.ternuxx-pulse-cookie
         --env GALLIUM_DRIVER=zink --env MESA_LOADER_DRIVER_OVERRIDE=zink
@@ -144,7 +148,7 @@ GUEST
     fi
     [ "$native_state" = stopped ] || { echo "Standalone display :0 requires Native GUI stopped; current Native state is $native_state. Choose nested mode while Native GUI is running." >&2; exit 1; }
     [ -x "$SUPERVISOR" ] && [ -x "$WRAPPER" ] && [ -x "$ROOT/lib/proot-dbus-session.sh" ] && [ -x "$OWNED_EXEC" ] || { echo "Ternuxx PRoot desktop component is unavailable." >&2; exit 1; }
-    PYTHONPATH="$ROOT/lib" python3 -c 'import os,proot_diagnostics; proot_diagnostics.resolve_proot_guest_shell(distro="debian",user="sbj",prefix=os.environ["PREFIX"])' >/dev/null 2>&1 || { echo "The existing Debian PRoot user profile is unavailable; no setup changes were made." >&2; exit 1; }
+    PYTHONPATH="$ROOT/lib" python3 -c 'import os,sys,proot_diagnostics; proot_diagnostics.resolve_proot_guest_shell(distro="debian",user=sys.argv[1],prefix=os.environ["PREFIX"])' "$guest_user" >/dev/null 2>&1 || { echo "The selected Debian guest account profile is unavailable; no setup changes were made." >&2; exit 1; }
     mkdir "$LOCAL_LOCK" 2>/dev/null || { echo "Another standalone PRoot GUI operation is active." >&2; exit 1; }
     local_lock=1
     current="$(inspect 2>/dev/null || true)"

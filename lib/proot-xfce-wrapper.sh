@@ -5,7 +5,13 @@ if [[ "$#" -ne 0 ]]; then
   exit 64
 fi
 
-args=(login debian --shared-tmp --user sbj
+SCRIPT_LIB_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+guest_user="$(PYTHONPATH="$SCRIPT_LIB_DIR" python3 -c 'import os,proot_diagnostics; print(proot_diagnostics.resolve_proot_guest_user(distro="debian",prefix=os.environ["PREFIX"]))')" || {
+  echo "Could not resolve one ordinary Debian guest account; no desktop was started." >&2
+  exit 1
+}
+args=(login debian --shared-tmp --user "$guest_user"
   --env DISPLAY=:1
   --env TERNUXX_SESSION_ID=proot-display0
   --env GALLIUM_DRIVER=zink

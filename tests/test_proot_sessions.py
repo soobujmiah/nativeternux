@@ -86,7 +86,7 @@ class PRootSessionRegistryTests(unittest.TestCase):
         self.assertNotEqual(default["plan_id"], replay["plan_id"])
         self.assertIn("/ternuxx-replay-test/rootfs", replay["rootfs"])
         self.assertEqual(replay["alias"], "ternuxx-replay-test")
-        record, _token = proot_sessions._create_login_record(self.state, discovery)
+        record, _token = proot_sessions._create_login_record(self.state, discovery, "sbj")
         self.assertEqual(record["expected_argv"][2], "ternuxx-replay-test")
         self.assertEqual(record["rootfs"], replay["rootfs"])
         proot_sessions._validate_record(record)
@@ -438,14 +438,23 @@ class PRootSessionRegistryTests(unittest.TestCase):
             target = root / ("usr/bin/" + name if name == "env" else "bin/" + name)
             target.write_text("#!/bin/sh\n", encoding="utf-8")
             target.chmod(0o700)
-        (root / "etc/passwd").write_text("sbj:x:1000:1000::/home/sbj:/bin/bash\n", encoding="utf-8")
+        (root / "etc/passwd").write_text("workuser:x:1000:1000::/home/workuser:/bin/bash\n", encoding="utf-8")
         with mock.patch("shutil.which", return_value=str(self.launcher)):
             result = proot_sessions.profile_inventory(prefix=str(prefix))
         self.assertEqual({item["id"] for item in result["profiles"]},
                          {"isolated-probe", "debian-interactive"})
         self.assertTrue(all(item["available"] for item in result["profiles"]))
-        self.assertEqual(next(x for x in result["profiles"] if x["id"] == "debian-interactive")["mode"],
-                         "foreground-tty")
+        interactive = next(x for x in result["profiles"] if x["id"] == "debian-interactive")
+        self.assertEqual(interactive["mode"], "foreground-tty")
+        self.assertEqual(interactive["user"], "workuser")
+        (root / "etc/passwd").write_text(
+            "workuser:x:1000:1000::/home/workuser:/bin/bash\nother:x:1001:1001::/home/other:/bin/bash\n",
+            encoding="utf-8")
+        with mock.patch("shutil.which", return_value=str(self.launcher)):
+            ambiguous = proot_sessions.profile_inventory(prefix=str(prefix))
+        interactive = next(x for x in ambiguous["profiles"] if x["id"] == "debian-interactive")
+        self.assertFalse(interactive["available"])
+        self.assertIn("ambiguous", interactive["unavailable_reason"])
 
     def test_profile_preview_binds_plan_to_rootfs_launcher_and_profile(self):
         prefix = self.base / "prefix"
@@ -456,13 +465,26 @@ class PRootSessionRegistryTests(unittest.TestCase):
         for executable in (root / "usr/bin/env", root / "bin/sleep", root / "bin/bash"):
             executable.write_text("#!/bin/sh\\n", encoding="utf-8")
             executable.chmod(0o700)
-        (root / "etc/passwd").write_text("sbj:x:1000:1000::/home/sbj:/bin/bash\\n", encoding="utf-8")
+        (root / "etc/passwd").write_text("workuser:x:1000:1000::/home/workuser:/bin/bash\n", encoding="utf-8")
         with mock.patch("shutil.which", return_value=str(self.launcher)):
             first = proot_sessions.preview_start("isolated-probe", prefix=str(prefix))
             second = proot_sessions.preview_start("debian-interactive", prefix=str(prefix))
         self.assertNotEqual(first["plan_id"], second["plan_id"])
         self.assertTrue(first["confirmation_required"])
-        self.assertIn("etc/profile.d/termux-profile.sh", second["impact"])
+        self.assertIn("profile hook", second["impact"])
+        self.assertEqual(second["user"], "workuser")
+        with mock.patch("shutil.which", return_value=str(self.launcher)):
+            discovery = proot_sessions.discover_debian(prefix=str(prefix))
+        record, _token = proot_sessions._create_login_record(self.state, discovery, second["user"])
+        user_index = record["expected_argv"].index("--user")
+        self.assertEqual(record["expected_argv"][user_index + 1], "workuser")
+        original_plan = second["plan_id"]
+        passwd_path = root / "etc/passwd"
+        passwd_path.write_text("anotheruser:x:1000:1000::/home/anotheruser:/bin/bash\n", encoding="utf-8")
+        with mock.patch("shutil.which", return_value=str(self.launcher)):
+            changed = proot_sessions.preview_start("debian-interactive", prefix=str(prefix))
+        self.assertEqual(changed["user"], "anotheruser")
+        self.assertNotEqual(changed["plan_id"], original_plan)
         with self.assertRaisesRegex(proot_sessions.SessionError, "unsupported"):
             proot_sessions.preview_start("arbitrary-shell", prefix=str(prefix))
 
@@ -491,7 +513,8 @@ class PRootSessionRegistryTests(unittest.TestCase):
         with mock.patch.object(proot_sessions.os, "isatty",
                                side_effect=AssertionError("broker spawn must not require a client TTY")), \
              mock.patch.object(proot_sessions, "preview_start",
-                               return_value={"plan_id": "plan-fixture"}), \
+                               return_value={"plan_id": "plan-fixture", "user": "sbj"}), \
+             mock.patch.object(proot_sessions.proot_diagnostics, "resolve_proot_guest_user", return_value="sbj"), \
              mock.patch.object(proot_sessions, "_start_plan",
                                return_value="plan-fixture"), \
              mock.patch.object(proot_sessions, "discover_debian",

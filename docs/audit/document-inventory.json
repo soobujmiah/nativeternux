@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 447,
+  "document_count": 448,
   "read_count": 117,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "e4826fc7b04b007c438aecd982d1e8de7ec315fea5b88bdbd7af24f0cb1172f9",
+      "sha256": "f9e70b43dddab034390cff5a9b946ea42df4cb84f24934ea149b154c10eeb7e7",
       "lines": 69,
       "read_status": "pending",
       "read_sha256": null
@@ -331,7 +331,7 @@
     {
       "path": "docs/architecture/PROOT-SESSIONS.md",
       "kind": "narrative",
-      "sha256": "1818d00d8b5d737afa622600f8e8faeca67a4534916a06b3178f769275e0c294",
+      "sha256": "2881077d1ef7cceaecf1c7c376359e15e15fc5a6e50e34eda51d3422ea443121",
       "lines": 58,
       "read_status": "pending",
       "read_sha256": null
@@ -531,8 +531,8 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "cbe34934c8c61f26dba87c5082d09d759519688b21a2a7304cfc937f040afd1d",
-      "lines": 150,
+      "sha256": "1136ebddc7a77002a4f577c7c129f82693cdaff761eef5b928cb907cf9f43fda",
+      "lines": 152,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2871,6 +2871,14 @@
       "lines": 18,
       "read_status": "read",
       "read_sha256": "be9a5d59fa8bfbbae4a78fe81f76931573b7d73c0b27f4648ec6a2f4098ddd93"
+    },
+    {
+      "path": "docs/evidence/2026-10-24-dynamic-proot-user-selection.md",
+      "kind": "narrative",
+      "sha256": "b77212f7fee8e31fa64ae5e95ce09c4f1e77e3941309cb01e67faa246b68ceaf",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-24-native-package-candidate-recheck.md",

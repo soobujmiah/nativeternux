@@ -18,10 +18,12 @@ import sys
 import time
 import uuid
 
+import proot_diagnostics
+
 SCHEMA = 3
 PROFILES = {
     "isolated-probe": {"version": 1, "mode": "background", "purpose": "bounded diagnostic process", "user": None},
-    "debian-interactive": {"version": 1, "mode": "foreground-tty", "purpose": "interactive Debian login shell", "user": "sbj"},
+    "debian-interactive": {"version": 1, "mode": "foreground-tty", "purpose": "interactive Debian login shell", "user": None},
 }
 _MAX_RECORDS = 256
 _SESSION_ID = re.compile(r"proot-[0-9a-f]{32}")
@@ -247,6 +249,17 @@ def _await_verified_login(record: dict[str, object], pid: int, *, timeout: float
         time.sleep(0.05)
 
 
+def _record_guest_user(record: dict[str, object]) -> str:
+    argv = record.get("expected_argv")
+    try:
+        user = argv[argv.index("--user") + 1]
+    except (AttributeError, ValueError, IndexError, TypeError) as exc:
+        raise SessionError("interactive session record has no selected guest account") from exc
+    if not isinstance(user, str) or not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", user):
+        raise SessionError("interactive session record has an invalid guest account")
+    return user
+
+
 def _verified(record: dict[str, object], *, proc_root: Path | None = None) -> bool:
     proc_root = Path("/proc") if proc_root is None else Path(proc_root)
     identity = _proc(record["pid"])
@@ -296,7 +309,7 @@ def _verified(record: dict[str, object], *, proc_root: Path | None = None) -> bo
     try:
         passwd = (Path(record["rootfs"]) / "etc/passwd").read_text(
             encoding="utf-8", errors="replace")
-        user = PROFILES[record["profile"]]["user"]
+        user = _record_guest_user(record)
         account = next(line.split(":") for line in passwd.splitlines()
                        if line.split(":", 1)[0] == user)
         expected_ids = f"--change-id={int(account[2])}:{int(account[3])}"
@@ -636,14 +649,28 @@ def profile_inventory(*, prefix: str, alias: str = "debian") -> dict[str, object
         diagnostic = str(exc)
     else:
         diagnostic = None
+    selected_user = None
+    user_error = None
+    if rootfs_state == "available":
+        try:
+            selected_user = proot_diagnostics.resolve_proot_guest_user(distro=alias, prefix=prefix)
+            after_user_read = discover_debian(prefix=prefix, alias=alias)
+            if (after_user_read["rootfs_device"], after_user_read["rootfs_inode"]) != (
+                    found["rootfs_device"], found["rootfs_inode"]):
+                selected_user = None
+                user_error = "guest rootfs identity changed during account discovery"
+        except (proot_diagnostics.GuestProfileError, SessionError) as exc:
+            user_error = str(exc)
     items = [
         {"id": "isolated-probe", **PROFILES["isolated-probe"],
          "available": rootfs_state == "available", "state_change": True,
-         "description": "Bounded, headless diagnostic sleep process; no host home or display binding."},
-        {"id": "debian-interactive", **PROFILES["debian-interactive"],
-         "available": rootfs_state == "available", "state_change": True,
-         "description": "Foreground Debian login shell using the existing guest user and shared-tmp behavior of db; no services or GUI are started."},
+         "description": "Bounded, headless Debian diagnostic sleep process; no host home or display binding."},
+        {"id": "debian-interactive", **PROFILES["debian-interactive"], "user": selected_user,
+         "available": rootfs_state == "available" and selected_user is not None, "state_change": True,
+         "description": "Foreground login shell as the uniquely discovered ordinary guest account; no services or GUI are started."},
     ]
+    if user_error and rootfs_state == "available":
+        items[1]["unavailable_reason"] = user_error
     if rootfs_state == "available":
         for item in items:
             required = (["usr/bin/env", "bin/sleep"] if item["id"] == "isolated-probe"
@@ -654,13 +681,10 @@ def profile_inventory(*, prefix: str, alias: str = "debian") -> dict[str, object
                 for relative in required if not relative.endswith("passwd")
             ) and ((Path(found["rootfs"]) / "etc/passwd").is_file() if item["id"] == "debian-interactive" else True)
             if item["id"] == "debian-interactive":
-                passwd_path = Path(found["rootfs"]) / "etc/passwd"
-                passwd = (passwd_path.read_text(encoding="utf-8", errors="replace")
-                          if passwd_path.is_file() else "")
-                paths_ok = paths_ok and any(line.split(":", 1)[0] == "sbj" for line in passwd.splitlines())
+                paths_ok = paths_ok and selected_user is not None
             item["available"] = bool(paths_ok)
-            if not paths_ok:
-                item["unavailable_reason"] = "configured guest executable or user is missing"
+            if not paths_ok and "unavailable_reason" not in item:
+                item["unavailable_reason"] = "configured guest executable or selected account is missing"
     return {"profiles": items, "rootfs_state": rootfs_state, "rootfs_identity": root_identity,
             "launcher": launcher, "diagnostic": diagnostic}
 
@@ -674,14 +698,14 @@ def show_profile(profile: str, *, prefix: str, alias: str = "debian") -> dict[st
             "rootfs_identity": inventory["rootfs_identity"], "diagnostic": inventory["diagnostic"]}
 
 
-def _start_plan(profile: str, discovery: dict[str, object]) -> str:
+def _start_plan(profile: str, discovery: dict[str, object], user: str | None = None) -> str:
     import hashlib
     spec = PROFILES[profile]
     content = {"profile": profile, "version": spec["version"], "mode": spec["mode"],
                "rootfs": discovery["rootfs"], "rootfs_device": discovery["rootfs_device"],
                "rootfs_inode": discovery["rootfs_inode"], "launcher": discovery["launcher"],
                "launcher_device": discovery["launcher_device"], "launcher_inode": discovery["launcher_inode"],
-               "user": spec["user"]}
+               "user": user if profile == "debian-interactive" else None}
     return "plan-" + hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
@@ -693,7 +717,9 @@ def preview_start(profile: str, *, prefix: str, alias: str = "debian") -> dict[s
     if not detail["profile"]["available"]:
         raise SessionError("PRoot profile preflight failed")
     spec = PROFILES[profile]
+    user = detail["profile"].get("user") if profile == "debian-interactive" else None
     return {"alias": _guest_alias(alias), "profile": profile, "profile_version": spec["version"], "mode": spec["mode"],
+            "user": user,
             "purpose": spec["purpose"], "rootfs": discovery["rootfs"],
             "rootfs_identity": {"device": discovery["rootfs_device"], "inode": discovery["rootfs_inode"]},
             "launcher": discovery["launcher"], "working_directory": "guest-default",
@@ -701,8 +727,8 @@ def preview_start(profile: str, *, prefix: str, alias: str = "debian") -> dict[s
                                     else "inherited-approved-proot-env"),
             "impact": ("Starts one bounded headless Debian diagnostic process."
                        if profile == "isolated-probe" else
-                       "Enters a foreground interactive Debian login shell as sbj using shared-tmp. The installed proot-distro normal-login path can write the shared guest etc/profile.d/termux-profile.sh and its container sidecar state from the login environment; Ternuxx does not snapshot or roll back those package-owned writes."),
-            "confirmation_required": True, "plan_id": _start_plan(profile, discovery)}
+                       "Enters a foreground login shell as the uniquely discovered guest account using shared-tmp. The installed proot-distro normal-login path can write the shared guest profile hook and its container sidecar state; Ternuxx does not snapshot or roll back those package-owned writes."),
+            "confirmation_required": True, "plan_id": _start_plan(profile, discovery, user)}
 
 
 def _timestamp() -> str:
@@ -819,7 +845,7 @@ def _native_pulse_login_args(source: dict[str, str] | None = None) -> list[str]:
     return args
 
 
-def _create_login_record(state_dir: str | os.PathLike[str], discovery: dict[str, object]):
+def _create_login_record(state_dir: str | os.PathLike[str], discovery: dict[str, object], user: str):
     root, path, lock_path = _paths(state_dir, create=True)
     lock = _RegistryLock(lock_path)
     try:
@@ -834,7 +860,7 @@ def _create_login_record(state_dir: str | os.PathLike[str], discovery: dict[str,
                 # Stale records are retained and never adopted or signalled.
         session_id, token = "proot-" + uuid.uuid4().hex, uuid.uuid4().hex
         marker = _MARKER_PREFIX + token
-        argv = [discovery["launcher"], "login", _guest_alias(discovery.get("alias", "debian")), "--shared-tmp", "--user", "sbj"]
+        argv = [discovery["launcher"], "login", _guest_alias(discovery.get("alias", "debian")), "--shared-tmp", "--user", user]
         argv.extend(_native_pulse_login_args())
         argv.extend(["--",
                 "/usr/bin/env", marker, "/bin/bash", "--login"]
@@ -970,9 +996,11 @@ def spawn_login_interactive(state_dir: str | os.PathLike[str], *, prefix: str, c
     if plan_id != preview["plan_id"]:
         raise SessionError("PRoot start preview is stale or does not match the selected profile")
     discovery = discover_debian(prefix=prefix, alias=alias)
-    if plan_id != _start_plan("debian-interactive", discovery):
-        raise SessionError("PRoot start preview is stale; rootfs or launcher identity changed")
-    record, token = _create_login_record(state_dir, discovery)
+    user = preview["user"]
+    current_user = proot_diagnostics.resolve_proot_guest_user(distro=alias, prefix=prefix)
+    if current_user != user or plan_id != _start_plan("debian-interactive", discovery, user):
+        raise SessionError("PRoot start preview is stale; rootfs, launcher, or guest account changed")
+    record, token = _create_login_record(state_dir, discovery, user)
     env = _login_environment(record["marker"], token)
     child_pid = None
     master = None
@@ -1261,7 +1289,7 @@ def _recovery_evidence(record: dict[str, object]) -> dict[str, object]:
                 try:
                     passwd = (Path(record["rootfs"]) / "etc/passwd").read_text(encoding="utf-8", errors="replace")
                     account = next(line.split(":") for line in passwd.splitlines()
-                                   if line.split(":", 1)[0] == PROFILES[record["profile"]]["user"])
+                                   if line.split(":", 1)[0] == _record_guest_user(record))
                     expected_ids = f"--change-id={int(account[2])}:{int(account[3])}"
                     checks = {
                         "proot": "proot" in text,
