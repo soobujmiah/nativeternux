@@ -531,7 +531,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "371707707c72d103ff282ced8fb6312081a27c12fca0430fa9e24d853b1d9ab9",
+      "sha256": "9bac08a2bbeafcdc8fa6e3c6d2c85be9466837d0bd84881a4a64d304aae8b2bb",
       "lines": 115,
       "read_status": "pending",
       "read_sha256": null
