@@ -1,5 +1,7 @@
 # PRoot GUI apps on native X11 sessions
 
+> Date-labeled sections below preserve historical observations. Use the current Ternuxx implementation and the latest current-status section for operational guidance; older Ternux CLI references are not runtime dependencies.
+
 ## Separate Native PRoot Apps menu
 
 Ternuxx scans the installed Debian rootfs application directory (`/usr/share/applications`) and generates a **PRoot Apps** category in the Native XFCE menu. Native desktop startup runs this sync automatically. After installing or removing guest GUI apps while Native XFCE stays open, refresh with:
@@ -17,7 +19,7 @@ A single menu entry can also be launched from Native Termux:
 ```
 
 
-The supported single-app path runs an individual GUI application from the installed Debian PRoot as a window on an already-running native X11 session. The default target is Ternuxx. An explicit Ternux target is available when the owner has already started the Native Termux/Ternux desktop; it requires a selected display and read-only Ternux status/backend checks. Neither target is started or stopped by this app handoff.
+The supported single-app path runs an individual application from the installed Debian PRoot as a window on an already-running Native Ternuxx X11 session. The shared Ternuxx service selects the Debian target and display; it does not invoke the separate Ternux CLI or inspect Ternux-private state. It does not start or stop either desktop.
 
 ```sh
 # Opens Debian's XFCE Terminal in the current native desktop
@@ -54,7 +56,9 @@ The Android dual-app Termux:X11 profile (user 999) is deferred. Its Activity did
 The owner confirmed the PRoot `xmessage` probe appeared on native `:1`. A later PRoot Thunar launch was visually confirmed by the owner while native supervisor, X11, and XFCE remained running. The menu manager has since been moved to the shared management service. Its read-only inventory preserves customized/unrecognized existing entries as conflicts; no launcher was changed during this repository verification.
 
 
-## Current explicit Ternux handoff — 2026-10-18
+## Historical explicit Ternux handoff — 2026-10-18
+
+This records an earlier direct Ternux integration experiment. It is not the current command contract; the Ternuxx-managed app launcher is documented above.
 
 The live Native Termux host reported Ternux v1.4.0 `running`, X11 `yes`, backend `zink`, Vulkan `yes`; the renderer summary field remained `unknown`. In the existing Debian 13 guest, `DISPLAY=:1 glxinfo -B` reported Mesa Zink Vulkan 1.4 on Adreno 825 (`MESA_TURNIP`) and `Accelerated: yes`. `./ternuxx management app launch files --session ternux --display :1` started Debian Thunar on that existing display; the process remained active after launch and was deliberately left open. This proves the selected guest client starts against `:1`; it does not prove GUI visibility via machine observation, Ternux display ownership, full desktop lifecycle, or a performance benchmark. No Ternux/Ternuxx start/stop, Activity request, PRoot session close, or `x.sh`/`killx` edit occurred. Detailed evidence: [2026-10-18 Ternux session app handoff](evidence/2026-10-18-ternux-session-app-handoff.md).
 

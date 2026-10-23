@@ -89,6 +89,8 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 
 | A50 | Managed SSH service repeatedly exited because the wrapper requested JSON through an environment variable that the `tx` entrypoint resets | Fixed by using the supported `tx --json` option, validating response envelopes, and logging only a safe error code. Regression tests cover failed acquisition and private-message redaction. Exact-plan deployment restored the fixed run definition; read-only inspect now sees the service running and a loopback banner. A stale restart plan was safely rejected after supervisor state changed; a fresh exact-plan restart then passed and the loopback banner became reachable after startup. Authenticated access and cold boot remain unverified. See [Native service repair](../evidence/2026-10-23-native-ssh-service-repair.md) |
 
+| A51 | Current operating guidance mixed a historical direct Ternux CLI handoff with the Ternuxx-owned typed PRoot adapter | Updated the operations guide and X11 app guide to use canonical tx management operations, removed separate Ternux CLI calls from current instructions, and labeled the old direct handoff as historical. Source search found no Ternux CLI invocation in bin/, lib/, or scripts/. Historical dated evidence remains intact |
+
 ## Continuation order
 
 1. Native UI/GTK SSH key-control remediation, install identity, Native read-only preview, push and CI are complete; the running 720×980 Services/SSH screens have now had a read-only visual pass. Key dialogs, action scrolling and smaller GTK viewports remain unverified; the Web UI now has visible Firefox acceptance.

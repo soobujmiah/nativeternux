@@ -195,10 +195,10 @@
     {
       "path": "docs/PROOT-SHARED-X11.md",
       "kind": "narrative",
-      "sha256": "0c1932a9cad9c9f8c3bd89737119b40ceedcb4e6e984808c62b963130378b54b",
-      "lines": 108,
+      "sha256": "44a78d1168d2b1497dd5852280f6bfb277c20b913b3ba725d158aff688652ffb",
+      "lines": 112,
       "read_status": "read",
-      "read_sha256": "0c1932a9cad9c9f8c3bd89737119b40ceedcb4e6e984808c62b963130378b54b"
+      "read_sha256": "44a78d1168d2b1497dd5852280f6bfb277c20b913b3ba725d158aff688652ffb"
     },
     {
       "path": "docs/README.md",
@@ -523,10 +523,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "7b38f4dc8e0a38d6a385ff9e1eef84b7167deb6c2441da0e369ffc38bd1a82b6",
-      "lines": 101,
+      "sha256": "ff42b59df8fbc9237f35126bd331f7e845fb3deeb519ffca3aca0bd469d37d9a",
+      "lines": 103,
       "read_status": "read",
-      "read_sha256": "7b38f4dc8e0a38d6a385ff9e1eef84b7167deb6c2441da0e369ffc38bd1a82b6"
+      "read_sha256": "ff42b59df8fbc9237f35126bd331f7e845fb3deeb519ffca3aca0bd469d37d9a"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
