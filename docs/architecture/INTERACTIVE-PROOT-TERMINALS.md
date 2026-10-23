@@ -42,7 +42,7 @@ Run this from the Native source checkout only after the new guest setup finishes
 1. Retain the [completed separate setup and broker/client evidence](../evidence/2026-10-22-fresh-setup-and-probe-safety.md); exact replay-guest retirement/restore is verified, while broader config replay and graphics workload acceptance remain open.
 2. Retain completed CLI, TUI, Web and GTK/VTE lifecycle and sequential cross-client handoff evidence. [Cross-client evidence](../evidence/2026-10-22-cross-client-terminal-handoff.md) records exact start, I/O, resize, detach and close.
 3. Recheck attachment ownership and close behavior under failure/concurrency. Opening the terminal dialog is not an I/O pass. [Web replay](../evidence/2026-10-22-web-terminal-replay.md) covers actual Firefox I/O and viewport-to-guest resize.
-4. Keep P4 in progress until the remaining provider/configuration, browser-rendered Web review, reproducibility and preservation criteria pass; update evidence and roadmap from observed results.
+4. Keep P4 in progress until the remaining provider/configuration, clean-device/full-workstation reproducibility, and preservation criteria pass. Visible Firefox layout/control review passed for its recorded scope; full Web mutation/client parity remains open. Update evidence and roadmap from observed results.
 
 ## Legacy Ternux CLI retirement
 

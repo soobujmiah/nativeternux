@@ -119,6 +119,7 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A75 | Current SSH lifecycle guide contradicted itself by calling durable key rollback incomplete after documenting its verified implementation | Removed rollback from the open-work list; retained password-recovery, post-action, caller-correlation, cold-boot, and GTK visual review gaps. Dated evidence remains unchanged. |
 | A76 | SSH lifecycle guide described 2026-10-22 inspection/authentication evidence as current even though the service wrapper was repaired on 2026-10-23 | Dated the observations and explicitly retained post-repair authenticated access as unverified; aligned current summary with Operations. |
 | A77 | PRoot session guidance repeated the normal-login hook's possible write effect and left owner-specific alias migration without a nearby evidence link | Kept the warning once, linked the dated Native alias migration evidence, and retained the distinction between tx db and the tracked broker profile. |
+| A78 | Interactive terminal P4 checklist still listed visible browser review as open after the recorded Firefox acceptance passed | Replaced the obsolete gate with the unclosed work: provider/configuration, clean-device/full-workstation reproducibility, preservation, and full Web mutation/client parity. |
 
 
 ## Continuation order
