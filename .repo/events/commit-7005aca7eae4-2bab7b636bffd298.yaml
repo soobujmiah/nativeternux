@@ -1,0 +1,7 @@
+event_id: commit-7005aca7eae4-2bab7b636bffd298
+repository: soobujmiah/ternuxx
+commit: 7005aca7eae46582e505f35719982f6e3658cbf6
+kind: commit
+occurred_at: '2026-10-23T22:00:15Z'
+status: completed
+summary: 'feat(proot): add managed legacy ICD migration'
