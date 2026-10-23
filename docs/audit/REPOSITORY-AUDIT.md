@@ -94,6 +94,7 @@ Implement over Native SSH 8022. This full-repository task explicitly authorizes 
 | A52 | Unified-workstation design proposal still presented 2026-10-17 plans as current, including no PRoot adapter, no GTK toolkit choice, and a blanket PRoot modification ban | Marked the old proposal baseline explicitly, linked current phase/capability/API authorities, updated Native/PRoot/GTK status, and clarified the active owner-approved guest-config scope and preserved rootfs/source-repository boundaries. AI/model and other unimplemented proposals remain labeled. |
 
 | A54 | Hybrid integration guide presented an unimplemented cross-provider SSH CLI and blanket read-only authorization gate as current, and omitted the owner-approved PRoot config scope | Labeled proposal/status boundaries, documented the implemented Native SSH command and honest PRoot limits, noted current db/droot routing, and clarified task-specific preview/rollback authorization while retaining Native-boot independence and independent guest SSH boundaries. |
+| A55 | AI assistant instructions referred to an ownership-aware adapter as not yet existing, despite the current Ternuxx PRoot adapter; this obscured the actual boundary between guest-process ownership and the separate Ternux desktop lifecycle | Reworded the instruction to state that Ternuxx owns only guest processes it starts and does not own/control the separate Ternux desktop, display, or audio lifecycle. Adapter source and current architecture guidance remain authoritative; no runtime behavior changed. |
 
 ## Continuation order
 
