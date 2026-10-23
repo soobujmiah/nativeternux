@@ -1,0 +1,7 @@
+event_id: commit-113aaca974bd-fc5b3422b86fe465
+repository: soobujmiah/ternuxx
+commit: 113aaca974bdf22078414fa566f058befe244b41
+kind: commit
+occurred_at: '2026-10-23T18:33:56Z'
+status: completed
+summary: 'docs: reconcile SSH and PRoot decision status'
