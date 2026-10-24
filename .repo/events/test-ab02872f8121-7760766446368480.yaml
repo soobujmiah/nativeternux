@@ -1,0 +1,8 @@
+event_id: test-ab02872f8121-7760766446368480
+repository: soobujmiah/ternuxx
+commit: ab02872f8121b98a7bbe317507b6547ca840fa91
+kind: test
+occurred_at: '2026-10-24T03:38:59Z'
+status: passed
+summary: 738 tests passed in 88.499 seconds; Native Termux full repository suite;
+  GTK4 syntax check passed
