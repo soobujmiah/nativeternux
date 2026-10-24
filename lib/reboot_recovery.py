@@ -27,9 +27,12 @@ OBSERVER_READINESS_POLL_SECONDS = 1.0
 AUTH_MODES = {"publickey", "password", "keyboard-interactive", "unknown"}
 CHECKS = {
     "boot_id_changed", "termux_boot_observed", "native_sshd_ready",
-    "ssh_socket_observed", "continuity_marker_matches", "proot_independent",
+    "ssh_socket_observed", "continuity_marker_matches",
     "db_preserved", "xgo_preserved", "wakelock_owner_checked",
 }
+# Preserve readability of pre-Native-only checkpoint evidence without making it
+# a valid check for newly prepared Native reboot records.
+HISTORICAL_CHECKS = {"proot_independent"}
 STATES = {"prepared", "awaiting_reboot", "boot_observed", "verified", "failed", "inconclusive"}
 ENUMS = {
     "sshd_process": {"present", "absent", "unknown"},
@@ -59,7 +62,7 @@ def _root(home: str | os.PathLike[str], state_dir: str | os.PathLike[str]) -> Pa
     return continuity._private_root(home, state_dir) / "continuity" / "reboot-tests"
 
 
-def _check_evidence(evidence: object) -> dict[str, object]:
+def _check_evidence(evidence: object, *, allow_historical: bool = False) -> dict[str, object]:
     if not isinstance(evidence, dict) or set(evidence) != {
         "native", "repository", "stage", "references", "ssh", "termux_boot",
         "wake_lock", "required_postboot_checks", "recovery_instructions", "rollback_instructions", "next_action",
@@ -105,7 +108,8 @@ def _check_evidence(evidence: object) -> dict[str, object]:
     if any(type(wake[key]) is not bool for key in ("cli_available", "launcher_acquire_request", "launcher_global_release_request")) or wake["ownership"] not in ENUMS["wake_lock_ownership"]:
         raise RecoveryError("Wake Lock evidence contains an unsupported value")
     required = evidence["required_postboot_checks"]
-    if not isinstance(required, list) or len(required) > 32 or any(item not in CHECKS for item in required) or len(set(required)) != len(required):
+    accepted_checks = CHECKS | (HISTORICAL_CHECKS if allow_historical else set())
+    if not isinstance(required, list) or len(required) > 32 or any(item not in accepted_checks for item in required) or len(set(required)) != len(required):
         raise RecoveryError("post-boot check list is invalid")
     instructions = evidence["recovery_instructions"]
     if not isinstance(instructions, list) or not 1 <= len(instructions) <= 24 or any(not isinstance(i, str) or not i or len(i) > 500 for i in instructions):
@@ -155,7 +159,7 @@ def _read_record(path: Path) -> dict[str, object]:
         for field, enum_name in observation_fields.items():
             if field in observation and (not isinstance(observation[field], str) or observation[field] not in ENUMS[enum_name]):
                 raise RecoveryError("boot observation contains unsupported managed-service evidence")
-    _check_evidence(value.get("baseline"))
+    _check_evidence(value.get("baseline"), allow_historical=True)
     return value
 
 
@@ -280,7 +284,7 @@ def record_boot_observation(
         **managed_values,
         "sshd_authenticated_connectivity": "not_tested", "errors": errors,
         "socket_binding": "not_observed", "wakelock_state": "unknown",
-        "proot_dependency": False, "automatic_resume": False,
+        "automatic_resume": False,
     }
     record["boot_observations"].append(observation)
     record["state"] = "boot_observed" if transition == "changed" else "inconclusive"

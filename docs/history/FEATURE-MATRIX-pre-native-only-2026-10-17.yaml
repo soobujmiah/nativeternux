@@ -1,0 +1,744 @@
+# Historical snapshot: commercial/feature planning audited 2026-10-17. Superseded as current coverage by ../testing/FEATURE-MATRIX.yaml. Do not use for current runtime claims.
+schema_version: 1
+product: Ternuxx
+repository_at_audit: soobujmiah/ternuxx
+audit_commit: 1a891fa
+audit_date: 2026-10-17
+classification_values:
+  - FREE_CORE
+  - FREE_EXPERIMENTAL
+  - PAID_SERVICE
+  - PREMIUM_MODULE_CANDIDATE
+  - FUTURE_RESEARCH
+  - NOT_READY
+features:
+  - id: core.cli
+    name: Workstation management CLI
+    user_value: Inspect and manage native Termux desktop lifecycle.
+    implementation_status: PARTIAL
+    commercial_class: FREE_EXPERIMENTAL
+    runtime: native_termux
+    dependencies: [bash, termux-x11, dbus-x11, xfce4-session]
+    validation_status: PARTIAL
+    qualification: DETECTED
+    requirements: [Termux, supported Termux:X11 Android app and companion package]
+    security_constraints: [preview_first_package_install, ownership_scoped_process_control]
+    evidence: [../../lib/desktop.sh, ../../lib/phases.sh, ../../tests/test_desktop_lifecycle_fixture.py, ../../tests/test_desktop_supervisor.py, ../evidence/P2-phase-completion-2026-10-18.md]
+    release_qualified: false
+    limitations: [P2 target lifecycle and approved installer transaction passed; original install preview capture gap remains documented; GUI visibility was owner-confirmed; target-device rollout of current CLI and paths remains pending]
+    next_action: Finish P3 management/recovery gates and deploy the canonical CLI/state paths to the target environment.
+    owner_decision_required: false
+
+  - id: inference.cpu
+    name: CPU inference and fallback
+    user_value: Provide a dependable inference baseline and fallback for unsupported accelerators.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: not_selected
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Select model/runtime, license review, memory-bounded device profile]
+    security_constraints: [Model provenance, safe model-file handling, bounded memory and execution]
+    evidence: [../RESEARCH.md#11-cpu-gpu-and-npu-runtime-research, CPU-BASELINE.md]
+    release_qualified: false
+    limitations: [No Ternuxx inference runtime, model loader, model artifact, correctness suite, or benchmark exists; separate Ternux PRoot CPU llama.cpp evidence is not a Ternuxx integration]
+    next_action: Evaluate a versioned adapter to the existing Ternux CPU provider before choosing a duplicate runtime.
+    owner_decision_required: true
+
+  - id: inference.model_loading
+    name: Basic local model loading
+    user_value: Let users select and run models supported by the chosen runtime.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: not_selected
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Runtime and format selection, model provenance/hash, device memory checks]
+    security_constraints: [Treat model files as untrusted inputs, record licenses, avoid unsafe remote model fetching]
+    evidence: [CPU-BASELINE.md, ../RESEARCH.md]
+    release_qualified: false
+    limitations: [No model loader, tokenizer or model artifact exists in this repository]
+    next_action: Defer until an inference runtime and license-aware model policy are approved.
+    owner_decision_required: true
+
+  - id: inference.gpu.native
+    name: Native Termux GPU inference
+    user_value: Run supported inference operators on a verified Android GPU backend.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: not_selected
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [GPU inference runtime, exact Android/ABI/driver support, actual operator delegation]
+    security_constraints: [Vendor library provenance, loader isolation, visible CPU fallback]
+    evidence: [../RESEARCH.md#8-native-termux-gpu-test, GPU-ACCELERATION.md]
+    release_qualified: false
+    limitations: [Native Vulkan Turnip probe failed for the recorded package/process; no native GPU inference test exists]
+    next_action: Evaluate upstream Snapdragon OpenCL inference path, then owner-authorized workload test if approved.
+    owner_decision_required: true
+
+  - id: inference.gpu.proot
+    name: Existing Ternux PRoot GPU inference
+    user_value: Reuse the separate Ternux guest for supported workloads without changing its environment.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: separate_ternux_proot
+    dependencies: [existing_owner_managed_ternux]
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Read-only adapter design, no guest modification, named inference backend]
+    security_constraints: [Never modify Ternux launcher/rootfs; do not infer inference support from Zink graphics]
+    evidence: [../PROOT-GPU.md, ../readiness/REPOSITORY-AUDIT.md, https://github.com/soobujmiah/ternux/blob/main/docs/BENCHMARKS.md]
+    release_qualified: false
+    limitations: [Independent Ternux main documents CPU/Vulkan llama.cpp workloads in PRoot; no Ternuxx adapter or fresh rerun exists, and this is not proof of native Termux inference]
+    next_action: Design a narrow, non-mutating provider adapter to supported Ternux interfaces; preserve its runtime, lifecycle and rootfs.
+    owner_decision_required: true
+
+  - id: integration.ternux_ai_provider
+    name: Existing Ternux AI provider adapter
+    user_value: Expose verified CPU/Vulkan PRoot workloads without duplicating Ternux's runtime or weakening its independent environment.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_EXPERIMENTAL
+    runtime: separate_ternux_proot
+    dependencies: [existing_owner_managed_ternux, versioned_supported_cli_or_api]
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Stable non-mutating provider contract; exact runtime/version evidence; lifecycle noninterference tests]
+    security_constraints: [Never invoke broad Ternux cleanup; never alter its rootfs/launcher; no code copying; explicit provider and consent]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../RESEARCH.md#11-cpu-gpu-and-npu-runtime-research, https://github.com/soobujmiah/ternux/blob/main/docs/BENCHMARKS.md, https://github.com/soobujmiah/ternux/blob/main/docs/ACCELERATOR-RELEASE-PLAN.md]
+    release_qualified: false
+    limitations: [Ternux documents CPU/Vulkan PRoot inference and experimental HTP/QNN routes; Ternuxx has no adapter and did not rerun those workloads]
+    next_action: Design a read-only status adapter first; review license, API stability, process ownership and failure isolation.
+    owner_decision_required: true
+
+  - id: inference.npu.hexagon
+    name: Qualcomm Hexagon HTP inference
+    user_value: Run supported model operators on a verified Hexagon NPU backend.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: candidate_llama_cpp_ggml_hexagon_or_qairt_android
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: DETECTED
+    requirements: [Exact SM8735 HTP target support, Termux-vs-Android context proof, SDK/model license review, full workload correctness]
+    security_constraints: [Vendor runtime provenance, FastRPC access scope, do not broaden permissions, visible fallback]
+    evidence: [../RESEARCH.md#11-cpu-gpu-and-npu-runtime-research, NPU-ACCELERATION.md, https://github.com/soobujmiah/ternux/blob/main/guides/llama-htp-experimental.md]
+    release_qualified: false
+    limitations: [Ternux main documents an experimental PRoot HTP extension with known-answer and passing HVX MUL_MAT evidence plus HMX/attention failures; no Ternuxx adapter, native Termux access, or Ternuxx qualification]
+    next_action: Keep HTP explicitly experimental; review Ternux provider contract, license and failure/fallback behavior before any integration.
+    owner_decision_required: true
+
+  - id: diagnostics.basic
+    name: Basic diagnostics and safe lifecycle status
+    user_value: Explain readiness, ownership, conflicts, and known limitations.
+    implementation_status: PARTIAL
+    commercial_class: FREE_CORE
+    runtime: native_termux
+    dependencies: [bash, python3]
+    validation_status: PARTIAL
+    qualification: DETECTED
+    requirements: [Accurate help, stable finding IDs, JSON contract and tests]
+    security_constraints: [Read-only doctor by default; no broad process or storage scan]
+    evidence: [../../lib/doctor_report.py, ../../lib/proot_diagnostics.py, ../../lib/ssh_diagnostics.py, ../../tests/test_doctor_report.py, ../../tests/test_proot_diagnostics.py, ../evidence/P3-doctor-progress.md]
+    release_qualified: false
+    limitations: [Target Doctor passes read-only checks; visible procfs is incomplete; installed PRoot distro inventory does not establish Ternux ownership or a running guest; SSH listener correlation and workload acceleration are unverified]
+    next_action: Implement ownership-aware Ternux PRoot/session reporting and service-listener correlation without starting or stopping existing workloads.
+    owner_decision_required: false
+
+  - id: recovery.basic
+    name: Safe basic recovery
+    user_value: Recover Ternuxx-owned state without touching unrelated Termux or existing Ternux data.
+    implementation_status: PARTIAL
+    commercial_class: FREE_CORE
+    runtime: native_termux
+    dependencies: [python3]
+    validation_status: PARTIAL
+    qualification: DETECTED
+    requirements: [Ownership-aware journal, backup preview, bounded rollback and failure fixtures]
+    security_constraints: [Never prune or repair Ternux rootfs; preview exact paths; explicit destructive consent]
+    evidence: [../../lib/config_recovery.py, ../../lib/operation_journal.py, ../../tests/test_config_recovery.py, ../../tests/test_operation_journal.py, ../evidence/P3-doctor-progress.md]
+    release_qualified: false
+    limitations: [Only the native boot profile is backed up/restored/rolled back; target has no backup or restore records; generic lifecycle recovery is unimplemented]
+    next_action: Review the next small Ternuxx-owned configuration allowlist and keep each compensation operation-specific with fixture failure coverage.
+    owner_decision_required: false
+
+  - id: benchmarks.basic
+    name: Reproducible basic workload benchmark
+    user_value: Let users reproduce and understand CPU/GPU/NPU measurements.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: not_selected
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [One approved model/workload, equivalent backend controls, machine-readable raw output]
+    security_constraints: [No telemetry upload by default; publish only redacted device details]
+    evidence: [BENCHMARK-METHODOLOGY.md]
+    release_qualified: false
+    limitations: [No workload harness, measurements, report data, or charts]
+    next_action: Implement a local/offline report format after runtime and test scope approval.
+    owner_decision_required: true
+
+  - id: metrics.basic
+    name: Basic workload/resource metrics
+    user_value: Explain the selected backend, latency/throughput and resource use for a workload.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: not_selected
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Metric source and units verified for each backend; user-visible fallback record]
+    security_constraints: [Local/offline by default; redact identifying system values in exported reports]
+    evidence: [BENCHMARK-METHODOLOGY.md, ../OPTIMIZATION.md]
+    release_qualified: false
+    limitations: [No workload instrumentation or benchmark telemetry exists]
+    next_action: Define metrics alongside the selected runtime and benchmark harness.
+    owner_decision_required: true
+
+  - id: compatibility.reports
+    name: Device/backend compatibility reports
+    user_value: Show tested, failed, blocked, and unknown device/backend combinations.
+    implementation_status: PARTIAL
+    commercial_class: FREE_CORE
+    runtime: docs_only
+    dependencies: []
+    validation_status: PARTIAL
+    qualification: DETECTED
+    requirements: [Exact device/runtime/model data and owner-reviewed reports]
+    security_constraints: [Redact serials, account names, personal paths, and sensitive logs]
+    evidence: [DEVICE-COMPATIBILITY.md, ../RESEARCH.md]
+    release_qualified: false
+    limitations: [Current compatibility data is a dated observation/research record, not an inference report]
+    next_action: Add data only from accepted test reports.
+    owner_decision_required: false
+
+  - id: developer.api.examples
+    name: Inference API and developer examples
+    user_value: Help developers integrate supported local inference capabilities.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: not_selected
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Stable public inference API/runtime first]
+    security_constraints: [Document model/input privacy and backend selection]
+    evidence: [../ARCHITECTURE.md]
+    release_qualified: false
+    limitations: [No inference library/API or examples exist]
+    next_action: Defer until runtime boundary is selected.
+    owner_decision_required: true
+
+  - id: learning.tutorials
+    name: Educational tutorials and sample projects
+    user_value: Help students and developers learn supported workflows by reproducing them.
+    implementation_status: PARTIAL
+    commercial_class: FREE_CORE
+    runtime: documentation
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: DETECTED
+    requirements: [Tutorials track a real release and tested workflow]
+    security_constraints: [No unsafe paste-and-run remote scripts; mark all untested steps]
+    evidence: [../../README.md, ../PRODUCT-VISION.md]
+    release_qualified: false
+    limitations: [No inference tutorial/sample exists; current docs do not prove a supported inference path]
+    next_action: Add examples only after the CPU runtime passes acceptance.
+    owner_decision_required: false
+
+  - id: product.public_evidence
+    name: Public changelog, roadmap, security and test evidence
+    user_value: Let users inspect what is implemented, limited, failed and planned.
+    implementation_status: PARTIAL
+    commercial_class: FREE_CORE
+    runtime: documentation
+    dependencies: []
+    validation_status: PARTIAL
+    qualification: DETECTED
+    requirements: [Version-linked reports, accurate security contact, release history]
+    security_constraints: [Do not publish secrets or private device data]
+    evidence: [../ROADMAP.md, ../../SECURITY.md, README.md]
+    release_qualified: false
+    limitations: [No product release/changelog artifacts, no acceleration report, generic security reporting process]
+    next_action: Maintain evidence docs and resolve release/security reporting gates.
+    owner_decision_required: false
+
+  - id: premium.advanced_orchestration
+    name: Advanced workflow orchestration
+    user_value: Save professional users time across complex repeatable workflows.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: future
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [User-demand evidence, clear separation from essential lifecycle, license review]
+    security_constraints: [Allowlisted commands, explicit consent, audit and rollback]
+    evidence: [../readiness/PRODUCT-MARKET-COMMERCIAL.md, ../readiness/PREMIUM-DISTRIBUTION.md]
+    release_qualified: false
+    limitations: [No customer demand evidence; basic orchestration and safe recovery must remain free]
+    next_action: Do not build/paywall until repeated demand and service cost are measured.
+    owner_decision_required: true
+
+  - id: premium.batch_benchmarking
+    name: Advanced batch benchmarking and scheduled reports
+    user_value: Save professional users time across large repeated workload matrices.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: future
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Keep single-workload reproduction and public evidence free; demand and cost evidence]
+    security_constraints: [No default telemetry upload; explicit schedule/resource limits]
+    evidence: [BENCHMARK-METHODOLOGY.md, ../readiness/PRODUCT-MARKET-COMMERCIAL.md]
+    release_qualified: false
+    limitations: [No benchmark harness, demand evidence, or scheduled-job engine]
+    next_action: Reconsider only after free benchmark protocol and demand are proven.
+    owner_decision_required: true
+
+  - id: premium.professional_dashboard
+    name: Advanced professional analytics and multi-workload reporting
+    user_value: Save time on specialized large-scale analysis beyond the basic free workstation visualizer and evidence reports.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: future
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Basic visualizer, metrics, and report access remain free; demonstrated additional user value]
+    security_constraints: [Local/offline option; data minimization and access controls]
+    evidence: [../readiness/PRODUCT-MARKET-COMMERCIAL.md]
+    release_qualified: false
+    limitations: [No analytics pipeline, dashboard, or customer demand evidence]
+    next_action: Do not build before interviews establish a need beyond the free whole-product visualizer.
+    owner_decision_required: true
+
+  - id: premium.specialized_connectors
+    name: Specialized integration connectors
+    user_value: Connect a tested workload to a specific professional toolchain.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: future
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Named customer need, compatible dependency licenses and maintenance owner]
+    security_constraints: [Least-privilege scopes, explicit consent and secret isolation]
+    evidence: [../readiness/PRODUCT-MARKET-COMMERCIAL.md, ../readiness/PREMIUM-DISTRIBUTION.md]
+    release_qualified: false
+    limitations: [No connector or customer requirements have been validated]
+    next_action: Scope each connector independently; don't create an empty generic plugin marketplace.
+    owner_decision_required: true
+
+  - id: premium.advanced_configuration
+    name: Advanced configuration management
+    user_value: Manage complex repeatable configurations across professional workflows.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: future
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Basic configuration, inspectability, backup and recovery stay free]
+    security_constraints: [Review diffs, no silent device changes, support rollback]
+    evidence: [../readiness/THREAT-MODEL.md, ../readiness/PRODUCT-MARKET-COMMERCIAL.md]
+    release_qualified: false
+    limitations: [No configuration management feature or demand evidence]
+    next_action: Evaluate only if it provides substantial additional automation beyond safe core management.
+    owner_decision_required: true
+
+  - id: premium.business_workflows
+    name: Business-specific workflow extensions
+    user_value: Automate a verified business process without changing free-core behavior.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: future
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Named buyer/workflow, scope, commercial license compatibility and maintenance budget]
+    security_constraints: [Tenant/data separation and explicit action audit]
+    evidence: [../readiness/PRODUCT-MARKET-COMMERCIAL.md]
+    release_qualified: false
+    limitations: [No business buyer or workflow validated]
+    next_action: Treat as custom service first; consider reusable module only after repeated demand.
+    owner_decision_required: true
+
+  - id: premium.hosted_capability
+    name: Optional hosted capabilities
+    user_value: Provide an ongoing remote service whose infrastructure cost creates real value.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: hosted_service
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Privacy/legal design, operating budget, security owner, availability and export plan]
+    security_constraints: [Offline core remains independent; data minimization; incident and access controls]
+    evidence: [../readiness/PREMIUM-DISTRIBUTION.md, ../readiness/THREAT-MODEL.md]
+    release_qualified: false
+    limitations: [No backend, data policy, service operations, or customer need evidence]
+    next_action: Do not add hosted dependency or telemetry to the core.
+    owner_decision_required: true
+
+  - id: premium.fleet_administration
+    name: Advanced fleet administration
+    user_value: Manage a genuine multi-device deployment with auditable controls.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: PREMIUM_MODULE_CANDIDATE
+    runtime: future
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Proven business need and separate management/security architecture]
+    security_constraints: [No silent remote execution or privilege escalation; admin roles and audit trail]
+    evidence: [../readiness/THREAT-MODEL.md, ../readiness/PRODUCT-MARKET-COMMERCIAL.md]
+    release_qualified: false
+    limitations: [No fleet customer, server, remote control plane, or operational controls]
+    next_action: Research only after an explicit buyer and threat model exist.
+    owner_decision_required: true
+
+  - id: services.professional_support
+    name: Installation, troubleshooting, and custom integration
+    user_value: Human assistance for supported profiles and scoped custom work.
+    implementation_status: NOT_OFFERED
+    commercial_class: PAID_SERVICE
+    runtime: human_service
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Stable tested profile, legal seller/payment route, approved scope and privacy process]
+    security_constraints: [Customer executes protected device actions; no credentials or unattended remote shell]
+    evidence: [../readiness/PRODUCT-MARKET-COMMERCIAL.md, ../readiness/LEGAL-IP.md]
+    release_qualified: false
+    limitations: [No approved prices, terms, availability, SLA, or customer traction]
+    next_action: Validate demand only after minimum product and legal gates.
+    owner_decision_required: true
+
+  - id: services.custom_development
+    name: Custom modules and integrations
+    user_value: Deliver a scoped capability for a specific customer need.
+    implementation_status: NOT_OFFERED
+    commercial_class: PAID_SERVICE
+    runtime: human_service
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Written specification, source/asset IP terms, estimate and acceptance criteria]
+    security_constraints: [No credential collection, dependency license review, client data retention plan]
+    evidence: [../readiness/PRODUCT-MARKET-COMMERCIAL.md, ../readiness/LEGAL-IP.md]
+    release_qualified: false
+    limitations: [No approved offer, contract, price, capacity, or customer commitment]
+    next_action: Treat as a possible custom service after legal and delivery process review.
+    owner_decision_required: true
+
+  - id: workstation.shared_management
+    name: Shared workstation management services
+    user_value: Keep CLI, visualizer, and automation on one state, permission, and lifecycle implementation.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: native_termux
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Define service contracts, state ownership, authorization, and compatibility tests]
+    security_constraints: [All interfaces share authorization; no arbitrary shell or bypass path]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../architecture/MANAGEMENT-API.md]
+    release_qualified: false
+    limitations: [Current CLI has no extracted shared application-service/API layer]
+    next_action: Stabilize CLI use cases and tests before introducing another adapter.
+    owner_decision_required: true
+
+  - id: visualizer.basic
+    name: Whole-product local visualizer
+    user_value: Let mobile users inspect and safely manage Ternuxx without knowing commands.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: local_loopback_web
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Shared management services, loopback API security, mobile English and Bangla UI]
+    security_constraints: [Loopback only; CSRF/origin protection; explicit confirmation; no shell endpoint]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../architecture/MANAGEMENT-API.md, ../readiness/THREAT-MODEL.md]
+    release_qualified: false
+    limitations: [No dashboard, management API, or shared service layer exists]
+    next_action: Build only after management contracts and security tests are approved.
+    owner_decision_required: true
+
+  - id: gui.x11_management
+    name: Shared-backend X11 Desktop GUI
+    user_value: Provide graphical workstation management inside the user's Termux:X11 desktop.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: native_termux_x11
+    dependencies: [Termux:X11, selected_lightweight_toolkit]
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Native desktop profile qualified; toolkit, size, memory, accessibility, and API client reviewed]
+    security_constraints: [Use shared management services; GUI is not system-state owner; no assumption X11 is running]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../INSTALLATION.md]
+    release_qualified: false
+    limitations: [No GUI application exists; native XFCE packages are absent in current Termux package database]
+    next_action: Compare a thin GTK client and shared Web UI in a disposable profile after P2 readiness.
+    owner_decision_required: true
+
+  - id: permissions.capability_manager
+    name: Android integration and capability manager
+    user_value: Explain and verify capability availability, consent, operation scope, and revocation.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: native_termux_android
+    dependencies: [Termux:API, optional_Termux:Boot, optional_Shizuku]
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Per-integration adapter; genuine authorization flow; runtime re-check and revocation handling]
+    security_constraints: [No simulated consent, silent privilege escalation, or broad authorization inference]
+    evidence: [../RESEARCH.md#12-native-termux-desktop-packages-and-host-integrations, ../architecture/UNIFIED-WORKSTATION.md, ../readiness/THREAT-MODEL.md]
+    release_qualified: false
+    limitations: [Add-on APKs are installed, but no Ternuxx adapter or per-operation permission verification exists]
+    next_action: Inventory a specific user-facing operation before selecting any integration to implement.
+    owner_decision_required: true
+
+  - id: core.capability_registry
+    name: Authoritative capability registry
+    user_value: Give every interface the same status, requirements, permissions, and evidence for each supported capability.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: shared_management
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Stable capability IDs, schema migrations, implementation/evidence state and publication policy]
+    security_constraints: [Separate installed/detected/authorized/workload-verified/release-qualified states]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../evidence/PHASE-0-MASTER-AUDIT.md]
+    release_qualified: false
+    limitations: [The current YAML feature matrix is documentation/catalog data, not a runtime capability registry]
+    next_action: Define the runtime schema and rendering relationship during architecture approval.
+    owner_decision_required: true
+
+  - id: lifecycle.service_registry
+    name: Shared service registry and lifecycle
+    user_value: Manage native, PRoot and AI services consistently through CLI and graphical clients.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: shared_management
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Service ownership, environment, dependency graph, health check, restart and shutdown contract]
+    security_constraints: [One process owner; bounded restarts; never invoke broad external cleanup]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../evidence/PHASE-0-MASTER-AUDIT.md]
+    release_qualified: false
+    limitations: [Native desktop lifecycle exists separately; no cross-provider service registry]
+    next_action: Define service/task schemas and process ownership before boot integration.
+    owner_decision_required: true
+
+  - id: core.task_center
+    name: Long-running task center
+    user_value: Track progress, errors, cancellation and recovery consistently across interfaces.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: shared_management
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Typed operation states, durable bounded journal, event/progress and cancellation contract]
+    security_constraints: [Redact secrets and model inputs; never promise rollback/cancellation that did not occur]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../architecture/MANAGEMENT-API.md]
+    release_qualified: false
+    limitations: [No common operation scheduler, progress stream or cross-interface history]
+    next_action: Define task states/ownership in Phase 1 and test state transitions before UI work.
+    owner_decision_required: true
+
+  - id: extensions.permissioned_registry
+    name: Permission-declared extension registry
+    user_value: Add optional runtimes and integrations without bypassing core permissions or compatibility checks.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_EXPERIMENTAL
+    runtime: shared_management
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Signed/provenance-aware metadata, version compatibility, dependency and license inventory]
+    security_constraints: [Least privilege; no implicit shell/file/network capability; reversible install/removal]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../readiness/THREAT-MODEL.md]
+    release_qualified: false
+    limitations: [No extension manager or permission contract exists in Ternuxx]
+    next_action: Defer until service/capability APIs and supply-chain policy are stable.
+    owner_decision_required: true
+
+  - id: management.local_api
+    name: Local versioned management API
+    user_value: Provide a stable contract for the visualizer and future approved clients.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: local_loopback_web
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Typed schemas, authorization, plan/confirm operations, local API security tests]
+    security_constraints: [Loopback only; no wildcard CORS; separate inference credentials; bounded requests]
+    evidence: [../architecture/MANAGEMENT-API.md, ../readiness/THREAT-MODEL.md]
+    release_qualified: false
+    limitations: [Contract is draft documentation only; no server or client]
+    next_action: Select transport/implementation after shared service contracts are testable.
+    owner_decision_required: true
+
+  - id: ai.gateway.basic
+    name: Basic local AI gateway and provider routing
+    user_value: Give developers one local interface to explicitly selected local/cloud inference providers.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: not_selected
+    dependencies: []
+    validation_status: BLOCKED
+    qualification: UNKNOWN
+    requirements: [Select and qualify runtime; choose API contract; provider privacy and credential design]
+    security_constraints: [Separate from management API; no secret echo; no silent cloud fallback or prompt logs]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../architecture/MANAGEMENT-API.md, ../readiness/THREAT-MODEL.md]
+    release_qualified: false
+    limitations: [No inference runtime, gateway, provider adapter, or credential store]
+    next_action: Stabilize CPU inference and select API/provider scope first.
+    owner_decision_required: true
+
+  - id: tools.permissioned_registry
+    name: Permissioned tool and agent registry
+    user_value: Expose useful workstation operations to agents through named, auditable capabilities.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: shared_management
+    dependencies: []
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Define named tools, scope, confirmation tiers, audit and cancellation behavior]
+    security_constraints: [No unrestricted shell; sensitive actions require preview and confirmation]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../readiness/THREAT-MODEL.md]
+    release_qualified: false
+    limitations: [No tool registry or agent integration exists]
+    next_action: Defer until shared management authorization is implemented and tested.
+    owner_decision_required: true
+
+  - id: lifecycle.boot_profiles
+    name: Opt-in service and boot profiles
+    user_value: Start a small, chosen set of services with understandable health and recovery behavior.
+    implementation_status: PARTIAL
+    commercial_class: FREE_CORE
+    runtime: native_termux
+    dependencies: []
+    validation_status: PARTIAL
+    qualification: DETECTED
+    requirements: [Termux:Boot availability, owner first-launch initialization, dependency and Android background validation]
+    security_constraints: [Manual start remains available; never start all services/models by default]
+    evidence: [../architecture/UNIFIED-WORKSTATION.md, ../OPERATIONS.md, ../../lib/boot_profiles.py, ../../lib/terminal_ui.py, ../../tests/test_boot_profiles.py, ../../tests/test_terminal_ui.py]
+    release_qualified: false
+    limitations: [CLI and TUI expose preview-first cli-only/native profile controls; PRoot and hybrid profiles remain fail-closed; Termux:Boot receiver execution after reboot and Android background behavior are unverified]
+    next_action: Owner performs the manual reboot using REBOOT-RECOVERY-GUIDE.md; verify saved evidence before qualifying recovery.
+    owner_decision_required: true
+
+  - id: lifecycle.native_ssh_recovery
+    name: Native SSH and reboot recovery foundation
+    user_value: Keep a bounded same-device management path and continuity evidence available without Debian PRoot.
+    implementation_status: PARTIAL
+    commercial_class: FREE_CORE
+    runtime: native_termux
+    dependencies: [termux-services, termux-boot, openssh]
+    validation_status: PARTIAL
+    qualification: INITIALIZED
+    requirements: [Owner-initialized Termux:Boot app, managed loopback SSH candidate, authenticated post-reboot verification, private continuity checkpoint]
+    security_constraints: [Bind candidate SSH to loopback only; private config/state permissions; no secrets in reports; no automatic task resume]
+    evidence: [../architecture/SSH-LIFECYCLE.md, ../architecture/CONTINUITY-IMPLEMENTATION.md, REBOOT-RECOVERY-GUIDE.md, ../evidence/2026-10-17-reboot-recovery-implementation.json]
+    release_qualified: false
+    limitations: [Port 8023 candidate is supervised and authenticated live; Android reboot and Termux:Boot receiver execution remain unverified; Android package query and kernel socket enumeration are unavailable; GUI/Web UI are not implemented]
+    next_action: Owner performs the manual reboot; then verify RB03 through the restored authenticated native SSH connection.
+    owner_decision_required: true
+
+  - id: lifecycle.launch_manager
+    name: Shared launch registry and workspace profiles
+    user_value: Launch native, existing PRoot, and shared services consistently through CLI and graphical interfaces.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: shared_management
+    dependencies: [Shared service/task model, provider ownership, display/audio resource registry]
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Owner-approved profile schema, exact legacy alias audit, safe external Ternux adapter, device-verified display policy]
+    security_constraints: [No arbitrary shell command records, exact owned process control only, never invoke broad Ternux cleanup, no implicit boot startup]
+    evidence: [../../schemas/launch-registry.schema.json, ../architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md, ../evidence/PHASE-0-MASTER-AUDIT.md]
+    release_qualified: false
+    limitations: [No Launch Manager or profile registry exists; simultaneous Termux:X11 sessions and Android Activity routing are unverified]
+    next_action: Review ADR-0007, then implement ownership fixtures and contract tests before owner-operated device acceptance.
+    owner_decision_required: true
+
+  - id: lifecycle.shell_integration
+    name: Per-provider shell, theme, and managed configuration
+    user_value: Let users choose and manage Bash, Zsh, or Fish independently in native Termux and Debian PRoot through shared interfaces.
+    implementation_status: PLANNED
+    commercial_class: FREE_CORE
+    runtime: native_termux_and_proot
+    dependencies: [Shared configuration service, shell adapter registry, installer provider plans]
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Independent Bash/Zsh/Fish selection per provider; migrate supported shell-neutral settings; theme catalog; managed config editor; target-shell validation; diff, backup, confirmation, rollback]
+    security_constraints: [Never overwrite user RC files; mutate only Ternuxx-owned overlays by default; preserve legacy Ternux aliases; package install and config apply are separate confirmed operations]
+    evidence: [../architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md, ../../schemas/shell-profile.schema.json]
+    release_qualified: false
+    limitations: [No shell profile service or adapters exist; availability and startup behavior need separate native and PRoot checks; CLI, GUI, and Web clients are not implemented]
+    next_action: Implement neutral settings migration and profile/config service; validate all three adapters against isolated fixtures before provider/device testing.
+    owner_decision_required: false
+
+  - id: install.optional_software_catalog
+    name: Provider-scoped optional software selection
+    user_value: Let users choose optional software independently for native Termux and the selected Debian PRoot guest during installation and later management.
+    implementation_status: PLANNED
+    commercial_class: FREE_CORE
+    runtime: native_termux_and_proot
+    dependencies: [Versioned software catalog, provider package adapters, shared install planner, native-owned shared-service registry, operation/task service]
+    validation_status: UNKNOWN
+    qualification: UNKNOWN
+    requirements: [Separate native and PRoot selections, package and service dependencies are distinct typed references, dependency/conflict resolution, exact preview, explicit confirmation, trustworthy installed-state verification, Termux/Bionic packages never satisfy Debian/glibc package dependencies]
+    security_constraints: [Catalog IDs only, no arbitrary command values, no silent cross-provider fallback, existing Ternux rootfs never an implicit target, host services are not exposed beyond their approved interface]
+    evidence: [../architecture/decisions/ADR-0009-provider-scoped-optional-software.md, ../architecture/decisions/ADR-0012-native-owned-shared-dependencies.md, ../../schemas/optional-software-catalog.schema.json, ../INSTALLATION.md]
+    release_qualified: false
+    limitations: [No catalog entries, package adapters, selector UI, planner, or provider transaction tests exist; schema now distinguishes native-owned service references from packages but has not been checked by a JSON Schema validator; Ternux reference verifies named Debian PRoot workload flags only]
+    next_action: Define the initial safe catalog and shared-service registry from current official package metadata and verified interfaces, then implement provider-isolated plan generation and fixture tests before any package mutation.
+    owner_decision_required: false
+
+  - id: evidence.center
+    name: Local testing and evidence center
+    user_value: Inspect reproducible tests, failures, compatibility and release qualification.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: local_reports
+    dependencies: []
+    validation_status: PARTIAL
+    qualification: UNKNOWN
+    requirements: [Canonical report schema, provenance, raw data, redaction and report browser]
+    security_constraints: [No telemetry upload by default; redact identifying device data on export]
+    evidence: [README.md, DEVICE-COMPATIBILITY.md, BENCHMARK-METHODOLOGY.md, reports/REPORT-TEMPLATE.md]
+    release_qualified: false
+    limitations: [Documentation defines evidence needs, but no test harness/data UI exists]
+    next_action: Add test/report schema validation before building a UI panel.
+    owner_decision_required: true
+
+  - id: access.off_home
+    name: Optional off-home workstation access
+    user_value: Let the owner use selected Native Termux or PRoot capabilities while away from home.
+    implementation_status: NOT_IMPLEMENTED
+    commercial_class: FREE_CORE
+    runtime: native_termux_entry_with_provider_targets
+    dependencies: [Owner-selected private VPN overlay or authenticated outbound tunnel, remote-access adapter, shared management authorization]
+    validation_status: NOT_TESTED
+    qualification: UNKNOWN
+    requirements: [Disabled by default, per-device remote-client selection, provider and named-capability scope, explicit plan and confirmation, credential revocation, local fallback]
+    security_constraints: [No direct WAN listener or router port-forward by default, no arbitrary shell proxy, no secrets in config or logs, SSH authentication is not management authorization, no automatic cloud fallback]
+    evidence: [../architecture/decisions/ADR-0013-owner-controlled-remote-access.md, ../architecture/UNIFIED-WORKSTATION.md, ../readiness/THREAT-MODEL.md, ../../schemas/remote-access-config.schema.json]
+    release_qualified: false
+    limitations: [No transport provider selected or adapter implemented; no remote-network/device evidence; loopback SSH checks do not qualify off-home access]
+    next_action: Select the private transport provider and define its identity, revocation, and offline behavior before adapter implementation.
+    owner_decision_required: true

@@ -1,4 +1,5 @@
 # ADR-0004: Management clients share one service layer
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Date:** 2026-10-17
 - **Status:** accepted by owner on 2026-10-18; implementation is incremental

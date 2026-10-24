@@ -1,8 +1,8 @@
-"""Ephemeral bearer sessions for the authenticated local management transport.
+"""Ephemeral bearer sessions with same-runtime browser reload recovery.
 
 This module does not open sockets, persist credentials, or dispatch operations.
 The HTTP adapter must call ``authorize_request`` before using the application
-service. It must keep the issued bearer and CSRF values out of URLs and logs.
+service. The browser bearer stays in an HttpOnly cookie; CSRF is re-derived only while the process-local key and session remain live. Secrets stay out of URLs and logs.
 """
 from __future__ import annotations
 
@@ -25,43 +25,32 @@ MAX_TOKEN_LENGTH = 256
 # Every known operation must be explicitly classified. Mutations also require
 # the session-specific CSRF proof in a custom header.
 MUTATING_OPERATIONS = frozenset({
-    "graphics.provider.verify", "proot.guest.verify",
-    "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "graphics.provider.select",
+    "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "graphics.provider.select", "graphics.provider.verify",
     "ssh.service.start", "ssh.service.stop", "ssh.service.restart", "ssh.service.deploy", "ssh.service.deploy.rollback.apply",
     "ssh.keys.add.preview", "ssh.keys.add.apply", "ssh.keys.remove.preview", "ssh.keys.remove.apply",
     "ssh.keys.rollback.preview", "ssh.keys.rollback.apply",
     "ssh.client-key.create.preview", "ssh.client-key.create.apply", "ssh.service.autostart.preview", "ssh.service.autostart.apply", "boot.enable", "boot.disable", "boot.cron.enable", "boot.cron.disable",
     "backup.create", "restore.apply", "recovery.resolve",
     "recovery.rollback.apply", "wakelock.acquire", "wakelock.release", "wakelock.ssh-policy.preview", "wakelock.ssh-policy.apply",
-    "continuity.prepare", "continuity.verify", "continuity.prepare-reboot-test",
-    "continuity.verify-reboot-test", "proot.app.launch", "proot.shortcuts.apply", "proot.shortcuts.sync.apply", "proot.shortcuts.sync.rollback.apply",
+    "continuity.prepare", "continuity.verify", "continuity.prepare-reboot-test", "continuity.verify-reboot-test",
     "cron.jobs.mutation.preview", "cron.jobs.mutation.apply",
-    "proot.start", "proot.stop", "proot.recovery.reconcile",
-    "proot.setup.retire.preview", "proot.setup.retire.apply", "proot.setup.restore.preview", "proot.setup.restore.apply",
-    "proot.setup.icd-migrate.preview", "proot.setup.icd-migrate.apply",
-    "proot.setup.icd-migrate.rollback.preview", "proot.setup.icd-migrate.rollback.apply",
     "cron.scheduler.start", "cron.scheduler.stop", "timezone.set",
     "boot.helpers.preview", "boot.helpers.apply",
-    "terminal.start.preview", "terminal.start", "terminal.channel.issue",
-    "terminal.attach", "terminal.input", "terminal.resize", "terminal.output",
-    "terminal.detach", "terminal.close.preview", "terminal.close",
+    "inference.cpu.model.apply", "inference.cpu.run",
+    "software.app.preview", "software.app.apply",
 })
 READ_ONLY_OPERATIONS = frozenset({
-    "management.catalog", "management.logs.list", "management.logs.read", "graphics.provider.status", "agent.hermes.status", "cron.status", "cron.executor.self_test",
-    "proot.sessions.list", "proot.sessions.show", "proot.sessions.health", "proot.recovery.inspect",
-    "proot.recovery.reconcile.preview", "proot.profiles.list", "proot.profiles.show",
-    "proot.start.preview", "proot.stop.preview", "cron.jobs.list",
+    "management.catalog", "management.logs.list", "management.logs.read", "graphics.provider.status", "agent.hermes.status", "cron.status", "cron.executor.self_test", "cron.jobs.list",
+    "ssh.inspect", "ssh.keys.list", "ssh.keys.rollback.list", "ssh.service.autostart.status", "ssh.service.deploy.rollback.preview", "native.ssh.status",
     "timezone.status", "timezone.list",
     "cron.jobs.show", "cron.jobs.validate", "cron.jobs.next_runs", "cron.executions.list", "cron.executions.show", "desktop.status", "desktop.monitor.status", "doctor.report",
-    "ssh.inspect", "ssh.keys.list", "ssh.keys.rollback.list", "ssh.service.autostart.status", "ssh.service.deploy.rollback.preview", "native.ssh.status", "proot.status",
-    "proot.shortcuts.list", "proot.shortcuts.preview", "proot.shortcuts.sync.preview", "proot.shortcuts.sync.rollback.list",
-    "proot.shortcuts.sync.rollback.preview",
-    "terminal.broker.status",
     "remote.access.preview", "boot.status", "boot.profile.status", "boot.helpers.status",
+    "inference.cpu.status", "inference.cpu.model.preview", "software.apps.list", "software.app.run",
     "boot.profile.preview", "boot.cron.status", "boot.cron.validate", "boot.cron.preview", "backup.list", "backup.inspect", "restore.preview",
     "recovery.status", "recovery.inspect", "recovery.rollback.preview",
     "wakelock.status", "wakelock.ssh-policy.status", "continuity.status", "continuity.resume-info",
 })
+
 
 
 def _digest(value: str) -> str:
@@ -134,6 +123,7 @@ class ManagementSessionAuthority:
         self._absolute_ttl = absolute_ttl_seconds
         self._clock = clock
         self._token_factory = token_factory
+        self._csrf_key = secrets.token_bytes(32)
         self._sessions: dict[str, _Session] = {}
         self._lock = threading.RLock()
 
@@ -167,11 +157,11 @@ class ManagementSessionAuthority:
             self._prune_expired()
 
             bearer = self._new_secret()
-            csrf = self._new_secret()
             session_ref = self._token_factory()
             if (not isinstance(session_ref, str) or len(session_ref) < 16
                     or len(session_ref) > MAX_TOKEN_LENGTH):
                 raise RuntimeError("session reference generation failed")
+            csrf = self._csrf_token(bearer, session_ref)
             if bearer == csrf or session_ref in {bearer, csrf}:
                 raise RuntimeError("session credential collision")
             now = self._clock()
@@ -192,6 +182,33 @@ class ManagementSessionAuthority:
                 bearer_token=bearer,
                 csrf_token=csrf,
                 capabilities=tuple(sorted(requested)),
+                idle_ttl_seconds=self._idle_ttl,
+                absolute_ttl_seconds=self._absolute_ttl,
+            )
+
+    def resume_session(self, bearer_token: str) -> IssuedSession:
+        """Restore the same live browser session without consuming bootstrap again."""
+        if not isinstance(bearer_token, str) or not 40 <= len(bearer_token) <= MAX_TOKEN_LENGTH:
+            raise PermissionError("session is unavailable")
+        digest = _digest(bearer_token)
+        with self._lock:
+            session = self._sessions.get(digest)
+            if session is None:
+                raise PermissionError("session is unavailable")
+            now = self._clock()
+            if (now - session.last_seen_at >= self._idle_ttl
+                    or now - session.created_at >= self._absolute_ttl):
+                self._sessions.pop(digest, None)
+                raise PermissionError("session expired")
+            csrf = self._csrf_token(bearer_token, session.session_ref)
+            if not hmac.compare_digest(_digest(csrf), session.csrf_digest):
+                raise PermissionError("session is unavailable")
+            session.last_seen_at = now
+            return IssuedSession(
+                session_ref=session.session_ref,
+                bearer_token=bearer_token,
+                csrf_token=csrf,
+                capabilities=tuple(sorted(session.capabilities)),
                 idle_ttl_seconds=self._idle_ttl,
                 absolute_ttl_seconds=self._absolute_ttl,
             )
@@ -278,6 +295,10 @@ class ManagementSessionAuthority:
             ]
             for digest in expired:
                 self._sessions.pop(digest, None)
+
+    def _csrf_token(self, bearer_token: str, session_ref: str) -> str:
+        message = (session_ref + ":" + bearer_token).encode("utf-8")
+        return hmac.new(self._csrf_key, message, hashlib.sha256).hexdigest()
 
     def _new_secret(self) -> str:
         value = self._token_factory()

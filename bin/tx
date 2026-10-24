@@ -2,8 +2,7 @@
 # =============================================================================
 #  Ternuxx — Native Termux-first workstation CLI
 #
-#  Native Termux is the self-sufficient core. Debian PRoot is an optional
-#  guest provider used only by explicitly selected guest operations.
+#  Native Termux is the product runtime; PRoot guests are not supported.
 #
 #  Copyright (c) 2026 Sobuj Miah (@soobujmiah)
 #  License: not yet selected; see README.md.
@@ -71,7 +70,7 @@ _nt_resolve_slug() {
   case "$1" in
     up) echo start ;; dn) echo stop ;; rs) echo restart ;; st) echo status ;;
     ck) echo check ;; inf) echo info ;; doc) echo doctor ;;
-    mg|mng) echo management ;; pr) echo proot ;;
+    mg|mng) echo management ;;
     cp) echo checkpoint ;; ra) echo remote ;; rb) echo reboot ;;
     bt) echo boot ;; wl) echo wakelock ;; in) echo install ;;
     bk) echo backup ;; rc) echo recovery ;; rt) echo restore ;; g) echo guides ;; h) echo help ;;
@@ -88,6 +87,17 @@ _nt_dispatch() {
   case "$cmd" in h) cmd=help ;; esac
   if [ "$cmd" = help ]; then _nt_use help && nt_help "\${1:-}"; return 0; fi
 
+  case "$cmd" in
+    proot|pgui|db|virgl|terminal)
+      local removed_message="PRoot support was retired. Use 'tx help' for Native Termux commands and 'tx guides' for the interactive setup path."
+      if [ "$TERNUXX_JSON" = "1" ]; then
+        nt_json_object "error" "feature_removed" "message" "$removed_message" "command" "$cmd"
+      else
+        nt_warn "$removed_message"
+      fi
+      return 2 ;;
+  esac
+
   if declare -F "nt_cmd_${cmd}" >/dev/null 2>&1; then
     "nt_cmd_${cmd}" "$@"
     return $?
@@ -96,24 +106,53 @@ _nt_dispatch() {
   local lib_map=""
   case "$cmd" in
     guides)
-      printf '%s\n' \
-        'Ternuxx guides:' \
-        '  Installation: https://github.com/soobujmiah/ternuxx/blob/main/docs/INSTALLATION.md' \
-        '  Architecture: https://github.com/soobujmiah/ternuxx/blob/main/docs/ARCHITECTURE.md' \
-        '' 'Open these links in a browser. This command does not install anything.'
-      return 0 ;;
+      local choice="" repo_root="${_NT_BIN_DIR%/bin}"
+      while :; do
+        printf '%s\n' '' 'Ternuxx Native Termux guide' \
+          '  1) Preview Native package setup' \
+          '  2) Check system health' \
+          '  3) Check desktop status' \
+          '  4) Start the Native desktop' \
+          '  5) Read installation guide' \
+          '  6) Read operations guide' \
+          '  7) Native CPU inference setup' \
+          '  8) Open terminal management (TUI)' \
+          '  9) Open authenticated Web management' \
+          ' 10) Open GTK management center' \
+          '  0) Exit'
+        [ -t 0 ] || { printf '%s\n' 'Interactive menu needs a terminal. Run `tx help`, `tx install preview`, `tx tui`, `tx web`, or `tx gui`.'; return 0; }
+        read -r -p 'Choose an item: ' choice || return 0
+        case "$choice" in
+          1) "$_NT_BIN_DIR/tx" install preview; return $? ;;
+          2) "$_NT_BIN_DIR/tx" doctor; return $? ;;
+          3) "$_NT_BIN_DIR/tx" status; return $? ;;
+          4) "$_NT_BIN_DIR/tx" start; return $? ;;
+          5|6)
+            local guide="$repo_root/docs/INSTALLATION.md"
+            [ "$choice" = 6 ] && guide="$repo_root/docs/OPERATIONS.md"
+            if [ -r "$guide" ]; then
+              if command -v less >/dev/null 2>&1; then less "$guide"; else cat "$guide"; fi
+            else printf 'Guide file not found: %s\n' "$guide" >&2; return 1; fi ;;
+          7) "$_NT_BIN_DIR/tx" ai setup; return $? ;;
+          8) "$_NT_BIN_DIR/tx" tui; return $? ;;
+          9) "$_NT_BIN_DIR/tx" web; return $? ;;
+          10) "$_NT_BIN_DIR/tx" gui; return $? ;;
+          0) return 0 ;;
+          *) printf '%s\n' 'Please choose 0 through 10.' ;;
+        esac
+      done
+      ;;
     start|stop|restart|status) lib_map="desktop" ;;
     audio)                     lib_map="audio" ;;
-    virgl)                     lib_map="virgl" ;;
+    ai)                        lib_map="ai" ;;
+    app)                       lib_map="management" ;;
     graphics)                   lib_map="desktop" ;;
-    db|gui)                    lib_map="launch" ;;
-    terminal)                  lib_map="terminal" ;;
+    gui)                       lib_map="launch" ;;
     tui)                        lib_map="tui" ;;
     web)                        lib_map="management" ;;
     checkpoint)                lib_map="continuity" ;;
     ssh)                       lib_map="ssh" ;;
     remote)                    lib_map="remote_access" ;;
-    proot|pgui|app)            lib_map="proot" ;;
     reboot|boot|wakelock)     lib_map="reboot" ;;
     backup|restore|recovery)  lib_map="recovery" ;;
     check|doctor)             lib_map="doctor" ;;

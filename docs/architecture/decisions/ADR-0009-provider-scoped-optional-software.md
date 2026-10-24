@@ -1,4 +1,5 @@
 # ADR-0009: Provider-scoped optional software selection
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Date:** 2026-10-17
 - **Status:** Partial implementation — fresh Debian package groups are selectable in the CLI and were replayed on-device; Native optional workload selection and shared CLI/Web/GTK/TUI catalog parity remain open

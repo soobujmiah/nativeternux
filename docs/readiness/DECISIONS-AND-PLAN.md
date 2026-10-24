@@ -1,5 +1,7 @@
 # Owner decision register and approval-gated plan
 
+> **Historical planning record, superseded 2026-10-24.** This decision register describes the former multi-provider product direction. PRoot requirements are retired by [ADR-0017](../architecture/decisions/ADR-0017-native-only-product-and-proot-retirement.md). Current project scope and open gates are in [phase status](../PHASE-STATUS.md) and [the current repository audit](../audit/REPOSITORY-AUDIT.md). Do not treat the backlog below as the active implementation plan.
+
 **Updated:** 2026-10-17. The audit does not grant permission for production, license, payment, repository-setting or device changes.
 
 ## Decision register

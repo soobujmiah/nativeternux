@@ -29,17 +29,13 @@
     "requested_profile": {
       "enum": [
         "cli-only",
-        "native",
-        "proot",
-        "hybrid"
+        "native"
       ]
     },
     "configured_profile": {
       "enum": [
         "cli-only",
-        "native",
-        "proot",
-        "hybrid"
+        "native"
       ]
     },
     "configuration_source": {
@@ -81,7 +77,6 @@
         "read_only",
         "script_installed",
         "boot_config_changed",
-        "existing_proot_touched",
         "silent_provider_fallback"
       ],
       "properties": {
@@ -92,9 +87,6 @@
           "const": false
         },
         "boot_config_changed": {
-          "const": false
-        },
-        "existing_proot_touched": {
           "const": false
         },
         "silent_provider_fallback": {

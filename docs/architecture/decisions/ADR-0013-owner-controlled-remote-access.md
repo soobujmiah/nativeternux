@@ -1,4 +1,5 @@
 # ADR-0013: Optional owner-controlled access from outside home
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Date:** 2026-10-18
 - **Status:** Owner-approved product requirement; local shared-management/CLI preview integrated; transport adapter and device/network enablement pending

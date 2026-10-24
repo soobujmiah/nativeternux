@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-10-24",
+  "execution_context": "Native Termux on Android, aarch64",
+  "device_scope": "25053RT47C, Android 16/API 36, Termux 0.119.0-beta.3",
+  "purpose": "Recheck the installed Termux graphics stack separately from Ternuxx's saved experimental KGSL candidate.",
+  "installed_packages": {
+    "mesa": {"version": "26.2.5", "candidate": "26.2.5"},
+    "mesa-vulkan-icd-freedreno": {"version": "26.2.4", "candidate": "26.2.5"},
+    "vulkan-loader-generic": {"version": "1.4.365", "candidate": "1.4.365"},
+    "configured_source": "https://termux.danyael.xyz/termux/termux-main"
+  },
+  "isolation_method": "graphics_manager.verify invoked with an empty private temporary state directory; no saved candidate selection was read; process used DISPLAY=:1 and LD_LIBRARY_PATH=$PREFIX/lib.",
+  "results": {
+    "opengl": {
+      "status": "rendered",
+      "renderer": "llvmpipe (LLVM 21.1.8, 128 bits)",
+      "accelerated": false,
+      "score": "81",
+      "exit_code": 0,
+      "proof": "bounded off-screen glmark2 draw"
+    },
+    "gles": {
+      "status": "unavailable",
+      "exit_code": 127,
+      "context_verified": false,
+      "render_verified": false,
+      "proof": "verification runner could not start; no GLES draw claimed"
+    },
+    "vulkan": {
+      "status": "unavailable",
+      "enumeration_exit_code": 1,
+      "render_verified": false,
+      "diagnostic": "Failed to detect any valid GPUs in the current config",
+      "proof": "device enumeration failed; no draw attempted"
+    }
+  },
+  "state_changes": {
+    "package_database": false,
+    "persistent_graphics_selection": false,
+    "native_desktop_or_services": false,
+    "temporary_state_removed": true
+  },
+  "limits": [
+    "This is the current installed Termux package stack on one device, not a clean-install test.",
+    "The official Termux Mesa recipe is versioned 26.2.5 and lists Gallium drivers llvmpipe, softpipe, virgl, and zink; it separately enables the Freedreno Vulkan ICD with KGSL support on aarch64. This recipe configuration does not establish a successful Vulkan draw.",
+    "The separately selected experimental Mesa 26.3.0-devel KGSL candidate has bounded OpenGL, GLES, and Vulkan draw evidence in the linked recheck, but no stable clean-install distribution path.",
+    "No GPU inference or NPU workload was tested."
+  ]
+}

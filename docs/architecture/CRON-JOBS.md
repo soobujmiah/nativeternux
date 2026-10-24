@@ -75,9 +75,9 @@ The execution ledger and summaries are private state; credentials are redacted f
 
 The shared management API provides typed Cron reads and `cron.jobs.mutation.preview` / `cron.jobs.mutation.apply`, plus read-only bounded execution history. Reads require `diagnostics.read`; preview and apply require `cron.manage`. Every client must reuse the saved plan ID and require explicit confirmation. CLI, TUI, Web, and GTK now use the shared preview/apply operations. The guided forms support typed create, update, and remove; TUI/Web can also toggle enabled state. UI behavior is covered by service/bridge and static-client checks; live interactive use was not performed in this increment. CLI, TUI, Web, and GTK expose bounded read-only execution history. No client claims that a resident scheduler is ready or running.
 
-## Existing Debian PRoot
+## Retired guest-session integration (historical)
 
-The rootfs may be reused; a second rootfs is not required. Filesystem sharing and lifecycle ownership are separate. Ternuxx may stop only an instance it started and can identify by a verified process identity/instance record. The current active Debian/Codex process and any session without proven Ternuxx ownership remain out of scope for termination. Current PRoot process association and same-rootfs concurrency have not been requalified in this increment; no guest was stopped or restarted.
+The former Debian/PRoot scheduler-integration plan is retired under the Native-only decision. Its guest ownership and process guidance below this heading is preserved as dated history only; it is not an available Cron target or supported operating procedure.
 
 ## Hermes
 
@@ -92,7 +92,7 @@ The real bounded subprocess runner was exercised only through a new registered n
 
 Dispatch health is based on recent successful polls, separate from process liveness and lease ownership. CLI/API provide explicit scheduler start/stop, but no boot service or persistent production process was enabled. Automatic retry, queue-one, cancellation, catch-up delivery, device boot and scheduler recovery adapters are not implemented. Unresolved claimed/running records remain uncertain and are not automatically retried. A crash after an action side effect but before durable completion remains an uncertain boundary; duplicate event claims are suppressed but arbitrary external effects are not exactly-once.
 
-PRoot status update (2026-10-23): Ternuxx now has a bounded session registry and typed start/attach/detach/stop operations for sessions it launches, plus exact-session recovery and retirement plans. CLI-to-Web-to-TUI-to-GTK continuity and disposable replay-session retirement/restore have passed. This does not establish ownership of the pre-existing Debian rootfs or any independently started guest process; the active Codex/development guest remains untouched. Do not stop an external or ownership-unverified process. Same-rootfs concurrency and cold-boot startup remain unqualified; see [interactive PRoot terminal contract](INTERACTIVE-PROOT-TERMINALS.md), [cross-client continuity evidence](../evidence/2026-10-22-cross-client-terminal-handoff.md), and [replay retirement evidence](../evidence/2026-10-22-replay-guest-retirement.md).
+Historical PRoot scheduler/session integration evidence is retained only in the dated records linked from [docs/README.md](../README.md); no guest-session scheduler integration is supported after the Native-only decision.
 
 
 ## Scheduler runtime increment (2026-10-19)

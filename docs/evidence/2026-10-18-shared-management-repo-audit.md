@@ -44,7 +44,7 @@ P3 remains the active phase. The owner-approved shared-management direction is n
 
 ## Shared PRoot GUI operation slice — 2026-10-18
 
-- Added typed provider-aware operations `proot.app.launch`, `proot.shortcuts.list`, `proot.shortcuts.preview`, and `proot.shortcuts.apply` to the shared service, with exact capability mapping and [`proot-x11-shortcuts.schema.json`](../../schemas/proot-x11-shortcuts.schema.json).
+- Added typed provider-aware operations `proot.app.launch`, `proot.shortcuts.list`, `proot.shortcuts.preview`, and `proot.shortcuts.apply` to the shared service, with exact capability mapping and ``proot-x11-shortcuts.schema.json``.
 - CLI shortcut administration, generated menu entries, and the X11 shortcut manager now route through the same service. Menu updates use a state-bound plan ID, explicit confirmation, atomic file replacement, and exact ownership checks. Guest user resolution reads the installed Ternux private state in-process; the value is not returned or logged.
 - Live read-only service listing succeeded over native SSH 8022. Customized/unrecognized Terminal and Files entries were reported as conflicts and preserved; the exact legacy shortcut-manager entry was recognized. No menu file, running app, GUI service, or boot setting was changed during this audit.
 - The owner previously confirmed Thunar was visible on native `:1`. This remains app-level X11 evidence only. Updated GUI manager interaction is pending; Web client/session bootstrap and HTTP mutation remain incomplete.

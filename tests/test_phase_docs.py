@@ -13,6 +13,24 @@ from tools import phase_docs  # noqa: E402
 
 
 class PhaseDocsTests(unittest.TestCase):
+    def test_readme_phase_status_stays_compact_and_links_to_authoritative_details(self):
+        rendered = phase_docs.render({
+            "phases": [
+                {"id": "P0", "title": "Foundation", "status": "completed", "completed_on": "2026-10-01",
+                 "summary": "An old gate passed.", "evidence": []},
+                {"id": "P1", "title": "Active work", "status": "in_progress",
+                 "summary": "Long detailed summary belongs elsewhere.",
+                 "next_action": "Perform the detailed next action.", "evidence": []},
+            ]
+        })
+        readme = rendered[phase_docs.README]
+        body = readme.split(phase_docs.README_START, 1)[1].split(phase_docs.README_END, 1)[0]
+        self.assertIn("Current phase:** P1", body)
+        self.assertIn("Roadmap and active work", body)
+        self.assertIn("Phase status and evidence", body)
+        self.assertNotIn("Long detailed summary", body)
+        self.assertNotIn("Perform the detailed next action", body)
+
     def test_phase_date_uses_utc_calendar_not_host_local_date(self):
         real_datetime = dt.datetime
         seen = []
@@ -52,6 +70,23 @@ class PhaseDocsTests(unittest.TestCase):
         self.assertEqual(state["phases"][1]["skipped_on"], "2026-10-20")
         self.assertEqual(state["phases"][2]["status"], "in_progress")
         self.assertEqual(state["active_phase"], "P10")
+
+    def test_resolved_phase_metadata_revision_preserves_gate_and_records_reason(self):
+        state = {"phases": [{"id": "P5", "status": "completed", "completed_on": "2026-10-23",
+                             "summary": "old", "next_action": "stale", "evidence": ["report.md"]}]}
+        phase_docs.revise_resolved_phase(state, "P5", title="Native profile compatibility",
+            summary="Direct profile recorded.", clear_next_action=True, reason="Profile gate is complete.")
+        phase = state["phases"][0]
+        self.assertEqual(phase["status"], "completed")
+        self.assertEqual(phase["completed_on"], "2026-10-23")
+        self.assertEqual(phase["evidence"], ["report.md"])
+        self.assertNotIn("next_action", phase)
+        self.assertEqual(phase["revision_notes"][-1]["reason"], "Profile gate is complete.")
+
+    def test_resolved_phase_metadata_revision_cannot_reopen_active_phase(self):
+        state = {"phases": [{"id": "P6", "status": "in_progress"}]}
+        with self.assertRaisesRegex(ValueError, "completed or skipped"):
+            phase_docs.revise_resolved_phase(state, "P6", summary="wrong", reason="not closed")
 
     def test_only_active_optional_phase_can_be_skipped(self):
         state = {"active_phase": "P8", "phases": [

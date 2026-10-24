@@ -35,17 +35,13 @@
         "requested_profile": {
           "enum": [
             "cli-only",
-            "native",
-            "proot",
-            "hybrid"
+            "native"
           ]
         },
         "configured_profile": {
           "enum": [
             "cli-only",
-            "native",
-            "proot",
-            "hybrid"
+            "native"
           ]
         },
         "configuration_source": {
@@ -102,7 +98,6 @@
             "read_only",
             "script_installed",
             "boot_config_changed",
-            "existing_proot_touched",
             "silent_provider_fallback"
           ],
           "properties": {
@@ -114,9 +109,6 @@
             },
             "boot_config_changed": {
               "type": "boolean"
-            },
-            "existing_proot_touched": {
-              "const": false
             },
             "silent_provider_fallback": {
               "const": false
@@ -160,9 +152,7 @@
         "configured_profile": {
           "enum": [
             "cli-only",
-            "native",
-            "proot",
-            "hybrid"
+            "native"
           ]
         },
         "configuration_source": {
@@ -193,8 +183,7 @@
           "required": [
             "read_only",
             "script_removed",
-            "only_owned_paths",
-            "existing_proot_touched"
+            "only_owned_paths"
           ],
           "properties": {
             "read_only": {
@@ -205,9 +194,6 @@
             },
             "only_owned_paths": {
               "const": true
-            },
-            "existing_proot_touched": {
-              "const": false
             }
           }
         }

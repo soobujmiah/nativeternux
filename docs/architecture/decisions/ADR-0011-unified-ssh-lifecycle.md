@@ -1,4 +1,5 @@
 # ADR-0011: Unified Native SSH connection and lifecycle management
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Status:** Accepted owner requirement; implementation partial (current status reviewed 2026-10-24)
 - **Date:** 2026-10-17

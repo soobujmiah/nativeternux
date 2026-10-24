@@ -21,7 +21,6 @@ import management_service
 import management_sessions
 import management_request_store
 import management_authorization
-import proot_diagnostics
 
 
 DEFAULT_PORT = 8765
@@ -39,13 +38,13 @@ _MUTATING_CAPABILITIES = {
 WEB_READ_CAPABILITIES = frozenset({
     "diagnostics.read", "remote_policy.read", "continuity.read",
 })
-WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "ssh.credentials.read", "ssh.credentials.manage", "graphics.manage", "applications.launch", "applications.shortcuts.manage", "cron.manage", "proot.session.manage", "proot.guest.manage", "wakelock.policy.manage"})
+WEB_CAPABILITIES = WEB_READ_CAPABILITIES | frozenset({"desktop.manage", "desktop.monitor.manage", "ssh.managed.lifecycle", "ssh.credentials.read", "ssh.credentials.manage", "graphics.manage", "cron.manage", "wakelock.policy.manage", "ai.local.run", "ai.local.manage", "software.manage"})
 _WEB_MUTATING_OPERATIONS = {
     operation for operation in management_sessions.MUTATING_OPERATIONS
     if management_authorization.required_capability(operation) in WEB_CAPABILITIES
 }
-if _WEB_MUTATING_OPERATIONS != {"graphics.provider.verify", "proot.guest.verify", "desktop.start", "desktop.stop", "desktop.restart", "desktop.monitor.configure", "ssh.service.start", "ssh.service.stop", "ssh.service.restart", "ssh.keys.add.preview", "ssh.keys.add.apply", "ssh.keys.remove.preview", "ssh.keys.remove.apply", "ssh.keys.rollback.preview", "ssh.keys.rollback.apply", "ssh.client-key.create.preview", "ssh.client-key.create.apply", "ssh.service.autostart.preview", "ssh.service.autostart.apply", "wakelock.ssh-policy.preview", "wakelock.ssh-policy.apply", "graphics.provider.select", "proot.app.launch", "proot.shortcuts.apply", "proot.shortcuts.sync.apply", "proot.shortcuts.sync.rollback.apply", "proot.start", "proot.stop", "proot.recovery.reconcile", "proot.setup.retire.preview", "proot.setup.retire.apply", "proot.setup.restore.preview", "proot.setup.restore.apply", "proot.setup.icd-migrate.preview", "proot.setup.icd-migrate.apply", "proot.setup.icd-migrate.rollback.preview", "proot.setup.icd-migrate.rollback.apply", "terminal.start.preview", "terminal.start", "terminal.channel.issue", "terminal.attach", "terminal.input", "terminal.resize", "terminal.output", "terminal.detach", "terminal.close.preview", "terminal.close", "cron.jobs.mutation.preview", "cron.jobs.mutation.apply"}:
-    raise RuntimeError("Web UI mutation scope must remain limited to desktop/monitor policy, managed SSH/key and Wake Lock controls, typed graphics/app actions, previewed PRoot guest migration and lifecycle, terminal sessions, shortcuts, and previewed Cron job mutations")
+if _WEB_MUTATING_OPERATIONS != {'ssh.client-key.create.apply', 'ssh.service.restart', 'desktop.restart', 'ssh.keys.rollback.apply', 'ssh.service.stop', 'graphics.provider.verify', 'ssh.service.autostart.apply', 'ssh.service.start', 'desktop.stop', 'cron.jobs.mutation.apply', 'graphics.provider.select', 'desktop.monitor.configure', 'ssh.client-key.create.preview', 'ssh.keys.remove.preview', 'cron.jobs.mutation.preview', 'wakelock.ssh-policy.apply', 'ssh.keys.remove.apply', 'ssh.keys.add.apply', 'ssh.service.autostart.preview', 'wakelock.ssh-policy.preview', 'ssh.keys.rollback.preview', 'desktop.start', 'ssh.keys.add.preview', 'inference.cpu.model.apply', 'inference.cpu.run', 'software.app.preview', 'software.app.apply'}:
+    raise RuntimeError("Web UI mutation scope must remain limited to the approved Native management controls, bounded local CPU inference, and curated Termux packages")
 if READ_CAPABILITIES & _MUTATING_CAPABILITIES:
     raise RuntimeError("read-only API runtime contains a mutation capability")
 if WEB_READ_CAPABILITIES & _MUTATING_CAPABILITIES:
@@ -104,8 +103,6 @@ NATIVE_BROWSER_CANDIDATES = (
     ("brave", "Brave"), ("brave-browser", "Brave"),
     ("google-chrome", "Google Chrome"),
 )
-PROOT_BROWSER = ("firefox-esr", "Firefox ESR")
-
 
 def detect_native_browser() -> tuple[str, str] | None:
     for executable, label in NATIVE_BROWSER_CANDIDATES:
@@ -115,43 +112,21 @@ def detect_native_browser() -> tuple[str, str] | None:
     return None
 
 
-def detect_proot_browser(env: Mapping[str, str]) -> tuple[str, str] | None:
-    """Inspect the guest executable without invoking a login/profile writer."""
-    if not shutil.which("proot-distro"):
-        return None
-    prefix = env.get("PREFIX", EXPECTED_PREFIX)
-    try:
-        proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=prefix)
-        root = Path(prefix) / "var/lib/proot-distro/containers/debian/rootfs"
-        if root.resolve(strict=True) != root.absolute():
-            return None
-        browser = (root / "usr/bin/firefox-esr").resolve(strict=True)
-        if not browser.is_relative_to(root) or not browser.is_file() or not os.access(browser, os.X_OK):
-            return None
-    except (OSError, RuntimeError, ValueError):
-        return None
-    return PROOT_BROWSER
-
-
 def choose_browser(requested: str, *, native: tuple[str, str] | None,
-                   proot: tuple[str, str] | None, stdin: object | None = None,
+                   stdin: object | None = None,
                    stderr: object | None = None) -> str | None:
     stdin = sys.stdin if stdin is None else stdin
     stderr = sys.stderr if stderr is None else stderr
-    automatic = "native" if native else "proot" if proot else "android"
+    automatic = "native" if native else "android"
     if requested == "auto":
         return automatic
     if requested == "native":
         return "native" if native else None
-    if requested == "proot":
-        return "proot" if proot else None
     if requested == "android":
         return "android"
     choices = [("android", "Android default browser")]
     if native:
         choices.append(("native", "Native Termux · " + native[1]))
-    if proot:
-        choices.append(("proot", "Debian PRoot · " + proot[1]))
     choices.append(("auto", "Auto-select installed browser (recommended)"))
     print("\nChoose a browser for Ternuxx Web:", file=stderr)
     for index, (_value, label) in enumerate(choices, 1):
@@ -170,7 +145,7 @@ def choose_browser(requested: str, *, native: tuple[str, str] | None,
         selected = choices[int(answer) - 1][0]
     else:
         aliases = {value: value for value, _label in choices}
-        aliases.update({"a": "android", "n": "native", "p": "proot"})
+        aliases.update({"a": "android", "n": "native"})
         selected = aliases.get(answer)
     if selected == "auto":
         return automatic
@@ -270,28 +245,6 @@ def open_browser(browser: str, url: str, *, env: Mapping[str, str],
     try:
         if browser == "native" and native:
             command = [native[0], url]
-        elif browser == "proot":
-            root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            tmp_root = env.get("TMPDIR") or os.path.join(
-                env.get("PREFIX", EXPECTED_PREFIX), "tmp")
-            os.makedirs(tmp_root, mode=0o700, exist_ok=True)
-            profile_host = tempfile.mkdtemp(prefix="ternuxx-web-firefox-", dir=tmp_root)
-            os.chmod(profile_host, 0o700)
-            profile_guest = "/tmp/" + os.path.basename(profile_host)
-            helper = os.path.join(root, "scripts", "proot-x11-app.sh")
-            bash = os.path.join(env.get("PREFIX", EXPECTED_PREFIX), "bin", "bash")
-            excluded_windows = set(visible_browser_windows(
-                env=browser_env, marker="Firefox"))
-            runner = ("import shutil,subprocess,sys\n"
-                      "profile=sys.argv[1]\n"
-                      "try:\n"
-                      " result=subprocess.run(sys.argv[2:],check=False)\n"
-                      " raise SystemExit(result.returncode)\n"
-                      "finally:\n"
-                      " shutil.rmtree(profile,ignore_errors=True)\n")
-            command = [sys.executable, "-c", runner, profile_host, bash, helper,
-                       "--", "firefox-esr", "-no-remote", "-profile",
-                       profile_guest, url]
         elif browser == "android":
             opener = shutil.which("termux-open-url")
             if not opener:
@@ -322,12 +275,12 @@ def open_browser(browser: str, url: str, *, env: Mapping[str, str],
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tx mng http serve",
-        description="Run the loopback management API; Web mode supports scoped management actions and the broker-backed Debian terminal.",
+        description="Run the Native Termux loopback management API and Web UI.",
     )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--web", action="store_true", help="open the local browser UI")
-    parser.add_argument("--browser", choices=("choose", "android", "native", "proot", "auto"),
-                        default="choose", help="choose Android, installed Native/PRoot browser, or auto-select")
+    parser.add_argument("--browser", choices=("choose", "android", "native", "auto"),
+                        default="choose", help="choose Android, an installed Native browser, or auto-select")
     parser.add_argument("--show-secret-on-clipboard-failure", action="store_true",
                         help="explicitly display the secret if clipboard copying fails")
     return parser
@@ -348,12 +301,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.web:
         if args.browser in {"choose", "native", "auto"}:
             native_browser = detect_native_browser()
-        proot_browser = None
-        if args.browser in {"choose", "proot"} or (
-                args.browser == "auto" and native_browser is None):
-            proot_browser = detect_proot_browser(os.environ)
-        selected_browser = choose_browser(args.browser, native=native_browser,
-                                          proot=proot_browser)
+        selected_browser = choose_browser(args.browser, native=native_browser)
         if selected_browser is None:
             print("That browser is not installed or could not be detected; choose an available browser.",
                   file=sys.stderr)
@@ -408,8 +356,7 @@ def main(argv: list[str] | None = None) -> int:
                 print("Could not launch the selected browser. Open this URL manually: " + url,
                       file=sys.stderr)
             else:
-                labels = {"android": "Android default browser", "native": "Native Termux browser",
-                          "proot": "Debian PRoot Firefox ESR"}
+                labels = {"android": "Android default browser", "native": "Native Termux browser"}
                 print("Opened " + labels[selected_browser] + " at " + url, file=sys.stderr)
             if autofilled:
                 print("One-time code entered in the local browser form; press Connect.",

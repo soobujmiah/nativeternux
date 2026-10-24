@@ -1,18 +1,18 @@
 # Product positioning, market and commercial model
 
-**Reviewed:** 2026-10-17. This is a research hypothesis document, not an approved offer, price list or sales claim.
+**Reviewed:** 2026-10-17; product boundary refreshed 2026-10-24. This is a research hypothesis document, not an approved offer, price list or sales claim. Historical multi-provider assumptions are not current Ternuxx scope.
 
 ## What the product is today
 
-**Current factual description (rechecked 2026-10-23):** Ternuxx is an early-stage Native Termux workstation manager with a Debian PRoot provider. `./tx` in the source checkout and the installed `tx` command are canonical; the older `ternuxx` command is a compatibility entrypoint. The repository includes package transactions, native desktop/SSH lifecycle, typed Debian PRoot operations, and CLI/TUI/Web/GTK management surfaces. P4 provider parity, reproducible setup, and the full audit remain in progress; there are no public releases or release-qualified product tests. See [phase status](../PHASE-STATUS.md) and [the repository audit worklist](../audit/REPOSITORY-AUDIT.md).
+**Current factual description (rechecked 2026-10-24):** Ternuxx is an early-stage Native Termux-only workstation manager. Owner-directed PRoot retirement is complete; prior PRoot market and product claims below are historical planning assumptions. `./tx` in the source checkout and the installed `tx` command are canonical; the older `ternuxx` command is a compatibility entrypoint. The repository includes Native package planning, desktop/SSH lifecycle, a shared management service, CPU-only inference, and CLI/TUI/Web/GTK management surfaces. Native profile qualification and later project phases remain in progress; there are no public releases or release-qualified product tests. See [phase status](../PHASE-STATUS.md) and [the repository audit worklist](../audit/REPOSITORY-AUDIT.md).
 
-**Product promise to test:** give advanced Android users one evidence-led way to inspect and manage native Termux desktop workflows while preserving a separately working Linux PRoot environment and making future cross-layer handoffs explicit. The distinction between desired architecture and usable product must stay visible on all marketing pages.
+**Product promise to test:** give advanced Android users one evidence-led way to inspect and manage Native Termux workstation workflows through consistent interfaces and guided recovery. The distinction between desired architecture and usable product must stay visible on all marketing pages.
 
 ## Likely first user groups
 
 | Segment | Need / likely pain | Fit now | Evidence / validation |
 |---|---|---|---|
-| Advanced Termux users who also run Debian PRoot | Reliable install, session ownership, desktop recovery and clear provider boundary | Closest fit to owner problem; product not qualified yet | Recruit a small opt-in pilot after P2/P4; observe actual install/recovery friction |
+| Advanced Termux users | Reliable install, desktop lifecycle, recovery and clear capability boundaries | Closest fit to owner problem; product not qualified yet | Recruit a small opt-in pilot after the supported Native profile is reproducible; observe setup/recovery friction |
 | Android developers using phone as workstation | CLI, editors, compilers, SSH, selected Android APIs, repeatable workspace | Plausible but no validated use cases beyond owner | Interview developers; record workflows, offline/network and keyboard constraints |
 | Linux-on-Android learners/hobbyists | Low-friction distro and desktop setup, guided recovery | Competes directly with established apps; support burden may be high | Compare setup failure paths, onboarding and device coverage |
 | Privacy/offline-first users | Local state and no mandatory telemetry/cloud accounts | Product principles align; no audit yet verifies every code path | Threat-model, network-egress and logging review before claim |
@@ -27,14 +27,13 @@
 | Andronix | Current official site describes Andronix 10.1 with app-guided Linux installs, nine distros, desktop/sound, no root, and optional paid Modded Pass/Complete; current prices vary by region and were showing a time-limited promotion when checked. Docs separate free distro/desktop access from paid extras. GitHub's command-line repo reports MIT; this is not the license of the Android app or every modded asset. | Closest productization/commercial example: guided install plus optional add-on monetization. | Andronix is not the same provider architecture; do not copy its UI, scripts or marketing. Its current feature/pricing snapshot will change. |
 | UserLAnd | Official site describes a free app to run Linux distributions/apps on Android without root; public Android repo contains distro-specific assets in separate repos. GitHub API currently reports no recognized repository license. | Competes for no-root distro/app access. | “Public source” does not prove a redistribution license; per-component support and device behavior need direct review. |
 | Linux Deploy | Official GitHub README describes distro install into image/directory/partition, SSH/VNC/X11/Framebuffer, and says it works better with superuser rights; repository shows GPL-3.0. Source last pushed in 2022. | Adjacent rooted/chroot deployment and service management alternative. | Different root assumptions and older source activity; not a direct comparison for an unrooted Termux-native product. |
-| Manual scripts / proot-distro | Official PRoot-Distro can manage OCI userlands from native Termux; it refuses nested PRoot. | Technically capable users can build their own stacks; high flexibility. | It is a low-level tool, not proof of turnkey desktop support or per-device GPU success. |
 
-Primary sources: [Andronix official product/pricing](https://andronix.app/), [Andronix source repo](https://github.com/AndronixApp/andronix), [Andronix open-source note](https://docs.andronix.app/v10/miscellaneous/open-source), [UserLAnd official site](https://userland.tech/linux/), [UserLAnd repository](https://github.com/CypherpunkArmory/UserLAnd), [Linux Deploy](https://github.com/meefik/linuxdeploy), Termux:X11, and [PRoot-Distro](https://github.com/termux/proot-distro). Accessed 2026-10-17.
+Primary sources: [Andronix official product/pricing](https://andronix.app/), [Andronix source repo](https://github.com/AndronixApp/andronix), [Andronix open-source note](https://docs.andronix.app/v10/miscellaneous/open-source), [UserLAnd official site](https://userland.tech/linux/), [UserLAnd repository](https://github.com/CypherpunkArmory/UserLAnd), [Linux Deploy](https://github.com/meefik/linuxdeploy), Termux:X11. Accessed 2026-10-17.
 
 ### Differentiation: claim versus present evidence
 
-- **Potential differentiated direction:** manage native Termux and explicitly reuse an existing independently maintained Debian PRoot setup without breaking its established Zink/Turnip workload route; add read-only doctoring, ownership-aware recovery and explicit routing.
-- **Currently usable differentiation:** not yet commercially verified. The code is early and the provider adapter is absent. The existing Ternux setup belongs to its own repo and must not be represented as a Ternuxx feature.
+- **Potential differentiated direction:** provide consistent Native Termux management, read-only diagnostics, ownership-aware recovery, and workload guidance across CLI, TUI, Web and GTK.
+- **Currently usable differentiation:** not yet commercially verified. The code is early and device qualification, release readiness, licensing and support remain open.
 - **Defensibility:** not a moat today. Long-term value would come from verified device compatibility, safe lifecycle/recovery, quality support and evidence records; those are maintenance costs, not proprietary lock-in.
 - **Market evidence:** no customer interviews, waitlist, service inquiries, conversions or revenue were found in the audited repo. GitHub stars/forks are not buyer evidence. Do not estimate total market size from them.
 

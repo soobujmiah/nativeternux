@@ -51,10 +51,10 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
 @media(max-width:760px){header{padding:.7rem 1rem;flex-wrap:wrap}h1{font-size:1rem;min-width:0;overflow-wrap:anywhere}#disconnect{margin-left:auto}.login{width:calc(100% - 1rem);margin:1rem auto}.login .tools{display:grid;grid-template-columns:minmax(0,1fr)}.login .tools input{width:100%;min-width:0}.tools input,.tools select{min-width:0;max-width:100%;width:100%}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:380px){.layout{padding:.5rem;padding-bottom:5rem}.panel{padding:.75rem}.summary{grid-template-columns:1fr}header{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
-.brand-footer{max-width:1440px;margin:0 auto;padding:.7rem 1.25rem 1rem;color:var(--muted);font-size:.82rem;text-align:center}.brand-footer a{color:var(--green);text-decoration:none}.brand-footer a:hover{text-decoration:underline}.terminal-dialog{width:min(1100px,96vw);height:min(820px,92vh);max-width:96vw;max-height:92vh;padding:1rem;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:14px}.terminal-dialog::backdrop{background:#000b}.terminal-shell{height:100%;display:flex;flex-direction:column;gap:.65rem}.terminal-toolbar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}.terminal-toolbar select{flex:1;min-width:10rem}.terminal-screen{flex:1;min-height:180px;background:#080e0b;border:1px solid var(--line);border-radius:8px;padding:.45rem;overflow:hidden}.terminal-screen .xterm{height:100%}.terminal-status{min-height:1.3rem;color:var(--muted);font-size:.85rem}@media(max-width:650px){.terminal-dialog{width:100vw;height:100dvh;max-width:100vw;max-height:100dvh;margin:0;border-radius:0;padding:.65rem}.terminal-screen{min-height:120px}}
+.brand-footer{max-width:1440px;margin:0 auto;padding:.7rem 1.25rem 1rem;color:var(--muted);font-size:.82rem;text-align:center}.brand-footer a{color:var(--green);text-decoration:none}.brand-footer a:hover{text-decoration:underline}
 
 </style>
-<link rel="stylesheet" href="/assets/xterm-6.0.0/xterm.css">
+
 </head>
 <body>
 <header><h1><span>TERN</span>UXX <span>Management Center</span></h1><button id="disconnect" hidden>Disconnect</button></header>
@@ -65,20 +65,20 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
 <aside class="panel detail-panel"><div class="heading"><div><h2 id="resource-title" tabindex="-1">Resource details</h2><div id="resource-subtitle" class="muted">Select a resource for status and actions.</div></div><button id="back-to-resources" class="back-to-resources">Back to list</button></div><section class="action-dock" aria-labelledby="actions-title"><h3 id="actions-title">Actions</h3><p id="action-hint" class="field-note">Select a resource to see its related controls.</p><div id="resource-actions" class="actions"></div></section><div class="resource-inspection"><div id="resource-detail" class="detail"></div><div id="result-readable" class="detail" role="status" aria-live="polite"></div><details id="monitor-panel" hidden><summary>Android Activity monitoring policy</summary><p class="muted">Eta sudhu Android Activity/focus check-er policy. Linux GUI health alada live status check diye dekhun. Default off; interval default 5 minute.</p><div class="form-grid"><label><span><input id="monitor-enabled" type="checkbox"> Enable Activity monitoring</span><span class="field-note">Background-e Termux:X11 Activity open ache kina check kore.</span></label><label>Check interval<input id="monitor-interval" type="number" min="30" max="86400" value="300"><span class="field-note">30 second theke 24 hour; default 300 second.</span></label><label>Unit<select id="monitor-unit"><option value="seconds">Seconds</option><option value="minutes">Minutes</option><option value="hours">Hours</option></select></label><label><span><input id="monitor-focus" type="checkbox"> Check Android Activity focus</span></label><label><span><input id="monitor-launch" type="checkbox"> Background-e thakle Activity request koro</span><span class="field-note">Focus checking chara ei option kaj kore na.</span></label><button id="save-monitor" class="primary">Save Activity policy</button></div></details><details id="activity-panel"><summary>Recent management activity</summary><p class="muted">Ternuxx-er operation history ekhane dekha jabe; runtime log dekhte nicher section khulun. Android and unrelated app logs ekhane dekhano hoy na.</p><button id="view-activity" class="primary">Load recent activity</button><p id="activity-note" class="muted" role="status">Activity history ekhono load hoyni.</p><div id="activity-output" class="activity-list"></div></details><details id="logs-panel"><summary>Ternuxx runtime logs</summary><p class="muted">Fixed private Ternuxx log files only. The Native desktop log may include output from apps running in XFCE. Android-wide logs and arbitrary file paths are not exposed. Reads are bounded to the latest 300 lines.</p><div class="tools"><button id="refresh-logs">Refresh sources</button><select id="log-source" aria-label="Log source"></select><button id="load-log" class="primary">Show latest lines</button></div><p id="log-note" class="muted" role="status">Log sources have not been checked.</p><pre id="log-output">No log loaded.</pre></details><details><summary>Technical API response</summary><pre id="response">No request yet.</pre></details></div></aside>
 </main>
 <div id="mobile-action-bar" class="mobile-action-bar" aria-label="Selected resource actions" hidden><button id="quick-status" hidden>Check live status</button><button id="quick-actions" class="primary">View actions</button></div>
-<dialog id="terminal-dialog" class="terminal-dialog" aria-labelledby="terminal-title"><div class="terminal-shell"><div class="heading"><div><h2 id="terminal-title">Debian terminal</h2><div id="terminal-status" class="terminal-status" role="status">Broker is not connected.</div></div><button id="terminal-close-dialog" aria-label="Close terminal window">Close</button></div><div class="terminal-toolbar"><select id="terminal-session" aria-label="Ternuxx-managed Debian session"><option value="">Choose a managed session</option></select><button id="terminal-refresh-sessions">Refresh sessions</button><button id="terminal-attach-session" class="primary">Attach</button><button id="terminal-start-session">Start new Debian terminal…</button><button id="terminal-stop-session" disabled>Close guest session…</button></div><div id="terminal-screen" class="terminal-screen" aria-label="Interactive Debian terminal"></div></div></dialog>
+
 <footer class="brand-footer">Workstation in your pocket — by Sobuj Miah · <a href="https://soobujmiah.github.io/" rel="noopener noreferrer">soobujmiah.github.io</a></footer>
-<script src="/assets/xterm-6.0.0/xterm.js"></script><script src="/assets/xterm-6.0.0/addon-fit.js"></script>
+
 <script>
 (()=>{
  let session=null,catalog=null,selectedCategory=null,selectedResource=null,allResources=[];
  const $=s=>document.querySelector(s), out=$("#response"), notice=$("#notice-app"), labels={healthy:"Healthy",running:"Running",ready:"Ready",starting:"Starting",stopping:"Stopping",stopped:"Stopped",failed:"Failed",stale:"Stale",unknown:"Unknown",unsafe:"Unsafe",implemented:"Available",partial:"Some actions available",available:"Available",external:"Externally managed",unverified:"Unverified",unavailable:"Unavailable",planned:"Planned"};
  const safe=v=>typeof v==="string"?v:"Unknown", statusLabel=v=>labels[v]||safe(v).replaceAll("_"," ");
- function humanValue(v){if(typeof v==="boolean")return v?"On":"Off";if(v===null||v===undefined)return "Not reported";if(typeof v!=="string")return String(v);if(v.includes("/"))return v;const words={"running_idle":"Ready; monitoring is off","configuration-managed":"Policy managed by Ternuxx","not-queried":"Not checked yet","query-required":"Check live status","not-probed":"Not checked yet","not-implemented":"Not available yet","not-applicable":"Not applicable","not-configured":"Not configured","ternuxx_verified":"Verified as managed by Ternuxx","configuration-managed-scheduler-not-installed":"Policy saved; background checker is not installed","scheduler-not-installed":"Background checker is not installed","source-scheduler-not-installed":"Background checker is not installed","disabled-by-default":"Off by default","native-termux":"Native Termux","debian-proot":"Debian PRoot","android-host-via-termux":"Android host through Termux","loopback":"This device only (127.0.0.1)"};return words[v]||statusLabel(v).replaceAll("-"," ")}
+ function humanValue(v){if(typeof v==="boolean")return v?"On":"Off";if(v===null||v===undefined)return "Not reported";if(typeof v!=="string")return String(v);if(v.includes("/"))return v;const words={"running_idle":"Ready; monitoring is off","configuration-managed":"Policy managed by Ternuxx","not-queried":"Not checked yet","query-required":"Check live status","not-probed":"Not checked yet","not-implemented":"Not available yet","not-applicable":"Not applicable","not-configured":"Not configured","ternuxx_verified":"Verified as managed by Ternuxx","configuration-managed-scheduler-not-installed":"Policy saved; background checker is not installed","scheduler-not-installed":"Background checker is not installed","source-scheduler-not-installed":"Background checker is not installed","disabled-by-default":"Off by default","native-termux":"Native Termux","android-host-via-termux":"Android host through Termux","loopback":"This device only (127.0.0.1)"};return words[v]||statusLabel(v).replaceAll("-"," ")}
  function humanReport(value){const lines=[],hidden=/password|private[_ ]?key|secret|token|request[_ ]?id|plan[_ ]?id|^id$/i;function walk(x,label="",depth=0){if(x&&typeof x==="object"){if(Array.isArray(x)){if(!x.length&&label)lines.push("  ".repeat(depth)+label+": None");x.forEach((item,i)=>{if(item&&typeof item==="object"){lines.push("  ".repeat(depth)+(i+1)+".");walk(item,"",depth+1)}else lines.push("  ".repeat(depth)+(i+1)+". "+humanValue(item))});return}for(const [key,item] of Object.entries(x)){if((depth===0&&(key==="api_version"||key==="operation"))||hidden.test(key))continue;if(key==="ok"){lines.push("  ".repeat(depth)+"Result: "+(item?"Complete":"Failed"));continue}const fieldNames={status:"Status",state:"State",current:"Current state",readiness:"Readiness",availability:"Availability",ownership:"Ownership",authority:"Managed by",provider:"Provider",environment:"Environment",enabled:"Enabled",running:"Running",interval_seconds:"Check interval (seconds)",boot_status:"Boot status",focus_check:"Check Activity focus",activity_launch:"Request Activity launch when missing",wakelock:"Wake Lock",message:"Details",impact:"Change impact",key_type:"Key type",fingerprint:"Fingerprint",label:"Key label",key_count:"Authorized keys",invalid_entries:"Invalid entries",permissions:"File permissions",reason:"Result",port:"Port",bind_address:"Bind address",auth_methods:"Login methods",password_authentication:"Password login",public_key_authentication:"Key login",managed_script_identity:"Managed script check",listener:"Listener",service:"Service",profile:"Startup profile",ready:"Ready for startup",blockers:"What must be fixed",actions:"Startup actions",id:"Reference",code:"Reference"};const title=fieldNames[key]||key.replaceAll("_"," ").replaceAll("."," ").replace(/\b\w/g,c=>c.toUpperCase());walk(item,title,depth+(label?1:0))}return}lines.push("  ".repeat(depth)+(label?label+": ":"")+humanValue(x))}walk(value);return lines.join("\n")||"No readable details were returned."}
  function reqid(){return crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)}
- async function post(path,body,headers={}){const response=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json",...headers},body:JSON.stringify(body)});let data;try{data=await response.json()}catch{throw Error("Invalid server response")};if(!response.ok)throw Error(data.error||"Request failed");return data}
- function headers(){return {Authorization:"Bearer "+session.bearer_token,"X-Ternuxx-CSRF":session.csrf_token}}
- async function run(operation,args={}){if(!session)return;const requestResourceId=selectedResource?.id;const mutations={"graphics.provider.select":"Change the Native Termux graphics backend for future desktop starts","desktop.start":"Start the native desktop session","desktop.stop":"Stop the native desktop session and its owned children","desktop.restart":"Stop the native desktop and start it again"};if(operation==="proot.app.launch"&&!window.confirm("Launch named PRoot app "+String(args.app_id||"")+" on display "+String(args.display||"from server environment")+"? Only this catalog app will be started; no guest configuration will change."))return;if(mutations[operation]&&!window.confirm(mutations[operation]+"? Ternuxx will operate only its verified owned GUI session. Continue?"))return;notice.textContent="Working…";try{const h=headers();if(mutations[operation]||(operation.startsWith("ssh.keys.")||operation.startsWith("ssh.client-key.")||operation.startsWith("ssh.service.autostart."))||operation==="desktop.monitor.configure"||operation==="ssh.service.start"||operation==="ssh.service.stop"||operation==="ssh.service.restart"||operation==="proot.app.launch"||operation==="proot.shortcuts.apply"||operation==="proot.shortcuts.sync.apply"||operation==="proot.shortcuts.sync.rollback.apply"||operation==="proot.start"||operation==="proot.stop"||operation==="proot.recovery.reconcile"||operation.startsWith("proot.setup.")||operation==="cron.jobs.mutation.preview"||operation==="cron.jobs.mutation.apply")h["Idempotency-Key"]=reqid();const result=await post("/api/v1/operations",{api_version:1,request_id:reqid(),operation,args},h);const isCatalog=operation==="management.catalog";if(isCatalog||selectedResource?.id===requestResourceId){out.textContent=isCatalog?"Catalog loaded. Select a resource to view its available actions.":JSON.stringify(result,null,2);const readable=$("#result-readable");if(readable)readable.textContent=isCatalog&&result.ok?"Loaded "+(result.data?.resources?.length||0)+" resources across "+(result.data?.categories?.length||0)+" categories.":humanReport(result);}notice.textContent=result.ok?"Updated from shared management service":"Operation failed";if(!result.ok)throw Error((result.error&&result.error.message)||result.error?.code||"Operation failed");if(operation==="management.catalog"){catalog=result.data;allResources=catalog.resources;drawCategories();drawResources()}if(operation==="desktop.monitor.status")fillMonitor(result.data);if(operation==="desktop.monitor.configure")await run("desktop.monitor.status");return result}catch(e){notice.textContent=e.message;return null}}
+ async function post(path,body,headers={}){const response=await fetch(path,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json",...headers},body:JSON.stringify(body)});let data;try{data=await response.json()}catch{throw Error("Invalid server response")};if(!response.ok)throw Error(data.error||"Request failed");return data}
+ function headers(){return {"X-Ternuxx-CSRF":session.csrf_token}}
+ async function run(operation,args={}){if(!session)return;const requestResourceId=selectedResource?.id;const mutations={"graphics.provider.select":"Save the Native graphics choice for future desktop starts","desktop.start":"Start the native desktop session","desktop.stop":"Stop the native desktop session and its owned children","desktop.restart":"Stop the native desktop and start it again"};if(mutations[operation]){const scope=operation==="graphics.provider.select"?"KGSL is experimental, must already be extracted, and this will not install files or change the running desktop.":"Ternuxx will operate only its verified owned GUI session.";if(!window.confirm(mutations[operation]+"? "+scope+" Continue?"))return;}notice.textContent="Working…";try{const h=headers();if(mutations[operation]||(operation.startsWith("ssh.keys.")||operation.startsWith("ssh.client-key.")||operation.startsWith("ssh.service.autostart."))||operation==="desktop.monitor.configure"||operation==="ssh.service.start"||operation==="ssh.service.stop"||operation==="ssh.service.restart"||operation==="cron.jobs.mutation.preview"||operation==="cron.jobs.mutation.apply"||operation==="inference.cpu.model.apply"||operation==="inference.cpu.run"||operation==="software.app.preview"||operation==="software.app.apply")h["Idempotency-Key"]=reqid();const result=await post("/api/v1/operations",{api_version:1,request_id:reqid(),operation,args},h);const isCatalog=operation==="management.catalog";if(isCatalog||selectedResource?.id===requestResourceId){out.textContent=isCatalog?"Catalog loaded. Select a resource to view its available actions.":JSON.stringify(result,null,2);const readable=$("#result-readable");if(readable)readable.textContent=isCatalog&&result.ok?"Loaded "+(result.data?.resources?.length||0)+" resources across "+(result.data?.categories?.length||0)+" categories.":humanReport(result);}notice.textContent=result.ok?"Updated from shared management service":"Operation failed";if(!result.ok)throw Error((result.error&&result.error.message)||result.error?.code||"Operation failed");if(operation==="management.catalog"){catalog=result.data;allResources=catalog.resources;drawCategories();drawResources()}if(operation==="desktop.monitor.status")fillMonitor(result.data);if(operation==="desktop.monitor.configure")await run("desktop.monitor.status");return result}catch(e){notice.textContent=e.message;return null}}
  async function cronChange(action){
   let args, jobId;
   if(action==="create"){
@@ -240,9 +240,9 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   if(r.id==="native.wakelock"&&operations.includes("wakelock.ssh-policy.preview")&&operations.includes("wakelock.ssh-policy.apply")){
    const b=document.createElement("button");b.textContent="Set managed SSH keep-awake preference";b.onclick=manageSshWakeLock;actions.append(b)
   }
-  if(r.id==="network.ssh.managed-8023"){const help=document.createElement("details"),summary=document.createElement("summary"),note=document.createElement("p");help.className="field-note";summary.textContent="SSH login help";note.textContent="This service accepts public-key login only; password login is disabled. The authorized-key list belongs to the shared Termux account and may also authorize development SSH 8022. Keep each private key with its client. For this device's configured PRoot client, use ssh -p 8023 termux. You can generate a Native recovery key, then enroll its public key for both ports.";help.append(summary,note);detail.append(help)}
+  if(r.id==="network.ssh.managed-8023"){const help=document.createElement("details"),summary=document.createElement("summary"),note=document.createElement("p");help.className="field-note";summary.textContent="SSH login help";note.textContent="This service accepts public-key login only; password login is disabled. The authorized-key list belongs to the shared Termux account and may also authorize development SSH 8022. Keep each private key with its client. For a local client, use the displayed 8023 endpoint and your enrolled public key. You can generate a Native recovery key, then enroll its public key for both ports.";help.append(summary,note);detail.append(help)}
   for(const [k,v] of [["Authority",r.ownership?.authority],["Ownership",r.ownership?.status],["Environment",r.environment],["Current state",r.state?.current],["Readiness",r.state?.readiness],["Boot",r.boot?.status]])detail.append(line(k,v));
-  const statusOp=operations.find(x=>["desktop.status","desktop.monitor.status","proot.status","ssh.inspect","native.ssh.status","boot.status","boot.profile.status","recovery.status","doctor.report","proot.shortcuts.list","cron.status","timezone.status","wakelock.status","boot.cron.status","terminal.broker.status"].includes(x));
+  const statusOp=operations.find(x=>["desktop.status","desktop.monitor.status","ssh.inspect","native.ssh.status","boot.status","boot.profile.status","recovery.status","doctor.report","cron.status","timezone.status","wakelock.status","boot.cron.status",].includes(x));
   if(statusOp){const b=document.createElement("button");b.className="primary";b.textContent="Check live status";b.dataset.statusAction="true";b.onclick=()=>run(statusOp);actions.append(b)}
   for(const [op,label] of [["desktop.start","Start"],["desktop.stop","Stop"],["desktop.restart","Restart"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label+" desktop";b.onclick=()=>run(op);actions.append(b)}
   if(r.id==="network.ssh.managed-8023"){
@@ -254,72 +254,61 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   if(operations.includes("ssh.keys.rollback.list")){const b=document.createElement("button");b.textContent="Restore a previous SSH key change";b.onclick=()=>restoreSshKeyChange();actions.append(b)}
    for(const [op,label] of [["ssh.service.start","Start managed SSH"],["ssh.service.stop","Stop managed SSH"],["ssh.service.restart","Restart managed SSH"]])if(operations.includes(op)){const b=document.createElement("button");b.textContent=label;b.onclick=()=>manageSsh(op);actions.append(b)}
   }
-  if(r.id==="graphics.native"||r.id==="graphics.debian"){
-   const provider=r.id==="graphics.native"?"native":"debian";
+  if(r.id==="graphics.native"){
+   const provider="native";
    const statusButton=document.createElement("button");statusButton.textContent="Check graphics status";statusButton.dataset.statusAction="true";statusButton.onclick=()=>run("graphics.provider.status",{provider});actions.append(statusButton);
    for(const api of ["opengl","gles","vulkan"]){const b=document.createElement("button");b.textContent="Verify "+api;b.onclick=()=>run("graphics.provider.verify",{provider,api,display:":1"});actions.append(b)}
-   if(provider==="native")for(const [backend,label] of [["kgsl-freedreno","Use verified KGSL candidate"],["system","Use system graphics stack"]]){const b=document.createElement("button");b.textContent=label;b.onclick=()=>run("graphics.provider.select",{provider,backend,confirmed:true});actions.append(b)}
+   if(provider==="native")for(const [backend,label] of [["kgsl-freedreno","Use experimental KGSL candidate"],["system","Use system graphics stack"]]){const b=document.createElement("button");b.textContent=label;b.onclick=()=>run("graphics.provider.select",{provider,backend,confirmed:true});actions.append(b)}
+  }
+  if(r.id==="software.curated-apps"){
+   const refresh=document.createElement("button");refresh.className="primary";refresh.textContent="Refresh curated app status";refresh.dataset.statusAction="true";refresh.onclick=()=>loadCuratedApps();actions.append(refresh);loadCuratedApps();
+  }
+  if(r.id==="inference.cpu.local"){
+   const status=document.createElement("button");status.className="primary";status.textContent="Check CPU runtime and model";status.dataset.statusAction="true";status.onclick=()=>run("inference.cpu.status");actions.append(status);
+   const install=document.createElement("button");install.textContent="Preview or download pinned model…";install.onclick=()=>manageCpuModel("install");actions.append(install);
+   const remove=document.createElement("button");remove.textContent="Preview model removal…";remove.onclick=()=>manageCpuModel("remove");actions.append(remove);
+   const execute=document.createElement("button");execute.textContent="Run bounded CPU prompt…";execute.onclick=()=>{const prompt=window.prompt("One-line prompt (max 4096 UTF-8 bytes). It is sent to the local runtime; offline behavior is unverified.");if(prompt!==null&&prompt.trim())run("inference.cpu.run",{prompt,max_tokens:64})};actions.append(execute);
   }
   if(r.id==="native.gui.activity-monitor"){const b=document.createElement("button");b.textContent="Refresh Activity policy";b.onclick=()=>run("desktop.monitor.status");actions.append(b);run("desktop.monitor.status")}
   if(r.id==="native.timezone"&&operations.includes("timezone.list")){const b=document.createElement("button");b.textContent="List available timezones";b.onclick=()=>run("timezone.list");actions.append(b)}
-  if(r.id==="proot.replay-guests"){
-   const action=document.createElement("select");action.setAttribute("aria-label","Replay guest action");for(const [v,l] of [["retire","Retire idle replay guest"],["restore","Restore retired replay guest"]]){const o=document.createElement("option");o.value=v;o.textContent=l;action.append(o)}
-   const alias=document.createElement("input");alias.placeholder="Exact alias: ternuxx-replay-NAME";alias.setAttribute("aria-label","Ternuxx replay guest alias");alias.autocomplete="off";
-   const backup=document.createElement("input");backup.placeholder="Backup ID, for restore";backup.setAttribute("aria-label","Replay guest backup ID");backup.autocomplete="off";
-   const previewButton=document.createElement("button");previewButton.className="primary";previewButton.textContent="Preview guest change";
-   previewButton.onclick=async()=>{const a=alias.value.trim(),kind=action.value;if(!/^ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}$/.test(a)){notice.textContent="Enter an exact Ternuxx replay alias.";return}let op,args;if(kind==="retire"){op="proot.setup.retire.preview";args={alias:a}}else{const b=backup.value.trim();if(!/^[0-9a-f]{32}$/.test(b)){notice.textContent="Enter the 32-character backup ID from a prior retirement.";return}op="proot.setup.restore.preview";args={alias:a,backup_id:b}}const result=await run(op,args);if(!result?.ok)return;const data=result.data||{},plan=data.plan_id;if(!/^[0-9a-f]{64}$/.test(plan||"")){notice.textContent="The preview did not return a valid plan.";return}const impact=String(data.operation?.impact||"Review the exact replay guest change.");if(!window.confirm((kind==="retire"?"Retire":"Restore")+" "+a+"?\\n\\n"+impact+"\\n\\nOnly the exact receipt-verified replay guest can be moved; no guest files are deleted."))return;const applyOp=kind==="retire"?"proot.setup.retire.apply":"proot.setup.restore.apply";const applyArgs={alias:a,confirmed:true,plan_id:plan};if(kind==="restore")applyArgs.backup_id=backup.value.trim();const applied=await run(applyOp,applyArgs);if(applied?.ok)notice.textContent=kind==="retire"?"Replay guest safely retired; private restore backup preserved.":"Replay guest restored from the exact private backup."};
-   actions.append(action,alias,backup,previewButton)
-  }
-  if(r.id==="proot.debian.workloads"&&operations.includes("proot.setup.icd-migrate.preview")){
-   const action=document.createElement("select");action.setAttribute("aria-label","Debian Vulkan ICD migration action");for(const [v,l] of [["migrate","Migrate legacy ICD filename"],["rollback","Roll back a prior migration"]]){const o=document.createElement("option");o.value=v;o.textContent=l;action.append(o)}
-   const alias=document.createElement("input");alias.value="debian";alias.setAttribute("aria-label","Exact Debian guest alias");
-   const migration=document.createElement("input");migration.placeholder="Migration ID for rollback";migration.setAttribute("aria-label","ICD migration ID");
-   const preview=document.createElement("button");preview.className="primary";preview.textContent="Preview ICD change";
-   preview.onclick=async()=>{const kind=action.value,a=alias.value.trim();let op,args;if(kind==="migrate"){if(!/^[a-zA-Z0-9_.-]{1,64}$/.test(a)){notice.textContent="Enter one exact guest alias.";return}op="proot.setup.icd-migrate.preview";args={alias:a}}else{const id=migration.value.trim();if(!/^[0-9a-f]{64}$/.test(id)){notice.textContent="Enter the 64-character migration ID.";return}op="proot.setup.icd-migrate.rollback.preview";args={migration_id:id}}const result=await run(op,args);if(!result?.ok)return;const data=result.data||{},plan=data.plan_id;if(!/^[0-9a-f]{64}$/.test(plan||"")){notice.textContent="Preview did not return a valid plan.";return}const change=data.operation||{};if(!window.confirm("Apply this exact ICD file rename?\n\n"+(change.source_path||change.target_path||"Review the migration details in the response.")+"\n\nNo packages are changed. An active or unverifiable guest blocks apply."))return;const applied=kind==="migrate"?await run("proot.setup.icd-migrate.apply",{alias:a,confirmed:true,plan_id:plan}):await run("proot.setup.icd-migrate.rollback.apply",{migration_id:migration.value.trim(),confirmed:true,plan_id:plan});if(applied?.ok)notice.textContent=kind==="migrate"?"Legacy ICD filename migrated; file bytes and inode preserved.":"Legacy ICD filename restored."};
-   actions.append(action,alias,migration,preview)
-  }
-  if(r.id==="proot.debian.workloads"||r.id==="proot.interactive-terminal-broker"){const terminalButton=document.createElement("button");terminalButton.className="primary";terminalButton.textContent="Open Debian terminal";terminalButton.onclick=openTerminalDialog;actions.append(terminalButton)}
-  if(r.id==="proot.debian.workloads"&&operations.includes("proot.app.launch")&&operations.includes("proot.shortcuts.list")){
-   const load=document.createElement("button");load.textContent="Discover Debian applications";const select=document.createElement("select");select.setAttribute("aria-label","Named PRoot app");select.disabled=true;const launch=document.createElement("button");launch.textContent="Launch selected app";launch.disabled=true;
-   launch.onclick=()=>{if(!select.value)return;const selected=select.selectedOptions[0],desktopId=selected?.dataset.desktopId;const display=window.prompt("X11 display for this app (for Native XFCE, usually :1). Leave blank to use the Web service environment DISPLAY.",":1");if(display===null)return;const chosen=display.trim();if(chosen&&!/^:[0-9]{1,2}$/.test(chosen)){notice.textContent="Use an X11 display like :1.";return}const target=desktopId?{desktop_id:desktopId}:{app_id:select.value};if(chosen)target.display=chosen;run("proot.app.launch",target)};
-   const shortcutAction=document.createElement("select");shortcutAction.setAttribute("aria-label","Shortcut action");for(const [value,label] of [["add","Add shortcut"],["remove","Remove owned shortcut"]]){const option=document.createElement("option");option.value=value;option.textContent=label;shortcutAction.append(option)}
-   const manageShortcut=document.createElement("button");manageShortcut.textContent="Preview shortcut change";manageShortcut.disabled=true;
-   load.onclick=async()=>{const result=await run("proot.shortcuts.list");if(!result?.ok)return;select.replaceChildren();for(const item of result.data?.items||[]){const option=document.createElement("option");option.value=item.id;option.textContent=item.name+" · "+item.shortcut_state;select.append(option)}for(const item of result.data?.desktop_applications?.items||[]){const option=document.createElement("option");option.value="desktop:"+item.desktop_id;option.dataset.desktopId=item.desktop_id;option.textContent=item.name+" · "+item.status+" · shortcut "+(item.shortcut_state||"unknown")+(item.status==="unavailable"?" ("+item.diagnostic+")":"");option.disabled=item.status!=="available";select.append(option)}select.disabled=select.options.length===0;launch.disabled=select.disabled;manageShortcut.disabled=select.disabled||select.selectedOptions[0]?.disabled;};select.onchange=()=>{manageShortcut.disabled=!select.value||Boolean(select.selectedOptions[0]?.disabled)};
-   manageShortcut.onclick=async()=>{if(!select.value||select.selectedOptions[0]?.disabled)return;const action=shortcutAction.value,desktopId=select.selectedOptions[0]?.dataset.desktopId;const targetArgs=desktopId?{desktop_id:desktopId}:{app_id:select.value};const preview=await run("proot.shortcuts.preview",{action,...targetArgs});if(!preview?.ok)return;const data=preview.data||{};if(!data.changed){notice.textContent="Shortcut already in requested state; no change needed.";return}const target=data.affected_resources?.[0]?.path||"the selected app shortcut";const before=data.affected_resources?.[0]?.before||"unknown",after=data.affected_resources?.[0]?.after||"unknown";if(typeof data.plan_id!=="string"){notice.textContent="Preview did not return a valid plan.";return}if(!window.confirm(action.toUpperCase()+" "+(data.name||select.selectedOptions[0]?.textContent)+" at "+target+" ("+before+" → "+after+")? Only an exact Ternuxx-owned launcher can change."))return;const applied=await run("proot.shortcuts.apply",{action,...targetArgs,confirmed:true,plan_id:data.plan_id});if(applied?.ok)await load.onclick()};
-   if(operations.includes("proot.shortcuts.sync.rollback.list")&&operations.includes("proot.shortcuts.sync.rollback.preview")&&operations.includes("proot.shortcuts.sync.rollback.apply")){
-    const history=document.createElement("button");history.textContent="Load shortcut sync history";
-    const rollbackSelect=document.createElement("select");rollbackSelect.setAttribute("aria-label","Saved PRoot shortcut sync");rollbackSelect.disabled=true;
-    const rollbackButton=document.createElement("button");rollbackButton.textContent="Preview shortcut restore";rollbackButton.disabled=true;
-    history.onclick=async()=>{const result=await run("proot.shortcuts.sync.rollback.list");if(!result?.ok)return;const rows=(result.data?.rollbacks||[]).filter(x=>x.integrity==="valid"&&x.status==="applied");rollbackSelect.replaceChildren();for(const item of rows){const option=document.createElement("option");option.value=item.rollback_id;option.textContent=(item.created_at||"Saved sync")+" · "+item.entry_count+" changes";rollbackSelect.append(option)}rollbackSelect.disabled=rows.length===0;rollbackButton.disabled=rollbackSelect.disabled;notice.textContent=rows.length?rows.length+" restorable shortcut sync(s) found.":"No applied shortcut sync is available to restore."};
-    rollbackButton.onclick=async()=>{if(!rollbackSelect.value)return;const preview=await run("proot.shortcuts.sync.rollback.preview",{rollback_id:rollbackSelect.value});if(!preview?.ok)return;const data=preview.data||{};if(typeof data.plan_id!=="string"){notice.textContent="Rollback preview did not return a valid plan.";return}const changes=(data.changes||[]).map(x=>x.action+" "+x.path).join("\n");if(!window.confirm("Restore this saved PRoot app menu state?\n\n"+changes+"\n\nOnly the exact files that still match the saved sync will change."))return;const applied=await run("proot.shortcuts.sync.rollback.apply",{rollback_id:rollbackSelect.value,confirmed:true,plan_id:data.plan_id});if(applied?.ok){notice.textContent="Previous PRoot shortcut state restored.";rollbackSelect.disabled=true;rollbackButton.disabled=true}};
-    actions.append(history,rollbackSelect,rollbackButton)
-   }
-   if(operations.includes("proot.shortcuts.sync.preview")&&operations.includes("proot.shortcuts.sync.apply")){
-    const syncApps=document.createElement("button");syncApps.textContent="Preview all Debian app shortcuts";
-    syncApps.onclick=async()=>{const preview=await run("proot.shortcuts.sync.preview");if(!preview?.ok)return;const data=preview.data||{};if(!data.changed){notice.textContent="PRoot Apps menu is already in sync.";return}const rows=(data.changes||[]).map(x=>x.action+" "+x.path).join("\n");if(typeof data.plan_id!=="string"){notice.textContent="Sync preview did not return a valid plan.";return}if(!window.confirm("Review PRoot shortcut sync ("+(data.discovered||0)+" discovered apps):\n\n"+rows+"\n\nUnowned conflicts will be preserved. Apply these generated launcher and menu changes?"))return;const applied=await run("proot.shortcuts.sync.apply",{confirmed:true,plan_id:data.plan_id});if(applied?.ok)notice.textContent="PRoot application shortcuts synchronized."};
-    actions.append(syncApps)
-   }
-   actions.append(load,select,launch,shortcutAction,manageShortcut);
-  }
-  if(r.id==="proot.debian.workloads"&&operations.includes("proot.sessions.list")&&operations.includes("proot.start.preview")&&operations.includes("proot.stop.preview")){
-   let sessions=[];const loadSessions=document.createElement("button");loadSessions.textContent="Load PRoot sessions";
-   const sessionSelect=document.createElement("select");sessionSelect.setAttribute("aria-label","Ternuxx PRoot session");sessionSelect.disabled=true;
-   const sessionNote=document.createElement("p");sessionNote.className="muted";sessionNote.setAttribute("role","status");sessionNote.textContent="Session inventory has not been loaded.";
-   const startProbe=document.createElement("button");startProbe.textContent="Preview and start fixed 5-minute probe";
-   const stopSession=document.createElement("button");stopSession.textContent="Preview and stop selected owned session";stopSession.disabled=true;
-   const recoveryDetail=document.createElement("button");recoveryDetail.textContent="Inspect selected session recovery";recoveryDetail.disabled=true;
-   const reconcileSession=document.createElement("button");reconcileSession.textContent="Preview and reconcile exited session";reconcileSession.disabled=true;
-   const refreshSessions=async()=>{const result=await run("proot.sessions.list");if(!result?.ok)return;sessions=Array.isArray(result.data?.sessions)?result.data.sessions:[];sessionSelect.replaceChildren();for(const item of sessions){if(typeof item.session_id!=="string")continue;const option=document.createElement("option");option.value=item.session_id;option.textContent=item.session_id+" · "+statusLabel(item.profile)+" · "+statusLabel(item.state)+" · "+statusLabel(item.ownership);sessionSelect.append(option)}sessionSelect.disabled=sessionSelect.options.length===0;sessionNote.textContent=sessions.length+" recorded Ternuxx sessions. Stop is enabled only for a running session with verified ownership.";updateSessionControls()};
-   const updateSessionControls=()=>{const item=sessions.find(x=>x.session_id===sessionSelect.value);stopSession.disabled=!item||item.state!=="running"||item.ownership!=="ternuxx_verified";recoveryDetail.disabled=!item;reconcileSession.disabled=!item||item.ownership!=="ternuxx_verified"};
-   loadSessions.onclick=refreshSessions;sessionSelect.onchange=updateSessionControls;
-   startProbe.onclick=async()=>{const preview=await run("proot.start.preview",{profile:"isolated-probe"});if(!preview?.ok)return;const data=preview.data||{};if(typeof data.plan_id!=="string"||!/^plan-[0-9a-f]{64}$/.test(data.plan_id)){notice.textContent="PRoot preview did not return a valid plan.";return}const impact=String(data.impact||"Starts one bounded headless Debian diagnostic process.");if(!window.confirm("Review exact PRoot plan:\n\nProfile: isolated-probe\nLifetime: 300 seconds\nImpact: "+impact+"\n\nStarts only the fixed sleep probe. No GUI, arbitrary command, package install, or guest configuration change."))return;const applied=await run("proot.start",{profile:"isolated-probe",confirmed:true,plan_id:data.plan_id,timeout_seconds:300});if(applied?.ok)await refreshSessions()};
-   stopSession.onclick=async()=>{const item=sessions.find(x=>x.session_id===sessionSelect.value);if(!item||item.state!=="running"||item.ownership!=="ternuxx_verified"){notice.textContent="Choose a live session with verified Ternuxx ownership.";return}const preview=await run("proot.stop.preview",{session_id:item.session_id});if(!preview?.ok)return;const data=preview.data||{};if(data.ownership!=="ternuxx_verified"||data.action!=="signal_owned_process_group"||typeof data.plan_id!=="string"||!/^plan-[0-9a-f]{64}$/.test(data.plan_id)){notice.textContent="Fresh stop preview did not verify this session; nothing was signaled.";return}if(!window.confirm("Stop only this verified Ternuxx session?\n\nID: "+item.session_id+"\nProfile: "+item.profile+"\nTarget: exact recorded process group\nNo force signal will be sent."))return;const applied=await run("proot.stop",{session_id:item.session_id,confirmed:true,plan_id:data.plan_id});if(applied?.ok)await refreshSessions()};
-   recoveryDetail.onclick=()=>{const item=sessions.find(x=>x.session_id===sessionSelect.value);if(item)run("proot.recovery.inspect",{session_id:item.session_id})};
-   reconcileSession.onclick=async()=>{const item=sessions.find(x=>x.session_id===sessionSelect.value);if(!item||item.ownership!=="ternuxx_verified"){notice.textContent="Choose a session with verified Ternuxx ownership.";return}const preview=await run("proot.recovery.reconcile.preview",{session_id:item.session_id});if(!preview?.ok)return;const data=preview.data||{};if(data.action!=="mark_exited_without_signal"||data.confirmation_required!==true||data.signal_allowed!==false||typeof data.plan_id!=="string"||!/^plan-[0-9a-f]{64}$/.test(data.plan_id)){notice.textContent="Process exit is not proven. The session record was kept and no signal was sent.";return}const evidence=String(data.evidence||"process exit verified");if(!window.confirm("Mark only this exited Ternuxx session as stopped?\n\nSession: "+item.session_id+"\nEvidence: "+evidence+"\n\nThis updates the exact session record and sends no process signal."))return;const applied=await run("proot.recovery.reconcile",{session_id:item.session_id,confirmed:true,plan_id:data.plan_id});if(applied?.ok)await refreshSessions()};
-   actions.append(loadSessions,sessionSelect,sessionNote,startProbe,stopSession,recoveryDetail,reconcileSession);
-  }
   if(r.id==="automation.cron-registry"){if(operations.includes("cron.jobs.list")){const b=document.createElement("button");b.textContent="List saved jobs";b.onclick=()=>run("cron.jobs.list");actions.append(b)}if(operations.includes("cron.jobs.mutation.preview")&&operations.includes("cron.jobs.mutation.apply")){const b=document.createElement("button");b.textContent="Create Cron job…";b.onclick=()=>cronChange("create");actions.append(b);const u=document.createElement("button");u.textContent="Update Cron job…";u.onclick=()=>cronChange("update");actions.append(u);const d=document.createElement("button");d.textContent="Remove Cron job…";d.onclick=()=>cronChange("remove");actions.append(d)}if(operations.includes("cron.executions.list")){const b=document.createElement("button");b.textContent="View execution history";b.onclick=()=>run("cron.executions.list",{limit:20});actions.append(b)}}
   syncQuickActions();
+ }
+ async function loadCuratedApps(){
+  const result=await run("software.apps.list");if(!result?.ok)return;
+  const actions=$("#resource-actions");
+  for(const old of actions.querySelectorAll("[data-curated-app-row]"))old.remove();
+  for(const app of (result.data?.apps||[])){
+   const row=document.createElement("div");row.className="activity-item";row.dataset.curatedAppRow="true";
+   const title=document.createElement("strong");title.textContent=app.name+" · "+app.package;
+   const state=document.createElement("p");state.className="muted";state.textContent=app.status+" · installed "+(app.installed_version||"no")+" · candidate "+(app.candidate_version||"unknown");
+   row.append(title,state);
+   const choices=app.status==="available"?["install"]:app.status==="update_available"?["update","remove"]:app.status==="installed"?["remove"]:[];
+   for(const action of choices){const button=document.createElement("button");button.textContent=action[0].toUpperCase()+action.slice(1)+" "+app.name;button.onclick=()=>manageCuratedApp(app.id,app.name,action);row.append(button)}
+   if(app.id==="directory-tree"&&app.installed===true){const open=document.createElement("button");open.textContent="Inspect a HOME file/directory";open.onclick=()=>handoffTreePath();row.append(open)}
+   actions.append(row);
+  }
+ }
+ async function handoffTreePath(){
+  const path=window.prompt("HOME-relative path only (for example notes.txt or Documents). File contents are not read.");
+  if(path===null||!path.trim())return;
+  await run("software.app.run",{app_id:"directory-tree",path:path.trim()});
+ }
+ async function manageCuratedApp(appId,name,action){
+  const preview=await run("software.app.preview",{app_id:appId,action});if(!preview?.ok)return;
+  const plan=preview.data||{};out.textContent=JSON.stringify(plan,null,2);
+  const transaction=(plan.changes||[]).map(change=>change.action+" "+change.package+(change.version?"="+change.version:"" )).join("\n");
+  const token=action.toUpperCase();
+  if(window.confirm(token+" "+name+"?\n\nExact APT changes:\n"+transaction+"\n\nNo autoremove; only the reviewed plan can run."))
+   await run("software.app.apply",{app_id:appId,action,plan_id:plan.plan_id,confirmation:token});
+ }
+ async function manageCpuModel(action){
+  const result=await run("inference.cpu.model.preview",{action});if(!result?.ok)return;
+  const plan=result.data||{};out.textContent=JSON.stringify(plan,null,2);
+  const verb=action==="install"?"Download":"Remove";
+  const detail=action==="install"?" ("+Math.round((plan.size_bytes||0)/1048576)+" MiB, SHA-256 "+plan.sha256+")":"";
+  if(window.confirm(verb+" the exact pinned model"+detail+" at "+plan.target+"?"))
+   await run("inference.cpu.model.apply",{action,plan_id:plan.plan_id,confirmed:true});
  }
  function syncQuickActions(){
   const buttons=[...$("#resource-actions").querySelectorAll("button")].filter(b=>!b.disabled);
@@ -335,105 +324,14 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
  $("#quick-actions").onclick=focusResourceActions;
  $("#back-to-resources").onclick=()=>{$("#resource-list").scrollIntoView({block:"start"});$("#resource-list .card.selected")?.focus({preventScroll:true})};
  new MutationObserver(syncQuickActions).observe($("#resource-actions"),{childList:true,subtree:true,attributes:true,attributeFilter:["disabled"]});
- let webTerminal=null,webFit=null,webLease=null,webPollTimer=0,webInputTimer=0,webInputBuffer="",webPollBusy=false;
- function terminalNote(message){$("#terminal-status").textContent=message}
- async function terminalCall(operation,{session_id=null,generation=null,attachment_id=null,channel_ticket=null,args={}}={}){
-  if(!session)throw Error("Connect to the management service first.");
-  const body={operation,request_id:reqid(),session_id,generation,attachment_id,channel_ticket,args};
-  const result=await post("/api/v1/terminal",body,headers());
-  if(!result?.ok)throw Error(result?.error||"Terminal operation failed");
-  return result.data;
- }
- function initWebTerminal(){
-  if(webTerminal)return;
-  if(!window.Terminal||!window.FitAddon){terminalNote("Terminal renderer could not load. Refresh the page and try again.");return}
-  webTerminal=new Terminal({cursorBlink:true,convertEol:false,scrollback:3000,fontSize:14,allowProposedApi:false,theme:{background:"#080e0b",foreground:"#e6f1e9",cursor:"#b8ed77",selectionBackground:"#345943"}});
-  webFit=new FitAddon.FitAddon();webTerminal.loadAddon(webFit);webTerminal.open($("#terminal-screen"));
-  webTerminal.onData(data=>{webInputBuffer+=data;if(!webInputTimer)webInputTimer=setTimeout(flushWebTerminalInput,220)});
-  new ResizeObserver(()=>{if(!webLease||!webFit)return;try{webFit.fit();terminalCall("terminal.resize",{session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id,args:{columns:webTerminal.cols,rows:webTerminal.rows}}).catch(()=>{})}catch{}}).observe($("#terminal-screen"));
- }
- async function flushWebTerminalInput(){
-  webInputTimer=0;if(!webLease||!webInputBuffer)return;
-  const encoded=new TextEncoder().encode(webInputBuffer);webInputBuffer="";
-  for(let offset=0;offset<encoded.length;offset+=3000){
-   const bytes=encoded.slice(offset,offset+3000);let binary="";
-   for(const byte of bytes)binary+=String.fromCharCode(byte);
-   try{await terminalCall("terminal.input",{session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id,args:{data_base64:btoa(binary)}})}
-   catch(error){terminalNote(error.message);return}
-  }
- }
- async function pollWebTerminal(){
-  if(!webLease||webPollBusy)return;webPollBusy=true;
-  try{
-   const result=await terminalCall("terminal.output",{session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id,args:{after_sequence:webLease.cursor||0}});
-   if(result.truncated)webTerminal.write("\r\n[Some terminal output was skipped while disconnected.]\r\n");
-   for(const chunk of result.chunks||[]){const raw=atob(chunk.data_base64),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));webTerminal.write(new TextDecoder().decode(bytes));webLease.cursor=chunk.sequence}
-   if(Number.isInteger(result.next_sequence)&&result.next_sequence>(webLease.cursor||0))webLease.cursor=result.next_sequence;
-  }catch(error){terminalNote(error.message);stopWebTerminalPolling()}
-  finally{webPollBusy=false;if(webLease)webPollTimer=setTimeout(pollWebTerminal,400)}
- }
- function stopWebTerminalPolling(){if(webPollTimer){clearTimeout(webPollTimer);webPollTimer=0}}
- async function attachWebTerminal(sessionId,ticket){
-  const lease=await terminalCall("terminal.attach",{session_id:sessionId,channel_ticket:ticket});
-  webLease={...lease,cursor:0};initWebTerminal();
-  if(!webTerminal){await terminalCall("terminal.detach",{session_id:lease.session_id,generation:lease.generation,attachment_id:lease.attachment_id});webLease=null;return}
-  webFit.fit();webTerminal.reset();
-  await terminalCall("terminal.resize",{session_id:lease.session_id,generation:lease.generation,attachment_id:lease.attachment_id,args:{columns:webTerminal.cols,rows:webTerminal.rows}});
-  $("#terminal-stop-session").disabled=false;
-  terminalNote("Connected to managed Debian terminal "+sessionId.slice(-8)+". Press Ctrl-] to detach.");
-  webTerminal.focus();pollWebTerminal();
- }
- async function refreshWebTerminalSessions(){
-  terminalNote("Checking Ternuxx-managed sessions…");const result=await run("proot.sessions.list");if(!result?.ok)return;
-  const select=$("#terminal-session");select.replaceChildren(new Option("Choose a managed session",""));
-  for(const item of result.data?.sessions||[]){
-   if(item.profile!=="debian-interactive"||item.state!=="running"||item.ownership!=="ternuxx_verified")continue;
-   select.append(new Option("Debian "+item.session_id.slice(-8)+" · "+statusLabel(item.state),item.session_id));
-  }
-  terminalNote(select.options.length>1?"Verified managed sessions are ready to attach.":"No verified Ternuxx interactive session is available. You can start one with a fresh preview.");
- }
- async function attachSelectedWebTerminal(){
-  const sessionId=$("#terminal-session").value;if(!sessionId){terminalNote("Choose a verified managed session first.");return}
-  try{terminalNote("Creating a short-lived single-use channel…");const grant=await terminalCall("terminal.channel.issue",{session_id:sessionId});await attachWebTerminal(sessionId,grant.channel_ticket)}
-  catch(error){terminalNote(error.message)}
- }
- async function startWebTerminal(){
-  try{
-   terminalNote("Creating an exact Debian login preview…");const response=await terminalCall("terminal.start.preview");const plan=response.plan;
-   if(!plan||typeof plan.plan_id!=="string"||plan.profile!=="debian-interactive"||typeof plan.alias!=="string"||typeof plan.rootfs!=="string"){terminalNote("The broker returned no valid start plan.");return}
-   const impact=String(plan.impact||"Starts one fixed-profile Debian interactive session.");
-   if(!window.confirm("Review the exact Ternuxx Debian terminal plan.\n\nProfile: Interactive Debian\nGuest: "+plan.alias+"\nRootfs: "+plan.rootfs+"\nImpact: "+impact+"\n\nNo terminal starts unless you confirm."))return;
-   terminalNote("Starting the confirmed Debian session…");
-   const started=await terminalCall("terminal.start",{args:{confirmed:true,plan_id:plan.plan_id}});
-   $("#terminal-session").append(new Option("Debian "+started.session_id.slice(-8)+" · Running",started.session_id));$("#terminal-session").value=started.session_id;
-   await attachWebTerminal(started.session_id,started.channel_ticket);
-  }catch(error){terminalNote(error.message)}
- }
- async function closeWebTerminalSession(){
-  if(!webLease)return;
-  try{
-   const preview=await terminalCall("terminal.close.preview",{session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id});
-   const plan=preview.plan;if(!plan||typeof plan.plan_id!=="string"){terminalNote("No verified stop plan was returned.");return}
-   if(!plan||plan.ownership!=="ternuxx_verified"||plan.signal!=="SIGHUP"||typeof plan.scope!=="string"){terminalNote("No verified terminal close plan was returned.");return}
-   if(!window.confirm("Close this exact Ternuxx-managed Debian session?\n\nSession: "+String(plan.session_id||webLease.session_id)+"\nSignal: "+plan.signal+"\nScope: "+humanValue(plan.scope)+"\nImpact: "+String(plan.impact||"Hang up this owned terminal.")+"\n\nThe session closes only after confirmation."))return;
-   const result=await terminalCall("terminal.close",{session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id,args:{confirmed:true,plan_id:plan.plan_id}});
-   if(result.result?.state==="stopped"){webLease=null;stopWebTerminalPolling();terminalNote("Managed Debian session stopped.")}
-  }catch(error){terminalNote(error.message)}
- }
- async function detachWebTerminal(){
-  const lease=webLease;webLease=null;stopWebTerminalPolling();
-  if(webInputTimer){clearTimeout(webInputTimer);webInputTimer=0}webInputBuffer="";$("#terminal-stop-session").disabled=true;
-  if(lease)try{await terminalCall("terminal.detach",{session_id:lease.session_id,generation:lease.generation,attachment_id:lease.attachment_id})}catch{}
-  terminalNote("Detached; the Debian session keeps running.");
- }
- async function closeWebTerminalDialog(){await detachWebTerminal();const dialog=$("#terminal-dialog");if(dialog.open)dialog.close()}
- function openTerminalDialog(){$("#terminal-dialog").showModal();initWebTerminal();if(webFit)setTimeout(()=>webFit.fit(),40);refreshWebTerminalSessions()}
  function operationLabel(op){const known={"ssh.inspect":"SSH connection status","native.ssh.status":"Managed SSH status","ssh.service.autostart.status":"SSH automatic-start preference","ssh.service.autostart.preview":"Preview SSH automatic-start preference","ssh.service.autostart.apply":"Change SSH automatic-start preference","boot.status":"Termux boot readiness","boot.profile.status":"Startup profile status","boot.enable":"Enable startup profile","boot.disable":"Disable startup profile","wakelock.status":"Wake Lock status","wakelock.ssh-policy.status":"Managed SSH keep-awake preference","wakelock.ssh-policy.preview":"Preview SSH keep-awake preference","wakelock.ssh-policy.apply":"Change SSH keep-awake preference","wakelock.ssh-policy.status":"Managed SSH Wake Lock preference","wakelock.ssh-policy.preview":"Preview SSH Wake Lock preference","wakelock.ssh-policy.apply":"Change SSH Wake Lock preference","wakelock.acquire":"Keep selected service awake","wakelock.release":"Release selected service Wake Lock","desktop.monitor.configure":"Update Activity monitoring policy"};return known[op]||op.replaceAll("."," ").replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}
  async function loadActivity(){const target=$("#activity-output"),note=$("#activity-note");note.textContent="Loading management activity…";target.replaceChildren();const result=await run("recovery.status");if(!result?.ok){note.textContent="Could not load management activity. Check Technical API response for details.";return}const rows=Array.isArray(result.data?.operations)?result.data.operations.slice():[];rows.sort((a,b)=>String(b.updated_at||"").localeCompare(String(a.updated_at||"")));if(!rows.length){note.textContent="No management activity has been recorded yet.";return}note.textContent=rows.length+" recorded operations · "+(result.data.unresolved_count||0)+" need attention";for(const item of rows.slice(0,12)){const card=document.createElement("div");card.className="activity-item";const title=document.createElement("strong");title.textContent=statusLabel(item.kind);const state=document.createElement("span");state.textContent=" · "+statusLabel(item.status)+" · "+safe(item.updated_at);const detail=document.createElement("div");detail.className="muted";detail.textContent=safe(item.detail);card.append(title,state,detail);target.append(card)}}
  async function refreshLogs(){const select=$("#log-source"),note=$("#log-note");note.textContent="Checking Ternuxx log sources...";select.replaceChildren();const result=await run("management.logs.list");if(!result?.ok){note.textContent="Could not read log-source inventory.";return}for(const source of result.data?.sources||[]){const option=document.createElement("option");option.value=source.source_id;option.textContent=source.label+" - "+statusLabel(source.status);option.disabled=source.status!=="available";select.append(option)}note.textContent="Only fixed Ternuxx-owned logs are listed. The Native desktop log may include output from apps running in XFCE."}
  async function loadLog(){const source_id=$("#log-source").value,note=$("#log-note"),output=$("#log-output");if(!source_id){note.textContent="Select an available log source.";return}note.textContent="Reading bounded log tail...";output.textContent="";const result=await run("management.logs.read",{source_id,limit:300});if(!result?.ok){note.textContent="Log read failed. Check Technical API response.";return}const data=result.data||{};output.textContent=(data.lines||[]).join("\n")||"Log is empty.";note.textContent=data.status==="missing"?"Log file is not present.":"Showing "+(data.lines||[]).length+" lines"+(data.truncated?" from a bounded tail.":".")}
  function fillMonitor(data){$("#monitor-enabled").checked=!!data.enabled;$("#monitor-interval").value=data.interval_seconds||300;$("#monitor-unit").value="seconds";$("#monitor-focus").checked=!!data.focus_check;$("#monitor-launch").checked=!!data.activity_launch}
- async function connect(){const note=$("#notice");note.textContent="Connecting…";try{const result=await post("/api/v1/session",{bootstrap_secret:$("#secret").value,capabilities:["diagnostics.read","remote_policy.read","continuity.read","desktop.manage","desktop.monitor.manage","ssh.managed.lifecycle","ssh.credentials.read","ssh.credentials.manage","graphics.manage","applications.launch","applications.shortcuts.manage","cron.manage","proot.session.manage","proot.guest.manage","wakelock.policy.manage"]});session=result.session;$("#secret").value="";$("#login").hidden=true;$("#app").hidden=false;$("#disconnect").hidden=false;await run("management.catalog")}catch(e){note.textContent=e.message}}
+ function showApplication(sessionData){session=sessionData;$("#secret").value="";$("#login").hidden=true;$("#app").hidden=false;$("#disconnect").hidden=false}
+ async function connect(){const note=$("#notice");note.textContent="Connecting…";try{const result=await post("/api/v1/session",{bootstrap_secret:$("#secret").value,capabilities:["diagnostics.read","remote_policy.read","continuity.read","desktop.manage","desktop.monitor.manage","ssh.managed.lifecycle","ssh.credentials.read","ssh.credentials.manage","graphics.manage","cron.manage","wakelock.policy.manage","ai.local.run","ai.local.manage"]});showApplication(result.session);await run("management.catalog")}catch(e){note.textContent=e.message}}
+ async function restoreSession(){try{const result=await post("/api/v1/session/reconnect",{});showApplication(result.session);await run("management.catalog")}catch{}}
  $("#view-activity").onclick=loadActivity;
  $("#refresh-logs").onclick=refreshLogs;
  $("#load-log").onclick=loadLog;
@@ -448,24 +346,19 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   await run("desktop.monitor.configure",{enabled:$("#monitor-enabled").checked,interval_value:value,unit,focus_check:$("#monitor-focus").checked,activity_launch:$("#monitor-launch").checked});
  };
  $("#disconnect").onclick=async()=>{
-  if(session){try{await detachWebTerminal();await post("/api/v1/session/revoke",{},headers())}catch{}}
+  if(session){try{await post("/api/v1/session/revoke",{},headers())}catch{}}
   location.reload();
  };
- $("#terminal-close-dialog").onclick=closeWebTerminalDialog;
- $("#terminal-refresh-sessions").onclick=refreshWebTerminalSessions;
- $("#terminal-attach-session").onclick=attachSelectedWebTerminal;
- $("#terminal-start-session").onclick=startWebTerminal;
- $("#terminal-stop-session").onclick=closeWebTerminalSession;
- $("#terminal-dialog").addEventListener("close",()=>{if(webLease)detachWebTerminal()});
+
+
+
+
+
+
  document.addEventListener("keydown",event=>{
-  if(event.ctrlKey&&event.key==="]"&&webLease){event.preventDefault();detachWebTerminal()}
  });
- window.addEventListener("pagehide",()=>{
-  if(!webLease||!session)return;
-  const body={operation:"terminal.detach",request_id:reqid(),session_id:webLease.session_id,generation:webLease.generation,attachment_id:webLease.attachment_id,channel_ticket:null,args:{}};
-  const requestHeaders={"Content-Type":"application/json",...headers()};
-  fetch("/api/v1/terminal",{method:"POST",keepalive:true,headers:requestHeaders,body:JSON.stringify(body)}).catch(()=>{});
- });
+
+ restoreSession();
 })();
 </script>
 </body>

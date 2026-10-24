@@ -1,6 +1,6 @@
 # Native continuity, recovery and Wake Lock implementation
 
-Native Termux owns persistent continuity evidence and service recovery. PRoot is optional; an Android reboot ends the old agent/process and never implies automatic task resumption.
+Native Termux owns persistent continuity evidence and service recovery. An Android reboot ends the old agent/process and never implies automatic task resumption. PRoot support has been retired; historical reboot records remain separately labeled.
 
 The earlier RB02/RB03 implementation narrative is preserved as [dated history](history/2026-10-22-continuity-implementation.md). It is not the current checkpoint, service count, authentication policy or client status. [Phase state](../../project/phase-state.json), [client coverage](CAPABILITY-MATRIX.md) and [the audit](../audit/REPOSITORY-AUDIT.md) own current qualification.
 
@@ -30,6 +30,6 @@ Android procfs/netlink limits can leave socket-to-process ownership unknown. A b
 
 ## Preservation and remaining work
 
-Preserve Native Termux, development SSH 8022, managed 8023, current desktop and the working Codex guest. No broad cleanup, rootfs replacement or unrelated file mutation. Legacy launcher observations in history do not authorize invoking their cleanup routines.
+Preserve Native Termux, development SSH 8022, managed 8023, and the current desktop. No broad cleanup, rootfs replacement or unrelated file mutation. Legacy launcher observations in history do not authorize invoking their cleanup routines.
 
-Per-service boot/Wake Lock controls, broader shared recovery actions, all-client terminal/guest qualification and fully reproducible supported setup remain in the active audit. Fixtures and current source tests cannot substitute for physical boot or workload evidence. See [reboot qualification](../testing/REBOOT-RECOVERY-GUIDE.md) for evidence vocabulary and owner-operated boot handling.
+Per-service boot/Wake Lock controls, broader shared recovery actions, all-client Native workflow qualification and fully reproducible supported setup remain in the active audit. Fixtures and current source tests cannot substitute for physical boot or workload evidence. See [reboot qualification](../testing/REBOOT-RECOVERY-GUIDE.md) for evidence vocabulary and owner-operated boot handling.

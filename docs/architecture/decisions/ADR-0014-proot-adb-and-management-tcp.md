@@ -1,4 +1,5 @@
 # ADR-0014: Separate PRoot ADB from Ternuxx management TCP
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Date:** 2026-10-18
 - **Status:** Proposed architecture; this ADR enabled no listener; an existing ADB server was observed, with bind ownership still unresolved

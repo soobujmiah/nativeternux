@@ -477,7 +477,7 @@ bash -c "$runner" _ status
                 env=env, text=True, capture_output=True, timeout=5, check=False,
             )
             self.assertNotEqual(result.returncode, 0, command)
-            self.assertIn("requires the native Termux shell", result.stderr, command)
+            self.assertIn("requires the Native Termux environment", result.stderr, command)
             self.assertEqual((self.state / "session.json").read_bytes(), state_before, command)
             self.assertEqual(
                 sorted(path.name for path in (self.state / "operations").glob("*.json")),
@@ -499,7 +499,7 @@ bash -c "$runner" _ status
             check=False,
         )
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("requires the native Termux shell", result.stderr)
+        self.assertIn("requires the Native Termux environment", result.stderr)
         self.assertFalse(self.state.exists())
 
     def test_checkpoint_cli_is_native_only_and_records_without_proot(self) -> None:

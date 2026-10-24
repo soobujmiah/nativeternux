@@ -1,4 +1,5 @@
 # ADR-0016: `tx db` and legacy PRoot entrypoints
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Status:** accepted by owner direction in the active master execution prompt, 2026-10-22
 - **Scope:** command identity, compatibility claims, and safe retirement of legacy shell entrypoints

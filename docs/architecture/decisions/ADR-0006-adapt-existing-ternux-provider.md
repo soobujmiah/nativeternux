@@ -1,4 +1,5 @@
 # ADR-0006: Integrate the independent Ternux environment through a narrow provider
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Date:** 2026-10-17
 - **Status:** superseded by owner direction on 2026-10-20

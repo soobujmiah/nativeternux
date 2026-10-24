@@ -458,7 +458,7 @@ def _main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "service":
-            import terminal_service_deployment as deployment
+            import fixed_service_deployment as deployment
             prefix = os.environ.get("PREFIX")
             if prefix != "/data/data/com.termux/files/usr" or not os.environ.get("TERMUX_VERSION"):
                 raise MonitoringError("GUI monitor service commands require Native Termux")

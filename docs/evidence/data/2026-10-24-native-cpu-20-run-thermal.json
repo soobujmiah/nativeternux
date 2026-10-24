@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-10-24",
+  "execution_context": "Native Termux on Android",
+  "runtime": "llama-cpp 0.7.0",
+  "model_id": "qwen3-0.6b-q4_0",
+  "backend": "CPU",
+  "gpu_layers": 0,
+  "max_output_tokens": 32,
+  "thermal_before_c": {
+    "cpu_therm": 45.944,
+    "socd": 55.0
+  },
+  "samples": [
+    {
+      "run": 1,
+      "exit_code": 0,
+      "wall_seconds": 3.129,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 46.985,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 2,
+      "exit_code": 0,
+      "wall_seconds": 3.21,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.257,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 3,
+      "exit_code": 0,
+      "wall_seconds": 3.158,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.392,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 4,
+      "exit_code": 0,
+      "wall_seconds": 3.15,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.481,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 5,
+      "exit_code": 0,
+      "wall_seconds": 3.156,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.571,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 6,
+      "exit_code": 0,
+      "wall_seconds": 3.159,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.668,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 7,
+      "exit_code": 0,
+      "wall_seconds": 3.163,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.778,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 8,
+      "exit_code": 0,
+      "wall_seconds": 3.155,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.0,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 9,
+      "exit_code": 0,
+      "wall_seconds": 3.147,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.963,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 10,
+      "exit_code": 0,
+      "wall_seconds": 3.142,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.978,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 11,
+      "exit_code": 0,
+      "wall_seconds": 3.15,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.029,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 12,
+      "exit_code": 0,
+      "wall_seconds": 3.133,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.014,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 13,
+      "exit_code": 0,
+      "wall_seconds": 3.177,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.044,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 14,
+      "exit_code": 0,
+      "wall_seconds": 3.137,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.029,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 15,
+      "exit_code": 0,
+      "wall_seconds": 3.155,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.037,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 16,
+      "exit_code": 0,
+      "wall_seconds": 3.154,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.044,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 17,
+      "exit_code": 0,
+      "wall_seconds": 3.134,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.074,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 18,
+      "exit_code": 0,
+      "wall_seconds": 3.218,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.051,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 19,
+      "exit_code": 0,
+      "wall_seconds": 3.13,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.037,
+        "socd": 55.0
+      }
+    },
+    {
+      "run": 20,
+      "exit_code": 0,
+      "wall_seconds": 3.197,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 48.179,
+        "socd": 55.0
+      }
+    }
+  ],
+  "total_wall_seconds": 63.339,
+  "child_peak_rss_kib": 550008,
+  "thermal_final_c": {
+    "cpu_therm": 48.179,
+    "socd": 55.0
+  },
+  "guard": {
+    "cpu_therm_stop_c": 60,
+    "reason": "Conservative test guard selected for this run; not an OEM-rated device limit."
+  },
+  "stop_reason": null,
+  "limits": [
+    "This bounded run is not a battery-life test or application-model quality evaluation.",
+    "Android thermal zones are coarse readings and do not directly report throttling.",
+    "Network was not isolated; offline operation is unverified."
+  ]
+}

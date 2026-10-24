@@ -6,8 +6,6 @@ import curses
 import json
 import os
 from pathlib import Path
-from pathlib import Path
-import re
 import stat
 import sys
 import textwrap
@@ -17,9 +15,6 @@ from typing import Any
 import management_service
 import management_sessions
 import management_presentation
-import proot_shortcuts
-import terminal_broker
-import terminal_cli
 
 
 BRANDING_TAGLINE = "Workstation in your pocket — by Sobuj Miah"
@@ -90,340 +85,65 @@ def _choose(screen: "curses._CursesWindow", title: str, options: list[tuple[str,
             return options[key - ord("1")][0]
 
 
-def _launch_proot_app(screen: "curses._CursesWindow") -> dict[str, object] | None:
-    inventory = _call("proot.shortcuts.list")
-    if not inventory.get("ok"):
-        return inventory
-    data = inventory.get("data", {})
-    static_items = data.get("items", []) if isinstance(data, dict) else []
-    desktop_catalog = data.get("desktop_applications", {}) if isinstance(data, dict) else {}
-    dynamic_items = desktop_catalog.get("items", []) if isinstance(desktop_catalog, dict) else []
-    options: list[tuple[str, str]] = []
-    names: dict[str, str] = {}
-    for item in static_items:
-        if not isinstance(item, dict) or item.get("id") not in proot_shortcuts.CATALOG:
-            continue
-        app_id = item["id"]
-        names["app:" + app_id] = str(item.get("name") or proot_shortcuts.CATALOG[app_id]["name"])
-        options.append(("app:" + app_id, names["app:" + app_id] + " · shortcut " + str(item.get("shortcut_state", "unknown"))))
-    for item in dynamic_items:
-        if not isinstance(item, dict) or item.get("status") != "available":
-            continue
-        desktop_id = item.get("desktop_id")
-        if not isinstance(desktop_id, str):
-            continue
-        key = "desktop:" + desktop_id
-        names[key] = str(item.get("name") or desktop_id)
-        options.append((key, names[key] + " · Debian app · shortcut " + str(item.get("shortcut_state", "unknown"))))
-    selected = _choose(screen, "Choose a PRoot app", options)
-    if not selected or selected not in names:
-        return {"ok": False, "error": {"code": "cancelled" if not selected else "unknown_proot_app"}}
-    display = _prompt(screen, "Native Ternuxx X11 display (blank=verified session default)")
-    if display and not re.fullmatch(r":[0-9]{1,2}", display):
-        return {"ok": False, "error": {"code": "invalid_display"}}
-    name = names[selected]
-    target = "Native Ternuxx display" + (f" {display}" if display else "")
-    if _prompt(screen, f"Launch {name} through PRoot in {target}? type yes").lower() != "yes":
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def _software_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
+    operations = set(resource.get("supported_operations", []))
+    if "software.apps.list" not in operations:
+        return {"ok": False, "error": {"code": "action_unavailable"}}
+    report = _call("software.apps.list")
+    if not report.get("ok"):
+        return report
+    apps = report.get("data", {}).get("apps", [])
+    _show_details(screen, report)
+    choices = [(item["id"], f"{item['name']} · {item['package']} · {item['status']}")
+               for item in apps if isinstance(item, dict) and item.get("id")]
+    app_id = _choose(screen, "Curated Native Termux apps", choices)
+    selected_app = next((item for item in apps if item.get("id") == app_id), None)
+    if not selected_app:
         return {"ok": False, "error": {"code": "cancelled"}}
-    args: dict[str, object] = {"app_id": selected[4:]} if selected.startswith("app:") else {
-        "desktop_id": selected[8:]}
-    if display:
-        args["display"] = display
-    return _call("proot.app.launch", args)
-
-
-def _manage_proot_shortcut(screen: "curses._CursesWindow") -> dict[str, object]:
-    inventory = _call("proot.shortcuts.list")
-    if not inventory.get("ok"):
-        return inventory
-    data = inventory.get("data", {})
-    items = data.get("items", []) if isinstance(data, dict) else []
-    options = [(item["id"], f"{item.get('name', item['id'])} · {item.get('shortcut_state', 'unknown')}")
-               for item in items if isinstance(item, dict) and item.get("id") in proot_shortcuts.CATALOG]
-    dynamic = data.get("desktop_applications", {}) if isinstance(data, dict) else {}
-    for item in dynamic.get("items", []) if isinstance(dynamic, dict) else []:
-        if item.get("status") == "available" and isinstance(item.get("desktop_id"), str):
-            options.append(("desktop:" + item["desktop_id"],
-                            f"{item.get('name', item['desktop_id'])} · {item.get('shortcut_state', 'unknown')} · Debian app"))
-    action = _choose(screen, "Shortcut action", [("add", "Add shortcut"), ("remove", "Remove owned shortcut")])
-    if action not in {"add", "remove"}:
-        return {"ok": False, "error": {"code": "cancelled"}}
-    app_id = _choose(screen, "Choose a named PRoot app shortcut", options)
-    if not app_id:
-        return {"ok": False, "error": {"code": "cancelled"}}
-    dynamic_app = app_id.startswith("desktop:")
-    target_args = {"desktop_id": app_id[8:]} if dynamic_app else {"app_id": app_id}
-    app_name = next((label.split(" · ", 1)[0] for value, label in options if value == app_id), app_id)
-    preview = _call("proot.shortcuts.preview", {"action": action, **target_args})
-    if not preview.get("ok"):
-        return preview
-    plan = preview.get("data", {})
-    if not isinstance(plan, dict):
-        return {"ok": False, "error": {"code": "invalid_shortcut_preview"}}
-    if not plan.get("changed"):
-        return preview
-    plan_id = plan.get("plan_id")
-    if not isinstance(plan_id, str):
-        return {"ok": False, "error": {"code": "invalid_shortcut_preview"}}
-    affected = plan.get("affected_resources") or []
-    target = affected[0].get("path", "the selected launcher") if affected and isinstance(affected[0], dict) else "the selected launcher"
-    before = affected[0].get("before", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
-    after = affected[0].get("after", "unknown") if affected and isinstance(affected[0], dict) else "unknown"
-    confirm = _prompt(screen, f"{action.title()} {app_name} at {target} ({before} → {after}). Type yes")
-    if confirm.lower() != "yes":
-        return {"ok": False, "error": {"code": "cancelled"}}
-    return _call("proot.shortcuts.apply", {
-        "action": action, **target_args, "confirmed": True, "plan_id": plan_id,
-    })
-
-
-def _manage_proot_shortcut_sync(screen: "curses._CursesWindow") -> dict[str, object]:
-    preview = _call("proot.shortcuts.sync.preview")
-    if not preview.get("ok"):
-        return preview
-    plan = preview.get("data", {})
-    if not isinstance(plan, dict):
-        return {"ok": False, "error": {"code": "invalid_shortcut_sync_preview"}}
-    if not plan.get("changed"):
-        return preview
-    plan_id = plan.get("plan_id")
-    if not isinstance(plan_id, str):
-        return {"ok": False, "error": {"code": "invalid_shortcut_sync_preview"}}
-    changes = plan.get("changes", [])
-    summary = "; ".join(f"{item.get('action')} {item.get('path')}"
-                        for item in changes if isinstance(item, dict))
-    confirm = _prompt(screen, f"Sync discovered PRoot apps ({plan.get('discovered', 0)} apps): {summary}. Type yes")
-    if confirm.lower() != "yes":
-        return {"ok": False, "error": {"code": "cancelled"}}
-    return _call("proot.shortcuts.sync.apply", {"confirmed": True, "plan_id": plan_id})
-
-def _manage_proot_shortcut_rollback(screen: "curses._CursesWindow") -> dict[str, object]:
-    """Select a saved bulk sync, review its exact paths, then confirm restore."""
-    inventory = _call("proot.shortcuts.sync.rollback.list")
-    if not inventory.get("ok"):
-        return inventory
-    data = inventory.get("data", {})
-    rows = data.get("rollbacks", []) if isinstance(data, dict) else []
-    eligible = [item for item in rows if isinstance(item, dict)
-                and item.get("integrity") == "valid" and item.get("status") == "applied"
-                and isinstance(item.get("rollback_id"), str)]
-    options = [(item["rollback_id"],
-                f"{item.get('created_at', 'Saved sync')} · {item.get('entry_count', 0)} changes")
-               for item in eligible]
-    rollback_id = _choose(screen, "Saved PRoot shortcut syncs", options)
-    if not rollback_id:
-        return {"ok": False, "error": {"code": "cancelled"}}
-    preview = _call("proot.shortcuts.sync.rollback.preview", {"rollback_id": rollback_id})
-    if not preview.get("ok"):
-        return preview
-    plan = preview.get("data", {})
-    if not isinstance(plan, dict) or not isinstance(plan.get("plan_id"), str):
-        return {"ok": False, "error": {"code": "invalid_rollback_preview"}}
-    changes = plan.get("changes", [])
-    summary = "; ".join(
-        f"{item.get('action')} {item.get('path')}" for item in changes if isinstance(item, dict))
-    confirmation = _prompt(
-        screen, f"Restore this PRoot menu state: {summary}. Type yes")
-    if confirmation.lower() != "yes":
-        return {"ok": False, "error": {"code": "cancelled"}}
-    return _call("proot.shortcuts.sync.rollback.apply", {
-        "rollback_id": rollback_id, "confirmed": True, "plan_id": plan["plan_id"],
-    })
-
-
-def _select_session(screen, title, sessions):
-    options = []
-    for item in sessions:
-        session_id = item.get("session_id")
-        if not isinstance(session_id, str) or not re.fullmatch(r"proot-[0-9a-f]{32}", session_id):
-            continue
-        name = "Interactive Debian" if item.get("profile") == "debian-interactive" else "Diagnostic probe"
-        state = str(item.get("state", "unknown")).replace("_", " ")
-        options.append((session_id, f"{name} · {state} · {session_id[-8:]}"))
-    return _choose(screen, title, options)
-
-
-def _attached_terminal(screen, client, *, session_id=None, plan_id=None):
-    """Restore curses after the shared terminal relay, including failures."""
-    curses.def_prog_mode()
-    curses.endwin()
-    try:
-        lease = None
-        if plan_id is not None:
-            started = terminal_cli._ok(client.request("terminal.start", args={
-                "confirmed": True, "plan_id": plan_id}))
-            lease = started.get("result")
-            if not isinstance(lease, dict):
-                return {"ok": False, "error": {"code": "invalid_terminal_start"}}
-            session_id = lease.get("session_id")
-        if not isinstance(session_id, str) or not re.fullmatch(r"proot-[0-9a-f]{32}", session_id):
-            return {"ok": False, "error": {"code": "invalid_terminal_session"}}
-        terminal_cli.attach(session_id, client=client, lease=lease)
-        return {"ok": True, "data": {"session_id": session_id, "state": "detached_or_closed"}}
-    except (OSError, terminal_broker.BrokerError) as exc:
-        return {"ok": False, "error": {"code": "terminal_attach_failed", "detail": str(exc)}}
-    finally:
-        curses.reset_prog_mode()
-        screen.clear()
-        screen.refresh()
-
-
-def _manage_icd_migration(screen: "curses._CursesWindow") -> dict[str, object]:
-    action = _choose(screen, "Debian Vulkan configuration", [
-        ("migrate", "Preview legacy ICD filename migration"),
-        ("rollback", "Preview migration rollback"),
-    ])
-    if action == "migrate":
-        alias = _prompt(screen, "Exact Debian guest alias", 64) or "debian"
-        preview = _call("proot.setup.icd-migrate.preview", {"alias": alias})
-    elif action == "rollback":
-        migration_id = _prompt(screen, "Migration ID (64 lowercase hex characters)", 64)
-        if not re.fullmatch(r"[0-9a-f]{64}", migration_id):
-            return {"ok": False, "error": {"code": "invalid_migration_id"}}
-        preview = _call("proot.setup.icd-migrate.rollback.preview", {"migration_id": migration_id})
-    else:
-        return {"ok": False, "error": {"code": "cancelled"}}
-    if not preview.get("ok"):
-        return preview
-    data = preview.get("data", {})
-    plan_id = data.get("plan_id") if isinstance(data, dict) else None
-    if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
-        return {"ok": False, "error": {"code": "invalid_icd_migration_preview"}}
-    _show_details(screen, preview)
-    if _prompt(screen, "Apply this exact guest file rename? Type yes").lower() != "yes":
-        return {"ok": False, "error": {"code": "cancelled"}}
-    if action == "migrate":
-        return _call("proot.setup.icd-migrate.apply", {
-            "alias": alias, "confirmed": True, "plan_id": plan_id})
-    return _call("proot.setup.icd-migrate.rollback.apply", {
-        "migration_id": migration_id, "confirmed": True, "plan_id": plan_id})
-
-
-def _manage_replay_guest(screen: "curses._CursesWindow") -> dict[str, object]:
-    action = _choose(screen, "Ternuxx replay guest", [
-        ("retire", "Retire an idle replay guest (keeps exact backup)"),
-        ("restore", "Restore a retired replay guest"),
-    ])
-    alias = _prompt(screen, "Exact alias (ternuxx-replay-NAME)")
-    if not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias):
-        return {"ok": False, "error": {"code": "invalid_replay_alias"}}
-    backup_id = ""
-    if action == "retire":
-        preview = _call("proot.setup.retire.preview", {"alias": alias})
-    elif action == "restore":
-        backup_id = _prompt(screen, "Backup ID (32 lowercase hex characters)", 32)
-        if not re.fullmatch(r"[0-9a-f]{32}", backup_id):
-            return {"ok": False, "error": {"code": "invalid_backup_id"}}
-        preview = _call("proot.setup.restore.preview", {"alias": alias, "backup_id": backup_id})
-    else:
-        return {"ok": False, "error": {"code": "cancelled"}}
-    if not preview.get("ok"):
-        return preview
-    plan = preview.get("data", {})
-    plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
-    if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
-        return {"ok": False, "error": {"code": "invalid_guest_lifecycle_preview"}}
-    _show_details(screen, preview)
-    if _prompt(screen, "Apply this exact guest change? Type yes").lower() != "yes":
-        return {"ok": False, "error": {"code": "cancelled"}}
-    if action == "retire":
-        return _call("proot.setup.retire.apply", {"alias": alias, "confirmed": True, "plan_id": plan_id})
-    return _call("proot.setup.restore.apply", {"alias": alias, "backup_id": backup_id,
-                                                "confirmed": True, "plan_id": plan_id})
-
-
-def _manage_proot_sessions(screen: "curses._CursesWindow") -> dict[str, object]:
-    """Manage fixed Ternuxx PRoot sessions through the shared typed service."""
-    listed = _call("proot.sessions.list")
-    if not listed.get("ok"):
-        return listed
-    data = listed.get("data", {})
-    sessions = data.get("sessions", []) if isinstance(data, dict) else []
-    if not isinstance(sessions, list):
-        return {"ok": False, "error": {"code": "invalid_session_inventory"}}
-    choice = _choose(screen, "Debian sessions", [
-        ("status", "View session status"), ("recovery", "Inspect session recovery"),
-        ("start-probe", "Start a bounded diagnostic probe"),
-        ("start-login", "Start an interactive terminal"),
-        ("attach", "Attach to an existing terminal"), ("stop", "Close a managed session"),
-        ("guest-lifecycle", "Retire or restore a Ternuxx replay guest"),
-    ])
-    if choice in {"status", "list"}:
-        return listed
-    if choice == "recovery":
-        session_id = _select_session(screen, "Inspect recovery", [x for x in sessions if isinstance(x, dict)])
-        if not session_id:
+    status = selected_app.get("status")
+    actions: list[tuple[str, str]] = []
+    if app_id == "directory-tree" and selected_app.get("installed") is True:
+        actions.append(("run", "Inspect a file/directory under Native HOME"))
+    if status == "available":
+        actions.append(("install", "Install from official Termux repository"))
+    elif status == "update_available":
+        actions.extend((("update", "Update the selected app"), ("remove", "Remove the selected app")))
+    elif status == "installed":
+        actions.append(("remove", "Remove the selected app"))
+    action = _choose(screen, selected_app["name"], actions)
+    if action == "run" and app_id == "directory-tree" and "software.app.run" in operations:
+        path = _prompt(screen, "HOME-relative path (e.g. Documents or notes.txt)", limit=4096).strip()
+        if not path:
             return {"ok": False, "error": {"code": "cancelled"}}
-        return _call("proot.recovery.inspect", {"session_id": session_id})
-    if choice == "start-probe":
-        preview = _call("proot.start.preview", {"profile": "isolated-probe"})
-        if not preview.get("ok"):
-            return preview
-        plan = preview.get("data", {})
-        plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
-        if not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id):
-            return {"ok": False, "error": {"code": "invalid_session_preview"}}
-        impact = str(plan.get("impact", "Starts one bounded headless Debian diagnostic process."))
-        if _prompt(screen, f"Impact: {impact} Fixed sleep only; no GUI or package changes. Type yes").lower() != "yes":
-            return {"ok": False, "error": {"code": "cancelled"}}
-        return _call("proot.start", {"profile": "isolated-probe", "confirmed": True,
-                                      "plan_id": plan_id, "timeout_seconds": 300})
-    if choice == "start-login":
-        client = terminal_cli._client()
-        try:
-            response = terminal_cli._ok(client.request("terminal.start.preview"))
-        except (OSError, terminal_broker.BrokerError):
-            return {"ok": False, "error": {"code": "terminal_broker_unavailable"}}
-        plan = response.get("plan", {})
-        plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
-        if (not isinstance(plan, dict) or plan.get("profile") != "debian-interactive"
-                or plan.get("mode") != "foreground-tty"
-                or not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
-            return {"ok": False, "error": {"code": "invalid_session_preview"}}
-        _show_details(screen, {"ok": True, "data": plan})
-        if _prompt(screen, "Start the interactive Debian terminal shown in this plan? Type yes").lower() != "yes":
-            return {"ok": False, "error": {"code": "cancelled"}}
-        return _attached_terminal(screen, client, plan_id=plan_id)
-    if choice == "attach":
-        candidates = [item for item in sessions if isinstance(item, dict)
-                      and item.get("ownership") == "ternuxx_verified"
-                      and item.get("state") == "running"
-                      and item.get("profile") == "debian-interactive"]
-        if not candidates:
-            return {"ok": False, "error": {"code": "no_verified_terminal_session"}}
-        client = terminal_cli._client()
-        try:
-            status = terminal_cli._ok(client.request("broker.status"))
-        except (OSError, terminal_broker.BrokerError):
-            return {"ok": False, "error": {"code": "terminal_broker_unavailable"}}
-        if status.get("pty_relay") != "running":
-            return {"ok": False, "error": {"code": "terminal_not_attachable"}}
-        session_id = _select_session(screen, "Attach to a managed terminal", candidates)
-        if not any(item.get("session_id") == session_id for item in candidates):
-            return {"ok": False, "error": {"code": "cancelled"}}
-        return _attached_terminal(screen, client, session_id=session_id)
-    if choice == "stop":
-        candidates = [item for item in sessions if isinstance(item, dict)
-                      and item.get("ownership") == "ternuxx_verified"
-                      and item.get("state") in {"running", "stopping"}]
-        if not candidates:
-            return {"ok": False, "error": {"code": "no_verified_live_session"}}
-        session_id = _select_session(screen, "Close a managed session", candidates)
-        if not any(item.get("session_id") == session_id for item in candidates):
-            return {"ok": False, "error": {"code": "session_not_in_verified_inventory"}}
-        preview = _call("proot.stop.preview", {"session_id": session_id})
-        if not preview.get("ok"):
-            return preview
-        plan = preview.get("data", {})
-        plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
-        if (not isinstance(plan, dict) or plan.get("ownership") != "ternuxx_verified"
-                or not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
-            return {"ok": False, "error": {"code": "session_stop_not_verified"}}
-        _show_details(screen, preview)
-        if _prompt(screen, "Close only the managed session shown in this plan? Type yes").lower() != "yes":
-            return {"ok": False, "error": {"code": "cancelled"}}
-        return _call("proot.stop", {"session_id": session_id, "confirmed": True, "plan_id": plan_id})
-    return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("software.app.run", {"app_id": app_id, "path": path})
+    if not action or not {"software.app.preview", "software.app.apply"} <= operations:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    report = _call("software.app.preview", {"app_id": app_id, "action": action})
+    if not report.get("ok"):
+        return report
+    _show_details(screen, report)
+    token = action.upper()
+    if _prompt(screen, f"Type {token} to apply this exact APT plan").strip() != token:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("software.app.apply", {"app_id": app_id, "action": action,
+                  "plan_id": report["data"]["plan_id"], "confirmation": token})
 
 
 def _desktop_action(screen: "curses._CursesWindow", resource: dict[str, Any]) -> dict[str, object]:
@@ -724,7 +444,7 @@ def _boot_action(screen: "curses._CursesWindow") -> dict[str, object]:
     if choice == "status":
         return _call("boot.profile.status")
     if choice == "preview":
-        profile = _prompt(screen, "Profile: cli-only or native (PRoot/hybrid are not ready)").lower()
+        profile = _prompt(screen, "Profile: cli-only or native").lower()
         if profile not in {"cli-only", "native"}:
             return {"ok": False, "error": {"code": "unsupported_boot_profile"}}
         return _call("boot.profile.preview", {"profile": profile})
@@ -787,21 +507,23 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
     if resource_id == "native.desktop.session":
         labels.extend(name for op, name in (("desktop.start", "start desktop"),
                                             ("desktop.stop", "stop desktop")) if op in operations)
-    elif resource_id in {"graphics.native", "graphics.debian"}:
+    elif resource_id == "graphics.native":
         labels.extend(("check graphics status", "verify OpenGL", "verify GLES", "verify Vulkan"))
         if resource_id == "graphics.native" and "graphics.provider.select" in operations:
-            labels.append("select Native backend")
+            labels.append("select backend (KGSL experimental)")
+    elif resource_id == "inference.cpu.local":
+        labels.extend(name for op, name in (("inference.cpu.status", "check CPU inference status"),
+            ("inference.cpu.model.preview", "preview pinned model setup"),
+            ("inference.cpu.run", "run a bounded CPU prompt")) if op in operations)
+    elif resource_id == "software.curated-apps":
+        if "software.apps.list" in operations:
+            labels.append("browse curated Native apps")
+        if {"software.app.preview", "software.app.apply"} <= operations:
+            labels.append("preview and manage an app")
     elif resource_id == "native.gui.activity-monitor":
         labels.append("configure monitoring policy")
     elif resource_id == "native.timezone" and "timezone.set" in operations:
         labels.append("configure Ternuxx timezone preference")
-    elif resource_id == "proot.debian.workloads":
-        labels.append("launch named PRoot app")
-        labels.append("preview and manage PRoot app shortcut")
-        labels.append("review and restore a saved PRoot app menu")
-        labels.append("inspect, start attached login, or manage bounded PRoot sessions")
-        if "proot.setup.icd-migrate.preview" in operations:
-            labels.append("preview and roll back Debian Vulkan ICD migration")
     elif resource_id == "network.ssh.managed-8023":
         labels.extend(name for op, name in (("ssh.service.start", "start SSH 8023 (preview)"),
                                             ("ssh.service.stop", "stop SSH 8023 (preview)"),
@@ -1252,36 +974,61 @@ def _run(screen: "curses._CursesWindow") -> int:
                 category_index = min(category_index, len(categories) - 1)
         elif key in (ord("a"), ord("A")) and resources:
             resource = resources[selected]
-            if resource["id"] in {"graphics.native", "graphics.debian"}:
-                provider = "native" if resource["id"] == "graphics.native" else "debian"
-                actions = "status, opengl, gles, vulkan"
-                if provider == "native" and "graphics.provider.select" in resource.get("supported_operations", []):
-                    actions += ", select"
-                action = _choose(screen, "Graphics verification", [
-                    (name, label) for name, label in (("status", "Check provider status"),
-                    ("opengl", "Verify OpenGL"), ("gles", "Verify OpenGL ES"),
-                    ("vulkan", "Verify Vulkan"), ("select", "Select Native backend"))
-                    if name != "select" or provider == "native" and "graphics.provider.select" in resource.get("supported_operations", [])
+            if resource["id"] == "graphics.native":
+                action = _choose(screen, "Native graphics verification", [
+                    ("status", "Check provider status"), ("opengl", "Verify OpenGL"),
+                    ("gles", "Verify OpenGL ES"), ("vulkan", "Verify Vulkan"),
+                    ("select", "Select backend (KGSL experimental)"),
                 ]).lower()
                 if action == "status":
-                    report = _call("graphics.provider.status", {"provider": provider})
-                elif action == "select" and provider == "native":
-                    backend = _prompt(screen, "Choose backend: kgsl-freedreno or system")
+                    report = _call("graphics.provider.status", {"provider": "native"})
+                elif action == "select":
+                    backend = _prompt(screen, "Choose: experimental KGSL (files already present) or system")
                     if backend not in {"kgsl-freedreno", "system"}:
                         report = {"ok": False, "error": {"code": "invalid_backend"}}
-                    elif _prompt(screen, f"Set Native backend to {backend} for future desktop starts? type yes").lower() == "yes":
+                    elif _prompt(screen, f"Save {backend} for future starts? KGSL is experimental, must already be extracted, and this does not change the running desktop. type yes").lower() == "yes":
                         report = _call("graphics.provider.select", {"provider": "native", "backend": backend, "confirmed": True})
                     else:
                         report = {"ok": False, "error": {"code": "cancelled"}}
                 elif action in {"opengl", "gles", "vulkan"}:
-                    display = ":1" if provider == "debian" else None
-                    if provider == "debian":
-                        chosen = _prompt(screen, "Debian display (default :1)")
-                        display = chosen or ":1"
-                    args = {"provider": provider, "api": action}
-                    if display:
-                        args["display"] = display
-                    report = _call("graphics.provider.verify", args)
+                    report = _call("graphics.provider.verify", {"provider": "native", "api": action})
+                else:
+                    report = {"ok": False, "error": {"code": "cancelled"}}
+            elif resource["id"] == "software.curated-apps":
+                report = _software_action(screen, resource)
+            elif resource["id"] == "inference.cpu.local":
+                action = _choose(screen, "Native CPU inference", [
+                    ("status", "Check runtime and model status"),
+                    ("install", "Preview or install pinned model"),
+                    ("remove", "Preview model removal"),
+                    ("run", "Run a bounded CPU prompt"),
+                ])
+                if action == "status":
+                    report = _call("inference.cpu.status")
+                elif action in {"install", "remove"}:
+                    model_action = action
+                    report = _call("inference.cpu.model.preview", {"action": model_action})
+                    if report.get("ok"):
+                        _show_details(screen, report)
+                        token = "DOWNLOAD" if action == "install" else "REMOVE"
+                        if _prompt(screen, f"Type {token} to apply this exact model plan").strip() == token:
+                            report = _call("inference.cpu.model.apply", {
+                                "action": model_action, "plan_id": report["data"]["plan_id"],
+                                "confirmed": True})
+                        else:
+                            report = {"ok": False, "error": {"code": "cancelled"}}
+                elif action == "run":
+                    prompt = _prompt(screen, "One-line local prompt (max 4096 UTF-8 bytes)")
+                    if prompt:
+                        _show_details(screen, {"ok": True, "data": {
+                            "backend": "CPU", "model_id": "qwen3-0.6b-q4_0",
+                            "max_output_tokens": 64, "resource_limit": "4 CPU threads, 512-token context"}})
+                        if _prompt(screen, "Run this prompt locally? type RUN").strip() == "RUN":
+                            report = _call("inference.cpu.run", {"prompt": prompt, "max_tokens": 64})
+                        else:
+                            report = {"ok": False, "error": {"code": "cancelled"}}
+                    else:
+                        report = {"ok": False, "error": {"code": "cancelled"}}
                 else:
                     report = {"ok": False, "error": {"code": "cancelled"}}
             elif resource["id"] == "native.gui.activity-monitor":
@@ -1290,23 +1037,6 @@ def _run(screen: "curses._CursesWindow") -> int:
                 report = _manage_logs(screen)
             elif resource["id"] == "native.desktop.session":
                 report = _desktop_action(screen, resource)
-            elif resource["id"] == "proot.replay-guests":
-                report = _manage_replay_guest(screen)
-            elif resource["id"] == "proot.debian.workloads":
-                choice = _choose(screen, "PRoot workloads", [("launch", "Launch named app"),
-                    ("shortcut", "Add or remove named shortcut"), ("sync", "Sync discovered Debian apps"),
-                    ("rollback", "Review and restore saved shortcut sync"),
-                    ("sessions", "Inspect or manage sessions"),
-                    ("guest", "Retire or restore a Ternuxx replay guest"),
-                    ("icd", "Preview Debian Vulkan ICD migration or rollback")]).lower()
-                report = (_launch_proot_app(screen) if choice == "launch" else
-                          _manage_proot_shortcut(screen) if choice == "shortcut" else
-                          _manage_proot_shortcut_sync(screen) if choice == "sync" else
-                          _manage_proot_shortcut_rollback(screen) if choice == "rollback" else
-                          _manage_proot_sessions(screen) if choice == "sessions" else
-                          _manage_replay_guest(screen) if choice == "guest" else
-                          _manage_icd_migration(screen) if choice == "icd" else
-                          {"ok": False, "error": {"code": "cancelled"}})
             elif resource["id"] == "network.ssh.managed-8023":
                 report = _managed_ssh_action(screen, resource)
             elif resource["id"] == "native.timezone":

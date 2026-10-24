@@ -17,7 +17,7 @@ _TOP_LEVEL = {
     "schema_version", "mode", "public_ingress", "transport", "allowed_client_refs",
     "allowed_targets", "capability_refs", "session_ttl_seconds",
 }
-_TARGETS = {"native_termux", "proot_debian"}
+_TARGETS = {"native_termux"}
 _TRANSPORTS = {"vpn_overlay", "authenticated_outbound_tunnel"}
 
 

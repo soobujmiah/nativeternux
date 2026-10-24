@@ -1,4 +1,5 @@
 # ADR-0007: Launch Manager owns named profiles, not existing Ternux sessions
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Date:** 2026-10-17
 - **Status:** proposed — owner review required; alias compatibility clauses superseded by [ADR-0016](ADR-0016-tx-db-and-legacy-entrypoints.md)

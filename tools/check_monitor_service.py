@@ -16,7 +16,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
 import gui_monitoring
-import terminal_service_deployment as deployment
+import fixed_service_deployment as deployment
 
 
 def main() -> int:
@@ -107,7 +107,7 @@ def main() -> int:
                   "module_sha256": hashlib.sha256((ROOT / "lib/gui_monitoring.py").read_bytes()).hexdigest()}
     finally:
         # Stop only the watcher we created, then its exact private service.
-        # Existing Native services, desktop and working guest are not addressed.
+        # Existing Native services and desktop are not addressed.
         if watcher is not None:
             if watcher.poll() is None:
                 watcher.terminate()

@@ -1,33 +1,22 @@
 #include <gtk/gtk.h>
-#include <vte/vte.h>
 #include <string.h>
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search, *action_scroll;
-                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *proot_app_button, *proot_shortcut_button, *proot_list_button, *proot_rollback_button, *proot_sessions_button, *proot_recovery_button, *proot_probe_button, *proot_terminal_button, *proot_stop_button, *proot_guest_button, *replay_guest_actions, *replay_guest_confirmation, *replay_guest_confirmation_label, *replay_guest_apply_button, *replay_guest_cancel_button, *proot_confirm_button, *proot_cancel_button, *monitor_box, *monitor_enabled,
-                 *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; gchar *proot_pending_action, *proot_pending_session_id, *proot_pending_plan_id; gchar *replay_guest_pending_kind, *replay_guest_pending_alias, *replay_guest_pending_backup, *replay_guest_pending_plan; GPtrArray *categories,
+                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *software_button, *ai_model_install_button, *ai_model_remove_button, *ai_run_button, *monitor_box, *monitor_enabled,
+                 *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; guint category_count; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
-typedef struct { Center *center; gchar **argv; gchar *working_directory; } TerminalSpawn;
 static Center *app_center;
-static const gchar *test_attach_session_id;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5);
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact);
 static void ask_ssh_rollback_confirmation(Center *c, const gchar *rollback_id, const gchar *plan_id, const gchar *effect);
-static void ask_proot_shortcut_rollback_confirmation(Center *c, const gchar *rollback_id, const gchar *plan_id, const gchar *effect);
-static void proot_shortcut_rollback_choice(GObject *source, GAsyncResult *result, gpointer user_data);
 static void choose_graphics_api(GtkButton *button, gpointer data);
 static void ask_shortcut_confirmation(Center *c, const gchar *action, const gchar *app_id, const gchar *plan_id, const gchar *target, const gchar *transition);
 static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *summary);
 static void confirmed_action(GObject *source, GAsyncResult *result, gpointer user_data);
-static void proot_app_cancel_clicked(GtkButton *button, gpointer data);
-static void proot_app_launch_clicked(GtkButton *button, gpointer data);
-static void show_proot_app_options(Center *c, const gchar *output, gboolean shortcut_mode);
-static void manage_replay_guest(GtkButton *button, gpointer data);
-static void replay_guest_preview_clicked(GtkButton *button, gpointer data);
-static void ask_guest_lifecycle_confirmation(Center *c, const gchar *kind, const gchar *alias, const gchar *backup_id, const gchar *plan_id, const gchar *impact);
-static void proot_recovery_submit(GtkButton *button, gpointer data);
+static void ask_cpu_model_confirmation(Center *c, const gchar *action, const gchar *plan_id, const gchar *summary);
 static void show_management_log(GtkButton *button, gpointer data);
 static void show_ssh_keys(GtkButton *button, gpointer data);
 static void enroll_ssh_key(GtkButton *button, gpointer data);
@@ -65,138 +54,6 @@ static void show_cron_log(GtkButton *button, gpointer data);
 static void show_desktop_log(GtkButton *button, gpointer data);
 static gchar *python_path(void);
 
-static void terminal_child_exited(VteTerminal *terminal, gint status, gpointer data) {
-    (void)terminal;
-    GtkWidget *window=data;
-    Center *c=g_object_get_data(G_OBJECT(window),"terminal-center");
-    if (c && c->notice) {
-        gchar *message=g_strdup_printf("Debian terminal closed (exit status %d).",status);
-        gtk_label_set_text(GTK_LABEL(c->notice),message);
-        g_free(message);
-    }
-    gtk_window_destroy(GTK_WINDOW(window));
-}
-
-static void terminal_spawn_done(VteTerminal *terminal, GPid pid, GError *error, gpointer data) {
-    (void)pid;
-    TerminalSpawn *spawn = data;
-    Center *c = spawn->center;
-    if (error || !terminal) {
-        if (terminal && error) {
-            gchar *message = g_strdup_printf("Could not open the terminal client: %s\n", error->message);
-            vte_terminal_feed_child(terminal, message, -1); g_free(message);
-        }
-        gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client could not open; inspect its window.");
-    } else {
-        gtk_label_set_text(GTK_LABEL(c->notice), "Terminal client opened; closing its window detaches.");
-    }
-    g_strfreev(spawn->argv);
-    g_free(spawn->working_directory);
-    g_free(spawn);
-}
-
-static void spawn_interactive_terminal(Center *c, const gchar *session_id) {
-    if (session_id && !g_regex_match_simple("^proot-[0-9a-f]{32}$", session_id, 0, 0)) {
-        gtk_label_set_text(GTK_LABEL(c->notice), "The selected managed terminal identity is invalid.");
-        return;
-    }
-    const gchar *root=g_getenv("TERNUXX_CHECKOUT");
-    if (!root || !g_file_test(root,G_FILE_TEST_IS_DIR)) {
-        gtk_label_set_text(GTK_LABEL(c->notice),"Native Ternuxx checkout is unavailable."); return;
-    }
-    GtkWidget *window=gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(window),"Ternuxx Debian terminal");
-    gtk_window_set_transient_for(GTK_WINDOW(window),GTK_WINDOW(c->window));
-    g_object_set_data(G_OBJECT(window),"terminal-center",c);
-    gtk_window_set_default_size(GTK_WINDOW(window),680,720);
-    GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,6);
-    GtkWidget *hint=gtk_label_new(session_id
-        ? "Attach to the selected managed Debian terminal. Close this window or press Ctrl-] to detach."
-        : "Review the exact Debian login preview before confirming. Close this window or press Ctrl-] to detach.");
-    gtk_label_set_wrap(GTK_LABEL(hint),TRUE); gtk_box_append(GTK_BOX(box),hint);
-    VteTerminal *terminal=VTE_TERMINAL(vte_terminal_new());
-    g_signal_connect_object(terminal,"child-exited",G_CALLBACK(terminal_child_exited),window,0);
-    vte_terminal_set_scrollback_lines(terminal,2000);
-    GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),GTK_WIDGET(terminal));
-    gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(box),scroll);
-    gtk_window_set_child(GTK_WINDOW(window),box);
-    TerminalSpawn *spawn=g_new0(TerminalSpawn,1);
-    spawn->center=c;
-    spawn->working_directory=g_strdup(root);
-    spawn->argv=g_new0(gchar *,5);
-    spawn->argv[0]=python_path();
-    spawn->argv[1]=g_build_filename(root,"lib","terminal_cli.py",NULL);
-    spawn->argv[2]=g_strdup(session_id ? "attach" : "start");
-    spawn->argv[3]=session_id ? g_strdup(session_id) : NULL;
-    vte_terminal_spawn_async(terminal,VTE_PTY_DEFAULT,spawn->working_directory,spawn->argv,NULL,G_SPAWN_DEFAULT,
-                             NULL,NULL,NULL,10000,NULL,terminal_spawn_done,spawn);
-    gtk_window_present(GTK_WINDOW(window));
-}
-
-static void terminal_choice_cancel(GtkButton *button, gpointer data) {
-    (void)button; gtk_window_destroy(GTK_WINDOW(data));
-}
-static void terminal_choice_start(GtkButton *button, gpointer data) {
-    (void)button; GtkWidget *dialog=data;
-    Center *c=g_object_get_data(G_OBJECT(dialog),"terminal-center");
-    gtk_window_destroy(GTK_WINDOW(dialog));
-    spawn_interactive_terminal(c,NULL);
-}
-static void terminal_choice_attach(GtkButton *button, gpointer data) {
-    GtkWidget *dialog=data;
-    Center *c=g_object_get_data(G_OBJECT(dialog),"terminal-center");
-    gchar *session_id=g_strdup(g_object_get_data(G_OBJECT(button),"terminal-session-id"));
-    gtk_window_destroy(GTK_WINDOW(dialog));
-    spawn_interactive_terminal(c,session_id);
-    g_free(session_id);
-}
-static void show_terminal_choices(Center *c, const gchar *options) {
-    GtkWidget *dialog=gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(dialog),"Debian terminal");
-    gtk_window_set_transient_for(GTK_WINDOW(dialog),GTK_WINDOW(c->window));
-    gtk_window_set_modal(GTK_WINDOW(dialog),TRUE);
-    gtk_window_set_default_size(GTK_WINDOW(dialog),460,330);
-    g_object_set_data(G_OBJECT(dialog),"terminal-center",c);
-    GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,8);
-    gtk_widget_set_margin_top(box,14);gtk_widget_set_margin_bottom(box,14);
-    gtk_widget_set_margin_start(box,14);gtk_widget_set_margin_end(box,14);
-    gtk_window_set_child(GTK_WINDOW(dialog),box);
-    GtkWidget *intro=gtk_label_new("Start a fixed Debian terminal or attach to a verified running one.");
-    gtk_label_set_wrap(GTK_LABEL(intro),TRUE);gtk_box_append(GTK_BOX(box),intro);
-    GtkWidget *start=gtk_button_new_with_label("Start new Debian terminal…");
-    gtk_box_append(GTK_BOX(box),start);
-    g_signal_connect(start,"clicked",G_CALLBACK(terminal_choice_start),dialog);
-    GtkWidget *scroll=gtk_scrolled_window_new();
-    gtk_widget_set_vexpand(scroll,TRUE);
-    GtkWidget *list=gtk_box_new(GTK_ORIENTATION_VERTICAL,6);
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),list);
-    gtk_box_append(GTK_BOX(box),scroll);
-    guint count=0;
-    gchar **lines=g_strsplit(options ? options : "","\n",-1);
-    for (guint i=0;lines[i];i++) {
-        gchar **fields=g_strsplit(lines[i],"\t",3);
-        if (fields[0] && g_strcmp0(fields[0],"S")==0 && fields[1] && fields[2]
-                && g_regex_match_simple("^proot-[0-9a-f]{32}$",fields[1],0,0)) {
-            GtkWidget *attach=gtk_button_new_with_label(fields[2]);
-            gtk_widget_set_tooltip_text(attach,fields[1]);
-            g_object_set_data_full(G_OBJECT(attach),"terminal-session-id",g_strdup(fields[1]),g_free);
-            g_signal_connect(attach,"clicked",G_CALLBACK(terminal_choice_attach),dialog);
-            gtk_box_append(GTK_BOX(list),attach);
-            count++;
-        }
-        g_strfreev(fields);
-    }
-    g_strfreev(lines);
-    if (!count) gtk_box_append(GTK_BOX(list),gtk_label_new("No verified running Debian terminal is available to attach."));
-    GtkWidget *cancel=gtk_button_new_with_label("Cancel");
-    gtk_box_append(GTK_BOX(box),cancel);
-    g_signal_connect(cancel,"clicked",G_CALLBACK(terminal_choice_cancel),dialog);
-    gtk_window_present(GTK_WINDOW(dialog));
-}
-static void open_interactive_terminal(GtkButton *button, gpointer data) {
-    (void)button;run_bridge(data,"terminal-session-options",NULL,NULL,NULL,NULL,NULL);
-}
-
 static gchar *bridge_path(void) {
     const gchar *root = g_getenv("TERNUXX_CHECKOUT");
     if (!root || !*root) return NULL;
@@ -209,30 +66,6 @@ static gchar *python_path(void) {
 static void set_text(Center *c, const gchar *text) {
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(c->details));
     gtk_text_buffer_set_text(buffer, text ? text : "", -1);
-}
-static void clear_proot_confirmation(Center *c) {
-    g_clear_pointer(&c->proot_pending_action,g_free); g_clear_pointer(&c->proot_pending_session_id,g_free);
-    g_clear_pointer(&c->proot_pending_plan_id,g_free);
-    gtk_widget_set_visible(c->proot_confirm_button,FALSE); gtk_widget_set_visible(c->proot_cancel_button,FALSE);
-}
-static void proot_confirm_clicked(GtkButton *button, gpointer data) {
-    (void)button; Center *c=data;
-    if (g_strcmp0(c->proot_pending_action,"proot-probe-apply")==0)
-        run_bridge(c,"proot-probe-apply",c->proot_pending_plan_id,NULL,NULL,NULL,NULL);
-    else if (g_strcmp0(c->proot_pending_action,"proot-session-stop-apply")==0)
-        run_bridge(c,"proot-session-stop-apply",c->proot_pending_session_id,c->proot_pending_plan_id,NULL,NULL,NULL);
-    clear_proot_confirmation(c);
-}
-static void proot_cancel_clicked(GtkButton *button, gpointer data) {
-    (void)button; Center *c=data; clear_proot_confirmation(c);
-    gtk_label_set_text(GTK_LABEL(c->notice),"PRoot action cancelled; no session change was applied.");
-}
-static void queue_proot_confirmation(Center *c, const gchar *action, const gchar *session_id,
-                                     const gchar *plan_id, const gchar *message) {
-    clear_proot_confirmation(c); c->proot_pending_action=g_strdup(action);
-    c->proot_pending_session_id=session_id?g_strdup(session_id):NULL; c->proot_pending_plan_id=g_strdup(plan_id);
-    set_text(c,message); gtk_button_set_label(GTK_BUTTON(c->proot_confirm_button),g_strcmp0(action,"proot-probe-apply")==0?"Start 300-second probe":"Stop this verified session"); gtk_widget_set_visible(c->proot_confirm_button,TRUE); gtk_widget_set_visible(c->proot_cancel_button,TRUE);
-    gtk_label_set_text(GTK_LABEL(c->notice),"Review the exact PRoot plan, then confirm or cancel.");
 }
 static void request_done(GObject *source, GAsyncResult *result, gpointer user_data) {
     Request *request = user_data; Center *c = request->center; GError *error = NULL;
@@ -252,22 +85,27 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
         g_clear_error(&error);
     } else {
         gboolean success = g_subprocess_get_successful(G_SUBPROCESS(source));
-        if (g_strcmp0(request->action, "guest-lifecycle-preview") == 0 && success && stdout_text && g_str_has_prefix(stdout_text, "G\t")) {
+        if (g_strcmp0(request->action, "software-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
             gchar **f = g_strsplit(stdout_text, "\t", 6);
-            if (f[1] && f[2] && f[3] && f[4] && f[5]
-                    && g_regex_match_simple("^(retire|restore)$", f[1], 0, 0)
-                    && g_regex_match_simple("^[0-9a-f]{64}$", f[2], 0, 0)
-                    && g_regex_match_simple("^ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}$", f[3], 0, 0)) {
-                g_strchomp(f[5]); ask_guest_lifecycle_confirmation(c, f[1], f[3], f[4], f[2], f[5]);
-            } else gtk_label_set_text(GTK_LABEL(c->notice), "Replay guest preview response was invalid.");
+            if (f[1] && g_regex_match_simple("^[0-9a-f]{64}$", f[1], 0, 0) && f[2] && f[3] && f[4]) {
+                g_strchomp(f[4]);
+                gchar *message = g_strdup_printf("Review exact Native Termux APT transaction for %s (%s):\n\n%s\n\nApply this exact preview?", f[2], f[3], f[4]);
+                GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
+                gchar *label = g_strdup_printf("Apply %s", f[3]); const char *choices[] = {"Cancel", label, NULL};
+                gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
+                Request *next = g_new0(Request, 1); next->center = c; next->action = g_strdup("software-apply");
+                next->resource_id = g_strdup(f[2]); next->detail_id = g_strdup(f[3]); next->plan_id = g_strdup(f[1]);
+                gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, next);
+                gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact Native app package plan");
+                g_free(label); g_free(message); g_object_unref(dialog);
+            } else gtk_label_set_text(GTK_LABEL(c->notice), "Native app preview response was invalid; no change was made.");
             g_strfreev(f);
-        } else if ((g_strcmp0(request->action, "proot-app-options") == 0
-                    || g_strcmp0(request->action, "proot-shortcut-options") == 0)
-                   && success && stdout_text) {
-            show_proot_app_options(c, stdout_text,
-                g_strcmp0(request->action, "proot-shortcut-options") == 0);
-        } else if (g_strcmp0(request->action, "terminal-session-options") == 0 && success) {
-            show_terminal_choices(c, stdout_text);
+        } else if (g_strcmp0(request->action, "cpu-model-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+            gchar **f = g_strsplit(stdout_text, "\t", 3);
+            if (f[1] && strlen(f[1]) == 24 && g_regex_match_simple("^[0-9a-f]{24}$", f[1], 0, 0) && f[2]) {
+                g_strchomp(f[2]); ask_cpu_model_confirmation(c, request->resource_id, f[1], f[2]);
+            } else gtk_label_set_text(GTK_LABEL(c->notice), "CPU model preview was invalid; no change was made.");
+            g_strfreev(f);
         } else if (g_strcmp0(request->action, "cron-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
             gchar **f = g_strsplit(stdout_text, "\t", 3);
             if (f[1] && f[2] && strlen(f[1]) == 32) {
@@ -303,51 +141,6 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
                     && (g_strcmp0(f[2], "true") == 0 || g_strcmp0(f[2], "false") == 0) && f[3]) {
                 g_strchomp(f[3]); ask_ssh_autostart_confirmation(c, f[2], f[1], f[3]);
             } else gtk_label_set_text(GTK_LABEL(c->notice), "SSH startup preference preview was invalid.");
-            g_strfreev(f);
-        } else if (g_strcmp0(request->action, "shortcut-sync-rollback-list") == 0 && stdout_text && g_str_has_prefix(stdout_text, "R\t")) {
-            gchar **lines = g_strsplit(stdout_text, "\n", -1);
-            GPtrArray *ids = g_ptr_array_new_with_free_func(g_free);
-            GPtrArray *labels = g_ptr_array_new_with_free_func(g_free);
-            for (guint i = 0; lines[i]; i++) {
-                gchar **f = g_strsplit(lines[i], "\t", 4);
-                if (f[0] && g_strcmp0(f[0], "R") == 0 && f[1]
-                        && g_regex_match_simple("^[0-9a-f]{32}$", f[1], 0, 0)) {
-                    g_ptr_array_add(ids, g_strdup(f[1]));
-                    g_ptr_array_add(labels, g_strdup_printf("%s · %s changes",
-                        f[2] ? f[2] : "Saved sync", f[3] ? f[3] : "?"));
-                }
-                g_strfreev(f);
-            }
-            g_strfreev(lines);
-            if (ids->len == 0) {
-                gtk_label_set_text(GTK_LABEL(c->notice), "No applied PRoot shortcut sync is available to restore.");
-            } else {
-                gchar **choices = g_new0(gchar *, labels->len + 2); choices[0] = g_strdup("Cancel");
-                GString *message = g_string_new("Choose a saved PRoot app menu state to review:");
-                GString *joined = g_string_new(NULL);
-                for (guint i = 0; i < ids->len; i++) {
-                    choices[i + 1] = g_strdup_printf("%u. %s", i + 1, (gchar *)g_ptr_array_index(labels, i));
-                    g_string_append_printf(message, "\n\n%u. %s", i + 1, (gchar *)g_ptr_array_index(labels, i));
-                    if (i) g_string_append_c(joined, ',');
-                    g_string_append(joined, g_ptr_array_index(ids, i));
-                }
-                GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message->str);
-                gtk_alert_dialog_set_buttons(dialog, (const char * const *)choices);
-                gtk_alert_dialog_set_default_button(dialog, 0);
-                Request *next = g_new0(Request, 1); next->center = c;
-                next->action = g_strdup("proot-shortcut-rollback-select");
-                next->resource_id = g_string_free(joined, FALSE);
-                gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, proot_shortcut_rollback_choice, next);
-                gtk_label_set_text(GTK_LABEL(c->notice), "Review a saved shortcut restore.");
-                g_object_unref(dialog); g_string_free(message, TRUE); g_strfreev(choices);
-            }
-            g_ptr_array_unref(ids); g_ptr_array_unref(labels);
-        } else if (g_strcmp0(request->action, "proot-shortcut-rollback-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
-            gchar **f = g_strsplit(stdout_text, "\t", 4);
-            if (f[1] && g_regex_match_simple("^[0-9a-f]{24}$", f[1], 0, 0)
-                    && f[2] && g_regex_match_simple("^[0-9a-f]{32}$", f[2], 0, 0) && f[3]) {
-                g_strchomp(f[3]); ask_proot_shortcut_rollback_confirmation(c, f[2], f[1], f[3]);
-            } else gtk_label_set_text(GTK_LABEL(c->notice), "Shortcut rollback preview was invalid; no change was made.");
             g_strfreev(f);
         } else if (g_strcmp0(request->action, "ssh-key-rollback-list") == 0 && stdout_text && g_str_has_prefix(stdout_text, "R\t")) {
             gchar **lines = g_strsplit(stdout_text, "\n", -1);
@@ -432,26 +225,6 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
                 gtk_label_set_text(GTK_LABEL(c->notice), "No service change needed");
             }
             g_strfreev(f);
-        } else if ((g_strcmp0(request->action, "proot-probe-preview") == 0 || g_strcmp0(request->action, "proot-session-stop-preview") == 0)
-                && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
-            gchar **f = g_strsplit(stdout_text, "\t", 7);
-            gboolean valid_plan = f[1] && g_str_has_prefix(f[1], "plan-") && strlen(f[1]) == 69;
-            if (valid_plan && g_strcmp0(request->action, "proot-probe-preview") == 0 && f[2]) {
-                g_strchomp(f[2]);
-                gchar *message = g_strdup_printf("Start only the fixed 300-second isolated Debian diagnostic probe?\n\n%s", f[2]);
-                queue_proot_confirmation(c, "proot-probe-apply", NULL, f[1], message);
-                g_free(message);
-            } else if (valid_plan && g_strcmp0(request->action, "proot-session-stop-preview") == 0
-                       && f[2] && f[3] && f[4] && f[5] && f[6]) {
-                g_strchomp(f[6]);
-                gchar *message = g_strdup_printf("Close only this Ternuxx-owned PRoot session?\n\nSession: %s\nProfile: %s\nSignal: %s\nScope: %s\nImpact: %s",
-                                                  f[3], f[2], f[4], f[5], f[6]);
-                queue_proot_confirmation(c, "proot-session-stop-apply", f[3], f[1], message);
-                g_free(message);
-            } else {
-                gtk_label_set_text(GTK_LABEL(c->notice), "PRoot preview did not contain a valid exact plan.");
-            }
-            g_strfreev(f);
         } else if (g_strcmp0(request->action, "monitor") == 0 && stdout_text && g_str_has_prefix(stdout_text,"M\t")) {
             gchar **f=g_strsplit(stdout_text,"\t",5);
             if(f[1]&&f[2]&&f[3]&&f[4]) {
@@ -467,11 +240,7 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
                 ((stdout_text && *stdout_text) ? stdout_text : "Request completed.");
             set_text(c, message);
         }
-        const gchar *notice = success && g_strcmp0(request->action,"terminal-session-options")==0
-            ? "Choose a managed terminal or start a new one."
-            : success && g_strcmp0(request->action,"proot-session-stop-apply")==0
-            ? "Verified Debian terminal stopped."
-            : success ? "Shared management service request completed"
+        const gchar *notice = success ? "Shared management service request completed"
             : ((stderr_text && *stderr_text) ? stderr_text : "Operation failed; inspect the result details.");
         gtk_label_set_text(GTK_LABEL(c->notice), notice);
         gtk_widget_set_sensitive(c->start_button, TRUE); gtk_widget_set_sensitive(c->stop_button, TRUE); gtk_widget_set_sensitive(c->ssh_restart_button, TRUE);
@@ -491,6 +260,10 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
             run_bridge(c,"monitor",NULL,NULL,NULL,NULL,NULL);
         else if (success && g_strcmp0(request->action,"cron-apply")==0)
             run_bridge(c,"cron-jobs",NULL,NULL,NULL,NULL,NULL);
+        else if (success && g_strcmp0(request->action,"cpu-model-apply")==0)
+            run_bridge(c,"inspect","inference.cpu.local",NULL,NULL,NULL,NULL);
+        else if (success && g_strcmp0(request->action,"software-apply")==0)
+            run_bridge(c,"inspect","software.curated-apps",NULL,NULL,NULL,NULL);
     }
     g_free(stdout_text); g_free(stderr_text); g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
 }
@@ -524,6 +297,27 @@ static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const 
     }
     g_ptr_array_unref(argv); g_free(script); g_free(python);
 }
+static void run_bridge_input(Center *c, const gchar *action, const gchar *input) {
+    gchar *script = bridge_path(), *python = python_path();
+    if (!script || !g_file_test(script, G_FILE_TEST_IS_REGULAR)) {
+        gtk_label_set_text(GTK_LABEL(c->notice), "Management bridge is unavailable; check TERNUXX_CHECKOUT.");
+        g_free(script); g_free(python); return;
+    }
+    const gchar *argv[] = {python, script, action, NULL}; GError *error = NULL;
+    GSubprocess *process = g_subprocess_newv(argv, G_SUBPROCESS_FLAGS_STDIN_PIPE |
+        G_SUBPROCESS_FLAGS_STDOUT_PIPE | G_SUBPROCESS_FLAGS_STDERR_PIPE, &error);
+    gtk_label_set_text(GTK_LABEL(c->notice), "Running bounded local CPU inference…");
+    if (!process) {
+        gtk_label_set_text(GTK_LABEL(c->notice), error ? error->message : "Could not start CPU inference");
+        g_clear_error(&error);
+    } else {
+        Request *request = g_new0(Request, 1); request->center = c; request->action = g_strdup(action);
+        g_subprocess_communicate_utf8_async(process, input, NULL, request_done, request);
+        g_object_unref(process);
+    }
+    g_free(script); g_free(python);
+}
+
 static void resource_free(gpointer ptr) {
     Resource *r = ptr; if (!r) return; g_free(r->id); g_free(r->category); g_free(r->name);
     g_free(r->status); g_free(r->availability); g_free(r->description); g_free(r->operations); g_free(r);
@@ -549,8 +343,6 @@ static void show_resource(Center *c, Resource *r) {
         gui_actions = "Check status · Start or stop desktop";
     else if (g_strcmp0(r->id, "graphics.native") == 0)
         gui_actions = "Check status · Verify OpenGL, GLES, Vulkan · Select backend";
-    else if (g_strcmp0(r->id, "graphics.debian") == 0)
-        gui_actions = "Check status · Verify OpenGL, GLES, Vulkan";
     else if (g_strcmp0(r->id, "network.ssh.managed-8023") == 0)
         gui_actions = "Check status · Generate a Native recovery key · Enroll, revoke, or restore public keys · Set SSH automatic start · Start, stop, or restart managed SSH (8023)";
     else if (g_strcmp0(r->id, "native.wakelock") == 0)
@@ -563,10 +355,8 @@ static void show_resource(Center *c, Resource *r) {
         gui_actions = "Manage scheduler and jobs · View run history";
     else if (g_strcmp0(r->id, "native.timezone") == 0)
         gui_actions = "View or change Ternuxx timezone";
-    else if (g_strcmp0(r->id, "proot.debian.workloads") == 0)
-        gui_actions = "Launch apps · Manage shortcuts · Restore saved menu · Inspect sessions";
-    else if (g_strcmp0(r->id, "proot.replay-guests") == 0)
-        gui_actions = "Retire or restore an exact, idle Ternuxx replay guest";
+    else if (g_strcmp0(r->id, "inference.cpu.local") == 0)
+        gui_actions = "Check runtime · Preview model download/removal · Run a bounded local CPU prompt";
     gchar *availability = g_strdup(r->availability && *r->availability ? r->availability : "unknown");
     g_strdelimit(availability, "-_", ' ');
     availability[0] = g_ascii_toupper(availability[0]);
@@ -583,20 +373,7 @@ static void show_resource(Center *c, Resource *r) {
     gboolean system_health = g_strcmp0(r->id, "native.system.health") == 0;
     gboolean cron = g_strcmp0(r->id, "automation.cron-registry") == 0;
     gboolean timezone = g_strcmp0(r->id, "native.timezone") == 0;
-    gboolean proot_apps = g_strcmp0(r->id, "proot.debian.workloads") == 0;
-    gboolean replay_guests = g_strcmp0(r->id, "proot.replay-guests") == 0;
-    gtk_widget_set_visible(c->proot_guest_button, proot_apps || replay_guests);
-    gtk_widget_set_visible(c->replay_guest_actions, proot_apps || replay_guests);
-    gtk_button_set_label(GTK_BUTTON(c->proot_guest_button),
-                         proot_apps ? "Migrate or roll back Debian Vulkan ICD..." : "Retire or restore replay guest...");
-    gtk_widget_set_visible(c->action_scroll, !replay_guests);
-    gtk_widget_set_visible(c->proot_sessions_button, proot_apps);
-    gtk_widget_set_visible(c->proot_recovery_button, proot_apps);
-    gtk_widget_set_visible(c->proot_probe_button, proot_apps);
-    gtk_widget_set_visible(c->proot_terminal_button, proot_apps);
-    gtk_widget_set_visible(c->proot_stop_button, proot_apps);
-    gtk_widget_set_visible(c->proot_confirm_button, proot_apps && c->proot_pending_action != NULL);
-    gtk_widget_set_visible(c->proot_cancel_button, proot_apps && c->proot_pending_action != NULL);
+    gboolean cpu_inference = g_strcmp0(r->id, "inference.cpu.local") == 0;
     gtk_widget_set_visible(c->history_button, history);
     gtk_widget_set_visible(c->desktop_log_button, system_health);
     gtk_widget_set_visible(c->logs_button, system_health);
@@ -605,10 +382,11 @@ static void show_resource(Center *c, Resource *r) {
     gtk_widget_set_visible(c->cron_history_button, cron);
     gtk_widget_set_visible(c->cron_manage_button, cron);
     gtk_widget_set_visible(c->timezone_set_button, timezone);
-    gtk_widget_set_visible(c->proot_app_button, proot_apps);
-    gtk_widget_set_visible(c->proot_shortcut_button, proot_apps);
-    gtk_widget_set_visible(c->proot_list_button, proot_apps);
-    gtk_widget_set_visible(c->proot_rollback_button, proot_apps);
+    gboolean curated_software = g_strcmp0(r->id, "software.curated-apps") == 0;
+    gtk_widget_set_visible(c->software_button, curated_software);
+    gtk_widget_set_visible(c->ai_model_install_button, cpu_inference);
+    gtk_widget_set_visible(c->ai_model_remove_button, cpu_inference);
+    gtk_widget_set_visible(c->ai_run_button, cpu_inference);
     gtk_widget_set_visible(c->graphics_api_button, graphics);
     gtk_button_set_label(GTK_BUTTON(c->start_button), managed_ssh ? "Start managed SSH (8023)" : "Start desktop");
     gtk_button_set_label(GTK_BUTTON(c->stop_button), managed_ssh ? "Stop managed SSH (8023)" : "Stop desktop");
@@ -629,10 +407,7 @@ static void show_resource(Center *c, Resource *r) {
     GtkWidget *action_buttons[] = {c->start_button, c->stop_button, c->ssh_restart_button, c->ssh_keys_button, c->ssh_enroll_button, c->ssh_revoke_button, c->ssh_rollback_button, c->ssh_generate_button, c->ssh_autostart_button, c->ssh_wakelock_button, c->graphics_select_button,
         c->graphics_api_button, c->history_button, c->desktop_log_button, c->logs_button,
         c->audit_logs_button, c->cron_button, c->cron_history_button, c->cron_manage_button,
-        c->timezone_set_button, c->proot_app_button, c->proot_shortcut_button,
-        c->proot_list_button, c->proot_rollback_button, c->proot_sessions_button, c->proot_recovery_button,
-        c->proot_probe_button, c->proot_terminal_button, c->proot_stop_button,
-        c->proot_confirm_button, c->proot_cancel_button};
+        c->timezone_set_button, c->software_button, c->ai_model_install_button, c->ai_model_remove_button, c->ai_run_button};
     gboolean has_actions = FALSE;
     for (guint i = 0; i < G_N_ELEMENTS(action_buttons); i++)
         has_actions = has_actions || gtk_widget_get_visible(action_buttons[i]);
@@ -725,8 +500,6 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
             run_bridge(request->center, request->action, "confirmed", request->resource_id, request->plan_id, NULL, NULL);
         else if (g_strcmp0(request->action, "ssh-key-rollback-apply") == 0)
             run_bridge(request->center, "ssh-key-rollback-apply", request->resource_id, request->plan_id, NULL, NULL, NULL);
-        else if (g_strcmp0(request->action, "proot-shortcut-rollback-apply") == 0)
-            run_bridge(request->center, "shortcut-sync-rollback-apply", request->resource_id, request->plan_id, NULL, NULL, NULL);
         else if (g_strcmp0(request->action, "ssh-client-key-apply") == 0)
             run_bridge(request->center, "ssh-client-key-apply", "confirmed", request->resource_id, request->plan_id, NULL, NULL);
         else if (g_strcmp0(request->action, "ssh-autostart-apply") == 0)
@@ -737,16 +510,13 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
             run_bridge(request->center, "shortcut-apply", request->resource_id, request->detail_id, request->plan_id, NULL, NULL);
         else if (g_strcmp0(request->action, "cron-apply") == 0)
             run_bridge(request->center, "cron-apply", request->plan_id, NULL, NULL, NULL, NULL);
-        else if (g_strcmp0(request->action, "proot-probe-apply") == 0)
-            run_bridge(request->center, "proot-probe-apply", request->plan_id, NULL, NULL, NULL, NULL);
-        else if (g_strcmp0(request->action, "proot-session-stop-apply") == 0)
-            run_bridge(request->center, "proot-session-stop-apply", request->resource_id, request->plan_id, NULL, NULL, NULL);
-        else if (g_strcmp0(request->action, "guest-lifecycle-apply") == 0) {
-            gchar **parts = g_strsplit(request->plan_id ? request->plan_id : "", "|", 2);
-            if (parts[0] && parts[1] && g_regex_match_simple("^[0-9a-f]{64}$", parts[0], 0, 0))
-                run_bridge(request->center, "guest-lifecycle-apply", request->resource_id, request->detail_id, parts[1], parts[0], NULL);
-            else gtk_label_set_text(GTK_LABEL(request->center->notice), "Replay guest confirmation data was invalid.");
-            g_strfreev(parts);
+        else if (g_strcmp0(request->action, "cpu-model-apply") == 0)
+            run_bridge(request->center, "cpu-model-apply", request->resource_id, request->plan_id, "confirmed", NULL, NULL);
+        else if (g_strcmp0(request->action, "software-apply") == 0) {
+            gchar *confirmation = g_ascii_strup(request->detail_id, -1);
+            run_bridge(request->center, "software-apply", request->resource_id, request->detail_id,
+                       request->plan_id, confirmation, NULL);
+            g_free(confirmation);
         }
         else
             run_bridge(request->center, request->action, "confirmed", NULL, NULL, NULL, NULL);
@@ -755,10 +525,95 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
     else gtk_label_set_text(GTK_LABEL(request->center->notice), "Action cancelled");
     g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
 }
+static void ask_cpu_model_confirmation(Center *c, const gchar *action,
+                                        const gchar *plan_id, const gchar *summary) {
+    gboolean install = g_strcmp0(action, "install") == 0;
+    gchar *message = g_strdup_printf("Review this exact pinned CPU model plan:\n\n%s\n\n%s only this Ternuxx-owned model file?",
+        summary, install ? "Download" : "Remove");
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
+    const char *choices[] = {"Cancel", install ? "Download model" : "Remove model", NULL};
+    gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
+    Request *request = g_new0(Request, 1); request->center = c;
+    request->action = g_strdup("cpu-model-apply"); request->resource_id = g_strdup(action);
+    request->plan_id = g_strdup(plan_id);
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
+    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact pinned CPU model change");
+    g_object_unref(dialog); g_free(message);
+}
+
+static void software_preview_clicked(GtkButton *button, gpointer data) {
+    (void)button; GtkWidget *window = GTK_WIDGET(data); Center *c = g_object_get_data(G_OBJECT(window), "software-center");
+    GtkWidget *app = g_object_get_data(G_OBJECT(window), "software-app");
+    GtkWidget *action = g_object_get_data(G_OBJECT(window), "software-action");
+    GtkWidget *path = g_object_get_data(G_OBJECT(window), "software-path");
+    const gchar *apps[] = {"process-monitor", "terminal-multiplexer", "directory-tree"};
+    const gchar *actions[] = {"install", "update", "remove", "run"};
+    guint ai = gtk_drop_down_get_selected(GTK_DROP_DOWN(app)); guint xi = gtk_drop_down_get_selected(GTK_DROP_DOWN(action));
+    if (ai >= G_N_ELEMENTS(apps) || xi >= G_N_ELEMENTS(actions)) return;
+    if (xi == 3) {
+        const gchar *selected_path = gtk_editable_get_text(GTK_EDITABLE(path));
+        if (ai != 2 || !selected_path || !*selected_path) {
+            gtk_label_set_text(GTK_LABEL(c->notice), "Choose directory-tree and a HOME-relative path."); return;
+        }
+        run_bridge(c, "software-run", selected_path, NULL, NULL, NULL, NULL);
+    } else {
+        run_bridge(c, "software-preview", apps[ai], actions[xi], NULL, NULL, NULL);
+    }
+    gtk_window_destroy(GTK_WINDOW(window));
+}
+static void software_apps(GtkButton *button, gpointer data) {
+    (void)button; Center *c = data; GtkWidget *window = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(window), "Native Termux optional apps"); gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window));
+    gtk_window_set_modal(GTK_WINDOW(window), TRUE); gtk_window_set_default_size(GTK_WINDOW(window), 360, 220);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8); gtk_widget_set_margin_top(box, 16); gtk_widget_set_margin_bottom(box, 16); gtk_widget_set_margin_start(box, 16); gtk_widget_set_margin_end(box, 16);
+    gtk_box_append(GTK_BOX(box), gtk_label_new("Choose a curated app and transaction. The shared service validates current installed state and APT origin."));
+    const char *apps[] = {"process-monitor", "terminal-multiplexer", "directory-tree", NULL}; GtkWidget *app = gtk_drop_down_new_from_strings(apps);
+    const char *actions[] = {"install", "update", "remove", "run (directory-tree only)", NULL}; GtkWidget *action = gtk_drop_down_new_from_strings(actions);
+    GtkWidget *path = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(path), "HOME-relative file or directory path");
+    gtk_box_append(GTK_BOX(box), app); gtk_box_append(GTK_BOX(box), action); gtk_box_append(GTK_BOX(box), path);
+    GtkWidget *preview = gtk_button_new_with_label("Preview package changes or run selected path"); gtk_box_append(GTK_BOX(box), preview);
+    g_object_set_data(G_OBJECT(window), "software-center", c); g_object_set_data(G_OBJECT(window), "software-app", app); g_object_set_data(G_OBJECT(window), "software-action", action); g_object_set_data(G_OBJECT(window), "software-path", path);
+    g_signal_connect(preview, "clicked", G_CALLBACK(software_preview_clicked), window); gtk_window_set_child(GTK_WINDOW(window), box); gtk_window_present(GTK_WINDOW(window));
+}
+
+static void cpu_model_install(GtkButton *button, gpointer data) {
+    (void)button; run_bridge(data, "cpu-model-preview", "install", NULL, NULL, NULL, NULL);
+}
+static void cpu_model_remove(GtkButton *button, gpointer data) {
+    (void)button; run_bridge(data, "cpu-model-preview", "remove", NULL, NULL, NULL, NULL);
+}
+static void cpu_prompt_submit(GtkButton *button, gpointer data) {
+    (void)button; GtkWidget *window = GTK_WIDGET(data);
+    Center *c = g_object_get_data(G_OBJECT(window), "cpu-center");
+    GtkWidget *entry = g_object_get_data(G_OBJECT(window), "cpu-entry");
+    const gchar *prompt = gtk_editable_get_text(GTK_EDITABLE(entry));
+    if (!prompt || !*prompt || strlen(prompt) > 4096 || strchr(prompt, '\n') || strchr(prompt, '\r')) {
+        if (c) gtk_label_set_text(GTK_LABEL(c->notice), "Use one non-empty prompt line under 4096 UTF-8 bytes.");
+        return;
+    }
+    run_bridge_input(c, "cpu-run", prompt);
+    gtk_window_destroy(GTK_WINDOW(window));
+}
+static void cpu_prompt_dialog(GtkButton *button, gpointer data) {
+    (void)button; Center *c = data;
+    GtkWidget *window = gtk_window_new(); gtk_window_set_title(GTK_WINDOW(window), "Run local CPU prompt");
+    gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window)); gtk_window_set_modal(GTK_WINDOW(window), TRUE);
+    gtk_window_set_default_size(GTK_WINDOW(window), 440, 180);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    gtk_widget_set_margin_top(box, 14); gtk_widget_set_margin_bottom(box, 14);
+    gtk_widget_set_margin_start(box, 14); gtk_widget_set_margin_end(box, 14);
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    gtk_box_append(GTK_BOX(box), gtk_label_new("Runs on this device: CPU only, 4 threads, 512-token context, up to 64 output tokens. Prompt is sent only to the local shared service."));
+    GtkWidget *entry = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(entry), "One-line prompt (up to 4096 UTF-8 bytes)");
+    gtk_box_append(GTK_BOX(box), entry); GtkWidget *run = gtk_button_new_with_label("Run on CPU"); gtk_box_append(GTK_BOX(box), run);
+    g_object_set_data(G_OBJECT(window), "cpu-center", c); g_object_set_data(G_OBJECT(window), "cpu-entry", entry);
+    g_signal_connect(run, "clicked", G_CALLBACK(cpu_prompt_submit), window); gtk_window_present(GTK_WINDOW(window));
+}
+
 static void ask_shortcut_confirmation(Center *c, const gchar *action, const gchar *app_id,
                                       const gchar *plan_id, const gchar *target, const gchar *transition) {
     (void)app_id;
-    gchar *message = g_strdup_printf("Confirm %s shortcut for the selected Debian app?\n\nTarget: %s\nChange: %s\n\nOnly this exact Ternuxx-owned launcher will change.", action, target, transition);
+    gchar *message = g_strdup_printf("Confirm %s shortcut change?\n\nTarget: %s\nChange: %s\n\nOnly this exact Ternuxx-owned launcher will change.", action, target, transition);
     GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
     const char *choices[] = {"Cancel", "Confirm", NULL}; gtk_alert_dialog_set_buttons(dialog, choices);
     gtk_alert_dialog_set_default_button(dialog, 0);
@@ -766,7 +621,7 @@ static void ask_shortcut_confirmation(Center *c, const gchar *action, const gcha
     request->action = g_strdup("shortcut-apply"); request->resource_id = g_strdup(action);
     request->detail_id = g_strdup(app_id); request->plan_id = g_strdup(plan_id);
     gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
-    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact PRoot shortcut change");
+    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact Native shortcut change");
     g_object_unref(dialog); g_free(message);
 }
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact) {
@@ -786,7 +641,7 @@ static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const g
 static void confirm_action(GtkButton *button, gpointer data) {
     Center *c=data; gboolean start=GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button),"start"));
     if (g_str_has_prefix(c->selected_resource_id ? c->selected_resource_id : "", "graphics.")) {
-        const gchar *provider = g_strcmp0(c->selected_resource_id, "graphics.native") == 0 ? "native" : "debian";
+        const gchar *provider = "native";
         if (start) run_bridge(c, "inspect", c->selected_resource_id, NULL, NULL, NULL, NULL);
         else run_bridge(c, "graphics-verify", provider, "opengl", NULL, NULL, NULL);
         return;
@@ -813,8 +668,8 @@ static void graphics_select_done(GObject *source, GAsyncResult *result, gpointer
 }
 static void select_graphics(GtkButton *button, gpointer data) {
     (void)button; Center *c=data;
-    GtkAlertDialog *dialog=gtk_alert_dialog_new("Choose the Native graphics backend for future desktop starts.");
-    const char *choices[]={"Cancel","KGSL Freedreno","System stack",NULL}; gtk_alert_dialog_set_buttons(dialog,choices);
+    GtkAlertDialog *dialog=gtk_alert_dialog_new("Choose a graphics stack for future desktop starts. The KGSL option is experimental, device-specific, and must already be extracted. Ternuxx does not install it; the running desktop will not change.");
+    const char *choices[]={"Cancel","Experimental KGSL (already present)","Termux system stack",NULL}; gtk_alert_dialog_set_buttons(dialog,choices);
     gtk_alert_dialog_set_default_button(dialog,0); gtk_alert_dialog_choose(dialog,GTK_WINDOW(c->window),NULL,graphics_select_done,c); g_object_unref(dialog);
 }
 static void graphics_api_done(GObject *source, GAsyncResult *result, gpointer user_data) {
@@ -830,7 +685,7 @@ static void graphics_api_done(GObject *source, GAsyncResult *result, gpointer us
 }
 static void choose_graphics_api(GtkButton *button, gpointer data) {
     (void)button; Center *c = data;
-    const gchar *provider = g_strcmp0(c->selected_resource_id, "graphics.native") == 0 ? "native" : "debian";
+    const gchar *provider = "native";
     GtkAlertDialog *dialog = gtk_alert_dialog_new("Choose the graphics API to verify.");
     const char *choices[] = {"Cancel", "OpenGL", "OpenGL ES", "Vulkan", NULL};
     gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
@@ -937,178 +792,6 @@ static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *
 }
 static void show_cron_jobs(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "cron-jobs", NULL, NULL, NULL, NULL, NULL);
-}
-static void show_proot_sessions(GtkButton *button, gpointer data) {
-    (void)button; run_bridge(data, "proot-session-list", NULL, NULL, NULL, NULL, NULL);
-}
-static void proot_recovery_clicked(GtkButton *button, gpointer data) {
-    (void)button; Center *c = data; GtkWidget *window = gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(window), "Inspect PRoot session recovery");
-    gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window)); gtk_window_set_modal(GTK_WINDOW(window), TRUE);
-    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8); gtk_widget_set_margin_top(box, 14);
-    gtk_widget_set_margin_bottom(box, 14); gtk_widget_set_margin_start(box, 14); gtk_widget_set_margin_end(box, 14);
-    gtk_window_set_child(GTK_WINDOW(window), box);
-    gtk_box_append(GTK_BOX(box), gtk_label_new("Copy an exact session ID from List PRoot sessions. This action only inspects recovery state."));
-    GtkWidget *entry = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(entry), "proot- plus 32 lowercase hex characters"); gtk_box_append(GTK_BOX(box), entry);
-    GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); GtkWidget *cancel = gtk_button_new_with_label("Cancel");
-    GtkWidget *inspect = gtk_button_new_with_label("Inspect recovery"); gtk_box_append(GTK_BOX(row), cancel);
-    gtk_box_append(GTK_BOX(row), inspect); gtk_box_append(GTK_BOX(box), row);
-    g_object_set_data(G_OBJECT(window), "stop-center", c); g_object_set_data(G_OBJECT(window), "stop-entry", entry);
-    g_signal_connect(cancel, "clicked", G_CALLBACK(proot_app_cancel_clicked), window);
-    g_signal_connect(inspect, "clicked", G_CALLBACK(proot_recovery_submit), window); gtk_window_present(GTK_WINDOW(window));
-}
-static void proot_recovery_submit(GtkButton *button, gpointer data) {
-    (void)button; GtkWidget *window=data; Center *c=g_object_get_data(G_OBJECT(window),"stop-center");
-    GtkWidget *entry=g_object_get_data(G_OBJECT(window),"stop-entry"); const gchar *id=gtk_editable_get_text(GTK_EDITABLE(entry));
-    if (!id || strlen(id)!=38 || !g_str_has_prefix(id,"proot-")) {
-        gtk_label_set_text(GTK_LABEL(c->notice),"Enter the exact proot- session ID from the session inventory."); return;
-    }
-    run_bridge(c,"proot-session-recovery",id,NULL,NULL,NULL,NULL); gtk_window_destroy(GTK_WINDOW(window));
-}
-static void replay_guest_preview_clicked(GtkButton *button, gpointer data) {
-    (void)button; GtkWidget *window=data; Center *c=g_object_get_data(G_OBJECT(window),"guest-center");
-    GtkWidget *kind_widget=g_object_get_data(G_OBJECT(window),"guest-kind");
-    GtkWidget *alias_widget=g_object_get_data(G_OBJECT(window),"guest-alias");
-    GtkWidget *backup_widget=g_object_get_data(G_OBJECT(window),"guest-backup");
-    const gchar *alias=gtk_editable_get_text(GTK_EDITABLE(alias_widget));
-    const gchar *kind=gtk_string_list_get_string(GTK_STRING_LIST(gtk_drop_down_get_model(GTK_DROP_DOWN(kind_widget))),gtk_drop_down_get_selected(GTK_DROP_DOWN(kind_widget)));
-    const gchar *backup=gtk_editable_get_text(GTK_EDITABLE(backup_widget));
-    gboolean migration=g_strcmp0(kind,"migrate")==0 || g_strcmp0(kind,"rollback")==0;
-    if (migration) {
-        if (!alias || g_strcmp0(alias,"debian")!=0) {
-            gtk_label_set_text(GTK_LABEL(c->notice),"The exact existing Debian alias is required."); return;
-        }
-    } else if (!alias || !g_regex_match_simple("^ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}$",alias,0,0)) {
-        gtk_label_set_text(GTK_LABEL(c->notice),"Enter an exact ternuxx-replay-NAME alias."); return;
-    }
-    if (g_strcmp0(kind,"restore")==0 && (!backup || !g_regex_match_simple("^[0-9a-f]{32}$",backup,0,0))) {
-        gtk_label_set_text(GTK_LABEL(c->notice),"Restore requires the 32-character private backup ID."); return;
-    }
-    if (g_strcmp0(kind,"rollback")==0 && (!backup || !g_regex_match_simple("^[0-9a-f]{64}$",backup,0,0))) {
-        gtk_label_set_text(GTK_LABEL(c->notice),"Rollback requires the 64-character migration ID."); return;
-    }
-    const gchar *bridge_kind=kind;
-    run_bridge(c,"guest-lifecycle-preview",bridge_kind,alias,
-               (g_strcmp0(kind,"restore")==0 || g_strcmp0(kind,"rollback")==0)?backup:"-",NULL,NULL);
-    gtk_window_destroy(GTK_WINDOW(window));
-}
-static void manage_replay_guest(GtkButton *button, gpointer data) {
-    (void)button; Center *c=data; GtkWidget *window=gtk_window_new();
-    gboolean migration=g_strcmp0(c->selected_resource_id,"proot.debian.workloads")==0;
-    gtk_window_set_title(GTK_WINDOW(window),migration?"Migrate Debian Vulkan configuration":"Retire or restore a replay guest");
-    gtk_window_set_transient_for(GTK_WINDOW(window),GTK_WINDOW(c->window)); gtk_window_set_modal(GTK_WINDOW(window),TRUE);
-    gtk_window_set_default_size(GTK_WINDOW(window),420,300);
-    GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_margin_top(box,14);
-    gtk_widget_set_margin_bottom(box,14); gtk_widget_set_margin_start(box,14); gtk_widget_set_margin_end(box,14);
-    gtk_window_set_child(GTK_WINDOW(window),box);
-    GtkWidget *explanation=gtk_label_new(migration
-        ? "Preview a byte-preserving rename of the known legacy Vulkan ICD file in the existing Debian guest. Active or unverifiable sessions block apply; package state is unchanged. Rollback is available from the exact migration receipt."
-        : "Only a receipt-verified ternuxx-replay-* guest can be changed. Existing Debian is protected. Retirement preserves the exact directory for restore.");
-    gtk_label_set_wrap(GTK_LABEL(explanation),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(explanation),PANGO_WRAP_WORD_CHAR);
-    gtk_label_set_max_width_chars(GTK_LABEL(explanation),46); gtk_widget_set_halign(explanation,GTK_ALIGN_START);
-    gtk_box_append(GTK_BOX(box),explanation);
-    const gchar *migration_choices[]={"migrate","rollback",NULL};
-    const gchar *guest_choices[]={"retire","restore",NULL};
-    GtkWidget *kind=gtk_drop_down_new_from_strings(migration?migration_choices:guest_choices);
-    GtkWidget *alias=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(alias),migration?"Exact alias: debian":"Exact alias: ternuxx-replay-NAME");
-    if (migration) gtk_editable_set_text(GTK_EDITABLE(alias),"debian");
-    GtkWidget *backup=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(backup),migration?"Migration ID (rollback only)":"Backup ID (restore only)");
-    gtk_box_append(GTK_BOX(box),kind); gtk_box_append(GTK_BOX(box),alias); gtk_box_append(GTK_BOX(box),backup);
-    GtkWidget *row=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,8); GtkWidget *cancel=gtk_button_new_with_label("Cancel");
-    GtkWidget *preview=gtk_button_new_with_label("Preview exact change"); gtk_box_append(GTK_BOX(row),cancel);
-    gtk_box_append(GTK_BOX(row),preview); gtk_box_append(GTK_BOX(box),row);
-    g_object_set_data(G_OBJECT(window),"guest-center",c); g_object_set_data(G_OBJECT(window),"guest-kind",kind);
-    g_object_set_data(G_OBJECT(window),"guest-alias",alias); g_object_set_data(G_OBJECT(window),"guest-backup",backup);
-    g_signal_connect(cancel,"clicked",G_CALLBACK(proot_app_cancel_clicked),window);
-    g_signal_connect(preview,"clicked",G_CALLBACK(replay_guest_preview_clicked),window);
-    gtk_window_present(GTK_WINDOW(window));
-}
-static void clear_replay_guest_confirmation(Center *c) {
-    g_clear_pointer(&c->replay_guest_pending_kind, g_free);
-    g_clear_pointer(&c->replay_guest_pending_alias, g_free);
-    g_clear_pointer(&c->replay_guest_pending_backup, g_free);
-    g_clear_pointer(&c->replay_guest_pending_plan, g_free);
-    gtk_widget_set_visible(c->replay_guest_confirmation, FALSE);
-}
-static void replay_guest_confirmation_apply(GtkButton *button, gpointer data) {
-    (void)button; Center *c = data;
-    if (!c->replay_guest_pending_kind || !c->replay_guest_pending_alias
-            || !c->replay_guest_pending_backup || !c->replay_guest_pending_plan
-            || !g_regex_match_simple("^[0-9a-f]{64}$", c->replay_guest_pending_plan, 0, 0)) {
-        gtk_label_set_text(GTK_LABEL(c->notice), "Replay guest preview expired; create a fresh preview.");
-        clear_replay_guest_confirmation(c);
-        return;
-    }
-    run_bridge(c, "guest-lifecycle-apply", c->replay_guest_pending_kind,
-               c->replay_guest_pending_alias, c->replay_guest_pending_backup,
-               c->replay_guest_pending_plan, NULL);
-    clear_replay_guest_confirmation(c);
-}
-static void replay_guest_confirmation_cancel(GtkButton *button, gpointer data) {
-    (void)button; Center *c = data;
-    clear_replay_guest_confirmation(c);
-    gtk_label_set_text(GTK_LABEL(c->notice), "Replay guest action cancelled; no guest change was applied.");
-}
-static void ask_guest_lifecycle_confirmation(Center *c,const gchar *kind,const gchar *alias,
-                                              const gchar *backup_id,const gchar *plan_id,const gchar *impact) {
-    gboolean retiring = g_strcmp0(kind, "retire") == 0;
-    gboolean migrating = g_strcmp0(kind, "migrate") == 0;
-    gboolean rolling_back = g_strcmp0(kind, "rollback") == 0;
-    g_free(c->replay_guest_pending_kind); c->replay_guest_pending_kind = g_strdup(kind);
-    g_free(c->replay_guest_pending_alias); c->replay_guest_pending_alias = g_strdup(alias);
-    g_free(c->replay_guest_pending_backup); c->replay_guest_pending_backup = g_strdup(backup_id ? backup_id : "-");
-    g_free(c->replay_guest_pending_plan); c->replay_guest_pending_plan = g_strdup(plan_id);
-    gchar *message = g_strdup_printf("Target: %s\n\n%s\n\n%s",
-        alias, impact && *impact ? impact : "Apply only the exact reviewed change.",
-        migrating || rolling_back ? "Only the exact ICD file rename is changed; packages and user accounts remain untouched."
-                                 : "No guest files are deleted. The exact directory can be restored from its private backup.");
-    gtk_label_set_text(GTK_LABEL(c->replay_guest_confirmation_label), message);
-    gtk_button_set_label(GTK_BUTTON(c->replay_guest_apply_button),
-                         retiring ? "Retire this replay guest" :
-                         migrating ? "Apply ICD migration" :
-                         rolling_back ? "Roll back ICD migration" : "Restore this replay guest");
-    gtk_widget_remove_css_class(c->replay_guest_apply_button, retiring ? "suggested-action" : "destructive-action");
-    gtk_widget_add_css_class(c->replay_guest_apply_button, retiring ? "destructive-action" : "suggested-action");
-    gtk_widget_set_visible(c->replay_guest_confirmation, TRUE);
-    gtk_label_set_text(GTK_LABEL(c->notice), "Review the exact replay guest target and effect before applying.");
-    g_free(message);
-}
-static void start_proot_probe(GtkButton *button, gpointer data) {
-    (void)button; run_bridge(data, "proot-probe-preview", NULL, NULL, NULL, NULL, NULL);
-}
-static void proot_stop_preview_clicked(GtkButton *button, gpointer data) {
-    (void)button; GtkWidget *window = data;
-    Center *c = g_object_get_data(G_OBJECT(window), "stop-center");
-    GtkWidget *entry = g_object_get_data(G_OBJECT(window), "stop-entry");
-    const gchar *id = gtk_editable_get_text(GTK_EDITABLE(entry));
-    if (!id || strlen(id) != 38 || !g_str_has_prefix(id, "proot-")) {
-        gtk_label_set_text(GTK_LABEL(c->notice), "Enter the exact proot- session ID from the session inventory."); return;
-    }
-    run_bridge(c, "proot-session-stop-preview", id, NULL, NULL, NULL, NULL);
-    gtk_window_destroy(GTK_WINDOW(window));
-}
-static void stop_proot_session(GtkButton *button, gpointer data) {
-    (void)button; Center *c = data; GtkWidget *window = gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(window), "Stop a verified PRoot session");
-    gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window));
-    gtk_window_set_modal(GTK_WINDOW(window), TRUE);
-    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
-    gtk_widget_set_margin_top(box, 14); gtk_widget_set_margin_bottom(box, 14);
-    gtk_widget_set_margin_start(box, 14); gtk_widget_set_margin_end(box, 14);
-    gtk_window_set_child(GTK_WINDOW(window), box);
-    gtk_box_append(GTK_BOX(box), gtk_label_new("List sessions first. Enter one exact session ID; a fresh ownership preview and confirmation are required."));
-    GtkWidget *entry = gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(entry), "proot- plus 32 lowercase hex characters");
-    gtk_box_append(GTK_BOX(box), entry);
-    GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    GtkWidget *cancel = gtk_button_new_with_label("Cancel"); GtkWidget *preview = gtk_button_new_with_label("Preview stop");
-    gtk_box_append(GTK_BOX(row), cancel); gtk_box_append(GTK_BOX(row), preview); gtk_box_append(GTK_BOX(box), row);
-    g_object_set_data(G_OBJECT(window), "stop-center", c); g_object_set_data(G_OBJECT(window), "stop-entry", entry);
-    g_signal_connect(cancel, "clicked", G_CALLBACK(proot_app_cancel_clicked), window);
-    g_signal_connect(preview, "clicked", G_CALLBACK(proot_stop_preview_clicked), window);
-    gtk_window_present(GTK_WINDOW(window));
-}
-static void show_proot_shortcuts(GtkButton *button, gpointer data) {
-    (void)button; run_bridge(data, "shortcut-list", NULL, NULL, NULL, NULL, NULL);
 }
 static void show_desktop_log(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "logs-read", "native-desktop", NULL, NULL, NULL, NULL);
@@ -1289,36 +972,6 @@ static void ask_ssh_rollback_confirmation(Center *c, const gchar *rollback_id,
     gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact SSH key recovery");
     g_object_unref(dialog); g_free(message);
 }
-static void proot_shortcut_rollback_choice(GObject *source, GAsyncResult *result, gpointer user_data) {
-    GtkAlertDialog *dialog = GTK_ALERT_DIALOG(source); Request *request = user_data; GError *error = NULL;
-    int choice = gtk_alert_dialog_choose_finish(dialog, result, &error);
-    if (!error && choice > 0) {
-        gchar **ids = g_strsplit(request->resource_id ? request->resource_id : "", ",", -1);
-        guint index = (guint)(choice - 1);
-        if (ids[index] && g_regex_match_simple("^[0-9a-f]{32}$", ids[index], 0, 0))
-            run_bridge(request->center, "shortcut-sync-rollback-preview", ids[index], NULL, NULL, NULL, NULL);
-        else gtk_label_set_text(GTK_LABEL(request->center->notice), "Selected shortcut restore record is invalid.");
-        g_strfreev(ids);
-    } else if (error) { gtk_label_set_text(GTK_LABEL(request->center->notice), error->message); g_clear_error(&error); }
-    else gtk_label_set_text(GTK_LABEL(request->center->notice), "Shortcut restore cancelled.");
-    g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
-}
-static void show_proot_shortcut_rollbacks(GtkButton *button, gpointer data) {
-    (void)button; run_bridge(data, "shortcut-sync-rollback-list", NULL, NULL, NULL, NULL, NULL);
-}
-static void ask_proot_shortcut_rollback_confirmation(Center *c, const gchar *rollback_id,
-                                                      const gchar *plan_id, const gchar *effect) {
-    gchar *message = g_strdup_printf("Restore this saved PRoot app menu state?\n\n%s\n\nOnly files that still match the saved sync will change.", effect);
-    GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
-    const char *choices[] = {"Cancel", "Restore saved shortcut state", NULL};
-    gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
-    Request *request = g_new0(Request, 1); request->center = c;
-    request->action = g_strdup("proot-shortcut-rollback-apply");
-    request->resource_id = g_strdup(rollback_id); request->plan_id = g_strdup(plan_id);
-    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
-    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact PRoot shortcut restore");
-    g_object_unref(dialog); g_free(message);
-}
 static void show_management_log(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "logs-read", "management-api", NULL, NULL, NULL, NULL);
 }
@@ -1327,103 +980,6 @@ static void show_cron_log(GtkButton *button, gpointer data) {
 }
 static void show_cron_history(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "cron-history", NULL, NULL, NULL, NULL, NULL);
-}
-static void proot_app_launch_clicked(GtkButton *button, gpointer data) {
-    (void)button; GtkWidget *window = data;
-    Center *c = g_object_get_data(G_OBJECT(window), "proot-center");
-    GtkWidget *selector = g_object_get_data(G_OBJECT(window), "proot-app-select");
-    GPtrArray *ids = g_object_get_data(G_OBJECT(window), "proot-app-ids");
-    guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(selector));
-    if (!ids || index >= ids->len) {
-        gtk_label_set_text(GTK_LABEL(c->notice), "Choose a listed PRoot app.");
-        return;
-    }
-    const gchar *selected = g_ptr_array_index(ids, index);
-    gboolean shortcut_mode = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(window), "shortcut-mode"));
-    if (shortcut_mode) {
-        GtkWidget *action_widget = g_object_get_data(G_OBJECT(window), "shortcut-action-entry");
-        guint action_index = gtk_drop_down_get_selected(GTK_DROP_DOWN(action_widget));
-        const gchar *actions[] = {"add", "remove", NULL};
-        gchar *target = g_str_has_prefix(selected, "D:")
-            ? g_strconcat("desktop:", selected + 2, NULL)
-            : g_strdup(selected + 2);
-        if (g_str_has_prefix(selected, "C:") || g_str_has_prefix(selected, "D:"))
-            run_bridge(c, "shortcut-preview", actions[action_index], target, NULL, NULL, NULL);
-        g_free(target);
-    } else if (g_str_has_prefix(selected, "D:")) {
-        gchar *launch_id = g_strconcat("desktop:", selected + 2, NULL);
-        run_bridge(c, "proot-app-launch", launch_id, NULL, NULL, NULL, NULL);
-        g_free(launch_id);
-    } else if (g_str_has_prefix(selected, "C:"))
-        run_bridge(c, "proot-app-launch", selected + 2, NULL, NULL, NULL, NULL);
-    gtk_window_destroy(GTK_WINDOW(window));
-}
-static void show_proot_app_options(Center *c, const gchar *output, gboolean shortcut_mode) {
-    GtkStringList *model = gtk_string_list_new(NULL);
-    GPtrArray *ids = g_ptr_array_new_with_free_func(g_free);
-    gchar **lines = g_strsplit(output, "\n", -1);
-    for (guint i = 0; lines[i]; i++) {
-        gchar **fields = g_strsplit(lines[i], "\t", 3);
-        gboolean valid = fields[0] && fields[1] && fields[2]
-            && ((g_strcmp0(fields[0], "C") == 0
-                 && g_regex_match_simple("^[a-z0-9][a-z0-9-]{0,63}$", fields[1], 0, 0))
-                || (g_strcmp0(fields[0], "D") == 0
-                    && g_regex_match_simple("^[A-Za-z0-9][A-Za-z0-9_.-]{0,254}$", fields[1], 0, 0)));
-        if (valid && *fields[2]) {
-            g_ptr_array_add(ids, g_strdup_printf("%s:%s", fields[0], fields[1]));
-            gchar *label = g_strdup_printf("%s%s", fields[2],
-                g_strcmp0(fields[0], "D") == 0 ? " (Debian)" : " (Ternuxx)");
-            gtk_string_list_append(model, label); g_free(label);
-        }
-        g_strfreev(fields);
-    }
-    g_strfreev(lines);
-    if (ids->len == 0) {
-        gtk_label_set_text(GTK_LABEL(c->notice), "No runnable Debian apps were discovered.");
-        g_ptr_array_unref(ids); g_object_unref(model); return;
-    }
-    GtkWidget *window = gtk_window_new();
-    gtk_window_set_title(GTK_WINDOW(window), shortcut_mode ? "Manage a PRoot app shortcut" : "Launch a PRoot app");
-    gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(c->window));
-    gtk_window_set_modal(GTK_WINDOW(window), TRUE); gtk_window_set_default_size(GTK_WINDOW(window), 500, 220);
-    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_widget_set_margin_top(box, 16); gtk_widget_set_margin_bottom(box, 16);
-    gtk_widget_set_margin_start(box, 16); gtk_widget_set_margin_end(box, 16);
-    gtk_window_set_child(GTK_WINDOW(window), box);
-    gtk_box_append(GTK_BOX(box), gtk_label_new(shortcut_mode
-        ? "Choose an installed app and shortcut action. The exact change is previewed before confirmation."
-        : "Choose an installed Debian app. Availability is checked again when it launches."));
-    GtkWidget *action_selector = NULL;
-    if (shortcut_mode) {
-        const gchar *actions[] = {"Add shortcut", "Remove owned shortcut", NULL};
-        action_selector = gtk_drop_down_new_from_strings(actions);
-        gtk_box_append(GTK_BOX(box), action_selector);
-    }
-    GtkWidget *selector = gtk_drop_down_new(G_LIST_MODEL(model), NULL);
-    gtk_widget_set_hexpand(selector, TRUE); gtk_box_append(GTK_BOX(box), selector);
-    GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    GtkWidget *cancel = gtk_button_new_with_label("Cancel");
-    GtkWidget *launch = gtk_button_new_with_label(shortcut_mode ? "Preview shortcut change" : "Launch app");
-    gtk_box_append(GTK_BOX(buttons), cancel); gtk_box_append(GTK_BOX(buttons), launch);
-    gtk_box_append(GTK_BOX(box), buttons);
-    g_object_set_data(G_OBJECT(window), "proot-center", c);
-    g_object_set_data(G_OBJECT(window), "proot-app-select", selector);
-    g_object_set_data(G_OBJECT(window), "shortcut-mode", GINT_TO_POINTER(shortcut_mode));
-    if (action_selector)
-        g_object_set_data(G_OBJECT(window), "shortcut-action-entry", action_selector);
-    g_object_set_data_full(G_OBJECT(window), "proot-app-ids", ids, (GDestroyNotify)g_ptr_array_unref);
-    g_signal_connect(cancel, "clicked", G_CALLBACK(proot_app_cancel_clicked), window);
-    g_signal_connect(launch, "clicked", G_CALLBACK(proot_app_launch_clicked), window);
-    gtk_window_present(GTK_WINDOW(window)); g_object_unref(model);
-}
-static void proot_app_cancel_clicked(GtkButton *button, gpointer data) {
-    (void)button; gtk_window_destroy(GTK_WINDOW(data));
-}
-static void launch_proot_app(GtkButton *button, gpointer data) {
-    (void)button; run_bridge(data, "proot-app-options", NULL, NULL, NULL, NULL, NULL);
-}
-static void manage_proot_shortcut(GtkButton *button, gpointer data) {
-    (void)button; run_bridge(data, "proot-shortcut-options", NULL, NULL, NULL, NULL, NULL);
 }
 static void timezone_save_clicked(GtkButton *button, gpointer data) {
     (void)button; GtkWidget *window = data;
@@ -1478,8 +1034,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     (void)user_data; Center *c=g_new0(Center,1); app_center=c;
     c->categories=g_ptr_array_new_with_free_func(g_free); c->resources=g_ptr_array_new_with_free_func(resource_free);
     c->window=gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(c->window), test_attach_session_id
-        ? "Ternuxx GTK handoff test" : "Ternuxx Management Center");
+    gtk_window_set_title(GTK_WINDOW(c->window), "Ternuxx Management Center");
     gtk_window_set_default_size(GTK_WINDOW(c->window),720,980);
     GtkCssProvider *theme=gtk_css_provider_new();
     gtk_css_provider_load_from_string(theme,"window{background:#0c1511;color:#e6f1e9;} list,row{background:#111e18;color:#e6f1e9;} list row:selected{background:#245638;} button{background:#17271f;color:#e6f1e9;border:1px solid #2b4034;border-radius:9px;padding:8px;} button:hover{border-color:#62d58a;} label.dim-label{color:#9eb2a3;} textview,textview text{background-color:#111e18;color:#e6f1e9;}");
@@ -1491,11 +1046,35 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->category_list=gtk_list_box_new(); gtk_widget_set_size_request(c->category_list,155,-1); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->category_list),GTK_SELECTION_SINGLE); gtk_paned_set_start_child(GTK_PANED(paned),c->category_list);
     GtkWidget *middle=gtk_paned_new(GTK_ORIENTATION_VERTICAL); GtkWidget *center=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); gtk_widget_set_size_request(center,-1,180); c->search=gtk_search_entry_new(); gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(c->search),"Search resources"); gtk_box_append(GTK_BOX(center),c->search); c->resource_list=gtk_list_box_new(); gtk_list_box_set_selection_mode(GTK_LIST_BOX(c->resource_list),GTK_SELECTION_SINGLE); GtkWidget *scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),c->resource_list); gtk_widget_set_vexpand(scroll,TRUE); gtk_box_append(GTK_BOX(center),scroll); gtk_paned_set_start_child(GTK_PANED(middle),center);
     GtkWidget *right=gtk_box_new(GTK_ORIENTATION_VERTICAL,8); c->details=gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(c->details),FALSE); gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->details),GTK_WRAP_WORD_CHAR); GtkWidget *detail_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(detail_scroll),c->details); gtk_widget_set_vexpand(detail_scroll,TRUE);
-    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE); c->desktop_log_button=gtk_button_new_with_label("Read Native desktop log (may include app output)"); gtk_widget_set_visible(c->desktop_log_button,FALSE); c->logs_button=gtk_button_new_with_label("Read Cron scheduler log"); gtk_widget_set_visible(c->logs_button,FALSE); c->audit_logs_button=gtk_button_new_with_label("Read management audit log"); gtk_widget_set_visible(c->audit_logs_button,FALSE); c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop"); c->ssh_restart_button=gtk_button_new_with_label("Restart managed SSH (8023)"); gtk_widget_set_visible(c->ssh_restart_button,FALSE); c->ssh_keys_button=gtk_button_new_with_label("View shared SSH key fingerprints"); gtk_widget_set_visible(c->ssh_keys_button,FALSE); c->ssh_enroll_button=gtk_button_new_with_label("Enroll public key..."); gtk_widget_set_visible(c->ssh_enroll_button,FALSE); c->ssh_revoke_button=gtk_button_new_with_label("Revoke public key..."); gtk_widget_set_visible(c->ssh_revoke_button,FALSE); c->ssh_rollback_button=gtk_button_new_with_label("Restore previous SSH key change..."); gtk_widget_set_visible(c->ssh_rollback_button,FALSE); c->ssh_generate_button=gtk_button_new_with_label("Create Native recovery key..."); gtk_widget_set_visible(c->ssh_generate_button,FALSE); c->ssh_autostart_button=gtk_button_new_with_label("Set SSH start with Termux services..."); gtk_widget_set_visible(c->ssh_autostart_button,FALSE); c->ssh_wakelock_button=gtk_button_new_with_label("Set managed SSH keep-awake preference..."); gtk_widget_set_visible(c->ssh_wakelock_button,FALSE); c->graphics_select_button=gtk_button_new_with_label("Select graphics backend"); gtk_widget_set_visible(c->graphics_select_button,FALSE); c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE); g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE)); gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->start_button); gtk_box_append(GTK_BOX(actions),c->stop_button); gtk_box_append(GTK_BOX(actions),c->ssh_restart_button); gtk_box_append(GTK_BOX(actions),c->ssh_keys_button); gtk_box_append(GTK_BOX(actions),c->ssh_enroll_button); gtk_box_append(GTK_BOX(actions),c->ssh_revoke_button); gtk_box_append(GTK_BOX(actions),c->ssh_rollback_button); gtk_box_append(GTK_BOX(actions),c->ssh_generate_button); gtk_box_append(GTK_BOX(actions),c->ssh_autostart_button); gtk_box_append(GTK_BOX(actions),c->graphics_select_button); gtk_box_append(GTK_BOX(actions),c->graphics_api_button); gtk_box_append(GTK_BOX(actions),c->history_button); gtk_box_append(GTK_BOX(actions),c->desktop_log_button); gtk_box_append(GTK_BOX(actions),c->logs_button); gtk_box_append(GTK_BOX(actions),c->audit_logs_button); c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button); c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button); c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button); c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button); c->proot_app_button=gtk_button_new_with_label("Launch PRoot app…"); gtk_widget_set_visible(c->proot_app_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_app_button); c->proot_shortcut_button=gtk_button_new_with_label("Manage PRoot shortcut…"); gtk_widget_set_visible(c->proot_shortcut_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_shortcut_button); c->proot_list_button=gtk_button_new_with_label("List PRoot app shortcuts"); gtk_widget_set_visible(c->proot_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_list_button); c->proot_rollback_button=gtk_button_new_with_label("Restore saved PRoot app menu…"); gtk_widget_set_visible(c->proot_rollback_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_rollback_button);
-    c->proot_sessions_button=gtk_button_new_with_label("List PRoot sessions"); gtk_widget_set_visible(c->proot_sessions_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_sessions_button);
-    c->proot_recovery_button=gtk_button_new_with_label("Inspect PRoot recovery..."); gtk_widget_set_visible(c->proot_recovery_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_recovery_button);
-    c->proot_probe_button=gtk_button_new_with_label("Start isolated probe..."); gtk_widget_set_visible(c->proot_probe_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_probe_button); c->proot_terminal_button=gtk_button_new_with_label("Open Debian terminal..."); gtk_widget_set_visible(c->proot_terminal_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_terminal_button);
-    c->proot_stop_button=gtk_button_new_with_label("Stop verified session..."); gtk_widget_set_visible(c->proot_stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_stop_button); c->replay_guest_actions=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->proot_guest_button=gtk_button_new_with_label("Retire or restore replay guest..."); gtk_widget_set_visible(c->proot_guest_button,FALSE); gtk_box_append(GTK_BOX(c->replay_guest_actions),c->proot_guest_button); c->replay_guest_confirmation=gtk_box_new(GTK_ORIENTATION_VERTICAL,6); c->replay_guest_confirmation_label=gtk_label_new(""); gtk_label_set_wrap(GTK_LABEL(c->replay_guest_confirmation_label),TRUE); gtk_label_set_wrap_mode(GTK_LABEL(c->replay_guest_confirmation_label),PANGO_WRAP_WORD_CHAR); gtk_label_set_max_width_chars(GTK_LABEL(c->replay_guest_confirmation_label),64); gtk_widget_set_halign(c->replay_guest_confirmation_label,GTK_ALIGN_START); gtk_box_append(GTK_BOX(c->replay_guest_confirmation),c->replay_guest_confirmation_label); GtkWidget *guest_confirm_row=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6); c->replay_guest_cancel_button=gtk_button_new_with_label("Cancel"); c->replay_guest_apply_button=gtk_button_new_with_label("Apply exact change"); gtk_widget_add_css_class(c->replay_guest_apply_button,"destructive-action"); gtk_box_append(GTK_BOX(guest_confirm_row),c->replay_guest_cancel_button); gtk_box_append(GTK_BOX(guest_confirm_row),c->replay_guest_apply_button); gtk_box_append(GTK_BOX(c->replay_guest_confirmation),guest_confirm_row); gtk_widget_set_visible(c->replay_guest_confirmation,FALSE); gtk_box_append(GTK_BOX(c->replay_guest_actions),c->replay_guest_confirmation); gtk_widget_set_visible(c->replay_guest_actions,FALSE); c->proot_confirm_button=gtk_button_new_with_label("Confirm exact PRoot action"); gtk_widget_set_visible(c->proot_confirm_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_confirm_button); c->proot_cancel_button=gtk_button_new_with_label("Cancel PRoot action"); gtk_widget_set_visible(c->proot_cancel_button,FALSE); gtk_box_append(GTK_BOX(actions),c->proot_cancel_button); c->action_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(c->action_scroll),actions); gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(c->action_scroll),190); gtk_scrolled_window_set_propagate_natural_height(GTK_SCROLLED_WINDOW(c->action_scroll),TRUE); gtk_widget_set_size_request(c->action_scroll,-1,1); gtk_box_append(GTK_BOX(right),c->replay_guest_actions); gtk_box_append(GTK_BOX(right),c->action_scroll); gtk_box_append(GTK_BOX(right),detail_scroll);
+    GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_VERTICAL,4);
+    c->history_button=gtk_button_new_with_label("View operation history"); gtk_widget_set_visible(c->history_button,FALSE);
+    c->desktop_log_button=gtk_button_new_with_label("Read Native desktop log (may include app output)"); gtk_widget_set_visible(c->desktop_log_button,FALSE);
+    c->logs_button=gtk_button_new_with_label("Read Cron scheduler log"); gtk_widget_set_visible(c->logs_button,FALSE);
+    c->audit_logs_button=gtk_button_new_with_label("Read management audit log"); gtk_widget_set_visible(c->audit_logs_button,FALSE);
+    c->start_button=gtk_button_new_with_label("Start desktop"); c->stop_button=gtk_button_new_with_label("Stop desktop");
+    c->ssh_restart_button=gtk_button_new_with_label("Restart managed SSH (8023)"); gtk_widget_set_visible(c->ssh_restart_button,FALSE);
+    c->ssh_keys_button=gtk_button_new_with_label("View shared SSH key fingerprints"); gtk_widget_set_visible(c->ssh_keys_button,FALSE);
+    c->ssh_enroll_button=gtk_button_new_with_label("Enroll public key..."); gtk_widget_set_visible(c->ssh_enroll_button,FALSE);
+    c->ssh_revoke_button=gtk_button_new_with_label("Revoke public key..."); gtk_widget_set_visible(c->ssh_revoke_button,FALSE);
+    c->ssh_rollback_button=gtk_button_new_with_label("Restore previous SSH key change..."); gtk_widget_set_visible(c->ssh_rollback_button,FALSE);
+    c->ssh_generate_button=gtk_button_new_with_label("Create Native recovery key..."); gtk_widget_set_visible(c->ssh_generate_button,FALSE);
+    c->ssh_autostart_button=gtk_button_new_with_label("Set SSH start with Termux services..."); gtk_widget_set_visible(c->ssh_autostart_button,FALSE);
+    c->ssh_wakelock_button=gtk_button_new_with_label("Set managed SSH keep-awake preference..."); gtk_widget_set_visible(c->ssh_wakelock_button,FALSE);
+    c->graphics_select_button=gtk_button_new_with_label("Select backend (KGSL experimental)"); gtk_widget_set_visible(c->graphics_select_button,FALSE);
+    c->graphics_api_button=gtk_button_new_with_label("Verify graphics API…"); gtk_widget_set_visible(c->graphics_api_button,FALSE);
+    g_object_set_data(G_OBJECT(c->start_button),"start",GINT_TO_POINTER(TRUE)); g_object_set_data(G_OBJECT(c->stop_button),"start",GINT_TO_POINTER(FALSE));
+    gtk_widget_set_visible(c->start_button,FALSE); gtk_widget_set_visible(c->stop_button,FALSE);
+    GtkWidget *base_actions[]={c->start_button,c->stop_button,c->ssh_restart_button,c->ssh_keys_button,c->ssh_enroll_button,c->ssh_revoke_button,c->ssh_rollback_button,c->ssh_generate_button,c->ssh_autostart_button,c->ssh_wakelock_button,c->graphics_select_button,c->graphics_api_button,c->history_button,c->desktop_log_button,c->logs_button,c->audit_logs_button};
+    for (guint i=0;i<G_N_ELEMENTS(base_actions);i++) gtk_box_append(GTK_BOX(actions),base_actions[i]);
+    c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button);
+    c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button);
+    c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button);
+    c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button);
+    c->software_button=gtk_button_new_with_label("Browse Native Termux apps…"); gtk_widget_set_visible(c->software_button,FALSE); gtk_box_append(GTK_BOX(actions),c->software_button);
+    c->ai_model_install_button=gtk_button_new_with_label("Preview or download pinned CPU model…"); gtk_widget_set_visible(c->ai_model_install_button,FALSE); gtk_box_append(GTK_BOX(actions),c->ai_model_install_button);
+    c->ai_model_remove_button=gtk_button_new_with_label("Preview model removal…"); gtk_widget_set_visible(c->ai_model_remove_button,FALSE); gtk_box_append(GTK_BOX(actions),c->ai_model_remove_button);
+    c->ai_run_button=gtk_button_new_with_label("Run bounded CPU prompt…"); gtk_widget_set_visible(c->ai_run_button,FALSE); gtk_box_append(GTK_BOX(actions),c->ai_run_button);
+    c->action_scroll=gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(c->action_scroll),actions); gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(c->action_scroll),190); gtk_scrolled_window_set_propagate_natural_height(GTK_SCROLLED_WINDOW(c->action_scroll),TRUE); gtk_widget_set_size_request(c->action_scroll,-1,1); gtk_box_append(GTK_BOX(right),c->action_scroll); gtk_box_append(GTK_BOX(right),detail_scroll);
     c->monitor_box=gtk_box_new(GTK_ORIENTATION_VERTICAL,4); c->monitor_enabled=gtk_check_button_new_with_label("Enable Activity/focus monitoring"); c->monitor_interval=gtk_spin_button_new_with_range(1,86400,1); const gchar *units[]={"seconds","minutes","hours",NULL}; c->monitor_unit=gtk_drop_down_new_from_strings(units); c->monitor_focus=gtk_check_button_new_with_label("Check Android Activity focus"); c->monitor_launch=gtk_check_button_new_with_label("Request Activity when background"); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_enabled); gtk_box_append(GTK_BOX(c->monitor_box),gtk_label_new("Polling interval")); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_interval); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_unit); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_focus); gtk_box_append(GTK_BOX(c->monitor_box),c->monitor_launch); GtkWidget *save=gtk_button_new_with_label("Save monitoring policy"); gtk_box_append(GTK_BOX(c->monitor_box),save); gtk_widget_set_visible(c->monitor_box,FALSE); gtk_box_append(GTK_BOX(right),c->monitor_box);
     gtk_paned_set_end_child(GTK_PANED(middle),right); gtk_paned_set_end_child(GTK_PANED(paned),middle); gtk_paned_set_position(GTK_PANED(paned),165); gtk_paned_set_position(GTK_PANED(middle),190);
     c->notice=gtk_label_new("Loading resource catalog…"); gtk_widget_set_halign(c->notice,GTK_ALIGN_START); gtk_box_append(GTK_BOX(root),c->notice);
@@ -1503,33 +1082,23 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_halign(tagline,GTK_ALIGN_START); gtk_widget_add_css_class(tagline,"dim-label");
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(c->proot_app_button,"clicked",G_CALLBACK(launch_proot_app),c); g_signal_connect(c->proot_shortcut_button,"clicked",G_CALLBACK(manage_proot_shortcut),c); g_signal_connect(c->proot_list_button,"clicked",G_CALLBACK(show_proot_shortcuts),c); g_signal_connect(c->proot_rollback_button,"clicked",G_CALLBACK(show_proot_shortcut_rollbacks),c); g_signal_connect(c->proot_sessions_button,"clicked",G_CALLBACK(show_proot_sessions),c); g_signal_connect(c->proot_probe_button,"clicked",G_CALLBACK(start_proot_probe),c); g_signal_connect(c->proot_terminal_button,"clicked",G_CALLBACK(open_interactive_terminal),c); g_signal_connect(c->proot_recovery_button,"clicked",G_CALLBACK(proot_recovery_clicked),c); g_signal_connect(c->proot_stop_button,"clicked",G_CALLBACK(stop_proot_session),c); g_signal_connect(c->proot_guest_button,"clicked",G_CALLBACK(manage_replay_guest),c); g_signal_connect(c->replay_guest_apply_button,"clicked",G_CALLBACK(replay_guest_confirmation_apply),c); g_signal_connect(c->replay_guest_cancel_button,"clicked",G_CALLBACK(replay_guest_confirmation_cancel),c); g_signal_connect(c->proot_confirm_button,"clicked",G_CALLBACK(proot_confirm_clicked),c); g_signal_connect(c->proot_cancel_button,"clicked",G_CALLBACK(proot_cancel_clicked),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->software_button,"clicked",G_CALLBACK(software_apps),c); g_signal_connect(c->ai_model_install_button,"clicked",G_CALLBACK(cpu_model_install),c); g_signal_connect(c->ai_model_remove_button,"clicked",G_CALLBACK(cpu_model_remove),c); g_signal_connect(c->ai_run_button,"clicked",G_CALLBACK(cpu_prompt_dialog),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window));
-    if (test_attach_session_id) spawn_interactive_terminal(c, test_attach_session_id);
     return TRUE;
 }
 int main(int argc, char **argv) {
     if (argc == 2 && g_strcmp0(argv[1], "--version") == 0) { g_print("Ternuxx Management Center 0.1\n"); return 0; }
     if (argc == 2 && g_strcmp0(argv[1], "--self-check") == 0) {
-        g_print("GTK %u.%u.%u; VTE %u.%u.%u; Native GTK terminal client build is available\n",
-                gtk_get_major_version(), gtk_get_minor_version(), gtk_get_micro_version(),
-                vte_get_major_version(), vte_get_minor_version(), vte_get_micro_version()); return 0;
+        g_print("GTK %u.%u.%u; Native management client build is available\n",
+                gtk_get_major_version(), gtk_get_minor_version(), gtk_get_micro_version()); return 0;
     }
     gboolean review_instance = argc == 2 && g_strcmp0(argv[1], "--review") == 0;
-    gboolean test_attach = argc == 3 && g_strcmp0(argv[1], "--test-attach-session") == 0;
-    if (test_attach) {
-        if (!g_regex_match_simple("^proot-[0-9a-f]{32}$", argv[2], 0, 0)) {
-            g_printerr("A verified managed terminal session ID is required.\n");
-            return 2;
-        }
-        test_attach_session_id = argv[2];
-    }
-    const gchar *app_id = test_attach ? "dev.ternuxx.management-center.attach-test"
-        : review_instance ? "dev.ternuxx.management-center.review" : "dev.ternuxx.management-center";
+    const gchar *app_id = review_instance ? "dev.ternuxx.management-center.review" : "dev.ternuxx.management-center";
     GtkApplication *app=gtk_application_new(app_id,
-        (test_attach || review_instance) ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS);
+        review_instance ? G_APPLICATION_NON_UNIQUE : G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(app,"activate",G_CALLBACK(active),NULL);
-    int run_argc = (test_attach || review_instance) ? 1 : argc;
+    int run_argc = review_instance ? 1 : argc;
     int status=g_application_run(G_APPLICATION(app),run_argc,argv);
     g_object_unref(app); return status;
 }

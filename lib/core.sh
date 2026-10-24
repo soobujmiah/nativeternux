@@ -157,10 +157,8 @@ nt_require_command() {
 }
 
 nt_require_termux() {
-  # PRoot may see /data/data/com.termux through a bind mount. Require the
-  # native Termux environment markers instead of treating that path as proof.
   if [ -z "${TERMUX_VERSION:-}" ] || [ "${PREFIX:-}" != "/data/data/com.termux/files/usr" ]; then
-    nt_fail "This operation requires the native Termux shell (TERMUX_VERSION and PREFIX do not identify it). Do not run native package or desktop lifecycle commands from Debian PRoot."
+    nt_fail "This operation requires the Native Termux environment (TERMUX_VERSION and PREFIX do not identify it)."
     return 1
   fi
   return 0

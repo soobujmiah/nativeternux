@@ -1,4 +1,5 @@
 # ADR-0003: Separate generated repository state from SKB knowledge return
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Date:** 2026-10-17
 - **Status:** accepted

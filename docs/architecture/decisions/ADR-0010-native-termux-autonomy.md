@@ -1,4 +1,5 @@
 # ADR-0010: Native Termux autonomy and bounded PRoot integration
+> **Scope update (2026-10-24):** This is a historical design record. ADR-0017 supersedes its PRoot/guest requirements; check the current source, [phase status](../../PHASE-STATUS.md), and [Native-only decision](ADR-0017-native-only-product-and-proot-retirement.md) for supported behavior.
 
 - **Status:** Accepted owner requirement; legacy-alias preservation clauses superseded by [ADR-0016](ADR-0016-tx-db-and-legacy-entrypoints.md); current implementation/qualification tracked by the capability matrix and phase evidence
 - **Date:** 2026-10-17

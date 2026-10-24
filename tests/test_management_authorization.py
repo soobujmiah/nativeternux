@@ -17,32 +17,15 @@ class ManagementAuthorizationTests(unittest.TestCase):
         # Ticket issuance is a transport-only Web operation handled by the
         # authenticated terminal endpoint, not generic management dispatch.
         self.assertEqual(set(management_authorization.OPERATION_CAPABILITIES),
-                         set(management_service.OPERATIONS) | {"terminal.channel.issue"})
+                         set(management_service.OPERATIONS))
         self.assertTrue(all(isinstance(scope, str) and scope and "." in scope
                             for scope in management_authorization.OPERATION_CAPABILITIES.values()))
 
-    def test_proot_app_launch_and_shortcut_apply_require_distinct_capabilities(self) -> None:
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.list"), "diagnostics.read")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.preview"), "diagnostics.read")
-        self.assertEqual(management_authorization.required_capability("proot.app.launch"), "applications.launch")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.apply"), "applications.shortcuts.manage")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.preview"), "diagnostics.read")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.apply"), "applications.shortcuts.manage")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.rollback.list"), "diagnostics.read")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.rollback.preview"), "diagnostics.read")
-        self.assertEqual(management_authorization.required_capability("proot.shortcuts.sync.rollback.apply"), "applications.shortcuts.manage")
-        self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["diagnostics.read"]))
-        self.assertFalse(management_authorization.authorize("proot.shortcuts.apply", ["applications.manage"]))
-        self.assertTrue(management_authorization.authorize("proot.shortcuts.apply", ["applications.shortcuts.manage"]))
-        self.assertFalse(management_authorization.authorize("proot.shortcuts.sync.apply", ["applications.manage"]))
-        self.assertFalse(management_authorization.authorize("proot.shortcuts.sync.rollback.apply", ["diagnostics.read"]))
-        self.assertTrue(management_authorization.authorize("proot.shortcuts.sync.rollback.apply", ["applications.shortcuts.manage"]))
-
-    def test_proot_health_uses_read_scope_and_is_not_mutating(self) -> None:
-        import management_sessions
-        self.assertEqual(management_authorization.required_capability("proot.sessions.health"), "diagnostics.read")
-        self.assertIn("proot.sessions.health", management_sessions.READ_ONLY_OPERATIONS)
-        self.assertNotIn("proot.sessions.health", management_sessions.MUTATING_OPERATIONS)
+    def test_retired_proot_and_terminal_operations_are_denied(self) -> None:
+        for operation in ("proot.status", "proot.app.launch", "proot.sessions.health",
+                          "proot.shortcuts.apply", "terminal.start", "terminal.input"):
+            self.assertIsNone(management_authorization.required_capability(operation))
+            self.assertFalse(management_authorization.authorize(operation, {"diagnostics.read"}))
 
     def test_unknown_or_malformed_operation_fails_closed(self) -> None:
         for operation in ("shell.exec", "adb.forward", None, [], {"ssh.inspect": True}):
@@ -56,6 +39,14 @@ class ManagementAuthorizationTests(unittest.TestCase):
         import management_sessions
         self.assertIn("ssh.keys.list", management_sessions.READ_ONLY_OPERATIONS)
         self.assertNotIn("ssh.keys.list", management_sessions.MUTATING_OPERATIONS)
+
+    def test_directory_tree_file_handoff_uses_read_only_diagnostics_scope(self) -> None:
+        import management_sessions
+        self.assertEqual(management_authorization.required_capability("software.app.run"), "software.manage")
+        self.assertFalse(management_authorization.authorize("software.app.run", {"diagnostics.read"}))
+        self.assertTrue(management_authorization.authorize("software.app.run", {"software.manage"}))
+        self.assertIn("software.app.run", management_sessions.READ_ONLY_OPERATIONS)
+        self.assertNotIn("software.app.run", management_sessions.MUTATING_OPERATIONS)
 
     def test_grants_are_exact_and_do_not_escalate(self) -> None:
         self.assertTrue(management_authorization.authorize("ssh.inspect", {"diagnostics.read"}))

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "active_phase": "P4",
+  "active_phase": null,
   "phases": [
     {
       "id": "P0",
@@ -38,7 +38,12 @@
         "docs/evidence/2026-10-18-p3-p2-native-recheck-0757.json",
         "docs/evidence/2026-10-18-p2-native-closure-recheck-0816.json"
       ],
-      "next_action": "P2 is complete. Continue P3 ownership and recovery acceptance from the current roadmap; preserve the existing Debian/X11 workflows and keep reboot readiness UNVERIFIED absent explicit owner-approved qualification."
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "Historical gate remains closed; its former next action depended on Debian workflows, which owner-directed Native-only scope has retired."
+        }
+      ]
     },
     {
       "id": "P3",
@@ -49,163 +54,109 @@
       "evidence": [
         "docs/evidence/2026-10-22-p3-rb08-postboot-exit-audit.md"
       ],
-      "next_action": "P3 is complete. Continue the active P4 optional-provider work from the current roadmap and preserve all Native Termux independence gates."
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "Historical gate remains closed; its former next action described the retired PRoot provider roadmap."
+        }
+      ]
     },
     {
       "id": "P4",
-      "title": "Existing Ternux PRoot feature-parity provider",
-      "status": "in_progress",
-      "completed_on": null,
-      "summary": "Disposable Debian migration interruption recovery and exact retire/restore now pass with inode/hash preservation; active default Debian remains untouched.",
+      "title": "Owner-directed retirement of former PRoot provider",
+      "status": "completed",
+      "summary": "P4 closed by owner-directed Native-only retirement: six guests and both manager packages removed, guest lifecycle/client code retired, Native controls preserved, and 654 repository tests pass.",
       "evidence": [
-        "docs/evidence/P4-ternux-source-capability-matrix-2026-10-18.md",
-        "docs/evidence/P4-proot-gpu-renderer-2026-10-18.md",
-        "docs/evidence/2026-10-18-p4-ternux-profile-discovery-recheck.json",
-        "docs/evidence/2026-10-18-p3-proot-isolation-verification.json",
-        "docs/evidence/2026-10-18-p3-live-followup-0158.json",
-        "docs/evidence/2026-10-18-p3-ternux-x11-presence-correlation-0202.json",
-        "docs/evidence/2026-10-18-p3-display-process-diagnostic-0206.json",
-        "docs/evidence/2026-10-18-p4-installed-ternux-interface-recheck-0600.json",
-        "docs/evidence/2026-10-18-p4-installed-cli-identity-0636.json",
-        "docs/architecture/decisions/ADR-0014-proot-adb-and-management-tcp.md",
-        "docs/evidence/2026-10-18-p3-ternux-provider-contract-recheck-0821.json",
-        "docs/evidence/2026-10-18-p3-ternux-guest-verify-recheck-0823.json",
-        "docs/evidence/2026-10-18-p4-installed-ternux-interface-recheck.md",
-        "docs/evidence/2026-10-18-ternux-session-app-handoff.md",
-        "docs/evidence/2026-10-18-live-session-state-reconciliation.json",
-        "docs/evidence/2026-10-19-tui-guided-proot-launch.md",
-        "docs/evidence/2026-10-19-native-monitoring-shizuku-graphics-followup.md",
-        "docs/architecture/NATIVE-GRAPHICS-AUDIO.md",
-        "docs/evidence/2026-10-20-ternuxx-proot-consolidation.md",
-        "docs/evidence/2026-10-20-proot-full-gui.md",
-        "docs/evidence/2026-10-20-graphics-live-recheck.md",
-        "docs/evidence/2026-10-20-phase-roadmap-audit.md",
-        "docs/evidence/2026-10-22-p0-p4-phase-audit.md",
-        "docs/evidence/2026-10-22-p4-legacy-cli-and-runtime-recheck.md",
-        "docs/evidence/2026-10-22-canonical-name-and-broker-audit.md",
-        "docs/evidence/2026-10-22-p4-terminal-client-and-gui-review.md",
-        "docs/evidence/2026-10-22-p4-persistent-broker-web-terminal.md",
-        "docs/evidence/2026-10-22-native-ui-and-audit-remediation.md",
-        "docs/evidence/2026-10-22-monitor-service-registration.md",
-        "docs/evidence/2026-10-22-native-entrypoint-and-contract-audit.md",
-        "docs/evidence/2026-10-22-guarded-fresh-replay.md",
-        "docs/evidence/2026-10-22-fresh-setup-and-probe-safety.md",
-        "docs/evidence/2026-10-22-tui-terminal-replay.md",
-        "docs/evidence/2026-10-22-web-terminal-replay.md",
-        "docs/evidence/2026-10-22-gtk-terminal-picker-review.md",
-        "docs/evidence/2026-10-22-ssh-gtk-key-controls.md",
-        "docs/evidence/2026-10-22-native-installed-parity-1007.json",
-        "docs/evidence/2026-10-22-ssh-client-key-generation.md",
-        "docs/evidence/2026-10-22-ssh-service-autostart-policy.md",
-        "docs/evidence/2026-10-22-managed-ssh-wakelock-policy.md",
-        "docs/evidence/2026-10-22-ssh-disposable-auth-qualification.md",
-        "docs/evidence/2026-10-22-cross-client-terminal-handoff.md",
-        "docs/evidence/2026-10-22-replay-guest-retirement.md",
-        "docs/evidence/2026-10-22-web-replay-guest-retirement.md",
-        "docs/evidence/2026-10-22-gtk-replay-guest-dialog-review.md",
-        "docs/evidence/2026-10-22-gtk-selection-response-review.md",
-        "docs/evidence/2026-10-22-gtk-vte-same-session.md",
-        "docs/evidence/2026-10-22-gtk-replay-guest-apply.md",
-        "docs/evidence/2026-10-22-web-ui-visible-acceptance.json",
-        "docs/evidence/2026-10-22-p4-next-gate-reconciliation.md",
-        "docs/evidence/2026-10-22-native-optional-proot-failure-injection.md",
-        "docs/evidence/2026-10-22-p4-replay-download-timeout.md",
-        "docs/evidence/2026-10-22-p4-virgl-route-recheck.md",
-        "docs/evidence/2026-10-22-web-proot-recovery-reconcile.md",
-        "docs/evidence/2026-10-22-native-provider-failure-isolation.md",
-        "docs/evidence/2026-10-22-p4-previewed-shortcut-sync.md",
-        "docs/evidence/2026-10-22-p4-shortcut-sync-rollback.md",
-        "docs/evidence/2026-10-23-gtk-shortcut-rollback.md",
-        "docs/evidence/2026-10-23-p4-shortcut-serialization.md",
-        "docs/evidence/2026-10-23-p4-broker-runtime-recheck.md",
-        "docs/evidence/2026-10-23-gtk-shortcut-friendly-selection.md",
-        "docs/evidence/2026-10-23-p4-gtk-dynamic-app-launcher.md",
-        "docs/evidence/2026-10-23-p4-dynamic-debian-shortcut-crud.md",
-        "docs/evidence/2026-10-23-p4-virgl-client-visibility.md",
-        "docs/evidence/2026-10-23-disposable-debian-replay.md",
-        "docs/evidence/2026-10-23-native-package-version-drift.md",
-        "docs/evidence/2026-10-24-native-suite-and-url-verification.md",
-        "docs/evidence/2026-10-24-virgl-stopped-status-correction.md",
-        "docs/evidence/2026-10-24-native-package-candidate-recheck.md",
-        "docs/evidence/2026-10-24-native-update-preview-lifecycle.md",
-        "docs/evidence/2026-10-24-p4-terminal-broker-and-install-preview.md",
-        "docs/evidence/2026-10-24-adoption-record-refresh.md",
-        "docs/evidence/2026-10-24-fresh-turnip-path-audit.md",
-        "docs/evidence/2026-10-24-dynamic-proot-user-selection.md",
-        "docs/evidence/2026-10-24-p4-managed-icd-migration.md",
-        "docs/evidence/2026-10-24-p4-replay-retire-restore-recheck.md"
+        "docs/evidence/2026-10-24-native-only-proot-removal-audit.md"
       ],
-      "next_action": "Reconcile remaining P4 config/package lifecycle and CLI/TUI/Web/GTK action parity against current source; then collect current isolated GUI/audio/workload evidence without stopping the active default Debian session."
+      "completed_on": "2026-10-23",
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "Corrected the phase title to describe the completed Native-only retirement decision."
+        }
+      ]
     },
     {
       "id": "P5",
-      "title": "Distro and display compatibility profiles",
-      "status": "planned",
-      "completed_on": null,
-      "summary": "Only the current Android 16/aarch64/Termux and existing Debian provider profile has device evidence; other combinations remain unqualified.",
+      "title": "Native Termux profile compatibility",
+      "status": "completed",
+      "completed_on": "2026-10-23",
+      "summary": "Recorded the sole directly observed Android 16/Termux 0.119.0-beta.3 Native profile, exact display/audio/package versions, and graphics probe failure; all other combinations remain unqualified.",
       "evidence": [
-        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+        "docs/testing/reports/2026-10-24-native-profile-25053RT47C.md"
       ],
-      "next_action": "After P4, freeze a dated supported profile matrix with exact host, Termux, ABI, distro, display, audio, and graphics versions."
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "Native profile compatibility gate is complete; dated matrix and follow-up evidence are recorded."
+        }
+      ]
     },
     {
       "id": "P6",
       "title": "CPU/GPU/NPU capability, optimization, and fallback",
-      "status": "planned",
-      "completed_on": null,
-      "summary": "Native GL/GLES/Vulkan and direct Debian Zink/Turnip draws exist; ordinary workload fallback, clean-install setup, nested presentation, and NPU remain open.",
+      "status": "completed",
+      "completed_on": "2026-10-24",
+      "summary": "Completed the Native compute capability assessment: the bounded shared CPU model path and software fallback are documented; stock and experimental graphics results are separated; offline inference remains unverified, GPU inference/NPU remain unavailable, and experimental graphics stay outside release support.",
       "evidence": [
-        "docs/evidence/2026-10-20-shared-graphics-manager.md",
-        "docs/evidence/2026-10-20-native-offscreen-glmark2.md",
-        "docs/evidence/2026-10-20-graphics-live-recheck.md",
-        "docs/evidence/2026-10-20-native-vulkan-draw.md",
-        "docs/evidence/2026-10-20-native-gles-draw.md",
-        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+        "docs/evidence/2026-10-24-p6-completion-review.md"
       ],
-      "next_action": "After P5, connect API-safe backend choice and verified CPU fallback to named workloads, reproduce setup from clean install, and record NPU feasibility."
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "P6 is closed; its previous next_action was the work completed by the P6 completion review and must not remain as an active instruction."
+        }
+      ]
     },
     {
       "id": "P7",
       "title": "Native apps and curated software catalog",
-      "status": "planned",
-      "completed_on": null,
-      "summary": "Catalog browse/shortcuts exist, but a supported install/update/remove lifecycle and exact client parity are not complete.",
+      "status": "completed",
+      "completed_on": "2026-10-24",
+      "summary": "Three-ID Native Termux lifecycle is implemented across CLI, TUI, Web, and GTK through shared authorization; 706 tests passed, live previews were read-only, and no app package was applied.",
       "evidence": [
-        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+        "docs/evidence/2026-10-24-p7-native-catalog-implementation.md"
       ],
-      "next_action": "After P6, select a small official app set and implement preview, consent, progress, update, remove, and result reporting through the shared service and clients."
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "The P7 completion run reached 706 passing tests; its implementation action is stale after the gate closed."
+        }
+      ]
     },
     {
       "id": "P8",
-      "title": "Hybrid workload and accelerator routing",
-      "status": "planned",
-      "completed_on": null,
-      "summary": "Native, standalone PRoot, and Hybrid features exist separately; accepted boot-to-workload-to-result flows are still missing.",
+      "title": "Native workload and accelerator routing",
+      "status": "completed",
+      "completed_on": "2026-10-24",
+      "summary": "Native workload checks and HOME-scoped file-name handoff pass across the shared service and clients; 714 tests pass. Historical NOT_READY checkpoints and accelerator proof limits remain explicit.",
       "evidence": [
-        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+        "docs/evidence/2026-10-24-p8-native-readiness-audit.md"
       ],
-      "next_action": "After P7, verify Native-only, PRoot :0, and Hybrid :1 with selected app and nested :2 workflows, file handoff, audio/display ownership, logs, and recovery."
+      "next_action": "Design a safe HOME-scoped file/argv handoff or formally defer it; fixture-test failure behavior, then continue bounded recovery review without rebooting or altering shared storage."
     },
     {
       "id": "P9",
-      "title": "Optional isolated PRoot profile",
-      "status": "planned",
+      "title": "Optional isolated workload profile",
+      "status": "skipped",
       "completed_on": null,
-      "summary": "Optional only: no separate isolated rootfs need is selected; never target the existing Debian installation.",
+      "summary": "Skipped: owner-selected Native-only product has no isolated workload gap; PRoot was retired and any future isolation needs a new decision.",
       "evidence": [
-        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+        "docs/evidence/2026-10-24-p9-native-only-scope-decision.md"
       ],
       "optional": true,
-      "next_action": "After P8, proceed only for an owner-approved workload gap; otherwise create Gate: SKIP evidence and use the reviewed skip transition."
+      "next_action": "Keep this optional phase deferred unless a specific Native workload gap is documented and approved.",
+      "skipped_on": "2026-10-24"
     },
     {
       "id": "P10",
       "title": "Hardening, release, and support",
-      "status": "planned",
-      "completed_on": null,
-      "summary": "Internal completion and public release are separate; supported-profile reproducibility, final docs/security review, license, and provenance remain release gates.",
+      "status": "completed",
+      "completed_on": "2026-10-24",
+      "summary": "Internal Native-only hardening and support review passes; public release remains blocked by unresolved license/provenance, SSH exposure, and clean-device qualification.",
       "evidence": [
-        "docs/evidence/2026-10-20-phase-roadmap-audit.md"
+        "docs/evidence/2026-10-24-p10-internal-hardening-review.md"
       ],
       "next_action": "After required phases, run reproducibility and support checks, update handoff/state, and keep public release blocked until license and provenance are resolved."
     }

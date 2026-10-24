@@ -1,52 +1,33 @@
-# Graphics and accelerator verification
+# Native graphics qualification
 
-## Current device results
+**Scope:** Native Termux graphics only. OpenGL, OpenGL ES, Vulkan, and inference are separate capabilities. A result applies to the exact device, driver path, API, and workload in its report.
 
-Target: Native Termux on Android 16, aarch64, Adreno 825. Results below are scoped to the named API, process, and display. They do not establish inference acceleration or general application compatibility.
+## Current device result
 
-| Provider and API | Current result | What the evidence establishes |
+Latest exact stock-package and experimental-candidate results are separated in the [stock Mesa recheck](../evidence/2026-10-24-native-stock-mesa-recheck.md) and [experimental graphics recheck](../evidence/2026-10-24-native-graphics-fallback-recheck.md).
+
+| Path | Observed result | Supported claim |
 |---|---|---|
-| Native OpenGL | Verified on display `:1`; Adreno 825 / Freedreno reports `Accelerated: yes` | The selected local Mesa KGSL candidate rendered GLX and the bounded `glmark2` workload. The stock Mesa path uses llvmpipe when the candidate is not selected. |
-| Native OpenGL ES | Shared manager rendered 1,098 frames in five seconds (219.47 frames/sec) at 1280x720; GLES 3.2; Adreno 825; `accelerated=true` | The tracked surfaceless EGL/GLES runner drew a shader to a pbuffer with `glFinish` each frame. This is synthetic off-screen throughput, not presented UI FPS. The verifier compiles into private temporary state and removes the binary after the run. |
-| Native Vulkan | Adreno 825 rendered the bounded 120-frame `vkcube` workload through the selected candidate | Vulkan device enumeration and selected draw device matched. Stock ICD separately returned `VK_ERROR_INCOMPATIBLE_DRIVER`. |
-| Debian OpenGL | Verified through the existing guest on `:1`; Zink over Turnip reports Adreno 825 | Existing Debian glibc stack only. The fixed verifier is read-only and does not install or alter guest files. |
-| Debian OpenGL ES | Unavailable through the current adapter | The guest verifier checks OpenGL/Zink, not a GLES workload. |
-| VirGL | Unqualified | A Native server process or available package alone does not prove a guest VirGL renderer. |
-| GPU inference / NPU | Not implemented or verified | No model/runtime workload has demonstrated delegated execution. |
+| Installed Termux Mesa 26.2.5, OpenGL | `llvmpipe`, off-screen draw passed, score 81 | CPU software rendering only |
+| Installed Termux Mesa, GLES | Verification runner unavailable, exit 127 | No GLES draw claim |
+| Installed Termux Mesa, Vulkan | No valid GPU detected; no draw attempted | No stock Vulkan workload claim |
+| Experimental Mesa 26.3.0-devel candidate, OpenGL/GLES/Vulkan | Bounded draws passed on Adreno 825 after fresh package extraction | Device-specific experimental evidence only; no supported clean installer |
 
-The current desktop preference is stored in private Ternuxx state. The running GUI session may continue to use the environment it inherited at its last start; changing the preference applies to future starts. Fresh installs use system Mesa because the locally tested candidate has no completed installer or clean-install qualification. The candidate remains experimental.
+The official Termux Mesa recipe currently builds Gallium `llvmpipe`, `softpipe`, `virgl`, and `zink`; its aarch64 build separately enables the Freedreno Vulkan ICD with KGSL. Neither package configuration nor status enumeration proves a draw. The current live manager status sees a saved experimental candidate; its Adreno renderer/context/device fields are not workload verification. Keep the candidate outside release support until it has an audited source, repeatable installation path, and workload evidence.
 
-## Shared management commands
+## Run the bounded checks
 
 ```sh
 ./tx mng graphics status native
-./tx mng graphics status debian
-./tx mng graphics verify native opengl
-./tx mng graphics verify native gles
-./tx mng graphics verify native vulkan
-./tx mng graphics select native system
-./tx mng graphics select native kgsl-freedreno
+DISPLAY=:1 ./tx mng graphics verify native opengl :1
+DISPLAY=:1 ./tx mng graphics verify native gles :1
+DISPLAY=:1 ./tx mng graphics verify native vulkan :1
 ```
 
-OpenGL verification runs a bounded off-screen-mode `glmark2` workload. If the selected accelerated path fails, it tries software in order: `llvmpipe`, then `softpipe`; it only reports fallback success when the renderer matches the attempted backend. This is verification-workload behavior and is not yet wired into ordinary app launches. Vulkan verification runs a bounded 120-frame `vkcube` draw on the active X11 display. It reports rendered only when the workload-selected GPU matches `vulkaninfo`; absent display/tool remains enumeration-only. Native OpenGL ES verification builds the checked-in GLES 3 pbuffer source with `clang` into the private Ternuxx state directory, runs a bounded shader draw, then cleans up the temporary binary. It returns `unavailable` if clang, source, EGL/GLES development libraries, or a private state directory is missing. Debian GLES remains unavailable through the current adapter. The Debian adapter supports only its configured OpenGL/Zink read-only check. CLI, TUI, Web, and GTK send these operations to the shared management service; action coverage varies by client.
+The OpenGL verification attempts the configured renderer, then tests `llvmpipe` and `softpipe` in order if the primary draw fails. It reports CPU fallback only when the exact software renderer and draw both pass. GLES verification compiles/runs a bounded shader pbuffer draw and removes its temporary binary. Vulkan verification requires enumeration and a bounded `vkcube` draw on the same selected device; enumeration failure returns a bounded diagnostic and does not attempt a draw.
 
-To use stock Native Mesa for the next desktop start, select `system`. To use the verified candidate for future starts, select `kgsl-freedreno`. Neither operation restarts the current desktop. The selected candidate must already exist in private provider state. This checkout does not yet download or install it on a fresh device.
+The selected candidate is an experimental extracted Mesa build from the community draft [PR #25](https://github.com/lfdevs/termux-packages/pull/25); its successful [GitHub Actions run](https://github.com/lfdevs/termux-packages/actions/runs/36377469447), source commit, artifact digest, and local package checksums are recorded in the [2026-10-24 recheck](../evidence/2026-10-24-native-graphics-fallback-recheck.md). It is not an official Termux release and still has no reproducible clean-install distribution path. No package upgrade or persistent backend change was made.
 
-## Repeatable test setup and limits
+## Qualification boundary
 
-The Native candidate came from a GitHub Actions artifact for the community draft [lfdevs/termux-packages PR #25](https://github.com/lfdevs/termux-packages/pull/25), not an official Termux release, and was staged under `$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84/`. The checked-in profile records its draft PR commit, workflow run, package names, versions, and hashes, but does not include the binary artifact or a stable distribution URL. Do not download an unverified replacement based only on the PR; a Ternuxx provider installer needs an owner-approved, reproducible artifact source and provenance review. A Ternuxx preview-first provider installer is still required for clean-install reproducibility.
-
-The checked-in evidence records the device package versions, candidate and stock measurements, display mode, and failure cases:
-
-- [Native candidate and session qualification](../evidence/2026-10-20-workstation-qualification-execution.md)
-- [Native off-screen benchmark results](../evidence/2026-10-20-native-offscreen-glmark2.md)
-- [KGSL session selection](../evidence/2026-10-20-native-kgsl-session-selection.md)
-- [Shared graphics manager and client coverage](../evidence/2026-10-20-shared-graphics-manager.md)
-- [Native GLES draw verification](../evidence/2026-10-20-native-gles-draw.md)
-- [Debian adapter audit and current adoption record](../evidence/2026-10-20-ternuxx-proot-consolidation.md)
-
-## GPU inference requirements
-
-A GPU inference pass requires a named model/runtime, recorded binary and model hashes, target-device identification, runtime logs showing delegated operations, correctness checks, and comparable CPU/GPU timing. A forced-GPU run that falls back silently to CPU is not a GPU pass. Record load time, prompt and decode throughput, memory, repeat variation, thermal behavior, and failure/teardown behavior where available. NPU capability claims require the same workload-level evidence.
-
-Upstream llama.cpp describes Snapdragon/OpenCL and Hexagon HTP backends as research options; their existence does not show that they work in this Ternuxx runtime. See [llama.cpp Snapdragon backend](https://github.com/ggml-org/llama.cpp/tree/master/docs/backend/snapdragon) and [Android/Termux instructions](https://github.com/ggml-org/llama.cpp/blob/master/docs/android.md).
+OpenGL/GLES off-screen draws, one bounded on-screen Vulkan `vkcube` draw, and the explicit software fallback are verified for this exact device snapshot. Other application rendering, broad Android compatibility, clean installation from a stable upstream source, CPU/GPU inference acceleration, and NPU execution are not release-qualified. Fresh extraction of the retained checksum-verified candidate package set passed the bounded OpenGL/GLES/Vulkan checks on 2026-10-24; this does not provide a public installer or establish official support. Keep unsupported workloads and APIs unavailable, and preserve the CPU renderer as an explicit fallback. Device/library detection alone never establishes workload acceleration.

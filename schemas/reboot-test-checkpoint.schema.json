@@ -286,7 +286,6 @@
               "native_sshd_ready",
               "ssh_socket_observed",
               "continuity_marker_matches",
-              "proot_independent",
               "db_preserved",
               "xgo_preserved",
               "wakelock_owner_checked"
@@ -337,7 +336,6 @@
         "errors",
         "socket_binding",
         "wakelock_state",
-        "proot_dependency",
         "automatic_resume"
       ],
       "properties": {
@@ -417,9 +415,6 @@
         },
         "wakelock_state": {
           "const": "unknown"
-        },
-        "proot_dependency": {
-          "const": false
         },
         "automatic_resume": {
           "const": false

@@ -1,5 +1,7 @@
 # Native and PRoot end-to-end integration
 
+> **Historical record, superseded 2026-10-24.** Ternuxx is Native Termux-only. PRoot implementation and operations described below have been retired and must not be used as current setup instructions. Current behavior is documented in [the product vision](PRODUCT-VISION.md), [phase status](PHASE-STATUS.md), and [Native-only retirement audit](evidence/2026-10-24-native-only-proot-removal-audit.md).
+
 **Document status (rechecked 2026-10-23):** This contains current provider-boundary requirements plus older proposed workflows. Follow current CLI help, phase status, and the capability matrix for implemented commands. The cross-provider SSH CLI and boot-profile sketches below are not current features. The owner-approved full-repository task separately permits exact, previewed, and reversible Native/existing-Debian config changes.
 
 Native Termux is the primary workstation and authoritative owner of native SSH, native services, boot recovery, lifecycle, and persistent continuity evidence. The existing Debian PRoot is an integrated but independently managed development/execution provider. They keep separate package managers, runtime libraries, configuration, and ownership; Ternuxx connects them through explicit, narrow interfaces. Native boot and recovery must work with PRoot stopped, unavailable, or without an agent running inside it.

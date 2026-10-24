@@ -214,17 +214,6 @@ nt_cmd_start() {
   _NT_ACTIVE_SESSION_LOCK="$lock"
   trap '_nt_release_session_lock' EXIT
 
-  local pgui_state_dir="$HOME/.local/share/ternuxx/proot-display0" pgui_report pgui_state
-  if [ -e "$pgui_state_dir/session.json" ]; then
-    pgui_report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" inspect "$HOME" "$pgui_state_dir" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null)" || {
-      nt_fail "Standalone PRoot GUI ownership is unknown or unsafe; Native desktop startup is blocked to protect display :0."; return 1;
-    }
-    pgui_state="$(printf '%s' "$pgui_report" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state", "unknown"))')"
-    [ "$pgui_state" = stopped ] || {
-      nt_fail "Standalone PRoot GUI state is $pgui_state; stop or safely reconcile that session before starting Native GUI."; return 1;
-    }
-  fi
-
   session_report="$(python3 "$_TN_LIB_DIR/desktop_session_state.py" inspect "$HOME" "$state_root" /proc "${TMPDIR:-/data/data/com.termux/files/usr/tmp}" 2>/dev/null)" || {
     nt_fail "Session ownership or process identity is unknown or unsafe. Processes and state were preserved; inspect session.json and desktop.log."; return 1;
   }
@@ -341,7 +330,7 @@ nt_cmd_start() {
   nt_ok "Ternuxx desktop session is running on :$display_number."
   nt_info "Termux:X11 Activity launch is disabled by default; open the app manually if needed."
   nt_info "GUI visibility remains unknown until the Termux:X11 window is actually visible."
-  nt_info "Native PulseAudio is managed independently; tx stop leaves it running for active PRoot clients."
+  nt_info "Native PulseAudio is managed independently; tx stop leaves it running for active clients."
   if [ "$TERNUXX_JSON" = "1" ]; then
     nt_json_object "start" "running" "display" ":$display_number" "activity_request" "disabled_by_default" "gui_visible" "unknown" "audio_owner" "ternuxx-native"
   fi

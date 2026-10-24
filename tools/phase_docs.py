@@ -87,15 +87,16 @@ def render(state: dict) -> dict[Path, str]:
     progress = f"{resolved}/{len(phases)} phases resolved ({complete} completed, {skipped} skipped)"
     if active:
         current = f"**Current phase:** {active['id']} — {active['title']}"
-        detail = active.get("summary") or "Work is in progress; no completion evidence has been accepted yet."
-        if active.get("next_action"):
-            detail += f"\n\n**Next action:** {active['next_action']}"
     else:
         current = ("**Current phase:** All required roadmap phases are resolved." if skipped
                    else "**Current phase:** All roadmap phases are complete.")
-        detail = "See the evidence records below for completed gates and any optional phases skipped with evidence." if skipped else "See the evidence records below for completed gates."
 
-    readme_body = f"{current}\n\n**Progress:** {progress}\n\n{detail}\n\n[Phase status and evidence](docs/PHASE-STATUS.md)"
+    # Keep the README status compact. Detailed summaries and the active next
+    # action belong to ROADMAP/PHASE-STATUS and should not be copied into a
+    # third generated location.
+    readme_body = (f"{current}\n\n**Progress:** {progress}\n\n"
+                   "[Roadmap and active work](docs/ROADMAP.md) · "
+                   "[Phase status and evidence](docs/PHASE-STATUS.md)")
     readme = replace_block(README.read_text(encoding="utf-8"), README_START, README_END, readme_body, "README")
 
     table_rows = ["| ID | Phase | Status | Completed / skipped |", "|---|---|---|---|"]
@@ -208,6 +209,31 @@ def skip_optional_phase(state: dict, phase_id: str, summary: str, evidence: list
     else:
         state["active_phase"] = None
 
+def revise_resolved_phase(state: dict, phase_id: str, *, title: str | None = None,
+                          summary: str | None = None, clear_next_action: bool = False,
+                          reason: str) -> None:
+    """Correct stale descriptive metadata on a closed phase without reopening its gate."""
+    phase = next(p for p in state["phases"] if p["id"] == phase_id)
+    if phase.get("status") not in {"completed", "skipped"}:
+        raise ValueError("Only a completed or skipped phase can have its metadata revised")
+    reason = reason.strip()
+    if not reason or "\n" in reason or "\r" in reason:
+        raise ValueError("Revision reason must be a non-empty single line")
+    if title is not None:
+        title = title.strip()
+        if not title or "\n" in title or "\r" in title:
+            raise ValueError("Phase title must be a non-empty single line")
+        phase["title"] = title
+    if summary is not None:
+        summary = summary.strip()
+        if not summary or "\n" in summary or "\r" in summary:
+            raise ValueError("Phase summary must be a non-empty single line")
+        phase["summary"] = summary
+    if clear_next_action:
+        phase.pop("next_action", None)
+    phase.setdefault("revision_notes", []).append({"date": utc_date(), "reason": reason})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -231,6 +257,12 @@ def main() -> int:
     complete.add_argument("phase_id")
     complete.add_argument("--evidence", action="append", required=True, help="repo-relative evidence file; repeatable")
     complete.add_argument("--summary", required=True, help="short gate result summary")
+    revise = sub.add_parser("revise", help="correct descriptive metadata on a closed phase without reopening its gate")
+    revise.add_argument("phase_id")
+    revise.add_argument("--reason", required=True, help="why the descriptive metadata needs correction")
+    revise.add_argument("--title", help="correct the phase title")
+    revise.add_argument("--summary", help="correct the phase summary")
+    revise.add_argument("--clear-next-action", action="store_true", help="remove a stale next action from a closed phase")
     args = parser.parse_args()
 
     try:
@@ -238,6 +270,14 @@ def main() -> int:
         if args.command == "refresh":
             write_all(render(state))
             print("Generated README, roadmap status, and docs/PHASE-STATUS.md from recorded state.")
+            return 0
+        if args.command == "revise":
+            if not args.title and not args.summary and not args.clear_next_action:
+                raise ValueError("Provide a title, summary, or --clear-next-action revision")
+            revise_resolved_phase(state, args.phase_id, title=args.title, summary=args.summary,
+                                  clear_next_action=args.clear_next_action, reason=args.reason)
+            write_all(render(state), state)
+            print(f"Revised descriptive metadata for closed {args.phase_id} without changing its gate.")
             return 0
 
         summary = args.summary.strip()

@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# Start only the enabled Native Termux runit services; never enter PRoot.
+# Start only the enabled Native Termux runit services.
 set -u
 umask 077
 
@@ -36,8 +36,8 @@ chmod 600 "$LOG_FILE" || exit 1
   done
   if [ "$ready" -ne 1 ]; then
     printf 'sshd=not-ready detail=%s\n' "${status:-no-status}"
-    printf 'result=degraded; PRoot was not started\n'
+    printf 'result=degraded; Native service unavailable\n'
     exit 1
   fi
-  printf 'result=ready; provider=native_termux; proot_dependency=false\n'
+  printf 'result=ready; provider=native_termux\n'
 } >>"$LOG_FILE" 2>&1

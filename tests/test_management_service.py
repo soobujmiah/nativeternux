@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+import io
+import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -29,66 +33,100 @@ def request(operation: object, args: object = None, api_version: int = 1) -> dic
 
 
 class ManagementServiceTests(unittest.TestCase):
-    def test_replay_guest_lifecycle_is_routed_through_typed_shared_operations(self) -> None:
-        env = {**NATIVE_ENV, "HOME": "/tmp/replay-home",
-               "TERNUXX_STATE_DIR": "/tmp/replay-home/.local/share/ternuxx"}
-        with patch.object(management_service.retire_fresh_guest, "retire_preview",
-                          return_value={"status": "preview", "plan_id": "a" * 64}) as preview:
-            result = management_service.dispatch(request("proot.setup.retire.preview", {
-                "alias": "ternuxx-replay-p4"}), env=env)
+    def test_cpu_inference_is_a_shared_native_management_resource(self) -> None:
+        status = {"runtime": {"available": True}, "model": {"state": "present-unverified"}}
+        with patch.object(management_service.cpu_inference, "status", return_value=status) as probe:
+            result = management_service.dispatch(request("inference.cpu.status"), env=NATIVE_ENV)
         self.assertTrue(result["ok"])
-        preview.assert_called_once_with(prefix=NATIVE_ENV["PREFIX"], home="/tmp/replay-home",
-                                        state_dir=env["TERNUXX_STATE_DIR"], alias="ternuxx-replay-p4")
-        denied_default = management_service.dispatch(request("proot.setup.retire.preview", {
-            "alias": "debian"}), env=env)
-        self.assertFalse(denied_default["ok"])
-        self.assertEqual(denied_default["error"]["code"], "proot_guest_retirement_failed")
-        denied_unconfirmed = management_service.dispatch(request("proot.setup.retire.apply", {
-            "alias": "ternuxx-replay-p4", "confirmed": False, "plan_id": "a" * 64}), env=env)
-        self.assertFalse(denied_unconfirmed["ok"])
-        self.assertEqual(denied_unconfirmed["error"]["code"], "confirmation_required")
-    def test_icd_migration_uses_shared_preview_apply_and_rollback_operations(self) -> None:
-        env = {**NATIVE_ENV, "HOME": "/tmp/icd-home",
-               "TERNUXX_STATE_DIR": "/tmp/icd-home/.local/share/ternuxx"}
-        with patch.object(management_service.proot_setup, "preview_icd_migration",
-                          return_value={"status": "preview", "plan_id": "a" * 64}) as preview:
-            result = management_service.dispatch(request("proot.setup.icd-migrate.preview", {
-                "alias": "debian"}), env=env)
-        self.assertTrue(result["ok"])
-        preview.assert_called_once_with(repo_root=str(ROOT), prefix=NATIVE_ENV["PREFIX"],
-                                        home="/tmp/icd-home",
-                                        state_dir=env["TERNUXX_STATE_DIR"], alias="debian")
-        bad_apply = management_service.dispatch(request("proot.setup.icd-migrate.apply", {
-            "alias": "debian", "confirmed": False, "plan_id": "a" * 64}), env=env)
-        self.assertFalse(bad_apply["ok"])
-        self.assertEqual(bad_apply["error"]["code"], "confirmation_required")
-        with patch.object(management_service.proot_setup, "apply_icd_migration",
-                          return_value={"status": "migrated"}) as apply:
-            result = management_service.dispatch(request("proot.setup.icd-migrate.apply", {
-                "alias": "debian", "confirmed": True, "plan_id": "a" * 64}), env=env)
-        self.assertTrue(result["ok"])
-        apply.assert_called_once_with(repo_root=str(ROOT), prefix=NATIVE_ENV["PREFIX"],
-                                      home="/tmp/icd-home", state_dir=env["TERNUXX_STATE_DIR"],
-                                      alias="debian", plan_id="a" * 64, confirmed=True)
+        self.assertEqual(result["data"], status)
+        probe.assert_called_once()
+        catalog = management_service.dispatch(request("management.catalog"), env=NATIVE_ENV)
+        self.assertTrue(catalog["ok"])
+        resource = next(item for item in catalog["data"]["resources"] if item["id"] == "inference.cpu.local")
+        self.assertEqual(resource["supported_operations"], [
+            "inference.cpu.status", "inference.cpu.model.preview",
+            "inference.cpu.model.apply", "inference.cpu.run"])
 
-    def test_icd_rollback_operations_route_without_manifest_arguments(self) -> None:
-        env = {**NATIVE_ENV, "HOME": "/tmp/icd-rollback-home",
-               "TERNUXX_STATE_DIR": "/tmp/icd-rollback-home/.local/share/ternuxx"}
-        with patch.object(management_service.proot_setup, "preview_icd_rollback",
-                          return_value={"status": "preview", "plan_id": "b" * 64}) as preview:
-            result = management_service.dispatch(request("proot.setup.icd-migrate.rollback.preview", {
-                "migration_id": "c" * 64}), env=env)
-        self.assertTrue(result["ok"])
-        preview.assert_called_once_with(prefix=NATIVE_ENV["PREFIX"], home="/tmp/icd-rollback-home",
-                                        state_dir=env["TERNUXX_STATE_DIR"], plan_id="c" * 64)
-        with patch.object(management_service.proot_setup, "apply_icd_rollback",
-                          return_value={"status": "rolled_back"}) as apply:
-            result = management_service.dispatch(request("proot.setup.icd-migrate.rollback.apply", {
-                "migration_id": "c" * 64, "confirmed": True, "plan_id": "b" * 64}), env=env)
-        self.assertTrue(result["ok"])
-        apply.assert_called_once_with(prefix=NATIVE_ENV["PREFIX"], home="/tmp/icd-rollback-home",
-                                      state_dir=env["TERNUXX_STATE_DIR"], migration_id="c" * 64,
-                                      plan_id="b" * 64, confirmed=True)
+    def test_cpu_model_apply_requires_typed_exact_plan_and_dispatches_same_runtime(self) -> None:
+        with patch.object(management_service.cpu_inference, "install_model", return_value={"installed": True}) as install:
+            missing = management_service.dispatch(request("inference.cpu.model.apply", {
+                "action": "install", "plan_id": "a" * 24}), env=NATIVE_ENV)
+            self.assertFalse(missing["ok"])
+            self.assertEqual(missing["error"]["code"], "confirmation_required")
+            applied = management_service.dispatch(request("inference.cpu.model.apply", {
+                "action": "install", "plan_id": "a" * 24, "confirmed": True}), env=NATIVE_ENV)
+        self.assertTrue(applied["ok"])
+        install.assert_called_once()
+        self.assertEqual(install.call_args.kwargs["plan_id"], "a" * 24)
+        self.assertEqual(install.call_args.kwargs["confirmed"], "DOWNLOAD")
+
+    def test_cpu_run_is_bounded_and_rejects_invalid_input_before_runtime(self) -> None:
+        with patch.object(management_service.cpu_inference, "run_inference", return_value={"output": "ok"}) as run:
+            invalid = management_service.dispatch(request("inference.cpu.run", {
+                "prompt": "bad\nline", "max_tokens": 64}), env=NATIVE_ENV)
+            self.assertFalse(invalid["ok"])
+            self.assertEqual(invalid["error"]["code"], "invalid_arguments")
+            too_many = management_service.dispatch(request("inference.cpu.run", {
+                "prompt": "hello", "max_tokens": 129}), env=NATIVE_ENV)
+            self.assertFalse(too_many["ok"])
+            good = management_service.dispatch(request("inference.cpu.run", {
+                "prompt": "hello", "max_tokens": 32}), env=NATIVE_ENV)
+        self.assertTrue(good["ok"])
+        run.assert_called_once()
+        self.assertEqual(run.call_args.kwargs["max_tokens"], 32)
+
+    def test_cli_inference_operations_use_the_shared_service_contract(self) -> None:
+        calls = []
+        def fake_dispatch(request_data, env=None):
+            calls.append(request_data)
+            return {"api_version": 1, "request_id": request_data["request_id"],
+                    "ok": True, "operation": request_data["operation"], "data": {}}
+
+        with patch.object(management_service, "dispatch", side_effect=fake_dispatch), \
+                patch.dict(os.environ, NATIVE_ENV, clear=False), \
+                patch("sys.stdin", io.StringIO("one-line local prompt")), \
+                redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(management_service.main([
+                "--operation", "inference.cpu.status", "--json"]), 0)
+            self.assertEqual(management_service.main([
+                "--operation", "inference.cpu.model.preview", "--model-action", "install", "--json"]), 0)
+            self.assertEqual(management_service.main([
+                "--operation", "inference.cpu.model.apply", "--model-action", "install",
+                "--plan-id", "a" * 24, "--model-confirm", "DOWNLOAD", "--json"]), 0)
+            self.assertEqual(management_service.main([
+                "--operation", "inference.cpu.run", "--prompt-stdin", "--max-tokens", "32", "--json"]), 0)
+
+        self.assertEqual([call["operation"] for call in calls], [
+            "inference.cpu.status", "inference.cpu.model.preview",
+            "inference.cpu.model.apply", "inference.cpu.run"])
+        self.assertEqual(calls[1]["args"], {"action": "install"})
+        self.assertEqual(calls[2]["args"], {
+            "action": "install", "plan_id": "a" * 24, "confirmed": True})
+        self.assertEqual(calls[3]["args"], {
+            "prompt": "one-line local prompt", "max_tokens": 32})
+        self.assertEqual([json.loads(line)["operation"] for line in output.getvalue().splitlines()], [
+            "inference.cpu.status", "inference.cpu.model.preview",
+            "inference.cpu.model.apply", "inference.cpu.run"])
+
+    def test_cli_inference_model_apply_rejects_a_confirmation_for_the_wrong_action(self) -> None:
+        with patch.object(management_service, "dispatch") as dispatch, \
+                patch.dict(os.environ, NATIVE_ENV, clear=False), \
+                redirect_stdout(io.StringIO()) as output:
+            result = management_service.main([
+                "--operation", "inference.cpu.model.apply", "--model-action", "install",
+                "--plan-id", "a" * 24, "--model-confirm", "REMOVE", "--json"])
+        self.assertEqual(result, 1)
+        dispatch.assert_not_called()
+        self.assertEqual(json.loads(output.getvalue())["error"]["code"], "confirmation_required")
+
+    def test_public_tx_ai_wrapper_routes_cpu_work_through_the_shared_service(self) -> None:
+        source = (ROOT / "lib/ai.sh").read_text(encoding="utf-8")
+        self.assertIn('management_service.py', source)
+        self.assertIn('--operation inference.cpu.status', source)
+        self.assertIn('--operation inference.cpu.model.preview', source)
+        self.assertIn('--operation inference.cpu.model.apply', source)
+        self.assertIn('--operation inference.cpu.run', source)
+        self.assertNotIn('cpu_inference.py', source)
 
     def test_ssh_key_inventory_is_a_separate_read_only_shared_operation(self) -> None:
         import tempfile
@@ -135,6 +173,18 @@ class ManagementServiceTests(unittest.TestCase):
             self.assertTrue(applied["ok"])
             self.assertEqual((home / ".ssh/authorized_keys").read_text(), public_key + "\n")
             self.assertEqual((home / ".ssh/authorized_keys").stat().st_mode & 0o777, 0o600)
+
+    def test_curated_file_handoff_is_read_only_and_only_accepts_directory_tree(self) -> None:
+        with patch.object(management_service.optional_software, "inspect_directory_tree",
+                          return_value={"read_only": True, "contents_read": False}) as run:
+            result = management_service.dispatch(request("software.app.run", {
+                "app_id": "directory-tree", "path": "Documents"}), caller="local_cli", env=NATIVE_ENV)
+        self.assertTrue(result["ok"])
+        run.assert_called_once()
+        denied = management_service.dispatch(request("software.app.run", {
+            "app_id": "process-monitor", "path": "/etc"}), caller="local_cli", env=NATIVE_ENV)
+        self.assertFalse(denied["ok"])
+        run.assert_called_once()
 
     def test_ssh_key_rollback_uses_the_authorized_shared_service(self) -> None:
         import os
@@ -213,20 +263,6 @@ class ManagementServiceTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "ssh_configuration_unverified")
 
-    def test_terminal_broker_status_is_optional_and_never_probes_proot(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="management-terminal-status-") as temp:
-            home = Path(temp)
-            env = {**NATIVE_ENV, "HOME": str(home),
-                   "TERNUXX_STATE_DIR": str(home / ".local/share/ternuxx")}
-            with patch.object(management_service.proot_diagnostics, "inspect_installed",
-                              side_effect=AssertionError("terminal status must not probe PRoot")):
-                result = management_service.dispatch(
-                    request("terminal.broker.status"), env=env)
-        self.assertTrue(result["ok"])
-        self.assertEqual(result["data"]["component"], "terminal_broker")
-        self.assertEqual(result["data"]["status"], "not_running")
-        self.assertTrue(result["data"]["provider_optional"])
-
     def test_desktop_status_adapter_preserves_shared_cli_reconciliation_result(self) -> None:
         import json
         from types import SimpleNamespace
@@ -242,7 +278,6 @@ class ManagementServiceTests(unittest.TestCase):
 
     def test_gui_monitor_status_and_configuration_share_the_management_api(self) -> None:
         import tempfile
-        from pathlib import Path
         with tempfile.TemporaryDirectory(prefix="management-gui-monitor-") as temp:
             home = Path(temp)
             state = home / ".local/share/ternuxx"
@@ -273,7 +308,6 @@ class ManagementServiceTests(unittest.TestCase):
         import io
         import json
         import tempfile
-        from pathlib import Path
         with tempfile.TemporaryDirectory(prefix="management-gui-monitor-cli-") as temp:
             home = Path(temp)
             state = home / ".local/share/ternuxx"
@@ -382,104 +416,6 @@ class ManagementServiceTests(unittest.TestCase):
             request("cron.scheduler.stop", {"confirmed": False}), env=NATIVE_ENV)
         self.assertFalse(denied["ok"])
         self.assertEqual(denied["error"]["code"], "confirmation_required")
-
-    def test_proot_status_routes_to_readonly_inventory_without_entering_guest(self) -> None:
-        inventory = {"component": "proot_distribution_inventory", "status": "installed",
-                     "manager_available": True, "installed_distributions": ["debian"],
-                     "ownership": "unverified", "guest_entered": False, "read_only": True}
-        with patch.object(management_service.proot_diagnostics, "inspect_installed", return_value=inventory) as inspect:
-            result = management_service.dispatch(request("proot.status"), env=NATIVE_ENV)
-        self.assertTrue(result["ok"])
-        self.assertEqual(result["data"], inventory)
-        inspect.assert_called_once_with()
-
-    def test_proot_guest_verify_routes_only_typed_readonly_arguments(self) -> None:
-        report = {"component": "proot_guest_diagnostics", "status": "partial", "read_only": True}
-        args = {"distro": "debian", "user": "sbj", "display": ":1", "backend": "zink"}
-        with patch.object(management_service.proot_diagnostics, "verify_proot_guest", return_value=report) as verify:
-            result = management_service.dispatch(request("proot.guest.verify", args), env=NATIVE_ENV)
-        self.assertTrue(result["ok"])
-        self.assertEqual(result["data"], report)
-        verify.assert_called_once_with(**args, prefix=NATIVE_ENV["PREFIX"])
-        malformed = management_service.dispatch(
-            request("proot.guest.verify", {**args, "user": "sbj;id"}), env=NATIVE_ENV)
-        self.assertFalse(malformed["ok"])
-        self.assertEqual(malformed["error"]["code"], "invalid_arguments")
-
-    def test_proot_guest_verify_can_resolve_user_from_private_ternux_state(self) -> None:
-        secret_user = "configured_guest"
-        args = {"distro": "debian", "user_source": "rootfs", "display": ":1", "backend": "zink"}
-        report = {"component": "proot_guest_diagnostics", "status": "complete", "read_only": True}
-        env = {**NATIVE_ENV, "PATH": "/fixture/bin"}
-        with patch.object(management_service.proot_diagnostics, "resolve_proot_guest_user", return_value=secret_user) as resolve, \
-             patch.object(management_service.proot_diagnostics, "verify_proot_guest", return_value=report) as verify:
-            result = management_service.dispatch(request("proot.guest.verify", args), env=env)
-        self.assertTrue(result["ok"])
-        self.assertEqual(result["data"], report)
-        resolve.assert_called_once_with(distro="debian", prefix=env["PREFIX"])
-        verify.assert_called_once_with(distro="debian", user=secret_user, display=":1", backend="zink",
-                                       prefix=env["PREFIX"])
-        self.assertNotIn(secret_user, __import__("json").dumps(result))
-        ambiguous = management_service.dispatch(
-            request("proot.guest.verify", {**args, "user": secret_user}), env=env)
-        self.assertFalse(ambiguous["ok"])
-        self.assertEqual(ambiguous["error"]["code"], "invalid_arguments")
-        malformed_source = management_service.dispatch(
-            request("proot.guest.verify", {**args, "user_source": []}), env=env)
-        self.assertFalse(malformed_source["ok"])
-        self.assertEqual(malformed_source["error"]["code"], "invalid_arguments")
-
-    def test_proot_guest_verify_cli_accepts_private_ternux_state_source_without_echoing_user(self) -> None:
-        import contextlib
-        import io
-        secret_user = "private_guest_account"
-        stdout = io.StringIO()
-        env = {**NATIVE_ENV, "PATH": "/fixture/bin"}
-        report = {"component": "proot_guest_diagnostics", "status": "complete", "read_only": True}
-        with patch.dict("os.environ", env), \
-             patch.object(management_service.proot_diagnostics, "resolve_proot_guest_user", return_value=secret_user) as resolve, \
-             patch.object(management_service.proot_diagnostics, "verify_proot_guest", return_value=report) as verify, \
-             contextlib.redirect_stdout(stdout):
-            code = management_service.main([
-                "--operation", "proot.guest.verify", "--distro", "debian",
-                "--guest-user-source", "rootfs", "--display", ":1", "--backend", "zink", "--json",
-            ])
-        self.assertEqual(code, 0)
-        result = __import__("json").loads(stdout.getvalue())
-        self.assertTrue(result["ok"])
-        self.assertNotIn(secret_user, stdout.getvalue())
-        resolve.assert_called_once_with(distro="debian", prefix=env["PREFIX"])
-        verify.assert_called_once_with(distro="debian", user=secret_user, display=":1", backend="zink",
-                                       prefix=env["PREFIX"])
-
-    def test_proot_guest_verify_cli_accepts_a_receipt_verified_replay_alias(self) -> None:
-        import contextlib
-        import io
-        stdout = io.StringIO()
-        env = {**NATIVE_ENV, "PATH": "/fixture/bin"}
-        alias = "ternuxx-replay-fixture"
-        report = {"component": "proot_guest_diagnostics", "status": "partial", "read_only": True}
-        with patch.dict("os.environ", env), \
-             patch.object(management_service.proot_diagnostics, "verify_proot_guest", return_value=report) as verify, \
-             contextlib.redirect_stdout(stdout):
-            code = management_service.main([
-                "--operation", "proot.guest.verify", "--distro", alias,
-                "--guest-user", "sbj", "--display", ":1", "--backend", "zink", "--json",
-            ])
-        self.assertEqual(code, 0)
-        verify.assert_called_once_with(distro=alias, user="sbj", display=":1", backend="zink",
-                                       prefix=env["PREFIX"])
-
-    def test_proot_guest_verify_cli_requires_all_explicit_profile_fields(self) -> None:
-        import contextlib
-        import io
-        stdout = io.StringIO()
-        with patch.dict("os.environ", NATIVE_ENV), contextlib.redirect_stdout(stdout):
-            code = management_service.main(["--operation", "proot.guest.verify", "--json"])
-        self.assertEqual(code, 1)
-        response = __import__("json").loads(stdout.getvalue())
-        self.assertFalse(response["ok"])
-        self.assertEqual(response["error"]["code"], "invalid_arguments")
 
     def test_ssh_inspection_returns_versioned_envelope_without_checkpoint_state(self) -> None:
         with patch.object(management_service.ssh_diagnostics, "inspect_native", return_value={"read_only": True}) as inspect:
@@ -812,66 +748,6 @@ class ManagementServiceTests(unittest.TestCase):
         invalid = management_service.dispatch(request("backup.create", {"name": "one", "path": "/tmp/escape"}), env=NATIVE_ENV)
         self.assertFalse(invalid["ok"])
         self.assertEqual(invalid["error"]["code"], "invalid_arguments")
-
-    def test_proot_profiles_and_start_preview_use_shared_typed_operations(self) -> None:
-        import proot_sessions
-        profiles = {"profiles": [{"id": "isolated-probe"}, {"id": "debian-interactive"}],
-                    "rootfs_state": "available", "rootfs_identity": {"device": 1, "inode": 2},
-                    "launcher": "/fixture/proot-distro", "diagnostic": None}
-        plan = {"profile": "debian-interactive", "plan_id": "plan-" + "a" * 64,
-                "confirmation_required": True, "mode": "foreground-tty"}
-        with patch.object(proot_sessions, "profile_inventory", return_value=profiles) as inventory, \
-             patch.object(proot_sessions, "preview_start", return_value=plan) as preview:
-            listed = management_service.dispatch(request("proot.profiles.list"), env=NATIVE_ENV)
-            shown = management_service.dispatch(request("proot.profiles.show", {"profile": "debian-interactive"}), env=NATIVE_ENV)
-            ready = management_service.dispatch(request("proot.start.preview", {"profile": "debian-interactive"}), env=NATIVE_ENV)
-        self.assertTrue(listed["ok"] and shown["ok"] and ready["ok"])
-        self.assertEqual(listed["data"], profiles)
-        self.assertEqual(ready["data"], plan)
-        self.assertEqual(inventory.call_count, 2)
-        preview.assert_called_once_with("debian-interactive", prefix=NATIVE_ENV["PREFIX"])
-
-    def test_proot_start_mutation_requires_exact_confirmation_and_narrow_scope(self) -> None:
-        import management_authorization
-        self.assertEqual(management_authorization.required_capability("proot.start"), "proot.session.manage")
-        self.assertEqual(management_authorization.required_capability("proot.stop"), "proot.session.manage")
-        denied = management_service.dispatch(request("proot.start", {
-            "profile": "isolated-probe", "confirmed": False, "plan_id": "plan-x",
-            "timeout_seconds": 300}), env=NATIVE_ENV)
-        self.assertFalse(denied["ok"])
-        self.assertEqual(denied["error"]["code"], "confirmation_required")
-
-
-    def test_proot_start_rejects_arbitrary_guest_command_fields(self) -> None:
-        base = {"profile": "debian-interactive", "confirmed": True,
-                "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300}
-        for field, value in (("command", "/bin/sh -c id"),
-                             ("argv", ["/bin/sh", "-c", "id"]),
-                             ("environment", {"LD_PRELOAD": "/tmp/host.so"}),
-                             ("rootfs", "/data/local/tmp/rootfs"),
-                             ("user", "root"),
-                             ("working_directory", "/tmp")):
-            with self.subTest(field=field):
-                args = {**base, field: value}
-                denied = management_service.dispatch(request("proot.start", args), env=NATIVE_ENV)
-                self.assertFalse(denied["ok"])
-                self.assertEqual(denied["error"]["code"], "invalid_arguments")
-
-    def test_proot_session_health_is_shared_read_only_operation(self) -> None:
-        import proot_sessions
-        session_id = "proot-" + "a" * 32
-        expected = {"session_id": session_id, "state": "running", "read_only": True,
-                    "reattach_supported": False}
-        with patch.object(proot_sessions, "session_health", return_value=expected) as health:
-            response = management_service.dispatch(request(
-                "proot.sessions.health", {"session_id": session_id}), env=NATIVE_ENV)
-        self.assertTrue(response["ok"])
-        self.assertEqual(response["data"], expected)
-        health.assert_called_once()
-        invalid = management_service.dispatch(request("proot.sessions.health", {}), env=NATIVE_ENV)
-        self.assertFalse(invalid["ok"])
-        self.assertEqual(invalid["error"]["code"], "invalid_arguments")
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -58,6 +58,20 @@ class RebootRecoveryTests(unittest.TestCase):
     def record_path(self) -> Path:
         return self.state / "continuity/reboot-tests/owner-reboot-check.json"
 
+    def test_legacy_proot_check_is_readable_but_rejected_for_new_checkpoint(self) -> None:
+        legacy_baseline = evidence()
+        legacy_baseline["required_postboot_checks"] = ["boot_id_changed", "proot_independent"]
+        with self.assertRaises(reboot_recovery.RecoveryError):
+            reboot_recovery.prepare(home=self.home, state_dir=self.state, test_id="legacy-rejected",
+                                    evidence=legacy_baseline, boot_id=BOOT_A)
+        self.prepare()
+        record_path = self.record_path()
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+        record["baseline"]["required_postboot_checks"].append("proot_independent")
+        record_path.write_text(json.dumps(record), encoding="utf-8")
+        self.assertEqual(reboot_recovery.status(home=self.home, state_dir=self.state,
+                                                test_id="owner-reboot-check")["state"], "prepared")
+
     def test_private_checkpoint_records_full_baseline_and_defaults_not_ready(self) -> None:
         result = self.prepare()
         self.assertEqual(result["state"], "prepared")
@@ -147,7 +161,7 @@ class RebootRecoveryTests(unittest.TestCase):
         record = json.loads(self.record_path().read_text(encoding="utf-8"))
         self.assertEqual(record["boot_observations"][0]["socket_binding"], "not_observed")
         self.assertEqual(record["boot_observations"][0]["wakelock_state"], "unknown")
-        self.assertFalse(record["boot_observations"][0]["proot_dependency"])
+        self.assertNotIn("proot_dependency", record["boot_observations"][0])
         observation = record["boot_observations"][0]
         self.assertEqual(observation["native_service_health"], "unknown")
         self.assertEqual(observation["managed_service_status"], "unknown")

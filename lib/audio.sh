@@ -10,10 +10,10 @@ nt_audio_call() {
 nt_audio_ensure() {
   local result
   result="$(nt_audio_call ensure 2>&1)" || {
-    nt_warn "Native PulseAudio is unavailable; GUI/PRoot CLI will continue without audio. $result"
+    nt_warn "Native PulseAudio is unavailable; the desktop will continue without audio. $result"
     return 1
   }
-  nt_info "Native PulseAudio is ready for PRoot clients."
+  nt_info "Native PulseAudio is ready for Native desktop clients."
 }
 
 nt_cmd_audio() {

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import config_recovery
 import adb_diagnostics
-import proot_diagnostics
+import cpu_inference
 import runtime_diagnostics
 import ssh_diagnostics
 
@@ -33,15 +33,25 @@ def add(code: str, severity: str, scope: str, observed: str, action: str) -> Non
     })
 
 
-def run(argv: list[str], timeout: float = 3.0) -> subprocess.CompletedProcess[str] | None:
+def run(argv: list[str], timeout: float = 3.0, *, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str] | None:
     try:
         return subprocess.run(
             argv, check=False, text=True, stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT, timeout=timeout,
-            env={**os.environ, "LC_ALL": "C"},
+            env={**(env if env is not None else os.environ), "LC_ALL": "C"},
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
+
+
+def native_graphics_probe_env() -> dict[str, str]:
+    """Keep Termux runtime libraries ahead of tool-private injected loaders."""
+    env = dict(os.environ)
+    prefix = env.get("PREFIX", "/data/data/com.termux/files/usr")
+    termux_lib = str(Path(prefix) / "lib")
+    paths = [termux_lib, *env.get("LD_LIBRARY_PATH", "").split(os.pathsep)]
+    env["LD_LIBRARY_PATH"] = os.pathsep.join(dict.fromkeys(path for path in paths if path))
+    return env
 
 
 def command_path(name: str) -> str | None:
@@ -446,7 +456,7 @@ def check_process_inventory(state_root: Path, proc_root: Path = Path("/proc")) -
     other_text = ", ".join(f"{name}={count}" for name, count in sorted(candidates.items())) or "none"
     add("NTX-SESSION-030", "info", "desktop-process-inventory",
         f"verified Ternuxx-owned roots: {owned_text}; same recorded session candidates: {session_text}; owner unverified: {other_text}",
-        "Same-session membership is not standalone lifecycle ownership. Unverified candidates may belong to Termux, Android, or PRoot; inspect before action. Hidden processes may not appear.")
+        "Same-session membership is not standalone lifecycle ownership. Unverified candidates may belong to Termux or Android; inspect before action. Hidden processes may not appear.")
 
 
 def check_operations(state_root: Path) -> None:
@@ -614,31 +624,6 @@ def check_service_manager() -> None:
             "Inspect the named Ternuxx service and its journal manually; Doctor does not start, stop, or repair it.")
 
 
-def check_proot_inventory() -> None:
-    """Report installed PRoot distributions without entering or claiming ownership."""
-    if not native_termux():
-        add("NTX-PROOT-001", "info", "proot-provider",
-            "installed Termux PRoot distributions are not inspected outside native Termux",
-            "Run Doctor from the native Termux host for host-provider inventory.")
-        return
-    try:
-        report = proot_diagnostics.inspect_installed()
-        status = str(report.get("status", "unknown"))
-        names = report.get("installed_distributions", [])
-        if not isinstance(names, list) or any(not isinstance(name, str) for name in names):
-            status, names = "unknown", []
-    except (OSError, TypeError, ValueError):
-        status, names = "unknown", []
-    if status == "installed":
-        observed = f"proot-distro installed distributions: {', '.join(names)}; guest/session ownership unverified"
-    elif status == "none":
-        observed = "proot-distro available; no installed distributions detected"
-    elif status == "unavailable":
-        observed = "proot-distro command unavailable; provider inventory unknown"
-    else:
-        observed = "proot-distro inventory query failed or was unrecognized; provider inventory unknown"
-    add("NTX-PROOT-001", "info", "proot-provider", observed,
-        "Installed distribution inventory does not prove ownership of the rootfs or any running guest process; Ternuxx exposes only fixed, target-validated guest operations.")
 
 
 def graphics_probe() -> None:
@@ -648,7 +633,7 @@ def graphics_probe() -> None:
         return
     glx = command_path("glxinfo")
     if glx:
-        result = run([glx, "-B"], 5.0)
+        result = run([glx, "-B"], 5.0, env=native_graphics_probe_env())
         if result and result.returncode == 0:
             renderer = next((line.split("OpenGL renderer string:", 1)[1].strip()
                              for line in result.stdout.splitlines()
@@ -667,7 +652,7 @@ def graphics_probe() -> None:
         add("NTX-GPU-103", "info", "native-graphics", "vulkaninfo unavailable; Vulkan unprobed",
             "Do not infer Vulkan support from device nodes or libraries.")
         return
-    result = run([vk, "--summary"], 8.0)
+    result = run([vk, "--summary"], 8.0, env=native_graphics_probe_env())
     if result and result.returncode == 0:
         lines = [line.strip() for line in result.stdout.splitlines() if "deviceName" in line]
         observed = "; ".join(lines[:3]) if lines else "probe returned success; workload backend not verified"
@@ -678,7 +663,7 @@ def graphics_probe() -> None:
         if result and result.stdout.strip():
             detail = " ".join(result.stdout.split())[:240]
         add("NTX-GPU-103", "warning", "native-graphics", detail,
-            "Record the tested driver/runtime; do not generalize this result to the PRoot provider.")
+            "Record the tested driver/runtime; do not generalize this result beyond the observed Native workload.")
 
 
 def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
@@ -722,7 +707,7 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
         audio_severity = "pass" if audio_status == "ready" else "info" if audio_status == "unavailable" else "warning"
         add("NTX-AUDIO-001", audio_severity, "native-audio",
             f"PulseAudio client readiness={audio_status}; {audio_detail}",
-            "Native Ternuxx owns the loopback audio service; use tx audio start/status and tx db for the PRoot client handoff.")
+            "Native Ternuxx owns the loopback audio service; use tx audio start/status for Native audio state.")
 
     if native_termux():
         add("NTX-APP-101", "info", "android-addons", f"Termux:X11 Android app: {app_path('com.termux.x11')}",
@@ -781,9 +766,30 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
         cpu_arch = platform.machine() or "unknown"
         logical_cpus = os.cpu_count()
         cpu_count = str(logical_cpus) if logical_cpus is not None else "unknown"
+        try:
+            inference = cpu_inference.status(prefix=os.environ.get("PREFIX"))
+            runtime = inference["runtime"]
+            model = inference["model"]
+            runtime_state = runtime["version"] if runtime["available"] else "unavailable"
+            model_state = model["state"]
+            cpu_detail = (
+                f"CPU inference workflow=available; runtime={runtime_state}; "
+                f"model={model_state}; model_id={model['id']}; backend=CPU"
+            )
+            if not runtime["available"]:
+                cpu_action = "Review `tx ai runtime preview` before installing the Termux-managed llama-cpp runtime."
+            elif model_state == "missing":
+                cpu_action = "Use `tx ai model preview` then apply if you want the pinned model; inference verifies its hash before running."
+            elif model_state in {"present-unverified", "invalid-size", "unsafe", "unsafe-permissions"}:
+                cpu_action = "Use `tx ai status` and run the inference workflow to verify the model hash; replace it only through the reviewed model workflow."
+            else:
+                cpu_action = "Use `tx ai run` for bounded CPU inference; execution verifies the pinned model hash."
+        except (cpu_inference.InferenceError, OSError, KeyError, TypeError):
+            cpu_detail = "CPU inference workflow status=unknown"
+            cpu_action = "Use `tx ai status` to inspect the Native CPU inference runtime and model state."
         add("NTX-CPU-001", "info", "native-compute",
-            f"CPU is the native execution baseline; architecture={cpu_arch}; logical CPUs={cpu_count}; Ternuxx inference runtime/model integration=not implemented",
-            "CPU execution does not establish a supported inference workload. Qualify a named runtime/model and correctness/performance separately.")
+            f"CPU is the native execution baseline; architecture={cpu_arch}; logical CPUs={cpu_count}; {cpu_detail}",
+            cpu_action)
 
         node_paths = (Path("/dev/kgsl-3d0"), Path("/dev/dri/renderD128"))
         nodes = [p for p in node_paths if path_presence(p) is True]
@@ -810,7 +816,7 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
             "Vendor libraries and device nodes are discovery hints only. Verify a supported runtime, delegate selection, and correct representative workload before claiming NPU acceleration.")
     else:
         add("NTX-GPU-001", "info", "native-graphics", "native GPU nodes not checked outside Termux",
-            "Run from Termux host; compare this result with a separate PRoot workload check.")
+            "Run from Termux host; interpret only within the observed Native workload.")
         add("NTX-NPU-001", "info", "native-accelerator", "native NPU capability not checked outside Termux",
             "Run on the Termux host and require a named runtime/workload before claiming NPU support.")
 
@@ -824,7 +830,6 @@ def build_report(graphics: bool, state_root: Path) -> dict[str, object]:
     check_process_inventory(state_root)
     check_operations(state_root)
     check_service_manager()
-    check_proot_inventory()
     check_backups(state_root)
     try:
         usage = shutil.disk_usage(Path.home())

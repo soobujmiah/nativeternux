@@ -42,7 +42,7 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertTrue(inline, "management page has no inline JavaScript")
         for script in inline:
             subprocess.run(["node", "--check"], input=script, text=True, check=True,
-                           capture_output=True)
+                           capture_output=True, env={k: v for k, v in __import__("os").environ.items() if k != "LD_LIBRARY_PATH"})
 
     def test_web_ssh_help_matches_publickey_only_service_policy(self) -> None:
         ui = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
@@ -50,12 +50,11 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("password login is disabled", ui)
         self.assertNotIn("Keep password recovery", ui)
 
-    def test_web_has_exact_preview_controls_for_debian_icd_migration(self) -> None:
+    def test_web_has_no_retired_proot_or_terminal_controls(self) -> None:
         ui = (ROOT / "lib" / "management_web_ui.html").read_text()
-        self.assertIn("Preview ICD change", ui)
-        self.assertIn('proot.setup.icd-migrate.preview', ui)
-        self.assertIn('proot.setup.icd-migrate.rollback.apply', ui)
-        self.assertIn("An active or unverifiable guest blocks apply.", ui)
+        self.assertNotIn("proot.", ui)
+        self.assertNotIn("xterm", ui)
+        self.assertNotIn("terminal.attach", ui)
 
     def test_web_resource_detail_uses_actions_instead_of_duplicate_capability_lists(self) -> None:
         ui = (ROOT / "lib" / "management_web_ui.html").read_text()
@@ -63,6 +62,19 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertNotIn('Supported capabilities (', ui)
         self.assertNotIn('Planned capabilities (', ui)
         self.assertIn("Technical API response", ui)
+
+    def test_authenticated_page_reconnect_contract_survives_reload(self) -> None:
+        ui = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
+        self.assertIn("/api/v1/session/reconnect", ui)
+        self.assertIn('credentials:"same-origin"', ui)
+        self.assertNotIn("document.cookie.indexOf(\'ternuxx_management_session\')", ui)
+
+    def test_web_ui_uses_http_only_session_cookie_and_reconnects_after_reload(self) -> None:
+        ui = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
+        self.assertIn("/api/v1/session/reconnect", ui)
+        self.assertIn('credentials:"same-origin"', ui)
+        self.assertIn('function headers(){return {"X-Ternuxx-CSRF":session.csrf_token}}', ui)
+        self.assertNotIn('Authorization:"Bearer "+session.bearer_token', ui)
 
     def test_bootstrap_secret_clipboard_copy_is_stdin_only_and_silent(self) -> None:
         completed = type("Completed", (), {"returncode": 0})()
@@ -92,46 +104,20 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("Clipboard copy failed", err.getvalue())
         event.return_value.wait.assert_not_called()
 
-    def test_browser_detection_reads_rootfs_without_entering_guest(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "var/lib/proot-distro/containers/debian/rootfs"
-            (root / "etc").mkdir(parents=True)
-            (root / "etc/passwd").write_text("sbj:x:1000:1000::/home/sbj:/bin/bash\n")
-            (root / "usr/bin").mkdir(parents=True)
-            browser = root / "usr/bin/firefox-esr"
-            browser.write_text("#!/bin/sh\n")
-            browser.chmod(0o755)
-            with patch.object(management_http_runtime.shutil, "which", return_value="/fixture/proot-distro"), \
-                 patch.object(management_http_runtime.subprocess, "run", side_effect=AssertionError("detection must not log in")):
-                self.assertEqual(management_http_runtime.detect_proot_browser({"PREFIX": directory}),
-                                 management_http_runtime.PROOT_BROWSER)
-                browser.unlink()
-                (root / "usr/lib").mkdir()
-                target = root / "usr/lib/browser"
-                target.write_text("#!/bin/sh\n")
-                target.chmod(0o755)
-                browser.symlink_to("../lib/browser")
-                self.assertEqual(management_http_runtime.detect_proot_browser({"PREFIX": directory}),
-                                 management_http_runtime.PROOT_BROWSER)
-                browser.unlink()
-                browser.symlink_to(Path(directory) / "outside-browser")
-                self.assertIsNone(management_http_runtime.detect_proot_browser({"PREFIX": directory}))
-
-    def test_interactive_auto_choices_resolve_to_a_launch_target(self) -> None:
+    def test_native_browser_detection_and_interactive_choices(self) -> None:
+        with patch.object(management_http_runtime.shutil, "which", return_value="/native/firefox"):
+            self.assertEqual(management_http_runtime.detect_native_browser(), ("/native/firefox", "Firefox"))
         native = ("/native/firefox", "Firefox")
-        proot = ("/guest/firefox-esr", "Firefox ESR")
-        for text in ("4\n", "auto\n", "\n"):
+        for text in ("3\n", "auto\n", "\n"):
             stream = io.StringIO(text)
             stream.isatty = lambda: True
             with self.subTest(text=text):
                 self.assertEqual(management_http_runtime.choose_browser(
-                    "choose", native=native, proot=proot,
-                    stdin=stream, stderr=io.StringIO()), "native")
-        stream = io.StringIO("3\n")
+                    "choose", native=native, stdin=stream, stderr=io.StringIO()), "native")
+        stream = io.StringIO("2\n")
         stream.isatty = lambda: True
         self.assertEqual(management_http_runtime.choose_browser(
-            "choose", native=None, proot=proot,
-            stdin=stream, stderr=io.StringIO()), "proot")
+            "choose", native=None, stdin=stream, stderr=io.StringIO()), "android")
 
     def test_failed_browser_and_clipboard_handoffs_stop_or_use_explicit_fallback(self) -> None:
         for explicit in (False, True):
@@ -236,9 +222,28 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 "Content-Length": str(len(body)),
             })
             response = connection.getresponse()
+            cookie = response.getheader("Set-Cookie")
             issued = json.loads(response.read())
             self.assertEqual(response.status, 200)
             self.assertNotIn(SECRET, json.dumps(issued))
+            self.assertNotIn("bearer_token", issued["session"])
+            self.assertIsNotNone(cookie)
+            cookie = cookie.split(";", 1)[0]
+            self.assertIn("HttpOnly", response.getheader("Set-Cookie"))
+            body = b"{}"
+            connection.request("POST", "/api/v1/session/reconnect", body=body, headers={
+                "Host": f"127.0.0.1:{server.port}",
+                "Origin": f"http://127.0.0.1:{server.port}",
+                "Content-Type": "application/json; charset=utf-8",
+                "Content-Length": str(len(body)),
+                "Cookie": cookie,
+            })
+            resumed_response = connection.getresponse()
+            resumed = json.loads(resumed_response.read())
+            self.assertEqual(resumed_response.status, 200)
+            self.assertEqual(resumed["session"]["session_ref"], issued["session"]["session_ref"])
+            self.assertNotIn("bearer_token", resumed["session"])
+            self.assertNotEqual(resumed["session"]["csrf_token"], "")
             connection.close()
         finally:
             connection.close()
@@ -319,78 +324,10 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 self.assertEqual(json.loads(response)["operation"], "recovery.status")
                 self.assertEqual(dispatch.call_count, 3)
 
-                dispatch.return_value = {"api_version": 1, "request_id": "web-proot-launch-001",
-                    "ok": True, "operation": "proot.app.launch", "data": {"app_id": "files"}}
                 status, _headers, response = post("proot.app.launch", "web-proot-launch-01",
                     "web-proot-launch-key1", {"app_id": "files"})
-                self.assertEqual(status, 200, response)
-                self.assertEqual(json.loads(response)["operation"], "proot.app.launch")
-                self.assertEqual(dispatch.call_count, 4)
-
-                status, _headers, response = post("proot.app.launch", "web-proot-desktop-01",
-                    "web-proot-desktop-key1", {"desktop_id": "unreviewed.desktop"})
-                self.assertEqual(status, 400)
-                self.assertEqual(json.loads(response)["error"], "named_app_only")
-                self.assertEqual(dispatch.call_count, 4)
-
-                status, _headers, response = post("proot.start", "web-proot-session-01",
-                    "web-proot-session-key1", {"profile": "debian-interactive",
-                                                "command": "/bin/sh -c id",
-                                                "argv": ["/bin/sh", "-c", "id"],
-                                                "rootfs": "/data/local/tmp/rootfs",
-                                                "user": "root"})
                 self.assertEqual(status, 403)
-                self.assertEqual(json.loads(response)["error"], "proot_profile_restricted")
-                self.assertEqual(dispatch.call_count, 4)
-
-                dispatch.return_value = {"api_version": 1, "request_id": "web-probe-start-001",
-                    "ok": True, "operation": "proot.start", "data": {
-                        "profile": "isolated-probe", "state": "running", "ownership": "ternuxx_verified"}}
-                status, _headers, response = post("proot.start", "web-probe-start-001",
-                    "web-probe-start-key-0001", {"profile": "isolated-probe", "confirmed": True,
-                                                  "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300})
-                self.assertEqual(status, 200, response)
-                self.assertEqual(json.loads(response)["operation"], "proot.start")
-                self.assertEqual(dispatch.call_count, 5)
-
-                dispatch.return_value = {"api_version": 1, "request_id": "web-probe-stop-001",
-                    "ok": True, "operation": "proot.stop", "data": {"stopped": True}}
-                status, _headers, response = post("proot.stop", "web-probe-stop-request-01",
-                    "web-probe-stop-key-0001", {"session_id": "proot-" + "a" * 32,
-                                                  "confirmed": True, "plan_id": "plan-" + "b" * 64})
-                self.assertEqual(status, 200, response)
-                self.assertEqual(json.loads(response)["operation"], "proot.stop")
-                self.assertEqual(dispatch.call_count, 6)
-
-                dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-preview-1",
-                    "ok": True, "operation": "proot.shortcuts.preview", "data": {
-                        "plan_id": "b" * 24, "changed": True}}
-                status, _headers, response = post("proot.shortcuts.preview", "web-shortcut-preview-1",
-                    "web-shortcut-preview-key1", {"action": "add", "app_id": "files"})
-                self.assertEqual(status, 200, response)
-                self.assertEqual(dispatch.call_count, 7)
-
-                dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-apply-01",
-                    "ok": True, "operation": "proot.shortcuts.apply", "data": {"status": "complete"}}
-                status, _headers, response = post("proot.shortcuts.apply", "web-shortcut-apply-001",
-                    "web-shortcut-apply-key1", {"action": "add", "app_id": "files",
-                                                "confirmed": True, "plan_id": "b" * 24})
-                self.assertEqual(status, 200, response)
-                self.assertEqual(json.loads(response)["operation"], "proot.shortcuts.apply")
-                self.assertEqual(dispatch.call_count, 8)
-
-                status, _headers, response = post("proot.shortcuts.sync.preview", "web-shortcut-sync-001",
-                    "web-shortcut-sync-key1", {})
-                self.assertEqual(status, 200, response)
-                self.assertEqual(dispatch.call_args.args[0]["operation"], "proot.shortcuts.sync.preview")
-
-                dispatch.return_value = {"api_version": 1, "request_id": "web-shortcut-sync-apply-1",
-                    "ok": True, "operation": "proot.shortcuts.sync.apply", "data": {"status": "complete"}}
-                status, _headers, response = post("proot.shortcuts.sync.apply", "web-shortcut-sync-apply-1",
-                    "web-shortcut-sync-apply-key1", {"confirmed": True, "plan_id": "b" * 24})
-                self.assertEqual(status, 200, response)
-                self.assertEqual(json.loads(response)["operation"], "proot.shortcuts.sync.apply")
-                self.assertEqual(dispatch.call_count, 10)
+                self.assertEqual(dispatch.call_count, 3)
 
                 dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
                     "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
@@ -410,6 +347,12 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("Idempotency-Key", page)
         self.assertIn("desktop.monitor.manage", page)
         self.assertIn("desktop.manage", page)
+        self.assertIn("ai.local.run", page)
+        self.assertIn("ai.local.manage", page)
+        self.assertEqual(page.count('if(r.id==="inference.cpu.local"){'), 1)
+        self.assertIn('run("inference.cpu.run"', page)
+        self.assertIn('run("inference.cpu.model.preview"', page)
+        self.assertIn('run("inference.cpu.model.apply"', page)
         self.assertIn("ssh.managed.lifecycle", page)
         self.assertIn("network.ssh.managed-8023", page)
         self.assertIn("Recent management activity", page)
@@ -420,41 +363,15 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('id="monitor-panel" hidden', page)
         self.assertIn('monitorPanel.hidden=r?.id!=="native.gui.activity-monitor"', page)
         self.assertIn("grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))", page)
+        self.assertIn("Use experimental KGSL candidate", page)
+        self.assertIn("KGSL is experimental, must already be extracted", page)
+        self.assertIn("offline behavior is unverified", page)
         self.assertIn("Technical API response", page)
         self.assertNotIn("network.ssh.manual-8022", page.split("manageSsh(operation)", 1)[-1].split("function drawCategories", 1)[0])
-        self.assertIn("applications.launch", page)
-        self.assertIn("applications.shortcuts.manage", page)
-        self.assertIn("cron.manage", page)
-        self.assertIn("proot.session.manage", page)
-        self.assertIn("proot.recovery.inspect", page)
-        self.assertIn("Preview and reconcile exited session", page)
-        self.assertIn('run("proot.recovery.reconcile.preview",{session_id:item.session_id})', page)
-        self.assertIn('run("proot.recovery.reconcile",{session_id:item.session_id,confirmed:true,plan_id:data.plan_id})', page)
-        self.assertIn('operation==="proot.recovery.reconcile"', page)
-        self.assertIn('run("proot.start.preview",{profile:"isolated-probe"})', page)
-        self.assertIn('run("proot.stop.preview",{session_id:item.session_id})', page)
-        self.assertIn('run("cron.jobs.mutation.preview",args)', page)
-        self.assertIn('run("cron.jobs.mutation.apply",{plan_id:plan.plan_id,confirmed:true})', page)
-        self.assertIn('run("proot.shortcuts.preview",{action,...targetArgs})', page)
-        self.assertIn('desktop_id:desktopId', page)
-        self.assertIn('run("proot.shortcuts.apply",{action,...targetArgs,confirmed:true,plan_id:data.plan_id})', page)
-        self.assertIn('run("proot.shortcuts.list")', page)
-        self.assertIn("desktop_applications?.items", page)
-        self.assertIn("option.dataset.desktopId=item.desktop_id", page)
-        self.assertIn('run("proot.shortcuts.sync.preview")', page)
-        self.assertIn('run("proot.shortcuts.sync.apply",{confirmed:true,plan_id:data.plan_id})', page)
-        self.assertIn('Load shortcut sync history', page)
-        self.assertIn('Preview shortcut restore', page)
-        self.assertIn('run("proot.shortcuts.sync.rollback.apply"', page)
-        self.assertIn('operation==="proot.shortcuts.sync.rollback.apply"', page)
-        self.assertIn("Unowned conflicts will be preserved.", page)
-        self.assertIn('operation==="proot.shortcuts.sync.apply"', page)
-        self.assertIn('const target=desktopId?{desktop_id:desktopId}:{app_id:select.value};if(chosen)target.display=chosen;run("proot.app.launch",target)', page)
-        self.assertIn("Remove owned shortcut", page)
-        self.assertIn("proot.shortcuts.apply", page)
-        self.assertIn("Use an X11 display like :1", page)
-        self.assertIn("Launch named PRoot app", page)
-        self.assertIn("Discover Debian applications", page)
+        self.assertNotIn("proot.", page)
+        self.assertNotIn("xterm", page)
+        self.assertNotIn("applications.launch", page)
+        self.assertNotIn("applications.shortcuts.manage", page)
 
     def test_web_console_has_bounded_mobile_layout_and_touch_navigation_rules(self) -> None:
         page = (ROOT / "lib" / "management_web_ui.html").read_text()

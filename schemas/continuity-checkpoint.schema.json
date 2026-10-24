@@ -4,33 +4,112 @@
   "title": "Ternuxx native continuity checkpoint",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "checkpoint_id", "test_id", "nonce", "previous_boot_id", "prepared_at", "repository", "task"],
+  "required": [
+    "schema_version",
+    "checkpoint_id",
+    "test_id",
+    "nonce",
+    "previous_boot_id",
+    "prepared_at",
+    "repository",
+    "task"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "checkpoint_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
-    "test_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"},
-    "nonce": {"type": "string", "minLength": 32, "maxLength": 128},
-    "previous_boot_id": {"oneOf": [{"type": "null"}, {"type": "string", "format": "uuid"}]},
-    "prepared_at": {"type": "string", "format": "date-time"},
+    "schema_version": {
+      "const": 1
+    },
+    "checkpoint_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "test_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 128
+    },
+    "previous_boot_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "prepared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "repository": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "commit", "worktree_state"],
+      "required": [
+        "id",
+        "commit",
+        "worktree_state"
+      ],
       "properties": {
-        "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}/[A-Za-z0-9_.-]{1,128}$"},
-        "commit": {"type": "string", "pattern": "^(unknown|[a-fA-F0-9]{7,64})$"},
-        "worktree_state": {"enum": ["clean", "dirty", "unknown"]}
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}/[A-Za-z0-9_.-]{1,128}$"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^(unknown|[a-fA-F0-9]{7,64})$"
+        },
+        "worktree_state": {
+          "enum": [
+            "clean",
+            "dirty",
+            "unknown"
+          ]
+        }
       }
     },
     "task": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "pending_tests", "next_safe_action", "automatic_resume"],
+      "required": [
+        "state",
+        "pending_tests",
+        "next_safe_action",
+        "automatic_resume"
+      ],
       "properties": {
-        "state": {"enum": ["prepared", "pending", "blocked", "verified"]},
-        "pending_tests": {"type": "array", "maxItems": 128, "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"}, "uniqueItems": true},
-        "next_safe_action": {"enum": ["owner_verify_after_reboot", "inspect_native_services", "start_fresh_proot_then_resume", "review_pending_tests", "manual_review"]},
-        "automatic_resume": {"const": false}
+        "state": {
+          "enum": [
+            "prepared",
+            "pending",
+            "blocked",
+            "verified"
+          ]
+        },
+        "pending_tests": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+          },
+          "uniqueItems": true
+        },
+        "next_safe_action": {
+          "enum": [
+            "owner_verify_after_reboot",
+            "inspect_native_services",
+            "review_pending_tests",
+            "manual_review"
+          ]
+        },
+        "automatic_resume": {
+          "const": false
+        }
       }
     }
   }

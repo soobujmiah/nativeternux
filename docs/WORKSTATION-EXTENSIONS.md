@@ -5,7 +5,7 @@ These ideas could make the pocket workstation more useful beyond features alread
 | Priority | Idea | Why it may help | Cost or risk | Suggested gate |
 |---|---|---|---|---|
 | High | **Docked-workstation profile** for keyboard, mouse, external monitor, density, and window layout | Makes the phone practical at a desk and keeps the UI usable across handheld and larger displays | Android display/input behavior varies by device; desktop-mode APIs are not guaranteed | Test input, resolution changes, rotation, suspend/resume, and Termux:X11 visibility on the target device |
-| High | **Project workspaces** with named paths, per-project provider, environment notes, and selected handoff files | Gives hybrid work a predictable home and makes it clear which files enter PRoot | Path permissions and shared-storage boundaries; avoid syncing secrets | Workspace roots private by default; every bind/share is visible and revocable |
+| High | **Project workspaces** with private Native roots, environment notes, and selected handoff files | Gives Native projects a predictable home and makes selected file handoff clear | Path permissions and shared-storage boundaries; avoid syncing secrets | Workspace roots private by default; every bind/share is visible and revocable |
 | High | **Portable backup/export and migration** for Ternuxx configuration and workspace manifests | Helps recover from app reinstall/device replacement and supports safer upgrades | Archives can contain secrets or become large; restore can overwrite user files | Manifest, checksums, schema migration, preview, rollback snapshot, and path confinement pass fixture tests |
 | Medium | **Offline-ready catalog and package plan** | Useful with weak connectivity and prevents website snapshots being mistaken for current package state | Package metadata/downloads go stale; cached packages need provenance | Label cached metadata with retrieval time; revalidate source/signature and availability before install |
 | Medium | **Workload queue with pause/resume where supported** | Makes long renders, builds, and model jobs easier to manage on a phone | Android may stop background work; arbitrary programs may not be resumable | Per-job owner, manual continuation path, bounded retry, checkpoint support, explicit cancellation |
@@ -20,12 +20,12 @@ These ideas could make the pocket workstation more useful beyond features alread
 1. Add docked/input behavior and project-workspace boundaries to product design before polishing the GUI.
 2. Deliver ownership, journaling, backup, and recovery before resumable queues or automation recipes.
 3. Build offline catalog data and the benchmark notebook after provider, installer, and capability records have stable schemas.
-4. Consider remote-access refinements after independent native and PRoot SSH services are safe and observable.
+4. Consider remote-access refinements after Native SSH services are safe and observable.
 
 ## Design rules
 
 - The CLI remains useful without the GUI, optional APKs, Shizuku, root access, or network access.
 - Android-owned behavior stays behind supported Termux APIs or explicit user actions. An X11 app must not be treated as a way around Android activity/background policy.
-- Users see the selected provider, exact target paths, package/source, and workload backend before state-changing operations.
+- Users see exact target paths, package/source, and workload backend before state-changing operations.
 - A dependency fallback reduces capability visibly; it does not silently switch provider, backend, display, or security mode.
-- Ternuxx keeps its own state and never edits or cleans the original Ternux launcher/rootfs.
+- Ternuxx keeps its own private state and never manages an external Linux root filesystem.

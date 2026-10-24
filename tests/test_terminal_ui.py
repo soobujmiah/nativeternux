@@ -14,12 +14,6 @@ import terminal_ui
 
 
 class TerminalUISharedServiceTests(unittest.TestCase):
-    def test_debian_icd_migration_action_is_catalog_bound_and_preview_first(self) -> None:
-        resource = {"id": "proot.debian.workloads", "supported_operations": [
-            "proot.setup.icd-migrate.preview"]}
-        self.assertIn("preview and roll back Debian Vulkan ICD migration",
-                      terminal_ui._available_action_labels(resource))
-        self.assertIn('proot.setup.icd-migrate.preview', (ROOT / "lib" / "terminal_ui.py").read_text())
 
     def test_stop_preview_preserves_signal_name_for_people(self):
         report=management_presentation.format_report({"ok":True,"data":{
@@ -52,279 +46,25 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertEqual(terminal_ui._choose(Screen([terminal_ui.curses.KEY_UP,10]), "Choose", options), "11")
         self.assertEqual(terminal_ui._choose(Screen([ord("9")]), "Choose", options), "8")
 
-    def test_existing_broker_terminal_can_be_selected_and_reattached(self):
-        session_id="proot-" + "a"*32
-        inventory={"ok":True,"data":{"sessions":[{"session_id":session_id,
-            "profile":"debian-interactive","state":"running","ownership":"ternuxx_verified"}]}}
-        client=mock.Mock()
-        client.request.return_value={"ok":True,"pty_relay":"running"}
-        with mock.patch.object(terminal_ui,"_prompt",return_value="attach"), \
-             mock.patch.object(terminal_ui,"_choose",side_effect=["attach",session_id]), \
-             mock.patch.object(terminal_ui,"_call",return_value=inventory), \
-             mock.patch.object(terminal_ui.terminal_cli,"_client",return_value=client), \
-             mock.patch.object(terminal_ui.terminal_cli,"attach") as attach, \
-             mock.patch.object(terminal_ui.curses,"def_prog_mode"), \
-             mock.patch.object(terminal_ui.curses,"endwin"), \
-             mock.patch.object(terminal_ui.curses,"reset_prog_mode") as restore:
-            result=terminal_ui._manage_proot_sessions(mock.Mock())
-        self.assertTrue(result["ok"])
-        attach.assert_called_once_with(session_id,client=client,lease=None)
-        restore.assert_called_once()
 
-    def test_attach_refuses_unverified_session_without_contacting_broker(self):
-        inventory={"ok":True,"data":{"sessions":[{"session_id":"proot-"+"b"*32,
-            "profile":"debian-interactive","state":"unverified","ownership":"unverified"}]}}
-        with mock.patch.object(terminal_ui,"_choose",return_value="attach"), \
-             mock.patch.object(terminal_ui,"_call",return_value=inventory), \
-             mock.patch.object(terminal_ui.terminal_cli,"_client") as client:
-            result=terminal_ui._manage_proot_sessions(mock.Mock())
-        self.assertEqual(result["error"]["code"],"no_verified_terminal_session")
-        client.assert_not_called()
 
-    def test_attach_refuses_disconnected_broker_and_cancelled_selection(self):
-        sid="proot-"+"c"*32
-        inventory={"ok":True,"data":{"sessions":[{"session_id":sid,
-            "profile":"debian-interactive","state":"running","ownership":"ternuxx_verified"}]}}
-        for relay in ("not_connected","running"):
-            client=mock.Mock();client.request.return_value={"ok":True,"pty_relay":relay}
-            with self.subTest(relay=relay), \
-                 mock.patch.object(terminal_ui,"_choose",side_effect=["attach",""]), \
-                 mock.patch.object(terminal_ui,"_call",return_value=inventory), \
-                 mock.patch.object(terminal_ui.terminal_cli,"_client",return_value=client), \
-                 mock.patch.object(terminal_ui.curses,"endwin") as endwin:
-                result=terminal_ui._manage_proot_sessions(mock.Mock())
-            self.assertEqual(result["error"]["code"],"cancelled" if relay=="running" else "terminal_not_attachable")
-            endwin.assert_not_called()
 
-    def test_terminal_relay_error_always_restores_curses(self):
-        screen=mock.Mock()
-        with mock.patch.object(terminal_ui.terminal_cli,"attach",side_effect=OSError("fixture relay failure")), \
-             mock.patch.object(terminal_ui.curses,"def_prog_mode"), \
-             mock.patch.object(terminal_ui.curses,"endwin"), \
-             mock.patch.object(terminal_ui.curses,"reset_prog_mode") as restore:
-            result=terminal_ui._attached_terminal(screen,mock.Mock(),session_id="proot-"+"d"*32)
-        self.assertEqual(result["error"]["code"],"terminal_attach_failed")
-        restore.assert_called_once();screen.clear.assert_called_once();screen.refresh.assert_called_once()
-
-    def test_optional_terminal_broker_resource_uses_read_only_shared_status(self):
-        resource = {
-            "id": "proot.interactive-terminal-broker",
-            "supported_operations": ["terminal.broker.status"],
-        }
-        self.assertEqual(terminal_ui._selected_status_operation(resource),
-                         "terminal.broker.status")
 
     def test_compact_branding_is_available_in_tui_header(self) -> None:
         self.assertEqual(terminal_ui.BRANDING_TAGLINE, "Workstation in your pocket — by Sobuj Miah")
         self.assertEqual(terminal_ui.BRANDING_URL, "soobujmiah.github.io")
 
-    def test_guided_proot_launch_uses_friendly_shared_inventory(self):
-        inventory = {"ok": True, "data": {
-            "items": [{"id": "files", "name": "PRoot Files", "shortcut_state": "installed"}],
-            "desktop_applications": {"items": [{"desktop_id": "org.example.Editor.desktop",
-                "name": "Editor", "status": "available", "shortcut_state": "absent"}]}}}
-        applied = {"ok": True}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=["", "yes"]) as prompt,              mock.patch.object(terminal_ui, "_choose", return_value="app:files") as choose,              mock.patch.object(terminal_ui, "_call", side_effect=[inventory, applied]) as call:
-            result = terminal_ui._launch_proot_app(mock.Mock())
-        self.assertEqual(result, applied)
-        self.assertEqual(call.call_args_list, [
-            mock.call("proot.shortcuts.list"),
-            mock.call("proot.app.launch", {"app_id": "files"}),
-        ])
-        self.assertEqual(choose.call_args.args[2], [
-            ("app:files", "PRoot Files · shortcut installed"),
-            ("desktop:org.example.Editor.desktop", "Editor · Debian app · shortcut absent"),
-        ])
-        labels = [item.args[1] for item in prompt.call_args_list]
-        self.assertIn("Native Ternuxx X11 display", labels[0])
-        self.assertNotIn("app ID", " ".join(labels).lower())
 
-    def test_guided_proot_launch_dispatches_selected_debian_desktop_id(self):
-        inventory = {"ok": True, "data": {"items": [], "desktop_applications": {"items": [
-            {"desktop_id": "org.example.Editor.desktop", "name": "Editor",
-             "status": "available", "shortcut_state": "absent"}]}}}
-        with mock.patch.object(terminal_ui, "_prompt", side_effect=[":1", "yes"]),              mock.patch.object(terminal_ui, "_choose", return_value="desktop:org.example.Editor.desktop"),              mock.patch.object(terminal_ui, "_call", side_effect=[inventory, {"ok": True}]) as call:
-            result = terminal_ui._launch_proot_app(mock.Mock())
-        self.assertTrue(result["ok"])
-        self.assertEqual(call.call_args_list[-1], mock.call("proot.app.launch", {
-            "desktop_id": "org.example.Editor.desktop", "display": ":1"}))
 
-    def test_proot_shortcut_change_previews_and_applies_the_exact_confirmed_plan(self) -> None:
-        plan = {"plan_id": "a" * 24, "changed": True, "affected_resources": [
-            {"path": "xfce/data/applications/ternuxx-proot-files.desktop",
-             "before": "absent", "after": "present"}]}
-        preview = {"ok": True, "data": plan}
-        applied = {"ok": True, "data": {"status": "complete"}}
-        inventory = {"ok": True, "data": {"items": [{"id": "files", "name": "PRoot Files",
-                                                        "shortcut_state": "absent"}]}}
-        with mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
-             mock.patch.object(terminal_ui, "_choose", side_effect=["add", "files"]), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
-            result = terminal_ui._manage_proot_shortcut(mock.Mock())
-        self.assertIs(result, applied)
-        call.assert_has_calls([
-            mock.call("proot.shortcuts.preview", {"action": "add", "app_id": "files"}),
-            mock.call("proot.shortcuts.apply", {
-                "action": "add", "app_id": "files", "confirmed": True, "plan_id": "a" * 24,
-            }),
-        ])
 
-    def test_dynamic_proot_shortcut_uses_named_preview_and_confirmed_desktop_id(self) -> None:
-        inventory = {"ok": True, "data": {"items": [], "desktop_applications": {"items": [
-            {"desktop_id": "org.example.Editor.desktop", "name": "Editor",
-             "status": "available", "shortcut_state": "absent"}]}}}
-        preview = {"ok": True, "data": {"plan_id": "d" * 24, "changed": True,
-            "name": "Editor", "affected_resources": [{"path": "applications/editor.desktop",
-            "before": "absent", "after": "present"}]}}
-        applied = {"ok": True, "data": {"status": "complete"}}
-        with mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
-             mock.patch.object(terminal_ui, "_choose", side_effect=["add", "desktop:org.example.Editor.desktop"]), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
-            result = terminal_ui._manage_proot_shortcut(mock.Mock())
-        self.assertIs(result, applied)
-        call.assert_has_calls([
-            mock.call("proot.shortcuts.preview", {
-                "action": "add", "desktop_id": "org.example.Editor.desktop"}),
-            mock.call("proot.shortcuts.apply", {
-                "action": "add", "desktop_id": "org.example.Editor.desktop",
-                "confirmed": True, "plan_id": "d" * 24}),
-        ])
 
-    def test_proot_shortcut_rollback_previews_and_applies_exact_plan(self) -> None:
-        rollback_id = "c" * 32
-        inventory = {"ok": True, "data": {"rollbacks": [{"rollback_id": rollback_id,
-            "status": "applied", "integrity": "valid", "created_at": "today", "entry_count": 3}]}}
-        preview = {"ok": True, "data": {"plan_id": "d" * 24, "changes": [
-            {"action": "restore", "path": "xfce/data/applications/ternuxx-proot-app-files.desktop"}]}}
-        applied = {"ok": True, "data": {"status": "complete"}}
-        with mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call, \
-             mock.patch.object(terminal_ui, "_choose", return_value=rollback_id), \
-             mock.patch.object(terminal_ui, "_prompt", return_value="yes"):
-            result = terminal_ui._manage_proot_shortcut_rollback(mock.Mock())
-        self.assertIs(result, applied)
-        self.assertEqual(call.call_args_list, [
-            mock.call("proot.shortcuts.sync.rollback.list"),
-            mock.call("proot.shortcuts.sync.rollback.preview", {"rollback_id": rollback_id}),
-            mock.call("proot.shortcuts.sync.rollback.apply", {
-                "rollback_id": rollback_id, "confirmed": True, "plan_id": "d" * 24}),
-        ])
 
-    def test_proot_shortcut_rollback_requires_confirmation(self) -> None:
-        rollback_id = "e" * 32
-        inventory = {"ok": True, "data": {"rollbacks": [{"rollback_id": rollback_id,
-            "status": "applied", "integrity": "valid"}]}}
-        preview = {"ok": True, "data": {"plan_id": "f" * 24, "changes": []}}
-        with mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview]) as call, \
-             mock.patch.object(terminal_ui, "_choose", return_value=rollback_id), \
-             mock.patch.object(terminal_ui, "_prompt", return_value="no"):
-            result = terminal_ui._manage_proot_shortcut_rollback(mock.Mock())
-        self.assertEqual(result["error"]["code"], "cancelled")
-        self.assertEqual(call.call_count, 2)
 
-    def test_proot_shortcut_cancel_does_not_apply(self) -> None:
-        preview = {"ok": True, "data": {"changed": True, "plan_id": "b" * 24}}
-        inventory = {"ok": True, "data": {"items": [{"id": "files", "name": "PRoot Files",
-                                                        "shortcut_state": "installed"}]}}
-        with mock.patch.object(terminal_ui, "_prompt", return_value="no"), \
-             mock.patch.object(terminal_ui, "_choose", side_effect=["remove", "files"]), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview]) as call:
-            result = terminal_ui._manage_proot_shortcut(mock.Mock())
-        self.assertEqual(result["error"]["code"], "cancelled")
-        self.assertEqual(call.call_args_list[-1], mock.call("proot.shortcuts.preview", {
-            "action": "remove", "app_id": "files"}))
 
-    def test_proot_session_start_is_fixed_previewed_and_confirmed(self) -> None:
-        inventory = {"ok": True, "data": {"sessions": []}}
-        preview = {"ok": True, "data": {"profile": "isolated-probe", "impact": "Fixed probe",
-                                             "plan_id": "plan-" + "a" * 64}}
-        applied = {"ok": True, "data": {"profile": "isolated-probe", "state": "running"}}
-        with mock.patch.object(terminal_ui, "_choose", return_value="start-probe"), \
-             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
-            result = terminal_ui._manage_proot_sessions(mock.Mock())
-        self.assertIs(result, applied)
-        self.assertEqual(call.call_args_list, [
-            mock.call("proot.sessions.list"),
-            mock.call("proot.start.preview", {"profile": "isolated-probe"}),
-            mock.call("proot.start", {"profile": "isolated-probe", "confirmed": True,
-                                      "plan_id": "plan-" + "a" * 64, "timeout_seconds": 300}),
-        ])
 
-    def test_proot_interactive_login_uses_broker_and_restores_curses(self) -> None:
-        inventory = {"ok": True, "data": {"sessions": []}}
-        plan_id = "plan-" + "e" * 64
-        preview = {"ok": True, "plan": {"profile": "debian-interactive",
-                    "mode": "foreground-tty", "impact": "Fixed login", "plan_id": plan_id}}
-        lease = {"session_id": "proot-" + "c" * 32, "generation": 7,
-                 "attachment_id": "attach-" + "d" * 32}
-        applied = {"ok": True, "result": lease}
-        events = []
-        screen = mock.Mock()
-        client = mock.Mock()
-        client.request.side_effect = lambda operation, **kwargs: (
-            events.append(("broker", operation)) or
-            (preview if operation == "terminal.start.preview" else applied))
-        with mock.patch.object(terminal_ui, "_choose", return_value="start-login"), \
-             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
-             mock.patch.object(terminal_ui, "_call", return_value=inventory), \
-             mock.patch.object(terminal_ui.terminal_cli, "_client", return_value=client), \
-             mock.patch.object(terminal_ui.terminal_cli, "attach", side_effect=lambda *a, **k: events.append(("attach", a, k))), \
-             mock.patch.object(terminal_ui, "_show_details") as details, \
-             mock.patch.object(terminal_ui.curses, "def_prog_mode", side_effect=lambda: events.append(("def_prog_mode", None))), \
-             mock.patch.object(terminal_ui.curses, "endwin", side_effect=lambda: events.append(("endwin", None))), \
-             mock.patch.object(terminal_ui.curses, "reset_prog_mode", side_effect=lambda: events.append(("reset_prog_mode", None))):
-            result = terminal_ui._manage_proot_sessions(screen)
-        self.assertTrue(result["ok"])
-        details.assert_called_once_with(screen, {"ok": True, "data": preview["plan"]})
-        self.assertEqual([event[0] for event in events], ["broker", "def_prog_mode", "endwin", "broker", "attach", "reset_prog_mode"])
-        self.assertEqual(events[0], ("broker", "terminal.start.preview"))
-        self.assertEqual(events[3], ("broker", "terminal.start"))
-        self.assertEqual(events[4][2]["lease"], lease)
-        self.assertEqual(screen.clear.call_count, 1)
-        self.assertEqual(screen.refresh.call_count, 1)
 
-    def test_proot_interactive_login_refuses_invalid_broker_preview(self) -> None:
-        inventory = {"ok": True, "data": {"sessions": []}}
-        client = mock.Mock()
-        client.request.return_value = {"ok": True, "plan": {"profile": "debian-interactive", "plan_id": "invalid"}}
-        with mock.patch.object(terminal_ui, "_choose", return_value="start-login"), \
-             mock.patch.object(terminal_ui, "_call", return_value=inventory) as call, \
-             mock.patch.object(terminal_ui.terminal_cli, "_client", return_value=client), \
-             mock.patch.object(terminal_ui.curses, "endwin") as endwin:
-            result = terminal_ui._manage_proot_sessions(mock.Mock())
-        self.assertEqual(result["error"]["code"], "invalid_session_preview")
-        endwin.assert_not_called()
-        call.assert_called_once_with("proot.sessions.list")
-        client.request.assert_called_once_with("terminal.start.preview")
 
-    def test_proot_session_stop_requires_verified_inventory_and_exact_plan(self) -> None:
-        session_id = "proot-" + "b" * 32
-        inventory = {"ok": True, "data": {"sessions": [{"session_id": session_id,
-                     "profile": "isolated-probe", "state": "running", "ownership": "ternuxx_verified"}]}}
-        preview = {"ok": True, "data": {"ownership": "ternuxx_verified", "confirmation_required": True,
-                                             "plan_id": "plan-" + "c" * 64}}
-        applied = {"ok": True, "data": {"stopped": True}}
-        with mock.patch.object(terminal_ui, "_choose", side_effect=["stop", session_id]), \
-             mock.patch.object(terminal_ui, "_show_details"), \
-             mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[inventory, preview, applied]) as call:
-            result = terminal_ui._manage_proot_sessions(mock.Mock())
-        self.assertIs(result, applied)
-        self.assertEqual(call.call_args_list, [
-            mock.call("proot.sessions.list"),
-            mock.call("proot.stop.preview", {"session_id": session_id}),
-            mock.call("proot.stop", {"session_id": session_id, "confirmed": True,
-                                     "plan_id": "plan-" + "c" * 64}),
-        ])
 
-    def test_proot_session_stop_never_targets_unverified_inventory(self) -> None:
-        inventory = {"ok": True, "data": {"sessions": [{"session_id": "proot-" + "d" * 32,
-                     "profile": "debian-interactive", "state": "unverified", "ownership": "unverified"}]}}
-        with mock.patch.object(terminal_ui, "_choose", return_value="stop"), \
-             mock.patch.object(terminal_ui, "_call", return_value=inventory) as call:
-            result = terminal_ui._manage_proot_sessions(mock.Mock())
-        self.assertEqual(result["error"]["code"], "no_verified_live_session")
-        call.assert_called_once_with("proot.sessions.list")
 
     def test_catalog_categories_and_resources_define_navigation(self) -> None:
         with mock.patch.dict(os.environ, {"PREFIX": "/data/data/com.termux/files/usr",
@@ -336,6 +76,31 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertTrue(categories)
         self.assertTrue(all(item["category_id"] in {c["id"] for c in categories} for item in resources))
         self.assertIn("native.desktop.session", {item["id"] for item in resources})
+
+    def test_curated_directory_tree_handoff_uses_one_read_only_shared_operation(self) -> None:
+        resource = next(item for item in management_service.management_catalog.RESOURCES
+                        if item["id"] == "software.curated-apps")
+        self.assertIn("browse curated Native apps", terminal_ui._available_action_labels(resource))
+        self.assertIn("software.app.run", resource["supported_operations"])
+        apps = {"ok": True, "data": {"apps": [{"id": "directory-tree", "name": "Directory tree",
+                "package": "tree", "status": "installed", "installed": True}]}}
+        result = {"ok": True, "data": {"output": "folder\n"}}
+        with mock.patch.object(terminal_ui, "_call", side_effect=[apps, result]) as dispatch, \
+             mock.patch.object(terminal_ui, "_choose", side_effect=["directory-tree", "run"]), \
+             mock.patch.object(terminal_ui, "_prompt", return_value="Documents"), \
+             mock.patch.object(terminal_ui, "_show_details"):
+            self.assertIs(terminal_ui._software_action(object(), resource), result)
+        dispatch.assert_has_calls([mock.call("software.apps.list"),
+            mock.call("software.app.run", {"app_id": "directory-tree", "path": "Documents"})])
+
+    def test_cpu_inference_resource_has_only_implemented_guided_actions(self) -> None:
+        resource = next(item for item in management_service.management_catalog.RESOURCES
+                        if item["id"] == "inference.cpu.local")
+        labels = terminal_ui._available_action_labels(resource)
+        self.assertIn("check CPU inference status", labels)
+        self.assertIn("preview pinned model setup", labels)
+        self.assertIn("run a bounded CPU prompt", labels)
+        self.assertIn("inference.cpu.status", terminal_ui.READ_WITHOUT_ARGUMENTS)
 
     def test_only_unargumented_read_operations_are_inspectable(self) -> None:
         self.assertIn("desktop.status", terminal_ui.READ_WITHOUT_ARGUMENTS)
@@ -361,17 +126,13 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         self.assertFalse(any("start" in item or "stop" in item for item in manual_actions))
         self.assertTrue(any("status" in item for item in manual_actions))
 
-    def test_graphics_action_labels_match_provider_operations(self) -> None:
+    def test_graphics_action_labels_are_native_only(self) -> None:
         native = next(item for item in management_service.management_catalog.RESOURCES
                       if item["id"] == "graphics.native")
-        debian = next(item for item in management_service.management_catalog.RESOURCES
-                      if item["id"] == "graphics.debian")
-        native_actions = terminal_ui._available_action_labels(native)
-        debian_actions = terminal_ui._available_action_labels(debian)
-        self.assertIn("verify GLES", native_actions)
-        self.assertIn("verify Vulkan", native_actions)
-        self.assertIn("select Native backend", native_actions)
-        self.assertNotIn("select Native backend", debian_actions)
+        labels = terminal_ui._available_action_labels(native)
+        self.assertIn("select backend (KGSL experimental)", labels)
+        self.assertIn("verify Vulkan", labels)
+        self.assertFalse(any("Debian" in label or "PRoot" in label for label in labels))
 
     def test_cron_resource_exposes_preview_apply_action_and_shared_reads(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES
@@ -516,26 +277,7 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                              "externally_managed_resource")
         prompt.assert_not_called(); dispatch.assert_not_called()
 
-    def test_proot_launch_rejects_a_stale_or_unknown_selection(self) -> None:
-        inventory = {"ok": True, "data": {"items": [], "desktop_applications": {"items": []}}}
-        with mock.patch.object(terminal_ui, "_call", return_value=inventory) as dispatch, \
-             mock.patch.object(terminal_ui, "_choose", return_value="app:arbitrary-shell"):
-            result = terminal_ui._launch_proot_app(object())
-        self.assertEqual(result["error"]["code"], "unknown_proot_app")
-        dispatch.assert_called_once_with("proot.shortcuts.list")
 
-    def test_proot_shortcut_sync_previews_then_applies_exact_plan(self) -> None:
-        preview = {"ok": True, "data": {"changed": True, "discovered": 2,
-            "plan_id": "c" * 24, "changes": [{"action": "create", "path": "xfce/data/editor.desktop"}]}}
-        applied = {"ok": True, "data": {"status": "complete"}}
-        with mock.patch.object(terminal_ui, "_prompt", return_value="yes"), \
-             mock.patch.object(terminal_ui, "_call", side_effect=[preview, applied]) as dispatch:
-            result = terminal_ui._manage_proot_shortcut_sync(mock.Mock())
-        self.assertIs(result, applied)
-        self.assertEqual(dispatch.call_args_list, [
-            mock.call("proot.shortcuts.sync.preview"),
-            mock.call("proot.shortcuts.sync.apply", {"confirmed": True, "plan_id": "c" * 24}),
-        ])
 
     def test_compact_screen_contains_category_resources_and_keyboard_help(self) -> None:
         class FakeScreen:

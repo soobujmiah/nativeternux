@@ -11,7 +11,6 @@
 # utilities requested by the owner. Heavy applications and Mesa providers stay
 # optional and are handled separately.
 _NT_BASE_PACKAGES=(
-  proot-distro
   termux-x11-nightly
   dbus
   pulseaudio
@@ -96,7 +95,7 @@ _nt_make_install_plan() {
       continue
     fi
     case "$package" in
-      dbus|pulseaudio|python|proot-distro) expected_repo="termux-main" ;;
+      dbus|pulseaudio|python) expected_repo="termux-main" ;;
       *) expected_repo="termux-x11" ;;
     esac
     candidate="$(_nt_package_candidate_from_official_repo "$package" "$expected_repo")" || {
@@ -156,7 +155,7 @@ _nt_make_update_plan() {
   for package in "${_NT_BASE_PACKAGES[@]}"; do
     _nt_package_installed "$package" || continue
     case "$package" in
-      dbus|pulseaudio|python|proot-distro) expected_repo="termux-main" ;;
+      dbus|pulseaudio|python) expected_repo="termux-main" ;;
       *) expected_repo="termux-x11" ;;
     esac
     installed="$(dpkg-query -W -f='${Version}' "$package" 2>/dev/null)" || {
@@ -377,50 +376,7 @@ finally:
 PYRECORD
 }
 
-_nt_install_debian() {
-  local action=preview guest_user="" plan_id="" option confirmed=0
-  while [ "$#" -gt 0 ]; do
-    option="$1"; shift
-    case "$option" in
-      preview) action=preview ;;
-      apply) action=apply; [ "$#" -gt 0 ] || { nt_fail "Usage: tx install debian apply PLAN_ID --yes [--user NAME]"; return 2; }; plan_id="$1"; shift ;;
-      --user) [ "$#" -gt 0 ] || { nt_fail "--user requires a Debian guest username."; return 2; }; guest_user="$1"; shift ;;
-      --yes) confirmed=1 ;;
-      *) nt_fail "Unknown Debian integration option: $option"; return 2 ;;
-    esac
-  done
-  nt_require_termux || return 1
-  nt_require_command python3 || return 1
-  if [ -z "$guest_user" ]; then
-    guest_user="$(PYTHONPATH="$_TN_LIB_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -c 'import os,proot_diagnostics; print(proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=os.environ["PREFIX"]))' 2>/dev/null)" || {
-      nt_fail "Could not resolve one Debian guest user safely; retry with --user NAME."; return 1;
-    }
-  fi
-  local repo_root; repo_root="$(cd -- "$_TN_LIB_DIR/.." && pwd -P)" || return 1
-  local -a setup_args=("$_TN_LIB_DIR/proot_setup.py" --repo-root "$repo_root" --json)
-  if [ "$action" = preview ]; then
-    [ -z "$plan_id" ] || { nt_fail "Preview does not accept a plan ID."; return 2; }
-    [ "$confirmed" = 0 ] || { nt_fail "Preview does not accept --yes."; return 2; }
-    setup_args+=(adopt-preview --user "$guest_user")
-  else
-    [ -n "$plan_id" ] && [[ "$plan_id" =~ ^[0-9a-f]{64}$ ]] || { nt_fail "Apply requires the 64-character ID from the matching Debian preview."; return 2; }
-    [ "$confirmed" = 1 ] || { nt_fail "Apply requires explicit --yes after reviewing the exact preview."; return 2; }
-    setup_args+=(adopt --user "$guest_user" --yes --plan-id "$plan_id")
-  fi
-  local result; result="$(python3 "${setup_args[@]}")" || return $?
-  if [ "${TERNUXX_JSON:-0}" = 1 ]; then
-    printf '%s\n' "$result"
-  else
-    printf '%s\n' "$result" | python3 "$_TN_LIB_DIR/proot_setup_present.py"
-  fi
-}
-
 nt_cmd_install() {
-  if [ "${1:-}" = debian ]; then
-    shift
-    _nt_install_debian "$@"
-    return $?
-  fi
   local apply=0 consent=0 update=0 verbose=0 arg plan_id=""
   while [ $# -gt 0 ]; do
     arg="$1"; shift

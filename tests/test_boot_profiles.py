@@ -126,17 +126,8 @@ class BootProfilesTest(unittest.TestCase):
             self.assertIn(result["configuration_source"], schema["properties"]["configuration_source"]["enum"])
             self.assertIs(result["safety"]["read_only"], True)
             self.assertIs(result["safety"]["boot_config_changed"], False)
-            self.assertIs(result["safety"]["existing_proot_touched"], False)
+            self.assertNotIn("existing_proot_touched", result["safety"])
 
-    def test_proot_and_hybrid_fail_closed_without_fallback(self):
-        for profile in ("proot", "hybrid"):
-            result = boot_profiles.preview(
-                profile, home=self.home, state_dir=self.state,
-                prefix="/data/data/com.termux/files/usr",
-            )
-            self.assertFalse(result["ready"])
-            self.assertEqual(result["generated_script"], "")
-            self.assertFalse(result["safety"]["silent_provider_fallback"])
 
     def test_invalid_profile_config_and_external_path_are_rejected(self):
         profile_file = self.state / "boot/profile.json"

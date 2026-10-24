@@ -15,7 +15,6 @@ classification:
 platform:
   targets:
     - Android with Termux
-    - Debian PRoot guest managed by the existing Ternux project
   offline_capable: true
   physical_device_required: true
 

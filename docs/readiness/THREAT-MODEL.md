@@ -1,63 +1,60 @@
 # Ternuxx security, privacy and supply-chain threat model
 
-**Reviewed:** 2026-10-18. This is a design review of the current repository and planned website, not a penetration test or security certification. The off-home access requirements are architecture-only and have not been implemented or tested.
+**Reviewed:** 2026-10-24. This is a repository design review, not a penetration test or security certification. Historical website and multi-provider risks are not current product capabilities.
 
 ## Assets and trust boundaries
 
 | Asset/boundary | Current or future data | Main risk |
 |---|---|---|
 | Android/Termux app sandbox | Package metadata, private CLI state, local processes, user-selected files | A shell tool can mutate packages, run arbitrary local commands or expose user files if its scope is wrong |
-| Existing Ternux Debian PRoot | Rootfs, launcher, display/audio and current workloads | PRoot is not a kernel security boundary; a wrong integration can damage or terminate the owner-managed setup |
-| Native ↔ PRoot handoff | Arguments, selected workspaces, environment, display/audio endpoints | Injection, unintended file exposure, credential crossing, duplicate lifecycle ownership |
-| SSH/ADB (planned) | Keys, ports, pairing state, remote command surface | Unauthenticated/LAN exposure, secret leakage, persistent privileged shell |
+| Native Termux runtime and active workstation | Private state, installed packages, display/audio services, SSH and local workloads | A shell tool can mutate packages, run commands or expose files if its scope is wrong |
+| Bounded local CPU inference | User prompt, pinned model file, runtime process and generated output | Prompt disclosure, untrusted model artifact, resource exhaustion, accidental network access |
+| SSH/ADB | Keys, ports, pairing state, remote command surface | Unauthenticated/LAN exposure, secret leakage, persistent shell |
 | Package and release pipeline | APT metadata, Python dependency, Actions, source archives/artifacts | Compromised action/dependency, wrong repository/version, unverified binary, misleading checksum |
 | Website/hosting | Public content, deployment secrets, access logs, possible future contact/analytics data | Supply-chain compromise, accidental private data publication, hostile form submissions, provider/account takeover |
 | Support operation | Customer-selected logs/device facts, possible remote session | Overcollection, credential exposure, unauthorized change, unclear retention/liability |
-| Proposed local management API / visualizer | Local configuration, model metadata, operation records, service actions | A hostile web origin, local webpage, CSRF, or compromised UI could trigger privileged local actions |
-| Proposed inference gateway | Prompts, model inputs/outputs, provider credentials, routing policy | Prompt exfiltration, accidental cloud fallback, credential disclosure, expensive/unbounded requests |
-| Proposed model library | User-selected model files, metadata, checksums and licenses | Path traversal, malicious/untrusted artifact, license violation, accidental shared-storage crawl |
+| Local management service and Web UI | Local configuration, model metadata, operation records, service actions | A hostile web origin, local webpage, CSRF, or compromised UI could trigger privileged local actions |
+| Managed model file | Pinned model file, metadata, checksum and license | Path traversal, malicious/untrusted artifact, license violation, accidental shared-storage crawl |
 
-## Proposed visualizer and AI-runtime controls (not implemented)
+## Current management and local inference controls
 
-- Keep management and inference APIs separate. Management endpoints authorize workstation changes; inference endpoints cannot install packages, alter services, or access arbitrary files.
-- The initial dashboard is same-origin and loopback-only. Validate Host and Origin, reject wildcard CORS, use CSRF/session defenses, limit request sizes/rates, and do not bind to LAN/public addresses. A local browser is not inherently trusted.
+- Management operations and the CPU inference operation use separate capabilities. Inference cannot install packages, alter services, or access arbitrary files.
+- The management Web UI is same-origin and loopback-only. Validate Host and Origin, reject wildcard CORS, use CSRF/session defenses, limit request sizes/rates, and do not bind to LAN/public addresses. A local browser is not inherently trusted. The management bearer is held in an HttpOnly, SameSite=Strict session cookie scoped to `/api/v1`, not page storage; reconnect requires exact Origin and a live in-memory session. Runtime restart invalidates reconnect. The loopback HTTP cookie omits `Secure`; this is safe only while the listener remains loopback-only.
 - Every mutation follows an exact preview, explicit confirmation bound to that plan and current state, an operation journal, and a verified outcome. Do not offer a generic shell or generic file-write route.
-- Keep CLI and dashboard on the same application services and permission checks. A UI route cannot bypass preview, scope, provider ownership, or confirmation rules.
+- CLI, TUI, Web and GTK use the shared management services and permission checks. A UI route cannot bypass preview, capability scope, or confirmation rules.
 - Model paths are confined after canonicalization to the managed model directory or an explicitly selected file. Reject traversal/symlink escape; verify hashes and show source/license before download/use. Never scan shared storage by default.
-- Do not expose provider keys to frontend code or return them from APIs. Store credentials only in a reviewed private mechanism; do not write them into URLs, operation logs, diagnostics, or exports.
-- Do not log inference prompts, outputs, or cloud secrets by default. Cloud routing is opt-in and visible per request; never silently fall back from local to a cloud provider. Disclose data destination and potential charges.
+- The current CPU inference path has no cloud-provider credentials or routing operation. It passes a prompt to the local runtime and does not silently fall back to a remote provider. If remote inference is added, require a separate reviewed capability and explicit per-request destination/charge disclosure.
 - Tool execution is a named allowlisted capability registry. File deletion, package changes, external network changes, boot changes, and recovery require a preview and appropriate confirmation.
 - Local operation history is bounded and redacted. Diagnostics export previews fields and removes serials, usernames, private paths and secret-like data before writing a user-selected export.
 - No dashboard analytics/telemetry by default. Optional off-home access is an owner-approved product requirement in [ADR-0013](../architecture/decisions/ADR-0013-owner-controlled-remote-access.md), but its transport implementation and device enablement remain pending a threat review and explicit owner action. Keep it disabled by default, use a private VPN/tunnel path, and do not add direct WAN listeners or router port-forwards by default.
 
-These are design requirements, not security controls already present or security certification. The proposed route and operation lifecycle is specified in [`../architecture/MANAGEMENT-API.md`](../architecture/MANAGEMENT-API.md); the full product boundary is in [`../architecture/UNIFIED-WORKSTATION.md`](../architecture/UNIFIED-WORKSTATION.md).
+These controls are not a security certification. Current routes and permission scopes are maintained in [`../architecture/MANAGEMENT-API.md`](../architecture/MANAGEMENT-API.md) and [`../architecture/CAPABILITY-MATRIX.md`](../architecture/CAPABILITY-MATRIX.md).
 
 ## Attacker and failure cases
 
-1. Malicious or compromised Termux package/repository, OCI/rootfs image, GitHub Action or PyPI dependency.
+1. Malicious or compromised Termux package/repository, downloaded model, GitHub Action or PyPI dependency.
 2. Malicious issue/PR or compromised owner account modifying a shell workflow or release link.
 3. PID reuse or process-name collision causing stop to target an unrelated session.
 4. X11 socket/display conflict, partial startup or Android background limit leaving orphan processes.
-5. Unsafe provider routing passing shell metacharacters or broad environment/credential state into the existing guest.
+5. Unsafe local workload routing passing shell metacharacters or broad environment/credential state to a child process.
 6. Customer or visitor submits SSH keys, tokens, private logs or shared-storage paths through support channels.
 7. Unreviewed brand/logo/font/screenshot/binary/model introduced into source/site without redistribution rights.
-8. A fake “GPU/NPU accelerated” or “secure sandbox” statement causes a user to trust an unverified backend or PRoot isolation.
+8. A fake “GPU/NPU accelerated” or “secure sandbox” statement causes a user to trust an unverified backend or sandbox isolation.
 
 ## Current controls and gaps
 
-**Present in docs/source:** explicit separation of Termux and PRoot providers; existing Ternux must remain untouched; package installer has preview/explicit `--yes`; native desktop state uses owner markers and PID start ticks; security policy rejects broad shared-storage scanning and unbounded cleanup; CI job permissions are mostly read-only with a narrow same-repo write job for generated `.repo` state; no SKB write token; no telemetry/form/payment system.
+**Present in docs/source:** Native Termux-only product boundary; package changes use preview/explicit confirmation; desktop state uses owner markers and PID start ticks; security policy rejects broad shared-storage scanning and unbounded cleanup; CPU inference pins model size/hash and runs with explicit CPU-only bounds; CLI/TUI/Web/GTK use shared authorization; CI job permissions are mostly read-only with a narrow same-repo write job for generated `.repo` state; no SKB write token; no telemetry/form/payment system.
 
-**Not established:** product tests, physical-device lifecycle test, PRoot adapter, recovery journal/backup implementation, SSH management, secure release signing/provenance, lockfile/SBOM, vulnerability response staffing/SLA, security scan, web host, privacy notice, customer-data policy and legal entity/payment readiness.
+**Not established:** full supported-profile reproducibility, secure release signing/provenance, build-specific SBOM, sustained model stability and offline isolation, vulnerability response staffing/SLA, independent security scan, web host, privacy notice, customer-data policy and legal entity/payment readiness.
 
 **Source review finding (corrected locally):** the previous `lib/help.sh` incorrectly described package installation/start as stubs while source paths can perform them. Help now discloses process/package mutation boundaries, and a CLI help contract test is wired into the repository-contract workflow. The workflow has not run remotely, and this does not qualify lifecycle or installation behavior; do not run `install --yes` without the separate operation authorization.
 
 ## Security requirements before release
 
-- Treat PRoot as a userland/compatibility boundary, not a security sandbox. No privileged Android operation is implied by PRoot.
 - Install is preview-first, repository-provenance checked, refuses unapproved upgrades/removals, and prints exact package set/scope. Re-check source and lock around transaction; document rollback limitations.
 - Process control verifies process start identity, executable marker, owning state path and display. Ambiguous records fail closed. No broad `pkill`, wildcard socket deletion or `kill -9` fallback.
-- Native↔guest execution uses argv arrays and allowlisted environment; no `eval`/shell concatenation. File sharing names explicit selected paths and never mounts all of `HOME`, `.ssh`, `.config` or shared storage by default.
-- SSH defaults, if ever implemented, are loopback + keys + no root login + distinct host/guest configs; LAN binding is explicit. Wireless ADB remains off; no pairing keys/codes in logs.
+- Local workload execution uses argv arrays and allowlisted environment; no `eval`/shell concatenation. File access names explicit selected paths and never scans shared storage by default.
+- Managed SSH 8023 is a distinct loopback service. The current device Doctor warns that another Native SSH configuration has wildcard bind scope and password authentication enabled; inspect `tx ssh status --json` before exposing remote access. Listener-to-process and external reachability remain unknown. Do not change either service without its exact preview and owner authorization. Wireless ADB remains off; no pairing keys/codes in logs.
 - No automatic remote shell, silent privilege escalation, Shizuku watchdog restart loop or device setting change.
 - Diagnostics redact Android serial, usernames, paths and locally identifying information before any user shares them. An export/report needs a preview and redaction policy.
 - Threat model, dependency inventory and test evidence are updated with each new provider/service/website form.

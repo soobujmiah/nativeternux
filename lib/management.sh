@@ -1,16 +1,69 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
+
+nt_cmd_app() {
+  nt_require_termux || return $?
+  local service="${_TN_LIB_DIR}/management_service.py" sub="${1:-list}" app_id="" action="" plan_id="" confirm=""
+  [ "$#" -gt 0 ] && shift || true
+  case "$sub" in
+    list|catalog)
+      [ "$#" -eq 0 ] || { nt_fail "Usage: tx app list"; return 2; }
+      local args=(--operation software.apps.list)
+      [ "$TERNUXX_JSON" = "1" ] && args+=(--json)
+      python3 "$service" "${args[@]}"
+      ;;
+    run)
+      [ "$#" -eq 2 ] && [ "$1" = directory-tree ] || { nt_fail "Usage: tx app run directory-tree HOME_PATH"; return 2; }
+      local app_path="$2"; local args=(--operation software.app.run --app-id directory-tree --app-path "$app_path")
+      [ "$TERNUXX_JSON" = "1" ] && args+=(--json)
+      python3 "$service" "${args[@]}"
+      ;;
+    preview)
+      [ "$#" -eq 2 ] || { nt_fail "Usage: tx app preview APP_ID {install|update|remove}"; return 2; }
+      app_id="$1"; action="$2"
+      case "$action" in install|update|remove) ;; *) nt_fail "App action must be install, update, or remove."; return 2 ;; esac
+      local args=(--operation software.app.preview --app-id "$app_id" --app-action "$action")
+      [ "$TERNUXX_JSON" = "1" ] && args+=(--json)
+      python3 "$service" "${args[@]}"
+      ;;
+    apply)
+      [ "$#" -ge 2 ] || { nt_fail "Usage: tx app apply APP_ID {install|update|remove} --plan-id ID [--confirm TOKEN]"; return 2; }
+      app_id="$1"; action="$2"; shift 2
+      case "$action" in install|update|remove) ;; *) nt_fail "App action must be install, update, or remove."; return 2 ;; esac
+      while [ "$#" -gt 0 ]; do
+        case "$1" in
+          --plan-id) [ "$#" -ge 2 ] || { nt_fail "--plan-id requires the ID from a saved preview."; return 2; }; plan_id="$2"; shift 2 ;;
+          --confirm) [ "$#" -ge 2 ] || { nt_fail "--confirm requires INSTALL, UPDATE, or REMOVE."; return 2; }; confirm="$2"; shift 2 ;;
+          *) nt_fail "Unknown app option: $1"; return 2 ;;
+        esac
+      done
+      if [ -z "$confirm" ] && [ -t 0 ]; then
+        read -r -p "Type ${action^^} to apply this exact package plan: " confirm || return 2
+      fi
+      local args=(--operation software.app.apply --app-id "$app_id" --app-action "$action"
+                  --plan-id "$plan_id" --app-confirm "$confirm")
+      [ "$TERNUXX_JSON" = "1" ] && args+=(--json)
+      python3 "$service" "${args[@]}"
+      ;;
+    *) nt_fail "Usage: tx app {list|run|preview|apply}"; return 2 ;;
+  esac
+}
+
 nt_cmd_management() {
   local section="${1:-}"
   [ "$#" -gt 0 ] && shift
   case "$section" in
+    proot|app|papps|shortcuts)
+      nt_warn "PRoot guest and application management was retired. Use the Native Termux desktop and 'tx help' for supported workflows."
+      return 2 ;;
     graphics)
       local action="${1:-status}" provider="${2:-native}" api="${3:-opengl}" display="${4:-:1}"
+      [ "$provider" = native ] || { nt_warn "Only Native Termux graphics are supported."; return 2; }
       case "$action" in
         status) python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.status --provider "$provider" --json ;;
         verify) python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.verify --provider "$provider" --graphics-api "$api" --display "$display" --json ;;
-        select) [ "$provider" = native ] || { nt_fail "Debian backend selection is not supported here; use Ternuxx Debian status and verification operations."; return 2; }; python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.select --provider native --graphics-backend "$api" --yes --json ;;
-        *) nt_fail "Usage: tx mng graphics status {native|debian} | verify {native|debian} {opengl|gles|vulkan} [:N]"; return 2 ;;
+        select) [ "$provider" = native ] || { nt_fail "Only Native Termux graphics backends are supported here."; return 2; }; python3 "$_TN_LIB_DIR/management_service.py" --operation graphics.provider.select --provider native --graphics-backend "$api" --yes --json ;;
+        *) nt_fail "Usage: tx mng graphics status native | verify native {opengl|gles|vulkan} [:N]"; return 2 ;;
       esac
       ;;
     logs)
@@ -26,87 +79,6 @@ nt_cmd_management() {
           python3 "$_TN_LIB_DIR/management_service.py" --operation management.logs.read --source-id "$1" --json
           ;;
         *) nt_fail "Usage: tx mng logs {list|read SOURCE_ID}"; return 2 ;;
-      esac
-      ;;
-    papps)
-      local action="${1:-}"
-      [ "$#" -gt 0 ] && shift
-      case "$action" in
-        rollback)
-          local mode="list"
-          if [ "$#" -gt 0 ]; then mode="$1"; shift; fi
-          nt_require_termux || return 1
-          nt_require_command python3 || return 1
-          if [ "$mode" = list ]; then
-            [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng papps rollback list"; return 2; }
-            python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.rollback.list --json
-            return $?
-          fi
-          [ "$mode" = apply ] && [ "$#" -eq 1 ] || { nt_fail "Usage: tx mng papps rollback list | apply ROLLBACK_ID"; return 2; }
-          local rollback_id="$1" rollback_preview rollback_plan answer
-          rollback_preview="$(python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.rollback.preview --rollback-id "$rollback_id" --json)" || return $?
-          printf '%s\n' "$rollback_preview" | python3 -c 'import json,sys; d=json.load(sys.stdin).get("data",{}); print("Restore previous PRoot app menu state:"); [print(" -",x.get("action"),x.get("path")) for x in d.get("changes",[])]'
-          rollback_plan="$(printf '%s' "$rollback_preview" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("data",{}).get("plan_id",""))')" || return 1
-          [ -n "$rollback_plan" ] || { nt_fail "Rollback preview did not return a plan."; return 1; }
-          [ -t 0 ] || { nt_fail "Rollback apply needs an interactive confirmation."; return 2; }
-          read -r -p "Restore this prior state? [y/N] " answer
-          case "$answer" in y|Y|yes|YES) ;; *) printf '%s\n' "No changes made."; return 0 ;; esac
-          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.rollback.apply --rollback-id "$rollback_id" --yes --plan-id "$rollback_plan" --json
-          ;;
-        sync)
-          local confirmed=0
-          if [ "$#" -gt 0 ] && [ "$1" = "--yes" ]; then confirmed=1; shift; fi
-          [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng papps sync [--yes]"; return 2; }
-          nt_require_termux || return 1
-          nt_require_command python3 || return 1
-          local preview plan_id changed
-          preview="$(python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.preview --json)" || return $?
-          printf '%s\n' "$preview" | python3 -c 'import json,sys; d=json.load(sys.stdin).get("data",{}); print("Found",d.get("discovered",0),"Debian applications."); [print(" -",x.get("action"),x.get("path")) for x in d.get("changes",[])]; [print("Preserved conflict:",x) for x in d.get("conflicts",[])]'
-          plan_id="$(printf '%s' "$preview" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("data",{}).get("plan_id",""))')" || return 1
-          changed="$(printf '%s' "$preview" | python3 -c 'import json,sys; print("yes" if json.load(sys.stdin).get("data",{}).get("changed") else "no")')" || return 1
-          [ "$changed" = yes ] || { printf '%s\n' "PRoot Apps menu is already in sync."; return 0; }
-          if [ "$confirmed" -ne 1 ]; then
-            [ -t 0 ] || { nt_fail "Non-interactive sync needs explicit --yes after reviewing this preview."; return 2; }
-            local answer
-            read -r -p "Apply these shortcut changes? [y/N] " answer
-            case "$answer" in y|Y|yes|YES) ;; *) printf '%s\n' "No changes made."; return 0 ;; esac
-          fi
-          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.sync.apply --yes --plan-id "$plan_id" --json
-          ;;
-        ""|--help|-h) nt_help management ;;
-        *) nt_fail "Usage: tx mng papps sync | rollback {list|apply ROLLBACK_ID}"; return 2 ;;
-      esac
-      ;;
-    app)
-      local action="${1:-}"
-      [ "$#" -gt 0 ] && shift
-      case "$action" in
-        launch)
-          [ "$#" -ge 1 ] || { nt_fail "Usage: tx mng app launch APP_ID | --desktop-id ID [--display :N]"; return 2; }
-          local app_id="" desktop_id="" display=""
-          if [ "$1" = "--desktop-id" ]; then
-            [ "$#" -ge 2 ] || { nt_fail "--desktop-id requires an installed Debian desktop entry ID"; return 2; }
-            desktop_id="$2"; shift 2
-          else
-            app_id="$1"; shift
-          fi
-          while [ "$#" -gt 0 ]; do
-            case "$1" in
-              --display)
-                [ "$#" -ge 2 ] || { nt_fail "--display requires an X11 display"; return 2; }
-                display="$2"; shift 2 ;;
-              *) nt_fail "Unknown app launch option: $1"; return 2 ;;
-            esac
-          done
-          nt_require_termux || return 1
-          nt_require_command python3 || return 1
-          local -a launch_args=(--operation proot.app.launch)
-          if [ -n "$desktop_id" ]; then launch_args+=(--desktop-id "$desktop_id"); else launch_args+=(--app-id "$app_id"); fi
-          [ -z "$display" ] || launch_args+=(--display "$display")
-          python3 "$_TN_LIB_DIR/management_service.py" "${launch_args[@]}" --json
-          ;;
-        --help|-h|"") nt_help management ;;
-        *) nt_fail "Unknown management app action: $action"; return 2 ;;
       esac
       ;;
     center)
@@ -173,89 +145,6 @@ nt_cmd_management() {
       nt_require_termux || return 1
       nt_require_command python3 || return 1
       python3 "$_TN_LIB_DIR/management_service.py" --operation management.catalog "${catalog_args[@]}" --json
-      ;;
-    proot)
-      local area="status" action="list" operation="proot.status" profile="" session_id="" confirmed=0 plan_id="" timeout=300
-      [ "$#" -eq 0 ] || area="$1"
-      [ "$#" -eq 0 ] || shift
-      case "$area" in
-        status) [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng proot status"; return 2; } ;;
-        terminal)
-          [ "$#" -eq 1 ] && [ "$1" = "status" ] || { nt_fail "Usage: tx mng proot terminal status"; return 2; }
-          operation="terminal.broker.status" ;;
-        profiles)
-          [ "$#" -eq 0 ] || action="$1"
-          [ "$#" -eq 0 ] || shift
-          case "$action" in
-            list) [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng proot profiles list"; return 2; }; operation="proot.profiles.list" ;;
-            show) [ "$#" -eq 1 ] || { nt_fail "Usage: tx mng proot profiles show PROFILE"; return 2; }; operation="proot.profiles.show"; profile="$1" ;;
-            *) nt_fail "Use tx mng proot profiles {list|show}."; return 2 ;;
-          esac ;;
-        sessions)
-          [ "$#" -eq 0 ] || action="$1"
-          [ "$#" -eq 0 ] || shift
-          case "$action" in
-            list) operation="proot.sessions.list"; [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng proot sessions list"; return 2; } ;;
-            show|health) [ "$#" -eq 1 ] || { nt_fail "Usage: tx mng proot sessions $action SESSION_ID"; return 2; }; session_id="$1"; operation="proot.sessions.$action" ;;
-            *) nt_fail "Use tx mng proot sessions {list|show|health}."; return 2 ;;
-          esac ;;
-        recover)
-          [ "$#" -eq 1 ] || { nt_fail "Usage: tx mng proot recover SESSION_ID"; return 2; }
-          operation="proot.recovery.inspect"; session_id="$1" ;;
-        reconcile)
-          [ "$#" -ge 1 ] || { nt_fail "Usage: tx mng proot reconcile SESSION_ID [--yes --plan-id PLAN]"; return 2; }
-          session_id="$1"; shift
-          while [ "$#" -gt 0 ]; do
-            case "$1" in
-              --yes) confirmed=1; shift ;;
-              --plan-id) [ "$#" -ge 2 ] || { nt_fail "--plan-id requires a value"; return 2; }; plan_id="$2"; shift 2 ;;
-              *) nt_fail "Unknown PRoot reconcile option: $1"; return 2 ;;
-            esac
-          done
-          if [ "$confirmed" -eq 1 ]; then operation="proot.recovery.reconcile"; else operation="proot.recovery.reconcile.preview"; fi ;;
-        start)
-          while [ "$#" -gt 0 ]; do
-            case "$1" in
-              --profile) [ "$#" -ge 2 ] || { nt_fail "--profile requires a value"; return 2; }; profile="$2"; shift 2 ;;
-              --timeout-seconds) [ "$#" -ge 2 ] || { nt_fail "--timeout-seconds requires a value"; return 2; }; timeout="$2"; shift 2 ;;
-              --yes) confirmed=1; shift ;;
-              --plan-id) [ "$#" -ge 2 ] || { nt_fail "--plan-id requires a value"; return 2; }; plan_id="$2"; shift 2 ;;
-              *) nt_fail "Unknown PRoot start option: $1"; return 2 ;;
-            esac
-          done
-          [ -n "$profile" ] || { nt_fail "Use tx mng proot start --profile PROFILE."; return 2; }
-          if [ "$confirmed" -eq 1 ]; then operation="proot.start"; else operation="proot.start.preview"; fi ;;
-        stop)
-          [ "$#" -ge 1 ] || { nt_fail "Usage: tx mng proot stop SESSION_ID [--yes --plan-id PLAN]"; return 2; }
-          session_id="$1"; shift
-          while [ "$#" -gt 0 ]; do
-            case "$1" in
-              --yes) confirmed=1; shift ;;
-              --plan-id) [ "$#" -ge 2 ] || { nt_fail "--plan-id requires a value"; return 2; }; plan_id="$2"; shift 2 ;;
-              *) nt_fail "Unknown PRoot stop option: $1"; return 2 ;;
-            esac
-          done
-          if [ "$confirmed" -eq 1 ]; then operation="proot.stop"; else operation="proot.stop.preview"; fi ;;
-        *) nt_fail "Use tx mng proot {status|terminal status|profiles|sessions|recover|reconcile|start|stop}."; return 2 ;;
-      esac
-      nt_require_termux || return 1
-      nt_require_command python3 || return 1
-      case "$operation" in
-        proot.profiles.show|proot.start.preview)
-          python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" --profile "$profile" --json ;;
-        proot.sessions.show|proot.sessions.health|proot.stop.preview|proot.recovery.inspect|proot.recovery.reconcile.preview)
-          python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" --operation-id "$session_id" --json ;;
-        proot.start)
-          [ -n "$plan_id" ] || { nt_fail "A preview --plan-id is required with --yes."; return 2; }
-          python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" --profile "$profile" --yes --plan-id "$plan_id" --timeout-seconds "$timeout" --json ;;
-        proot.recovery.reconcile)
-          [ -n "$plan_id" ] || { nt_fail "A preview --plan-id is required with --yes."; return 2; }
-          python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" --operation-id "$session_id" --yes --plan-id "$plan_id" --json ;;
-        proot.stop)
-          [ -n "$plan_id" ] || { nt_fail "A preview --plan-id is required with --yes."; return 2; }
-          python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" --operation-id "$session_id" --yes --plan-id "$plan_id" --json ;;
-        *) python3 "$_TN_LIB_DIR/management_service.py" --operation "$operation" --json ;;
-      esac
       ;;
     timezone)
       local action="${1:-status}"
@@ -424,38 +313,12 @@ nt_cmd_management() {
       nt_require_command python3 || return 1
       python3 "$_TN_LIB_DIR/management_service.py" --operation doctor.report $graphics_flag --json
       ;;
-    shortcuts)
-      local action="${1:-}"
-      [ "$#" -gt 0 ] && shift
-      nt_require_termux || return 1
-      nt_require_command python3 || return 1
-      case "$action" in
-        list)
-          [ "$#" -eq 0 ] || { nt_fail "Usage: tx mng shortcuts list"; return 2; }
-          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.list --json
-          ;;
-        plan)
-          [ "$#" -eq 2 ] || { nt_fail "Usage: tx mng shortcuts plan {add|remove} APP_ID"; return 2; }
-          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.preview \
-            --shortcut-action "$1" --app-id "$2" --json
-          ;;
-        apply)
-          [ "$#" -eq 5 ] && [ "$3" = "--plan-id" ] && [ "$5" = "--yes" ] || {
-            nt_fail "Usage: tx mng shortcuts apply {add|remove} APP_ID --plan-id ID --yes"; return 2;
-          }
-          python3 "$_TN_LIB_DIR/management_service.py" --operation proot.shortcuts.apply \
-            --shortcut-action "$1" --app-id "$2" --plan-id "$4" --yes --json
-          ;;
-        --help|-h|"") nt_help management ;;
-        *) nt_fail "Unknown shortcuts action: $action"; return 2 ;;
-      esac
-      ;;
     web)
       local port=8765 show_secret_fallback=0 browser=choose
       while [ "$#" -gt 0 ]; do
         case "$1" in
           --port) [ "$#" -ge 2 ] || { nt_fail "--port requires a value."; return 2; }; port="$2"; shift 2 ;;
-          --browser) [ "$#" -ge 2 ] || { nt_fail "--browser requires choose, android, native, proot, or auto."; return 2; }; browser="$2"; shift 2 ;;
+          --browser) [ "$#" -ge 2 ] || { nt_fail "--browser requires choose, android, native, or auto."; return 2; }; browser="$2"; shift 2 ;;
           --show-secret-on-clipboard-failure) show_secret_fallback=1; shift ;;
           --help|-h) nt_help web; return 0 ;;
           *) nt_fail "Unknown Web UI option: $1"; return 2 ;;

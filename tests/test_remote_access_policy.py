@@ -15,7 +15,7 @@ class RemoteAccessPolicyTests(unittest.TestCase):
             "public_ingress": False,
             "transport": {"kind": "vpn_overlay", "provider_id": "owner_selected", "credential_ref": "credential_ref_00000001"},
             "allowed_client_refs": ["client_ref_001"],
-            "allowed_targets": ["native_termux", "proot_debian"],
+            "allowed_targets": ["native_termux"],
             "capability_refs": ["capability_001"],
             "session_ttl_seconds": 900,
         }
@@ -61,7 +61,7 @@ class RemoteAccessPolicyTests(unittest.TestCase):
         self.assertEqual(result["readiness"], "unavailable")
         self.assertFalse(result["remote_access_active"])
         self.assertEqual(result["allowed_client_count"], 1)
-        self.assertEqual(result["allowed_target_count"], 2)
+        self.assertEqual(result["allowed_target_count"], 1)
         self.assertIn("private transport adapter is not implemented", result["blockers"])
         self.assertEqual(result["transport_kind"], "vpn_overlay")
         rendered = str(result)

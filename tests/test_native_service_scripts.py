@@ -39,7 +39,7 @@ class NativeServiceScriptTests(unittest.TestCase):
             result = subprocess.run(["bash", str(BOOT_SCRIPT)], env=env, capture_output=True, text=True, timeout=5)
             self.assertEqual(result.returncode, 0, result.stderr)
             log = (state / "continuity/boot-logs/ternuxx-services.log").read_text()
-            self.assertIn("result=ready; provider=native_termux; proot_dependency=false", log)
+            self.assertIn("result=ready; provider=native_termux", log)
             self.assertIn("supervisor-started", events.read_text())
             self.assertIn("status ternuxx-sshd", events.read_text())
             self.assertNotIn("proot", events.read_text().lower())
@@ -54,13 +54,14 @@ class NativeServiceScriptTests(unittest.TestCase):
             events = root / "events.log"
             executable(prefix / "etc/profile.d/start-services.sh", f"echo supervisor-started >> '{events}'\n")
             executable(prefix / "bin/sv", f"#!/bin/sh\necho \"$*\" >> '{events}'\necho 'run: ternuxx-sshd: (pid 123) 5s'\n")
-            env = {**os.environ, "PREFIX": str(prefix), "HOME": str(home),
-                   "TERMUX_VERSION": "fixture", "PATH": f"{prefix / 'bin'}:{os.environ['PATH']}"}
+            env = {key: value for key, value in os.environ.items() if key != "TERNUXX_STATE_DIR"}
+            env.update({"PREFIX": str(prefix), "HOME": str(home), "TERMUX_VERSION": "fixture",
+                        "PATH": f"{prefix / 'bin'}:{os.environ['PATH']}"})
             result = subprocess.run(["bash", str(BOOT_SCRIPT)], env=env, capture_output=True, text=True, timeout=5)
             self.assertEqual(result.returncode, 0, result.stderr)
             log = state / "continuity/boot-logs/ternuxx-services.log"
             self.assertTrue(log.is_file())
-            self.assertIn("result=ready; provider=native_termux; proot_dependency=false", log.read_text())
+            self.assertIn("result=ready; provider=native_termux", log.read_text())
 
     def test_recovery_boot_source_uses_only_canonical_install_and_state_paths(self) -> None:
         source = (ROOT / "scripts/termux-boot/ternuxx-recovery").read_text(encoding="utf-8")

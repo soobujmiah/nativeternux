@@ -2,84 +2,239 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ternuxx:schema:optional-software-catalog:1",
   "title": "Ternuxx optional software catalog",
-  "description": "Declarative provider-scoped install choices. Catalog entries are identifiers and metadata, never executable commands.",
+  "description": "Declarative Native Termux install choices. Catalog entries are identifiers and metadata, never executable commands.",
   "type": "object",
-  "required": ["schema_version", "catalog_version", "providers"],
+  "required": [
+    "schema_version",
+    "catalog_version",
+    "providers"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema_version": {"const": 1},
-    "catalog_version": {"type": "string", "minLength": 1},
+    "schema_version": {
+      "const": 1
+    },
+    "catalog_version": {
+      "type": "string",
+      "minLength": 1
+    },
     "providers": {
       "type": "object",
-      "required": ["native_termux", "proot_debian"],
+      "required": [
+        "native_termux"
+      ],
       "additionalProperties": false,
       "properties": {
-        "native_termux": {"$ref": "#/$defs/providerCatalog"},
-        "proot_debian": {"$ref": "#/$defs/providerCatalog"}
+        "native_termux": {
+          "$ref": "#/$defs/providerCatalog"
+        }
       }
     },
     "shared_services": {
       "description": "Native-owned services that selected consumers may use through an explicit, verified interface. These entries are not package IDs and do not install anything.",
       "type": "array",
-      "items": {"$ref": "#/$defs/sharedService"},
+      "items": {
+        "$ref": "#/$defs/sharedService"
+      },
       "uniqueItems": true
     }
   },
   "$defs": {
     "providerCatalog": {
       "type": "object",
-      "required": ["status", "package_adapter", "items"],
+      "required": [
+        "status",
+        "package_adapter",
+        "items"
+      ],
       "additionalProperties": false,
       "properties": {
-        "status": {"enum": ["available", "planned", "unsupported"]},
-        "package_adapter": {"enum": ["termux_pkg", "debian_apt", "none"]},
+        "status": {
+          "enum": [
+            "available",
+            "planned",
+            "unsupported"
+          ]
+        },
+        "package_adapter": {
+          "enum": [
+            "termux_pkg",
+            "none"
+          ]
+        },
         "items": {
           "type": "array",
-          "items": {"$ref": "#/$defs/item"},
+          "items": {
+            "$ref": "#/$defs/item"
+          },
           "uniqueItems": true
         }
       }
     },
     "item": {
       "type": "object",
-      "required": ["id", "name", "status", "package_ids", "depends_on", "optional", "default_selected"],
+      "required": [
+        "id",
+        "name",
+        "status",
+        "package_ids",
+        "depends_on",
+        "optional",
+        "default_selected"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,63}$"},
-        "name": {"type": "string", "minLength": 1},
-        "description": {"type": "string"},
-        "status": {"enum": ["verified", "experimental", "planned", "unavailable"]},
-        "package_ids": {"type": "array", "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9+_.:-]*$"}, "uniqueItems": true},
-        "depends_on": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{1,63}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "verified",
+            "experimental",
+            "planned",
+            "unavailable"
+          ]
+        },
+        "package_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9+_.:-]*$"
+          },
+          "uniqueItems": true
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
         "service_dependencies": {
           "description": "IDs from the top-level shared_services registry. These describe runtime service/API requirements, never package installation instructions.",
           "type": "array",
-          "items": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,63}$"},
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]{1,63}$"
+          },
           "uniqueItems": true
         },
-        "conflicts_with": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "optional": {"type": "boolean", "const": true},
-        "default_selected": {"type": "boolean", "const": false},
-        "size_bytes": {"type": ["integer", "null"], "minimum": 0},
-        "evidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "limitations": {"type": "array", "items": {"type": "string"}}
+        "conflicts_with": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "optional": {
+          "type": "boolean",
+          "const": true
+        },
+        "default_selected": {
+          "type": "boolean",
+          "const": false
+        },
+        "size_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "sharedService": {
       "type": "object",
-      "required": ["id", "owner_provider", "status", "consumer_providers", "interface", "readiness_check", "boot_default"],
+      "required": [
+        "id",
+        "owner_provider",
+        "status",
+        "consumer_providers",
+        "interface",
+        "readiness_check",
+        "boot_default"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,63}$"},
-        "owner_provider": {"const": "native_termux"},
-        "status": {"enum": ["planned", "available_unverified", "verified", "unavailable"]},
-        "consumer_providers": {"type": "array", "items": {"enum": ["proot_debian"]}, "uniqueItems": true},
-        "interface": {"enum": ["loopback_tcp", "unix_socket", "scoped_shared_path", "native_api"]},
-        "protocol": {"type": ["string", "null"]},
-        "readiness_check": {"type": "string", "minLength": 1},
-        "boot_default": {"const": false},
-        "evidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "limitations": {"type": "array", "items": {"type": "string"}}
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{1,63}$"
+        },
+        "owner_provider": {
+          "const": "native_termux"
+        },
+        "status": {
+          "enum": [
+            "planned",
+            "available_unverified",
+            "verified",
+            "unavailable"
+          ]
+        },
+        "consumer_providers": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "native_termux"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "interface": {
+          "enum": [
+            "loopback_tcp",
+            "unix_socket",
+            "scoped_shared_path",
+            "native_api"
+          ]
+        },
+        "protocol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "readiness_check": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boot_default": {
+          "const": false
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

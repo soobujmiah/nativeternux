@@ -1,6 +1,6 @@
 # Native GUI session lifecycle
 
-Ternuxx owns only the native Termux desktop session that it starts and records in its private schema-v2 `session.json`. Debian PRoot remains a separate workload provider; this lifecycle does not claim ownership of its processes, root filesystem, launchers, or acceleration setup.
+Ternuxx owns only the Native Termux desktop session that it starts and records in its private schema-v2 `session.json`. Debian/PRoot session management has been retired; dated guest records are historical.
 
 ## Shared operation path
 
@@ -26,7 +26,7 @@ The lifecycle states exposed by the classifier are:
 
 ## Stable native display
 
-Native Ternuxx defaults to display `:1`, leaving `:0` to the existing Debian PRoot graphical workflow. Default startup fails closed when `:1` is occupied or ambiguous; it does not silently create another native desktop on `:2` or higher. An explicit `tx start --display N` remains available for an owner-selected alternate. After a stale Ternuxx `:1` record is safely reconciled, startup reuses `:1`; repeated start is idempotent, and stop signals only the recorded Ternuxx process identities while retaining state and logs.
+Native Ternuxx defaults to display `:1`. Default startup fails closed when `:1` is occupied or ambiguous; it does not silently create another native desktop on `:2` or higher. An explicit `tx start --display N` remains available for an owner-selected alternate. After a stale Ternuxx `:1` record is safely reconciled, startup reuses `:1`; repeated start is idempotent, and stop signals only the recorded Ternuxx process identities while retaining state and logs.
 
 ## Health limits
 
@@ -36,4 +36,4 @@ A responsive X11 socket and live XFCE process establish session readiness, not A
 
 On 2026-10-19, the live schema-v2 record for display `:1` said `running` while its supervisor, X11, and XFCE identities were absent and no display socket or lock existed. Under owner-authorized validation, one session was started and status verified its processes and responsive socket. On 2026-10-20, a stale `:1` record had a dead recorded PID but its matching private socket and lock remained; those artifacts were preserved during initial diagnosis, and the session was temporarily started on explicit display `:2`. The owner then clarified that Native Ternuxx must remain on `:1`. The implementation now makes `:1` the fixed default and permits exact record-bound stale artifact recovery; the current live migration result is recorded in the current execution evidence. Android window visibility remains unknown. Fixture tests cover stale-running reconciliation, exact-PID recovery, mismatches, active sockets, malformed/symlinked records, display readiness, lock contention, repeated lifecycle requests, and management-service response routing. Full Native Termux suite results and separate boot findings are recorded in [the recovery evidence](../evidence/2026-10-19-gui-session-recovery.md) and the current [qualification execution evidence](../evidence/2026-10-20-workstation-qualification-execution.md).
 
-This does not qualify cold boot, general GUI visibility, listener socket ownership, or PRoot lifecycle integration. P3 remains open and P4 ownership gates remain unmet.
+This dated lifecycle record does not qualify cold boot, general GUI visibility, or listener socket ownership. Current project gates are listed in [phase status](../PHASE-STATUS.md).

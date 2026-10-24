@@ -73,34 +73,22 @@ class GraphicsManagementTests(unittest.TestCase):
                                                state_dir=str(self.state), repo_root=str(self.repo))
         self.assertTrue(link.is_symlink())
 
-    def test_debian_status_does_not_enter_guest_but_explicit_verify_does(self):
-        import proot_diagnostics
-        inventory = {"status": "installed", "installed_distributions": ["debian"], "guest_entered": False}
-        with patch.object(proot_diagnostics, "inspect_installed", return_value=inventory), \
-             patch.object(proot_diagnostics, "resolve_proot_guest_user", return_value="sbj"), \
-             patch.object(proot_diagnostics, "verify_proot_guest", side_effect=AssertionError("status must not log in")):
-            result = graphics_manager.status("debian", home=str(self.home), state_dir=str(self.state),
-                process_env={}, prefix="/fixture")
-        self.assertTrue(result["read_only"])
-        self.assertFalse(result["guest_entered"])
-        self.assertEqual(result["verification"], "not_run")
-        with patch.object(proot_diagnostics, "resolve_proot_guest_user", return_value="sbj"), \
-             patch.object(proot_diagnostics, "verify_proot_guest", return_value={"guest_entered": True, "read_only": False}) as verify:
-            result = graphics_manager.verify("debian", "opengl", home=str(self.home), state_dir=str(self.state),
-                process_env={}, prefix="/fixture", repo_root=str(self.repo))
-        verify.assert_called_once()
-        self.assertTrue(result["guest_entered"])
-        self.assertFalse(result["read_only"])
+    def test_candidate_environment_prioritizes_termux_runtime_over_injected_loader_paths(self) -> None:
+        graphics_manager.configure_native("kgsl-freedreno", home=str(self.home),
+                                           state_dir=str(self.state), repo_root=str(self.repo))
+        env = graphics_manager._native_env(
+            home=str(self.home), state_dir=str(self.state),
+            process_env={"PATH": "/fixture", "PREFIX": "/termux",
+                         "LD_LIBRARY_PATH": "/codex/bin:/custom/lib"},
+        )
+        self.assertEqual(env["LD_LIBRARY_PATH"],
+                         f"{self.prefix}/lib:/termux/lib:/codex/bin:/custom/lib")
 
     def test_gles_is_not_reported_from_an_opengl_only_probe(self) -> None:
         native = graphics_manager.verify("native", "gles", home=str(self.home), state_dir=str(self.state),
                                          process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
-        guest = graphics_manager.verify("debian", "gles", home=str(self.home), state_dir=str(self.state),
-                                        process_env={"PATH": "", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(native["status"], "unavailable")
         self.assertFalse(native["render_verified"])
-        self.assertEqual(guest["status"], "unavailable")
-        self.assertFalse(guest["render_verified"])
 
     def test_gles_draw_verification_reports_real_frames_and_renderer(self) -> None:
         with patch.object(graphics_manager, "_gles_draw", return_value={
@@ -217,6 +205,19 @@ class GraphicsManagementTests(unittest.TestCase):
                                              process_env={"PATH": "/fixture", "PREFIX": "/termux"}, prefix="/termux", repo_root=str(self.repo))
         self.assertEqual(result["status"], "failed")
         self.assertFalse(result["render_verified"])
+
+    def test_vulkan_enumeration_failure_returns_bounded_linker_diagnostic_without_draw(self) -> None:
+        detail = 'CANNOT LINK EXECUTABLE "vulkaninfo": cannot locate symbol "fixture"'
+        with patch.object(graphics_manager.shutil, "which", return_value="/fixture/vulkaninfo"), \
+             patch.object(graphics_manager, "_native_env", return_value={"PATH": "/fixture", "DISPLAY": ":1"}), \
+             patch.object(graphics_manager, "_run", return_value=(1, detail)) as runner:
+            result = graphics_manager.verify("native", "vulkan", home=str(self.home), state_dir=str(self.state),
+                                             process_env={"PATH": "/fixture", "PREFIX": "/termux"},
+                                             prefix="/termux", repo_root=str(self.repo))
+        self.assertEqual(result["status"], "unavailable")
+        self.assertEqual(result["diagnostic"], detail)
+        self.assertFalse(result["render_verified"])
+        self.assertEqual(runner.call_count, 1)
 
     def test_vulkan_enumeration_without_display_does_not_claim_a_draw(self) -> None:
         with patch.object(graphics_manager.shutil, "which", side_effect=["/fixture/vulkaninfo", "/fixture/vkcube"]), \

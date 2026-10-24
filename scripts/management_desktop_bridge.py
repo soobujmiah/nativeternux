@@ -38,6 +38,47 @@ def main(argv: list[str]) -> int:
         print("Typed management action required.", file=sys.stderr)
         return 2
     action = argv[0]
+    if action == "software-run" and len(argv) == 2:
+        result = call("software.app.run", {"app_id": "directory-tree", "path": argv[1]})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
+    if action == "software-preview" and len(argv) == 3 and argv[1] in {"process-monitor", "terminal-multiplexer", "directory-tree"} and argv[2] in {"install", "update", "remove"}:
+        result = call("software.app.preview", {"app_id": argv[1], "action": argv[2]})
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        data = result.get("data", {})
+        plan_id = data.get("plan_id")
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+            print("Native app preview returned an invalid plan."); return 1
+        print("P\t" + plan_id + "\t" + argv[1] + "\t" + argv[2] + "\t" + clean(json.dumps(data, sort_keys=True)))
+        return 0
+    if action == "software-apply" and len(argv) == 5 and argv[1] in {"process-monitor", "terminal-multiplexer", "directory-tree"} and argv[2] in {"install", "update", "remove"}:
+        plan_id = argv[3]
+        if not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+            print("Native app preview expired; create a new preview."); return 2
+        result = call("software.app.apply", {"app_id": argv[1], "action": argv[2], "plan_id": plan_id,
+                                             "confirmation": argv[4]})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
+    if action == "cpu-run" and len(argv) == 1:
+        prompt = sys.stdin.read(management_service.cpu_inference.MAX_PROMPT_BYTES + 1)
+        result = call("inference.cpu.run", {"prompt": prompt, "max_tokens": 64})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
+    if action == "cpu-model-preview" and len(argv) == 2 and argv[1] in {"install", "remove"}:
+        result = call("inference.cpu.model.preview", {"action": argv[1]})
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        data = result.get("data", {})
+        print("P\t" + clean(data.get("plan_id")) + "\t" + clean(json.dumps(data, sort_keys=True)))
+        return 0
+    if action == "cpu-model-apply" and len(argv) == 4 and argv[3] == "confirmed" and argv[1] in {"install", "remove"}:
+        plan_id = argv[2]
+        if not re.fullmatch(r"[0-9a-f]{24}", plan_id):
+            print("The CPU model preview is invalid; create a new preview.", file=sys.stderr); return 2
+        result = call("inference.cpu.model.apply", {"action": argv[1], "plan_id": plan_id, "confirmed": True})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "graphics-select" and len(argv) == 2 and argv[1] in {"kgsl-freedreno", "system"}:
         result = call("graphics.provider.select", {"provider": "native", "backend": argv[1], "confirmed": True})
         print(management_presentation.format_report(result))
@@ -218,9 +259,9 @@ def main(argv: list[str]) -> int:
     if action == "inspect" and len(argv) == 2:
         rid = argv[1]
         operation_args: dict[str, object] = {}
-        if rid in {"graphics.native", "graphics.debian"}:
+        if rid == "graphics.native":
             operation = "graphics.provider.status"
-            operation_args = {"provider": "native" if rid.endswith("native") else "debian"}
+            operation_args = {"provider": "native"}
         elif rid == "network.ssh.manual-8022":
             operation = "ssh.inspect"
         elif rid == "native.acceleration.qualification":
@@ -302,267 +343,10 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.list")
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
-    if action == "guest-lifecycle-preview" and len(argv) == 4:
-        kind, alias, backup_id = argv[1:]
-        if kind in {"retire", "restore"} and not re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_replay_alias"}})); return 2
-        if kind in {"migrate", "rollback"} and alias != "debian":
-            print(json.dumps({"ok": False, "error": {"code": "invalid_debian_alias"}})); return 2
-        if kind == "retire" and backup_id == "-":
-            result = call("proot.setup.retire.preview", {"alias": alias})
-        elif kind == "restore" and re.fullmatch(r"[0-9a-f]{32}", backup_id):
-            result = call("proot.setup.restore.preview", {"alias": alias, "backup_id": backup_id})
-        elif kind == "migrate" and backup_id == "-":
-            result = call("proot.setup.icd-migrate.preview", {"alias": alias})
-        elif kind == "rollback" and re.fullmatch(r"[0-9a-f]{64}", backup_id):
-            result = call("proot.setup.icd-migrate.rollback.preview", {"migration_id": backup_id})
-        else:
-            print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_target"}}))
-            return 2
-        if not result.get("ok"):
-            print(management_presentation.format_report(result)); return 1
-        data = result.get("data", {})
-        plan_id = data.get("plan_id") if isinstance(data, dict) else None
-        impact = data.get("operation", {}).get("impact", "") if isinstance(data, dict) else ""
-        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_preview"}})); return 1
-        print("\t".join(("G", kind, plan_id, alias, backup_id, clean(impact))))
-        return 0
-    if action == "guest-lifecycle-apply" and len(argv) == 5:
-        kind, alias, backup_id, plan_id = argv[1:]
-        replay = kind in {"retire", "restore"} and re.fullmatch(r"ternuxx-replay-[a-z0-9][a-z0-9-]{0,31}", alias)
-        debian = kind in {"migrate", "rollback"} and alias == "debian"
-        if (not (replay or debian) or not re.fullmatch(r"[0-9a-f]{64}", plan_id)
-                or (kind in {"retire", "migrate"} and backup_id != "-")
-                or (kind == "restore" and not re.fullmatch(r"[0-9a-f]{32}", backup_id))
-                or (kind == "rollback" and not re.fullmatch(r"[0-9a-f]{64}", backup_id))):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_guest_lifecycle_target"}})); return 2
-        if kind == "retire":
-            result = call("proot.setup.retire.apply", {"alias": alias, "confirmed": True, "plan_id": plan_id})
-        elif kind == "restore":
-            result = call("proot.setup.restore.apply", {"alias": alias, "backup_id": backup_id,
-                                                         "confirmed": True, "plan_id": plan_id})
-        elif kind == "migrate":
-            result = call("proot.setup.icd-migrate.apply", {"alias": alias, "confirmed": True, "plan_id": plan_id})
-        else:
-            result = call("proot.setup.icd-migrate.rollback.apply", {"migration_id": backup_id,
-                "confirmed": True, "plan_id": plan_id})
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action == "shortcut-sync-rollback-list" and len(argv) == 1:
-        result = call("proot.shortcuts.sync.rollback.list")
-        if not result.get("ok"):
-            print(management_presentation.format_report(result)); return 1
-        rows = result.get("data", {}).get("rollbacks", [])
-        emitted = False
-        for item in rows:
-            if (not isinstance(item, dict) or item.get("integrity") != "valid"
-                    or item.get("status") != "applied"
-                    or not re.fullmatch(r"[0-9a-f]{32}", str(item.get("rollback_id", "")))):
-                continue
-            print("R\t" + item["rollback_id"] + "\t" + clean(item.get("created_at"))
-                  + "\t" + clean(item.get("entry_count")))
-            emitted = True
-        if not emitted: print("R\t-\t-\t-")
-        return 0
-    if action == "shortcut-sync-rollback-preview" and len(argv) == 2:
-        rollback_id = argv[1]
-        if not re.fullmatch(r"[0-9a-f]{32}", rollback_id):
-            print("Invalid saved PRoot shortcut sync ID."); return 2
-        result = call("proot.shortcuts.sync.rollback.preview", {"rollback_id": rollback_id})
-        if not result.get("ok"):
-            print(management_presentation.format_report(result)); return 1
-        data = result.get("data", {}); plan_id = data.get("plan_id")
-        changes = data.get("changes", [])
-        summary = "; ".join(clean(item.get("action")) + " " + clean(item.get("path"))
-                            for item in changes if isinstance(item, dict))
-        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
-            print("Could not verify the exact shortcut restore preview."); return 1
-        print("P\t" + plan_id + "\t" + rollback_id + "\t" + clean(summary))
-        return 0
-    if action == "shortcut-sync-rollback-apply" and len(argv) == 3:
-        rollback_id, plan_id = argv[1:]
-        if not re.fullmatch(r"[0-9a-f]{32}", rollback_id) or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
-            print("The PRoot shortcut restore preview is invalid or expired."); return 2
-        result = call("proot.shortcuts.sync.rollback.apply", {
-            "rollback_id": rollback_id, "confirmed": True, "plan_id": plan_id})
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action == "shortcut-list" and len(argv) == 1:
-        result = call("proot.shortcuts.list")
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action == "proot-session-list" and len(argv) == 1:
-        result = call("proot.sessions.list")
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action == "terminal-session-options" and len(argv) == 1:
-        result = call("proot.sessions.list")
-        if not result.get("ok"):
-            print(management_presentation.format_report(result))
-            return 1
-        sessions = result.get("data", {}).get("sessions", [])
-        if not isinstance(sessions, list):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_session_inventory"}}))
-            return 1
-        for item in sessions:
-            if not isinstance(item, dict):
-                continue
-            session_id = item.get("session_id")
-            if (not isinstance(session_id, str)
-                    or not re.fullmatch(r"proot-[0-9a-f]{32}", session_id)
-                    or item.get("profile") != "debian-interactive"
-                    or item.get("state") != "running"
-                    or item.get("ownership") != "ternuxx_verified"):
-                continue
-            print("S\t" + session_id + "\tDebian " + session_id[-8:] + " · Running")
-        return 0
-    if action == "proot-session-recovery" and len(argv) == 2:
-        if not re.fullmatch(r"proot-[0-9a-f]{32}", argv[1]):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_session_id"}}))
-            return 2
-        result = call("proot.recovery.inspect", {"session_id": argv[1]})
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action == "proot-probe-preview" and len(argv) == 1:
-        result = call("proot.start.preview", {"profile": "isolated-probe"})
-        if not result.get("ok"):
-            print(management_presentation.format_report(result))
-            return 1
-        data = result.get("data", {})
-        plan_id = data.get("plan_id") if isinstance(data, dict) else None
-        impact = clean(data.get("impact")) if isinstance(data, dict) else ""
-        if not isinstance(plan_id, str) or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_session_preview"}}))
-            return 1
-        print("P\t" + plan_id + "\t" + impact)
-        return 0
-    if action == "proot-probe-apply" and len(argv) == 2:
-        if not re.fullmatch(r"plan-[0-9a-f]{64}", argv[1]):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_plan_id"}}))
-            return 2
-        result = call("proot.start", {"profile": "isolated-probe", "confirmed": True,
-                                      "plan_id": argv[1], "timeout_seconds": 300})
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action == "proot-session-stop-preview" and len(argv) == 2:
-        session_id = argv[1]
-        if not re.fullmatch(r"proot-[0-9a-f]{32}", session_id):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_session_id"}}))
-            return 2
-        result = call("proot.stop.preview", {"session_id": session_id})
-        if not result.get("ok"):
-            print(management_presentation.format_report(result))
-            return 1
-        data = result.get("data", {})
-        allowed_contracts = {
-            ("isolated-probe", "signal_owned_process_group", "SIGTERM", "verified_process_group"),
-            ("debian-interactive", "hangup_owned_terminal_session", "SIGHUP",
-             "verified_private_session_job_groups"),
-        }
-        contract = (data.get("profile"), data.get("action"), data.get("signal"),
-                    data.get("scope")) if isinstance(data, dict) else None
-        if (not isinstance(data, dict) or data.get("ownership") != "ternuxx_verified"
-                or contract not in allowed_contracts
-                or not isinstance(data.get("plan_id"), str)
-                or not re.fullmatch(r"plan-[0-9a-f]{64}", data["plan_id"])):
-            print(json.dumps({"ok": False, "error": {"code": "session_stop_not_verified"}}))
-            return 1
-        print("P\t" + data["plan_id"] + "\t" + clean(
-            management_presentation.human_value(data["profile"])) + "\t" + clean(session_id)
-            + "\t" + data["signal"] + "\t" + clean(
-                management_presentation.human_value(data["scope"])) + "\t" + clean(data.get("impact")))
-        return 0
-    if action == "proot-session-stop-apply" and len(argv) == 3:
-        session_id, plan_id = argv[1:]
-        if (not re.fullmatch(r"proot-[0-9a-f]{32}", session_id)
-                or not re.fullmatch(r"plan-[0-9a-f]{64}", plan_id)):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_session_plan"}}))
-            return 2
-        result = call("proot.stop", {"session_id": session_id, "confirmed": True, "plan_id": plan_id})
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action in {"proot-app-options", "proot-shortcut-options"} and len(argv) == 1:
-        import proot_shortcuts
-        result = call("proot.shortcuts.list")
-        if not result.get("ok"):
-            print(management_presentation.format_report(result)); return 1
-        for app_id, item in proot_shortcuts.CATALOG.items():
-            print("C\t" + clean(app_id) + "\t" + clean(item.get("name")))
-        inventory = result.get("data", {}).get("desktop_applications", {})
-        for item in inventory.get("items", []) if isinstance(inventory, dict) else []:
-            desktop_id, name = item.get("desktop_id"), item.get("name")
-            if (item.get("status") == "available" and isinstance(desktop_id, str)
-                    and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id)
-                    and isinstance(name, str) and name.strip()):
-                print("D\t" + desktop_id + "\t" + clean(name))
-        return 0
-    if action == "proot-app-launch" and len(argv) == 2:
-        import proot_shortcuts
-        if argv[1].startswith("desktop:"):
-            desktop_id = argv[1][8:]
-            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id):
-                print(json.dumps({"ok": False, "error": {"code": "invalid_desktop_app"}}))
-                return 2
-            result = call("proot.app.launch", {"desktop_id": desktop_id})
-        else:
-            if argv[1] not in proot_shortcuts.CATALOG:
-                print(json.dumps({"ok": False, "error": {"code": "unknown_proot_app"}}))
-                return 2
-            result = call("proot.app.launch", {"app_id": argv[1]})
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
-    if action == "shortcut-preview" and len(argv) == 3:
-        import proot_shortcuts
-        shortcut_action, selected = argv[1:]
-        if shortcut_action not in {"add", "remove"}:
-            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
-            return 2
-        if selected.startswith("desktop:"):
-            desktop_id = selected[8:]
-            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id):
-                print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
-                return 2
-            shortcut_args = {"action": shortcut_action, "desktop_id": desktop_id}
-        elif selected in proot_shortcuts.CATALOG:
-            shortcut_args = {"action": shortcut_action, "app_id": selected}
-        else:
-            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
-            return 2
-        result = call("proot.shortcuts.preview", shortcut_args)
-        if not result.get("ok"):
-            print(management_presentation.format_report(result))
-            return 1
-        data = result.get("data", {})
-        changed = str(bool(data.get("changed"))).lower()
-        affected = data.get("affected_resources") or []
-        target = clean(affected[0].get("path")) if affected and isinstance(affected[0], dict) else "-"
-        before = clean(affected[0].get("before")) if affected and isinstance(affected[0], dict) else "-"
-        after = clean(affected[0].get("after")) if affected and isinstance(affected[0], dict) else "-"
-        print("\t".join(("P", clean(data.get("plan_id")) or "-", changed, target, before + " -> " + after)))
-        return 0
-    if action == "shortcut-apply" and len(argv) == 4:
-        import proot_shortcuts
-        shortcut_action, selected, plan_id = argv[1:]
-        if shortcut_action not in {"add", "remove"} or not re.fullmatch(r"[0-9a-f]{24}", plan_id):
-            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
-            return 2
-        if selected.startswith("desktop:"):
-            desktop_id = selected[8:]
-            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,254}", desktop_id):
-                print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
-                return 2
-            target_args = {"desktop_id": desktop_id}
-        elif selected in proot_shortcuts.CATALOG:
-            target_args = {"app_id": selected}
-        else:
-            print(json.dumps({"ok": False, "error": {"code": "invalid_shortcut_target"}}))
-            return 2
-        result = call("proot.shortcuts.apply", {
-            "action": shortcut_action, **target_args, "confirmed": True, "plan_id": plan_id,
-        })
-        print(management_presentation.format_report(result))
-        return 0 if result.get("ok") else 1
+    if action.startswith(("proot-", "guest-lifecycle-", "shortcut-", "terminal-session-")):
+        print(json.dumps({"ok": False, "error": {"code": "feature_removed",
+            "message": "PRoot guest management has been retired; use Native Termux controls."}}))
+        return 2
     if action == "timezone-set" and len(argv) == 2:
         result = call("timezone.set", {"timezone": argv[1]})
         print(management_presentation.format_report(result))

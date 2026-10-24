@@ -185,11 +185,11 @@ class ConfigRecoveryTests(unittest.TestCase):
                                       plan_id=preview["plan_id"])
         restore = config_recovery.restore_preview(home=str(self.home), state_dir=str(self.state), backup_id="saved")
         self.assertEqual(config_recovery.restore_backup(home=str(self.home), state_dir=str(self.state), backup_id="saved")["action"], "restore_preview")
-        self.source.write_bytes(profile("hybrid"))
+        self.source.write_bytes(profile("cli-only"))
         with self.assertRaisesRegex(config_recovery.RecoveryError, "changed"):
             config_recovery.restore_backup(home=str(self.home), state_dir=str(self.state), backup_id="saved",
                                            confirmed=True, plan_id=restore["plan_id"])
-        self.assertEqual(self.source.read_bytes(), profile("hybrid"))
+        self.assertEqual(self.source.read_bytes(), profile("cli-only"))
 
     def test_corrupt_checksum_unknown_schema_and_path_traversal_fail_closed(self):
         preview = config_recovery.create_backup(home=str(self.home), state_dir=str(self.state), name="checks")

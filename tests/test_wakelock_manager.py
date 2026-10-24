@@ -65,16 +65,16 @@ class WakeLockManagerTests(unittest.TestCase):
 
     def test_other_process_cannot_release_a_process_lease(self) -> None:
         with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):
-            self.acquire("proot.desktop")
+            self.acquire("other-service.desktop")
             with self.assertRaises(wakelock_manager.WakeLockError):
-                self.release("proot.desktop", pid=self.pid + 100000)
+                self.release("other-service.desktop", pid=self.pid + 100000)
             self.assertEqual(len(self.runner.calls), 1)
-            self.assertEqual(wakelock_manager.status(state_dir=self.state)["managed_owners"], ["proot.desktop"])
+            self.assertEqual(wakelock_manager.status(state_dir=self.state)["managed_owners"], ["other-service.desktop"])
 
     def test_persistent_lease_is_limited_to_native_sshd(self) -> None:
         with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):
             with self.assertRaises(wakelock_manager.WakeLockError):
-                self.acquire("proot.desktop", persistent=True)
+                self.acquire("other-service.desktop", persistent=True)
             acquired = self.acquire("native.sshd", persistent=True)
             self.assertEqual(acquired["owner_count"], 1)
             released = self.release("native.sshd", persistent=True)
@@ -89,11 +89,11 @@ class WakeLockManagerTests(unittest.TestCase):
             status = wakelock_manager.status(state_dir=self.state)
             self.assertEqual(status["stale_owners"], ["native.sshd"])
             self.assertEqual(status["boot_id_relation"], "different")
-            self.acquire("proot.desktop")
+            self.acquire("other-service.desktop")
             self.assertEqual(self.runner.calls, [["/termux/bin/termux-wake-lock"]])
             record = json.loads((self.state / "wakelock/owners.json").read_text())
             self.assertEqual(record["boot_id"], new_boot)
-            self.assertEqual(set(record["owners"]), {"proot.desktop"})
+            self.assertEqual(set(record["owners"]), {"other-service.desktop"})
 
     def test_acquire_clears_record_only_when_kernel_confirms_pid_absent(self) -> None:
         with patch.object(wakelock_manager, "_boot_id", return_value=self.boot):

@@ -23,7 +23,7 @@ MAX_ENTRY_BYTES = 64 * 1024
 BACKUP_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 PROFILE_PATH = "state/boot/profile.json"
 EXCLUDED_PATHS = [
-    "Termux/Debian rootfs and all PRoot state",
+    "External storage and unrelated Termux application state",
     "shared/external storage",
     "SSH host/client private keys and credentials",
     "managed OpenSSH configuration",
@@ -83,7 +83,7 @@ def _profile_valid(data: bytes) -> None:
     if (not isinstance(value, dict) or set(value) != {"schema_version", "owner", "provider", "profile"}
             or value.get("schema_version") != 1 or value.get("owner") != "ternuxx"
             or value.get("provider") != "native"
-            or value.get("profile") not in {"cli-only", "native", "proot", "hybrid"}):
+            or value.get("profile") not in {"cli-only", "native"}):
         raise RecoveryError("boot profile does not match the supported Ternuxx schema")
 
 

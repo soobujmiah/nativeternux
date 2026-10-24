@@ -14,7 +14,7 @@
 - Device model / chipset / ABI:
 - Android build/API:
 - Termux version and app source/signing context:
-- Execution context: native Termux | Android app | Debian PRoot | other (explain)
+- Execution context: Native Termux | Android app | other (explain)
 - Display/audio state if workload requires it:
 - Runtime version/commit/build flags:
 - Driver/delegate/SDK versions:

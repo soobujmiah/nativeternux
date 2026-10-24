@@ -1,6 +1,10 @@
 # Research & Evidence
 
+> **Historical record, superseded 2026-10-24.** Ternuxx is Native Termux-only. PRoot implementation and operations described below have been retired and must not be used as current setup instructions. Current behavior is documented in [the product vision](PRODUCT-VISION.md), [phase status](PHASE-STATUS.md), and [Native-only retirement audit](evidence/2026-10-24-native-only-proot-removal-audit.md).
+
 Dated source links and evidence classifications for Ternuxx design decisions.
+
+> **Historical research snapshot.** This research began on 2026-10-17 and includes the former guest-provider proposal. Ternuxx is now Native Termux-only; use the [current device matrix](testing/DEVICE-COMPATIBILITY.md), [Native capability matrix](testing/FEATURE-MATRIX.yaml), and [phase status](PHASE-STATUS.md) for current product claims. Older provider research is context, not supported behavior.
 
 ---
 

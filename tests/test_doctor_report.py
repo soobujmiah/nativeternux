@@ -14,6 +14,22 @@ import doctor_report  # noqa: E402
 
 
 class DoctorReportTest(unittest.TestCase):
+    def test_graphics_probes_put_termux_runtime_before_injected_loader_path(self):
+        calls = []
+        def fake_run(argv, **kwargs):
+            calls.append((argv, kwargs))
+            return SimpleNamespace(returncode=1, stdout="probe unavailable")
+        with patch.dict("os.environ", {
+                "DISPLAY": ":1", "PREFIX": "/termux", "LD_LIBRARY_PATH": "/codex/private:/custom/lib"}),                 patch.object(doctor_report, "command_path", side_effect=lambda name: "/mock/" + name),                 patch.object(doctor_report.subprocess, "run", side_effect=fake_run):
+            doctor_report.FINDINGS.clear()
+            doctor_report.graphics_probe()
+        self.assertEqual(len(calls), 2)
+        for _, kwargs in calls:
+            self.assertEqual(kwargs["env"]["LD_LIBRARY_PATH"],
+                             "/termux/lib:/codex/private:/custom/lib")
+        self.assertEqual(calls[0][0], ["/mock/glxinfo", "-B"])
+        self.assertEqual(calls[1][0], ["/mock/vulkaninfo", "--summary"])
+
     def test_native_npu_report_separates_vendor_libraries_nodes_and_runtime(self):
         def present(path):
             return path.name in {"libQnnHtp.so", "libcdsprpc.so"}
@@ -143,12 +159,12 @@ class DoctorReportTest(unittest.TestCase):
                 patch.object(doctor_report.adb_diagnostics, "inspect_local_server", return_value={
                     "status": "available", "server_protocol_version_hex": "0029",
                 }),
-                patch.object(doctor_report.proot_diagnostics, "inspect_installed", return_value={
-                    "status": "installed", "installed_distributions": ["debian"],
-                    "ownership": "unverified", "guest_entered": False, "read_only": True,
-                }) as proot_inventory,
                 patch.object(doctor_report.shutil, "disk_usage", return_value=SimpleNamespace(free=4 * 1024**3)),
-                patch.object(doctor_report, "pulse_server_status", return_value=("ready", "protocol connected")), \
+                patch.object(doctor_report, "pulse_server_status", return_value=("ready", "protocol connected")),
+                patch.object(doctor_report.cpu_inference, "status", return_value={
+                    "runtime": {"available": True, "version": "llama.cpp fixture"},
+                    "model": {"state": "present-unverified", "id": "qwen3-0.6b-q4_0"},
+                }),
                 patch.object(doctor_report, "check_session") as check_session, \
                 patch.object(doctor_report.ssh_diagnostics, "inspect_native", return_value={"checks": {}}),
             ):
@@ -156,8 +172,6 @@ class DoctorReportTest(unittest.TestCase):
                 first_ids = [finding["id"] for finding in first["findings"]]
                 second = doctor_report.build_report(False, state)
                 second_ids = [finding["id"] for finding in second["findings"]]
-                proot_inventory.side_effect = FileNotFoundError("optional manager absent")
-                without_proot = doctor_report.build_report(False, state)
 
             self.assertEqual(first_ids, second_ids)
             self.assertEqual(len(first_ids), len(set(first_ids)))
@@ -166,15 +180,15 @@ class DoctorReportTest(unittest.TestCase):
             self.assertTrue(first["read_only"])
             self.assertEqual(first["schema_version"], 1)
             self.assertEqual(first["overall"], "pass")
-            self.assertTrue(without_proot["read_only"])
-            self.assertEqual(without_proot["overall"], "pass")
-            proot_finding = next(f for f in without_proot["findings"] if f["id"] == "NTX-PROOT-001")
-            self.assertEqual(proot_finding["severity"], "info")
-            self.assertIn("provider inventory unknown", proot_finding["observed"])
+            self.assertFalse(any(f["id"] == "NTX-PROOT-001" for f in first["findings"]))
             cpu = next(f for f in first["findings"] if f["id"] == "NTX-CPU-001")
             self.assertEqual(cpu["scope"], "native-compute")
             self.assertIn("CPU is the native execution baseline", cpu["observed"])
-            self.assertIn("inference runtime/model integration=not implemented", cpu["observed"])
+            self.assertIn("CPU inference workflow=available", cpu["observed"])
+            self.assertIn("runtime=llama.cpp fixture", cpu["observed"])
+            self.assertIn("model=present-unverified", cpu["observed"])
+            self.assertNotIn("/models/", cpu["observed"])
+            self.assertIn("verify the model hash", cpu["suggested_action"])
             shizuku = next(f for f in first["findings"] if f["id"] == "NTX-APP-103")
             termux_boot = next(f for f in first["findings"] if f["id"] == "NTX-APP-102")
             adb_server = next(f for f in first["findings"] if f["id"] == "NTX-ADB-001")
@@ -196,7 +210,7 @@ class DoctorReportTest(unittest.TestCase):
             self.assertIn("0x0029", adb_server["observed"])
             self.assertIn("does not start ADB", adb_server["suggested_action"])
             self.assertEqual(sum(first["summary"].values()), len(first["findings"]))
-            self.assertEqual(check_session.call_count, 3)
+            self.assertEqual(check_session.call_count, 2)
             encoded = json.dumps(first)
             self.assertEqual(json.loads(encoded)["command"], "doctor")
 
@@ -320,36 +334,6 @@ class DoctorReportTest(unittest.TestCase):
         self.assertEqual(finding["severity"], "info")
         self.assertIn("No manager fallback is automatic", finding["suggested_action"])
 
-    def test_doctor_reports_installed_proot_without_claiming_ternux_ownership(self):
-        doctor_report.FINDINGS.clear()
-        report = {"status": "installed", "installed_distributions": ["debian"],
-                  "ownership": "unverified", "guest_entered": False, "read_only": True}
-        with patch.object(doctor_report, "native_termux", return_value=True), \
-                patch.object(doctor_report.proot_diagnostics, "inspect_installed", return_value=report):
-            doctor_report.check_proot_inventory()
-        finding = next(f for f in doctor_report.FINDINGS if f["id"] == "NTX-PROOT-001")
-        self.assertEqual(finding["severity"], "info")
-        self.assertIn("debian", finding["observed"])
-        self.assertIn("ownership unverified", finding["observed"])
-        self.assertIn("does not prove ownership of the rootfs", finding["suggested_action"])
-        self.assertIn("fixed, target-validated guest operations", finding["suggested_action"])
-        self.assertNotIn("use an ownership-aware adapter before management", finding["suggested_action"])
-
-    def test_doctor_continues_when_optional_proot_manager_is_missing(self):
-        doctor_report.FINDINGS.clear()
-        report = {
-            "component": "proot_distribution_inventory", "status": "unavailable",
-            "manager_available": False, "installed_distributions": [],
-            "ownership": "unverified", "guest_entered": False, "read_only": True,
-        }
-        with patch.object(doctor_report, "native_termux", return_value=True), \
-                patch.object(doctor_report.proot_diagnostics, "inspect_installed", return_value=report):
-            doctor_report.check_proot_inventory()
-        finding = next(f for f in doctor_report.FINDINGS if f["id"] == "NTX-PROOT-001")
-        self.assertEqual(finding["severity"], "info")
-        self.assertIn("command unavailable", finding["observed"])
-        self.assertFalse(report["guest_entered"])
-
     def test_process_inventory_separates_verified_owner_from_unverified_candidates(self):
         with tempfile.TemporaryDirectory(prefix="ternuxx-doctor-inventory-") as temporary:
             root = Path(temporary)
@@ -405,7 +389,7 @@ class DoctorReportTest(unittest.TestCase):
             finding = next(f for f in doctor_report.FINDINGS if f["id"] == "NTX-SESSION-030")
             self.assertIn("xfwm4=1", finding["observed"])
             self.assertIn("owner unverified", finding["observed"])
-            self.assertIn("may belong to Termux, Android, or PRoot", finding["suggested_action"])
+            self.assertIn("may belong to Termux or Android", finding["suggested_action"])
 
     def test_proc_identity_allows_supervisor_without_group_fields(self):
         import os

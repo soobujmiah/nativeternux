@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-10-24",
+  "execution_context": "Native Termux on Android",
+  "model_id": "qwen3-0.6b-q4_0",
+  "runtime": "llama-cpp 0.7.0",
+  "backend": "CPU",
+  "gpu_layers": 0,
+  "max_output_tokens": 32,
+  "runs": [
+    {"exit_code": 0, "wall_seconds": 3.154, "expected_marker": true},
+    {"exit_code": 0, "wall_seconds": 3.144, "expected_marker": true},
+    {"exit_code": 0, "wall_seconds": 3.211, "expected_marker": true}
+  ],
+  "child_peak_rss_kib": 550408,
+  "thermal_celsius": {
+    "cpu_therm_before": 45.279,
+    "cpu_therm_after": 45.15,
+    "socd_before": 53.0,
+    "socd_after": 53.0,
+    "sampling": "One read before and one read after the short three-run smoke; not continuous monitoring."
+  },
+  "limits": [
+    "This short repeat does not establish sustained thermal stability or absence of throttling.",
+    "Network isolation was not applied; offline operation was not device-verified.",
+    "The measured timings are device-local observations, not performance guarantees."
+  ]
+}

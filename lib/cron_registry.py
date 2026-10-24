@@ -153,7 +153,7 @@ def validate_job(job: object, *, now: dt.datetime | None = None, require_future:
         raise CronError("job owner/provider must identify the Ternuxx registry")
     if job["source"] != "tx-mng-cron" or not isinstance(job["source"], str):
         raise CronError("job source identity is invalid")
-    if not isinstance(job["environment"], str) or job["environment"] not in {"native-termux", "debian-proot"}:
+    if not isinstance(job["environment"], str) or job["environment"] not in {"native-termux"}:
         raise CronError("execution environment is unsupported")
     if type(job["enabled"]) is not bool or type(job["run_after_device_boot"]) is not bool or type(job["run_after_scheduler_recovery"]) is not bool:
         raise CronError("enabled and startup trigger fields must be booleans")

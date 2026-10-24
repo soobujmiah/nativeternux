@@ -22,7 +22,6 @@ COMMIT_RE = re.compile(r"^(?:unknown|[a-fA-F0-9]{7,64})$")
 NEXT_ACTIONS = {
     "owner_verify_after_reboot",
     "inspect_native_services",
-    "start_fresh_proot_then_resume",
     "review_pending_tests",
     "manual_review",
 }

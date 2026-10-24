@@ -4,20 +4,19 @@
 
 # Security and privacy
 
-Ternuxx manages local desktop processes, optional network listeners, Android-facing integrations, and user-selected files. This is a high-risk local operations tool. Ternuxx must preserve Android security boundaries and must never imply that PRoot is a security sandbox.
+Ternuxx manages Native Termux desktop processes, optional network listeners, Android-facing integrations, and user-selected files. This is a high-risk local operations tool. It must preserve Android security boundaries and must not imply isolation from the Android app.
 
 ## Scope and data
 
 The tool may inspect Termux package metadata, its own session state, process metadata needed to validate ownership, and explicitly selected files. It must not scan `/sdcard`, `/storage/emulated/0`, or other shared storage by default. User file handoff must name exact paths and actions. SSH private keys, passwords, tokens, app payloads, and unredacted private logs must never be copied to documentation, SKB, or diagnostic output.
 
-Ternuxx state and backups remain under Ternuxx-owned paths. Before reset/restore/removal, show exact affected paths and preserve user data by default. Never reset, replace, broadly prune, or mutate unselected data in the existing guest/launcher. An explicitly authorized targeted configuration change needs preserved pre-state, exact scope, and a recovery path.
+Ternuxx state and backups remain under Ternuxx-owned paths. Before reset/restore/removal, show exact affected paths and preserve user data by default. Never reset, replace, broadly prune, or mutate unselected Termux or Android data. An explicitly authorized targeted configuration change needs preserved pre-state, exact scope, and a recovery path.
 
 ## Service security
 
-- SSH services are separate host and guest providers with distinct accounts, keys, configs, logs, and ports.
+- SSH services run in Native Termux. Keep the managed service separate from an unmanaged daemon and its configuration.
 - Default to loopback binding and key authentication; deny root login. LAN exposure requires explicit provider, address, port, firewall/network context, and authentication review.
 - Do not adopt, stop, or overwrite an unmanaged SSH daemon/configuration.
-- PRoot shares the Android app's network context and is not a network/security boundary.
 - Wireless ADB stays disabled unless a separately reviewed, explicit owner operation configures the Android-supported pairing. Never expose pairing codes or ADB credentials in logs.
 
 ## Android integrations and automation

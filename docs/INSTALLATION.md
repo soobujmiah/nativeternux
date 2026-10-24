@@ -1,10 +1,10 @@
-# Installation and upgrade guide
+# Native Termux installation and upgrade guide
 
-Ternuxx installs its Native Termux workstation packages through a saved, preview-first transaction. The Native install does not create or replace a Debian rootfs. A Debian guest is a separate, explicitly selected setup path.
+Ternuxx installs Native Termux workstation packages through a saved, preview-first transaction. It does not create or manage Linux guest environments.
 
-## Quick install
+## Install
 
-On a fresh Termux profile, enable the Termux X11 package repository, install Git, clone Ternuxx, and preview the Native transaction:
+Enable the Termux X11 package repository, install Git, clone Ternuxx, and inspect the Native package transaction:
 
 ```sh
 pkg update && pkg install x11-repo git && pkg update
@@ -13,32 +13,35 @@ cd "$HOME/ternuxx"
 ./tx install preview
 ```
 
-Read the full package/dependency plan and exact preview ID. Apply only that saved plan:
+Review the exact package and dependency plan, then apply only its saved plan ID:
 
 ```sh
 ./tx install apply PLAN_ID
 ```
 
-The install transaction refuses package removals and upgrades. To preview upgrades of installed Ternuxx core packages, run:
+
+## Optional Native CPU inference
+
+`tx ai status` inspects the Termux-owned `llama-cpp` runtime and Ternuxx's pinned local model. If the runtime is absent, first review `apt-get -s install llama-cpp`; package installation remains a separate Termux package-manager action and is never performed by Ternuxx. After the runtime is available, `tx ai setup` offers the exact pinned 429 MB model preview and requires you to type `DOWNLOAD` before fetching it. The model file is checked against its fixed size and SHA-256 before it is installed under private Ternuxx state.
+
+Use `tx ai model preview` to review the model URL, destination, license, required storage, and hash without network access. `tx ai run` reads one line from the terminal or stdin and runs locally on CPU only, with a bounded context, token count, and timeout. Model downloads need network access; inference uses the local model file. Network-isolated inference has not yet been verified on-device. See the [CPU baseline](testing/CPU-BASELINE.md) for current limits and evidence.
+
+The transaction refuses removals and upgrades. To preview upgrades of installed Ternuxx core packages:
 
 ```sh
 ./tx install update preview
-```
-
-Review the full changed-package and dependency transaction, then apply only its saved preview ID:
-
-```sh
 ./tx install update apply PLAN_ID
 ```
 
-Update refuses removals, downgrades, and packages outside official Termux repositories. The saved preview binds the current package-index state and exact candidate transaction, but it is not a durable artifact mirror and cannot guarantee old package files remain downloadable. Cross-date exact replay requires retaining the package artifacts/repository snapshot. See [Native package-version drift](evidence/2026-10-23-native-package-version-drift.md). Install the matching Termux:X11 Android app separately for a desktop.
+Update refuses removals, downgrades, and packages outside official Termux repositories. The matching Termux:X11 Android app must be installed separately for a desktop.
 
 ## First checks and desktop
 
 ```sh
+./tx help
+./tx guides
 ./tx doctor
 ./tx info
-./tx help
 ```
 
 Open the Termux:X11 Android app, then start the Native desktop:
@@ -47,86 +50,22 @@ Open the Termux:X11 Android app, then start the Native desktop:
 ./tx start
 ```
 
-For management, run `./tx tui`, `./tx web`, or `./tx mng center`. Their supported actions differ; see the [capability matrix](architecture/CAPABILITY-MATRIX.md).
+For interactive management, use `./tx tui`, `./tx web`, or `./tx mng center`. Each client uses the shared service; supported actions can vary by client. See the [capability matrix](architecture/CAPABILITY-MATRIX.md).
 
-## Choose a Debian path
+## Native SSH and recovery
 
-- For a Debian Trixie guest you already use, inspect it and optionally create a Native-side adoption record. Adoption does not change guest files.
-- For a new guest beside an existing Debian installation, use a unique `ternuxx-replay-NAME` alias and the fresh-install flow below. The target is isolated from the default `debian` alias.
-- General package/config migration of an existing guest is not complete. Any authorized guest change must show its exact target/effects, preserve prior data, require explicit apply, and have a tested rollback.
+`./tx ssh inspect` reports Native SSH state. Managed SSH lifecycle actions use preview and confirmation. The product service is loopback-only on port 8023; port 8022 is a separately owner-managed repository-work channel.
 
-The details, verification commands, and failure recovery steps follow.
+`./tx backup`, `./tx recovery`, and `./tx checkpoint` show private Native state backup and recovery guidance. Read the exact target and plan before applying a change. Ternuxx does not scan shared storage or manage arbitrary files.
 
-## Current repository state
+## Optional Native apps
 
-- `tx check`, `info`, `doctor`, and `help` are inspection/documentation commands.
-- `tx install preview` previews the complete constrained APT transaction, including dependencies. `tx install update preview` previews upgrades for installed Ternuxx core packages. Each preview is saved under `install-transactions/`; `tx install apply ID` and `tx install update apply ID` rebuild the transaction and proceed only on an exact match. The older `--yes --plan-id ID` forms remain available. If APT fails partway, some packages may already be changed; Ternuxx does not automatically roll them back. Inspect APT output/history, then review a fresh preview before retrying.
-- `tx start`, `stop`, `restart`, and `status` have an ownership-aware implementation in `lib/desktop.sh` and `lib/desktop-supervisor.sh`. The attached Android 16 / aarch64 target has completed start, repeated start, injected startup failure, stop, repeated stop, and preservation checks for the active PRoot login; the owner confirmed the `:1` desktop was visible and heard the audio test. These observations qualify only the recorded target and do not certify other builds. P2's acceptance gate is completed with a new target-native exact-preview validation; the original XFCE pre-consent console capture remains explicitly incomplete. See the [P2 completion evidence](evidence/P2-phase-completion-2026-10-18.md).
-- Device package installation remains an explicit, owner-authorized mutation. Run `tx install --preview`, review the full saved transaction and its plan ID, then apply only that unchanged plan with `tx install --yes --plan-id ID`.
+The separate curated catalog currently offers htop, tmux, and tree. Use `tx app list`, then preview the exact install plan before applying it. After installing tree, `tx app run directory-tree HOME_PATH` provides a bounded, read-only HOME path listing. It does not access shared storage or read file contents. See the [software catalog](SOFTWARE-CATALOG.md) for source and safety details.
 
-## Existing Debian provider
+## Current limits
 
-`tx proot setup status` reports whether the installed Debian rootfs is recorded by Ternuxx. A `profile_changed` result means the setup manifest differs from the saved Native adoption record; it does not prove guest drift and performs no repair. Compare the recorded and current hashes before choosing any adoption action; status never changes the guest or its adoption record. For the existing working Debian Trixie guest, run `tx install debian` for a read-only preview. It resolves the one ordinary guest account when unambiguous and reports the exact rootfs inode, release, installed/held counts for every manifest package group, the exact Ternuxx graphics paths, and any other ICD config separately. The package inventory comes from the guest dpkg database and does not enter the guest. Apply the Native adoption record with `tx install debian apply PLAN_ID --yes` only when the preview does not report a blocker. The operation reuses the current rootfs; it does not create another Debian, alter guest files, or install packages. If the adoption record is stale but still identifies the same rootfs, the preview shows a metadata refresh and apply saves the exact previous record bytes before updating it. A record tied to a different rootfs remains blocked. The apply result gives a backup ID; inspect tx proot setup adoption-rollback-preview --backup-id BACKUP_ID, then restore only its exact reviewed plan with tx proot setup adoption-rollback --backup-id BACKUP_ID --yes --plan-id PLAN_ID. If account discovery is ambiguous, pass `--user NAME`. The lower-level equivalent remains `tx proot setup adopt-preview` / `adopt`.
+The current device is already configured; this is not a clean-device reproduction claim. Package candidates can change over time, and the saved preview is not an offline artifact mirror. GPU/NPU acceleration, rollback, supported-device coverage, and public release each require separate evidence. No PRoot guest setup is supported by Ternuxx.
 
-This adoption step records the guest in private Native Ternuxx state. It does not install packages, migrate guest configuration, or retire files inside the guest. Legacy host/guest CLI targets are reviewed separately with exact previews and reversible operations; see [legacy CLI inspection](evidence/2026-10-23-legacy-cli-absence.md). A separate fresh Trixie installer supports a uniquely named disposable target beside the working Debian guest. The 2026-10-23 replay installed the pinned image/snapshot and verified its selected packages and account; it is not a clean-device, custom-workstation, GPU-rendering, or audio acceptance claim. See [fresh replay evidence](evidence/2026-10-23-disposable-debian-replay.md). General existing-guest package/config migration remains unfinished.
+## Optional Native apps
 
-## Fresh Debian Trixie setup
-
-On a clean Termux profile use the default `debian` target only when absent. To test alongside an existing guest, select an unused `ternuxx-replay-NAME` alias explicitly:
-
-```sh
-./tx proot setup fresh-preview --user NAME --alias ternuxx-replay-example
-```
-
-Check the selected user, dated Debian image and APT snapshot, package groups, available storage, and Turnip decision. Apply only the exact returned plan ID:
-
-```sh
-./tx proot setup fresh-install --yes --plan-id PLAN_ID
-```
-
-The preview binds the chosen username and alias to its exact plan. Apply reads that identity from the saved plan, so you do not retype it; optional `--user` or `--alias` values act only as mismatch checks. During apply, the installer asks for the selected guest user’s sudo password twice using hidden terminal input. The password is sent to the guest over stdin and is never included in the command line, preview, receipt, or logs. Native Termux keeps the existing Termux/Android app identity; it does not create a separate Linux user or sudo password. This account-and-password onboarding currently applies only to fresh Debian Trixie provisioning. Other proot-distro distributions are not yet provisioned by Ternuxx. The fresh installer takes the Turnip driver and ICD destinations from the Debian manifest, sets the ICD library path to that selected driver, and refuses symlinks or conflicting existing bytes. The installer checks the pulled arm64 image content before guest configuration. It uses the repository-pinned Debian image content and dated APT snapshot, provisions the selected manifest package groups, then verifies that every requested package is installed in the recorded dpkg inventory. The exact installed package versions are saved for that run. Arbitrary aliases, occupied containers and symlinked destinations are refused. The working `debian` rootfs is not overwritten. A refused target does not gain ownership through a failure journal. Package-stage retry can reuse the same failed preview and verified container/rootfs device/inode identity. If only the HTTPS mirror changes while the Debian snapshot, image, package profile and graphics decision remain compatible, create a new resume preview from the exact failed plan:
-
-```sh
-./tx proot setup fresh-resume-preview --user NAME --alias ternuxx-replay-example --plan-id FAILED_PLAN_ID
-./tx proot setup fresh-install --yes --plan-id RESUME_PLAN_ID
-```
-
-The HTTPS bootstrap records the Native Termux CA bundle hash in the preview, stages that bundle temporarily in the guest, keeps Debian Release signature verification enabled, and removes the temporary copy when the guest setup shell exits, including package-stage failures. Fresh PRoot previews select groups with `--groups base,fonts`; `base` is required and omission selects only the `base` group. A failed-plan resume with no new group selection inherits that failed plan’s recorded groups. The current Native preview avoids upgrades and detects a transaction, but it is not a permanent cross-date package-version lock; the Native version-lock/update lifecycle remains open. Existing Debian adoption remains available as a separate path. The Native core package set is fixed; optional Native workload selection and Web/TUI/GTK setup flows are open. Clean-device, rollback, and post-install rendering acceptance are not claimed.
-
-See [the 2026-10-23 disposable replay](evidence/2026-10-23-disposable-debian-replay.md), [completed setup and scoped live acceptance](evidence/2026-10-22-fresh-setup-and-probe-safety.md), [earlier guarded replay evidence](evidence/2026-10-22-guarded-fresh-replay.md) and the [earlier fixture snapshot](evidence/2026-10-20-proot-fresh-reproducibility.md).
-
-## Timezone default and selection
-
-A new Ternuxx installation uses `Asia/Dhaka` by default. The preference is selectable after installation with `tx mng timezone set IANA_NAME`; `tx mng timezone status` and `list` inspect the resolved setting and available IANA names. A deployment may supply `TERNUXX_INSTALL_TIMEZONE` as an explicit installation preference. A saved owner selection takes precedence. Timezone support uses the installed Android/Termux database when available and does not install packages or call an external geolocation service. Optional IP-based suggestions are not implemented.
-
-## Requirements under evaluation
-
-### Planned shell selection (not implemented)
-
-The future installer must let the owner choose Bash, Zsh, or Fish separately for Native Termux and the Debian PRoot provider. The currently active shell is a preselection hint only; the installer must not silently switch shells. Missing shell packages must appear in a provider-specific plan and require explicit confirmation before installation. Shell theme and configuration selection belongs to the shared management service and Ternuxx-owned overlays. No existing startup file or Ternux configuration is overwritten. See [ADR-0008](architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md) and the [shell profile schema](../schemas/shell-profile.schema.json).
-
-The Native workstation transaction includes `proot-distro`, Termux:X11, PulseAudio/D-Bus, Python, XFCE host packages, and the `glmark2`, `xorg-server-xvfb`, and `xdotool` graphics/X11 utilities. These support benchmarking, virtual X displays, and X11 input automation. The Native transaction does not create or replace a Debian rootfs. The existing Debian adapter supports inventory, a private read-only adoption record and explicit bounded guest verification. Verification login can write its generated profile; see [probe boundaries](PROOT-GPU.md). A separate preview-bound fresh Debian Trixie provisioner supports a distinct disposable alias and refuses occupied containers; live replay and clean-device acceptance are tracked above. Package/config migration of the existing guest is not implemented. Mesa, Turnip/Vulkan, and VirGL remain separate acceleration providers and are not installed by the base transaction. The Android Termux:X11 app remains a separate requirement. The exact package set and dependency plan are resolved from current signed indexes and rechecked immediately before any authorized installation; transitive packages are recorded per transaction rather than pinned as permanent direct installer targets. Package names and repository commands are release-sensitive; check the enabled signed Termux indexes and matching Android app before publishing a setup recipe.
-
-### Optional software selection (partially implemented)
-
-Fresh Debian Trixie provisioning supports explicit package groups through `tx proot setup fresh-preview --user NAME [--alias ternuxx-replay-NAME] --groups base,fonts`. `base` is required and is the default; optional groups must be named explicitly. A failed-plan resume inherits its saved group selection. Available groups are `base`, `desktop-compat`, `development`, `desktop-apps`, and `fonts`. The preview binds the selected group/package set to an exact plan; apply requires its plan ID and `--yes`. Plan IDs also bind point-in-time capacity and device-capability observations, so repeated previews can have different IDs even when package and image inputs are unchanged. This path creates only an absent fresh alias (or uses the guarded default Debian target when permitted); it does not migrate the existing guest. The 2026-10-23 disposable replay selected all five groups and verified 50 requested packages on this device. It does not establish clean-device or cross-host byte-identical reproduction. See [replay evidence](evidence/2026-10-23-disposable-debian-replay.md).
-
-The broader provider-scoped optional software catalog remains incomplete. Native optional workload selection, saved per-provider desired profiles, and one shared planner across CLI, Web Visualizer, GTK, and TUI are not implemented. The Native workstation transaction currently uses a fixed core package set. These future requirements are tracked in [ADR-0009](architecture/decisions/ADR-0009-provider-scoped-optional-software.md) and the [optional software catalog schema](../schemas/optional-software-catalog.schema.json). The group selector is a PRoot fresh-provisioning feature only; it is not a general optional software manager or existing-guest migration interface.
-
-Historical research inspected the separate Ternux installer as a behavioral reference: its live installer accepts `--with-dev`, `--with-llm`, `--with-network`, `--with-media`, `--with-blender`, and `--all`; the corresponding optional-workload phase runs Debian package operations inside `proot-distro login debian`. This verifies a PRoot-side named-workload selection pattern. It does not verify a two-provider selector in Ternux, nor does it establish that any of those package bundles are appropriate for native Termux. Ternuxx defines and verifies its own provider-specific catalog; no code was copied, and the Ternux CLI is not an installation or runtime dependency. [Ternux installer](https://github.com/soobujmiah/ternux/blob/main/install.sh), [optional workload phase](https://github.com/soobujmiah/ternux/blob/main/lib/phases.sh).
-
-Safety and fallback requirements:
-
-- Native selections resolve only through the Native Termux package adapter; PRoot selections only through the explicitly selected guest adapter. Do not silently retry the same package in the other provider.
-- Non-interactive installation defaults to core-only. Explicit optional selections are required even with `--yes`; `--all` must be provider-scoped and show a preview.
-- Show the provider, repository, package IDs, dependency changes, and reliable size data before confirmation. Unknown package sizes remain unknown.
-- Cancellation, invalid catalog IDs, or an unavailable provider make no optional package changes. A failed optional item must be reported as failed; unrelated selections continue only if they are independent and partial completion can be reported safely.
-- The existing Debian rootfs is never an implicit package target. The owner-selected existing Debian adapter is an explicit target; any guest package/config change must show its exact target and dependency plan and require explicit apply. Fresh provisioning targets a separately named, absent container; it does not migrate the existing guest.
-
-This is a design requirement, not an implemented installer feature or device-qualified package list.
-
-The historical Native Turnip test failed with `VK_ERROR_INCOMPATIBLE_DRIVER` for its recorded package version. Later API/workload evidence and remaining limits are tracked in [GPU qualification](testing/GPU-ACCELERATION.md); do not generalize one version/context to every backend. The existing Debian PRoot has a live-verified Ternuxx-managed Zink/Turnip route; see [PRoot GPU reuse](PROOT-GPU.md). The separate Ternux project is reference-only and its CLI is not required. Current official local package-index candidates and the read-only XFCE dependency simulations are recorded in [Research & Evidence](RESEARCH.md#12-native-termux-desktop-packages-and-host-integrations); their exact transaction must be previewed again before implementation installs anything.
-
-## Before an installation flow is published
-
-Before release, re-verify package metadata, retain preview and explicit consent, then validate fresh setup, startup/recovery, guest configuration rollback, existing workflow preservation, and old CLI removal on the target device. The 2026-10-23 disposable replay proves the pinned-image Debian package/setup path on the recorded Native Termux device only; it does not prove clean-device or complete Native-plus-PRoot workstation reproducibility. Do not replace the existing rootfs or broaden the replay result beyond its recorded scope.
+The separate curated catalog currently offers htop, tmux, and tree. Use tx app list, then preview the exact install plan before applying it. After installing tree, tx app run directory-tree HOME_PATH provides a bounded, read-only HOME path listing. It does not access shared storage or read file contents. See the software catalog for source and safety details.

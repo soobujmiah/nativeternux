@@ -20,4 +20,4 @@ The shared CLI returned an exact retire preview (plan `45321a4eb1b33db18edda05ab
 
 This verifies the current installed CLI/shared-service rename and restore path for one idle, Ternuxx-owned replay guest. It does not qualify every client dialog, distro, GUI/audio workload, clean-device installation, or long-term package artifact retention.
 
-Implementation: [replay retirement service](../../lib/proot_guest_retirement.py), [CLI route](../../lib/proot.sh). Prior cross-client evidence: [Web replay retirement](2026-10-22-web-replay-guest-retirement.md), [GTK replay dialog](2026-10-22-gtk-replay-guest-dialog-review.md).
+Implementation: `replay retirement service`, `CLI route`. Prior cross-client evidence: [Web replay retirement](2026-10-22-web-replay-guest-retirement.md), [GTK replay dialog](2026-10-22-gtk-replay-guest-dialog-review.md).

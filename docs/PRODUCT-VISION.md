@@ -1,15 +1,9 @@
 # What I want Ternuxx to become
 
-I want my phone to be a world-class mobile workstation I can carry in my pocket. I want to use its CPU, GPU, and NPU wherever the software actually supports them.
+I want my phone to be a world-class mobile workstation I can carry in my pocket. Ternuxx runs directly in Native Termux on Android and uses the CPU as its baseline, with GPU or NPU acceleration only when a named workload proves it works on my device.
 
-Ternuxx's core must work entirely from native Termux. Boot and recovery, SSH, CLI, management, and native workloads must stay usable when PRoot is stopped, missing, or broken. My existing Ternux Debian PRoot is an optional integration for Linux workloads; it must never become a prerequisite for Ternuxx itself.
+Ternuxx owns its Native boot and recovery, SSH, CLI, management, state, desktop, and workload controls. PRoot and Debian guest support are outside the product. The separate Ternux repository and its launcher remain independent and are not modified by Ternuxx.
 
-Native Termux lets me run compatible tools directly and use Android or Termux features when supported. When I choose to use PRoot, it gives me Debian, XFCE, Linux applications, and the GPU/workload setup I have already built. Ternuxx can offer explicit, scoped handoffs to that optional provider, while its own boot, SSH, CLI, management, and native work continue independently. A PRoot failure must affect only an operation that I explicitly routed there.
+I want four easy ways to manage the same Native workstation: CLI, an interactive Terminal/TUI, Web UI, and Graphical UI. Each client calls the same management service and operation contract, so validation, authorization, state, journaling, and recovery behave consistently. Keep the help and interactive guidance simple to follow.
 
-I do not want Ternuxx to replace, trim, or break my current Ternux setup. Ternux is already useful to me, and it should stay independent.
-
-CPU is the baseline. I have seen the PRoot GPU setup work on my device, but the docs should say when the live renderer was last checked. A driver file or shader cache alone is not enough proof. NPU support is a goal; first we need to confirm that the right runtime works on my exact device. The separate Ternux repository documents optional CPU/Vulkan llama.cpp work and an experimental SM8735 HTP path, but Ternuxx must not depend on the Ternux source tree or CLI at runtime. I want Ternuxx to manage its own Native controls and make explicit, bounded handoffs to my existing Debian environment; any guest change needs an exact preview, preserved state, and a verified rollback. Source documentation and installed device state must remain separate evidence.
-
-I want four ways to manage the same workstation: CLI, an interactive Terminal/TUI, Web UI, and Graphical UI. Each must call the same management service and operation contract, so validation, authorization, provider selection, state, journal, and recovery behave consistently. The interfaces are different clients, not separate management systems.
-
-I want the documentation and compatibility research done before feature implementation. Then we can build phase by phase and update the docs as the work changes. Keep device checks read-only unless I explicitly authorize a specific change.
+I want the documentation and compatibility research reviewed before feature changes. Keep Native runtime evidence distinct from dated historical PRoot evidence, owner reports, and untested proposals. Do not claim GPU/NPU acceleration from a device node, library, or renderer string alone. Keep device checks read-only unless I explicitly authorize a specific change.

@@ -1,4 +1,4 @@
-"""Fixtures for short launch commands and canonical PRoot routing."""
+"""Native launch command and retired-route contract tests."""
 from __future__ import annotations
 
 import os
@@ -15,359 +15,61 @@ class LaunchCommandTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory(prefix="ternuxx-launch-")
         self.root = Path(self.temp.name)
-        self.bin = self.root / "bin"
-        self.bin.mkdir()
-        passwd = self.root / "var/lib/proot-distro/containers/debian/rootfs/etc/passwd"
-        passwd.parent.mkdir(parents=True)
-        passwd.write_text("root:x:0:0:root:/root:/bin/bash\n"
-                          "dev:x:1000:1000:Dev:/home/dev:/bin/bash\n", encoding="utf-8")
-        stub = self.bin / "proot-distro"
-        stub.write_text('#!/bin/sh\nif [ -n \"${PROOT_ENV_CAPTURE:-}\" ]; then env > \"$PROOT_ENV_CAPTURE\"; fi\nprintf \"%s\\n\" \"$@\"\n')
-        stub.chmod(0o755)
-        prefix_bash = self.bin / "bash"
-        prefix_bash.symlink_to(shutil.which("bash"))
-        self.env = {**os.environ, "HOME": str(self.root), "PREFIX": str(self.root),
-                    "PATH": f"{self.bin}:{os.environ['PATH']}",
-                    "TERNUXX_STATE_DIR": str(self.root / "state"),
-                    "TERNUXX_LOG_DIR": str(self.root / "log")}
+        self.prefix = self.root / "prefix"
+        self.prefix.mkdir()
+        self.env = {
+            **os.environ,
+            "HOME": str(self.root),
+            "PREFIX": str(self.prefix),
+            "PATH": os.environ["PATH"],
+            "TERNUXX_STATE_DIR": str(self.root / "state"),
+            "TERNUXX_LOG_DIR": str(self.root / "log"),
+        }
 
     def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def tx(self, *args: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run([shutil.which("bash"), str(ROOT / "tx"), *args],
-                              capture_output=True, text=True, env=self.env, timeout=30)
-
     def cli(self, *args: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run([shutil.which("bash"), str(ROOT / "tx"), *args],
-                              capture_output=True, text=True, env=self.env, timeout=30)
+        return subprocess.run(
+            [shutil.which("bash"), str(ROOT / "tx"), *args],
+            capture_output=True, text=True, env=self.env, timeout=15,
+        )
 
-    def test_shell_explicit_user_runs_proot_distro_login(self) -> None:
-        result = self.tx("db", "--user", "dev")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.split(), ["login", "debian", "--shared-tmp", "--user", "dev"])
+    def test_removed_guest_routes_fail_closed_without_starting_processes(self):
+        for command in ("proot", "db", "pgui", "virgl", "terminal"):
+            with self.subTest(command=command):
+                result = self.cli(command)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("retired", result.stdout + result.stderr)
 
-    def test_native_db_backend_is_per_process_and_shared_profile_stays_zink(self) -> None:
-        capture = self.root / "proot-args"
-        ensure = self.root / "virgl-ensure"
-        stub = self.bin / "proot-distro"
-        stub.write_text("#!/bin/sh\nprintf \"%s\\n\" \"$@\" > \"$PROOT_ARGS_CAPTURE\"\n")
-        stub.chmod(0o755)
-        script = "\n".join([
-            '_TN_LIB_DIR="$LIB_DIR"',
-            'source "$LIB_DIR/launch.sh"',
-            'nt_fail() { echo "$*" >&2; }',
-            'nt_warn() { echo "$*" >&2; }',
-            'nt_require_command() { command -v "$1" >/dev/null; }',
-            'nt_require_termux() { return 0; }',
-            'nt_audio_ensure() { return 0; }',
-            'nt_use() { return 0; }',
-            '_nt_use() { return 0; }',
-            '_nt_guest_pulse_cookie() { return 0; }',
-            '_nt_launch_guest_shell() { printf "/bin/bash"; }',
-            '_nt_virgl_ensure() { printf "%s\n" "$1" > "$VIRGL_ENSURE_CAPTURE"; }',
-            'nt_cmd_db --user dev --backend virgl --display :1',
-        ])
-        env = {**self.env, "PREFIX": "/data/data/com.termux/files/usr",
-               "TERMUX_VERSION": "fixture", "LIB_DIR": str(ROOT / "lib"),
-               "PROOT_ARGS_CAPTURE": str(capture), "VIRGL_ENSURE_CAPTURE": str(ensure)}
-        result = subprocess.run([shutil.which("bash"), "-c", script], capture_output=True,
-                                text=True, env=env, timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        virgl_args = capture.read_text().splitlines()
-        separator = virgl_args.index("--")
-        persisted = virgl_args[:separator]
-        self.assertEqual(persisted[:5], ["login", "debian", "--shared-tmp", "--user", "dev"])
-        self.assertIn("DISPLAY=:1", persisted)
-        self.assertIn("GALLIUM_DRIVER=zink", persisted)
-        self.assertIn("MESA_LOADER_DRIVER_OVERRIDE=zink", persisted)
-        self.assertNotIn("GALLIUM_DRIVER=virpipe", persisted)
-        self.assertFalse(any(arg.startswith("VTEST_SOCKET_NAME=") for arg in persisted))
-        self.assertIn("LIBGL_ALWAYS_SOFTWARE=true", virgl_args[separator + 4])
-        self.assertIn("GALLIUM_DRIVER=virpipe", virgl_args[separator + 4])
-        self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-1.sock", virgl_args[separator + 4])
-        self.assertEqual(ensure.read_text().strip(), ":1")
-
-        zink_capture = self.root / "zink-proot-args"
-        zink_env = {**env, "PROOT_ARGS_CAPTURE": str(zink_capture)}
-        zink_script = script.replace(
-            "nt_cmd_db --user dev --backend virgl --display :1",
-            "nt_cmd_db --user dev --backend zink --display :1")
-        zink_result = subprocess.run([shutil.which("bash"), "-c", zink_script],
-                                     capture_output=True, text=True, env=zink_env, timeout=10)
-        self.assertEqual(zink_result.returncode, 0, zink_result.stderr)
-        zink_args = zink_capture.read_text().splitlines()
-        zink_separator = zink_args.index("--")
-        self.assertEqual(zink_args[:zink_separator], persisted)
-        self.assertIn("GALLIUM_DRIVER=zink", zink_args[zink_separator + 4])
-        self.assertNotIn("VTEST_SOCKET_NAME=", zink_args[zink_separator + 4])
-
-        parallel = []
-        for label, invocation in (
-                ("parallel-virgl", "nt_cmd_db --user dev --backend virgl --display :2"),
-                ("parallel-zink", "nt_cmd_db --user dev --backend zink --display :1")):
-            parallel_capture = self.root / f"{label}-args"
-            parallel_script = script.replace(
-                "nt_cmd_db --user dev --backend virgl --display :1", invocation)
-            parallel_env = {**env, "PROOT_ARGS_CAPTURE": str(parallel_capture)}
-            process = subprocess.Popen([shutil.which("bash"), "-c", parallel_script],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=parallel_env)
-            parallel.append((process, parallel_capture, label))
-        parallel_profiles = {}
-        for process, parallel_capture, label in parallel:
-            stdout, stderr = process.communicate(timeout=10)
-            self.assertEqual(process.returncode, 0, stderr or stdout)
-            parallel_args = parallel_capture.read_text().splitlines()
-            parallel_profiles[label] = parallel_args[:parallel_args.index("--")]
-        self.assertEqual(parallel_profiles["parallel-virgl"], parallel_profiles["parallel-zink"])
-        parallel_virgl_args = (self.root / "parallel-virgl-args").read_text().splitlines()
-        self.assertIn("DISPLAY=:2", parallel_virgl_args[parallel_virgl_args.index("--") + 4])
-
-        command_capture = self.root / "command-proot-args"
-        command_env = {**env, "PROOT_ARGS_CAPTURE": str(command_capture)}
-        command_script = script.replace(
-            "nt_cmd_db --user dev --backend virgl --display :1",
-            "nt_cmd_db --user dev --backend virgl --display :1 -- glxinfo -B")
-        command_result = subprocess.run([shutil.which("bash"), "-c", command_script],
-                                        capture_output=True, text=True, env=command_env, timeout=10)
-        self.assertEqual(command_result.returncode, 0, command_result.stderr)
-        command_args = command_capture.read_text().splitlines()
-        command_separator = command_args.index("--")
-        self.assertEqual(command_args[command_separator + 1], "/usr/bin/env")
-        self.assertIn("GALLIUM_DRIVER=virpipe", command_args[command_separator + 1:])
-        self.assertEqual(command_args[-2:], ["glxinfo", "-B"])
-
-    def test_receipt_verified_replay_backend_is_per_process_and_fails_closed(self) -> None:
-        capture = self.root / "replay-proot-args"
-        ensure = self.root / "replay-virgl-ensure"
-        script = "\n".join([
-            '_TN_LIB_DIR="$LIB_DIR"',
-            'source "$LIB_DIR/launch.sh"',
-            'nt_fail() { echo "$*" >&2; }',
-            'nt_warn() { echo "$*" >&2; }',
-            'nt_require_command() { command -v "$1" >/dev/null; }',
-            'nt_require_termux() { return 0; }',
-            'nt_audio_ensure() { return 0; }',
-            'nt_use() { return 0; }',
-            '_nt_use() { return 0; }',
-            '_nt_guest_pulse_cookie() { return 0; }',
-            '_nt_launch_verify_replay_alias() { [ "$1" = ternuxx-replay-fixture ]; }',
-            '_nt_launch_guest_shell() { printf /bin/bash; }',
-            '_nt_virgl_ensure() { printf "%s\n" "$1" > "$VIRGL_ENSURE_CAPTURE"; }',
-            'nt_cmd_db --user dev --distro ternuxx-replay-fixture --backend virgl --display :2',
-        ])
-        env = {**self.env, "PREFIX": "/data/data/com.termux/files/usr",
-               "TERMUX_VERSION": "fixture", "LIB_DIR": str(ROOT / "lib"),
-               "PROOT_ARGS_CAPTURE": str(capture), "VIRGL_ENSURE_CAPTURE": str(ensure)}
-        stub = self.bin / "proot-distro"
-        stub.write_text("#!/bin/sh\nprintf \"%s\\n\" \"$@\" > \"$PROOT_ARGS_CAPTURE\"\n")
-        stub.chmod(0o755)
-        result = subprocess.run([shutil.which("bash"), "-c", script], capture_output=True,
-                                text=True, env=env, timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        args = capture.read_text().splitlines()
-        separator = args.index("--")
-        self.assertEqual(args[:separator], ["login", "--isolated", "--shared-tmp",
-                                            "ternuxx-replay-fixture", "--user", "dev"])
-        self.assertNotIn("--env", args[:separator])
-        child = args[separator + 1:]
-        self.assertEqual(child[:3], ["/bin/bash", "-l", "-c"])
-        self.assertIn("exec /usr/bin/env", child[3])
-        self.assertIn("LIBGL_ALWAYS_SOFTWARE=true", child[3])
-        self.assertIn("GALLIUM_DRIVER=virpipe", child[3])
-        self.assertIn("VTEST_SOCKET_NAME=/tmp/.ternuxx-virgl/virgl-2.sock", child[3])
-        self.assertEqual(ensure.read_text().strip(), ":2")
-
-        denied_capture = self.root / "denied-proot-args"
-        denied_env = {**env, "PROOT_ARGS_CAPTURE": str(denied_capture)}
-        denied_script = script.replace(
-            "_nt_launch_verify_replay_alias() { [ \"$1\" = ternuxx-replay-fixture ]; }",
-            "_nt_launch_verify_replay_alias() { return 1; }")
-        denied = subprocess.run([shutil.which("bash"), "-c", denied_script],
-                                capture_output=True, text=True, env=denied_env, timeout=10)
-        self.assertNotEqual(denied.returncode, 0)
-        self.assertFalse(denied_capture.exists())
-
-    def test_virgl_global_json_flag_reaches_lifecycle_cli(self) -> None:
-        capture = self.root / "virgl-cli-args"
-        script = "\n".join([
-            '_TN_LIB_DIR="$LIB_DIR"',
-            'source "$LIB_DIR/virgl.sh"',
-            'nt_fail() { echo "$*" >&2; }',
-            'nt_require_termux() { return 0; }',
-            '_nt_virgl_call() { python3 "$@"; }',
-            'nt_help() { :; }',
-            'nt_require_command() { return 0; }',
-            'python3() { printf "<%s>\n" "$@" >> "$VIRGL_ARGS_CAPTURE"; }',
-            'PREFIX="/data/data/com.termux/files/usr"',
-            'TERMUX_VERSION=fixture',
-            'TERNUXX_JSON=1; nt_cmd_virgl status',
-            'TERNUXX_JSON=0; nt_cmd_virgl status --display :2 --json',
-            'source "$LIB_DIR/launch.sh"',
-            'TERNUXX_JSON=1; nt_cmd_virgl status',
-        ])
-        env = {**self.env, "LIB_DIR": str(ROOT / "lib"),
-               "VIRGL_ARGS_CAPTURE": str(capture)}
-        result = subprocess.run([shutil.which("bash"), "-c", script],
-                                capture_output=True, text=True, env=env, timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        calls = capture.read_text().splitlines()
-        self.assertEqual(calls, [
-            "<" + str(ROOT / "lib/virgl_lifecycle.py") + ">",
-            "<status>", "<--display>", "<:1>", "<--json>",
-            "<" + str(ROOT / "lib/virgl_lifecycle.py") + ">",
-            "<status>", "<--display>", "<:2>", "<--json>",
-            "<" + str(ROOT / "lib/virgl_lifecycle.py") + ">",
-            "<status>", "<--display>", "<:1>", "<--json>",
-        ])
-
-    def test_native_android_runtime_variables_do_not_leak_to_guest_profile(self) -> None:
-        capture = self.root / "proot-env"
-        env = {**self.env, "PROOT_ENV_CAPTURE": str(capture),
-               "ANDROID_ART_ROOT": "/apex/com.android.art", "ANDROID_DATA": "/data",
-               "ANDROID_ROOT": "/system", "BOOTCLASSPATH": "sentinel-classpath",
-               "EXTERNAL_STORAGE": "/sdcard", "TERM": "xterm-256color"}
-        result = subprocess.run([shutil.which("bash"), str(ROOT / "tx"), "db", "--user", "dev"],
-                                capture_output=True, text=True, env=env, timeout=30)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        observed = capture.read_text()
-        observed_keys = {line.split("=", 1)[0] for line in observed.splitlines() if "=" in line}
-        for name in ("ANDROID_ART_ROOT", "ANDROID_DATA", "ANDROID_ROOT", "BOOTCLASSPATH", "EXTERNAL_STORAGE"):
-            self.assertNotIn(name, observed_keys)
-        self.assertIn("TERM", observed_keys)
-
-    def test_legacy_tx_shell_command_is_removed(self) -> None:
-        result = self.tx("shell")
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Unknown command", result.stderr)
-
-    def test_shell_root_and_command_passthrough(self) -> None:
-        result = self.tx("db", "--root", "--", "echo", "a b")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.splitlines(),
-                         ["login", "debian", "--shared-tmp", "--", "echo", "a b"])
-
-    def test_shell_refuses_unresolvable_user_and_bad_names(self) -> None:
-        self.assertNotEqual(self.tx("db", "--distro", "missing").returncode, 0)
-        self.assertEqual(self.tx("db", "--user", "a;b").returncode, 2)
-        self.assertEqual(self.tx("db", "--root", "--distro", "../x").returncode, 2)
-
-    def test_gui_and_canonical_proot_gui_reject_unknown_actions(self) -> None:
-        self.assertEqual(self.tx("gui", "bogus").returncode, 2)
-        self.assertEqual(self.cli("proot", "gui", "bogus").returncode, 2)
-
-    def test_gui_reports_missing_display_without_starting_desktop(self) -> None:
-        env = dict(self.env)
-        env["PREFIX"] = "/data/data/com.termux/files/usr"
-        env["TERMUX_VERSION"] = "fixture"
-        env.pop("DISPLAY", None)
-        result = subprocess.run([shutil.which("bash"), str(ROOT / "tx"), "gui"],
-                                capture_output=True, text=True, env=env, timeout=10)
+    def test_native_app_command_is_live_not_a_retired_guest_alias(self):
+        result = self.cli("app")
         self.assertEqual(result.returncode, 1)
-        self.assertIn("The Ternuxx Native desktop is not verified running", result.stderr)
-        self.assertIn("Run 'tx start', then retry 'tx gui'", result.stderr)
+        self.assertIn("Native Termux", result.stderr)
+        self.assertNotIn("retired", result.stdout + result.stderr)
 
-    def test_pgui_is_registered_and_app_route_requires_allowlisted_command(self) -> None:
-        result = self.tx("pgui", "--help")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("tx pgui [start", result.stdout)
-        result = self.tx("apps")
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Unknown command", result.stderr)
-        result = self.tx("app")
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Usage: tx app --", result.stderr)
+    def test_help_lists_only_native_supported_commands(self):
+        result = self.cli("--help")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("tx gui", result.stdout)
+        self.assertIn("tx guides", result.stdout)
+        self.assertNotRegex(result.stdout.lower(), r"proot|debian|hybrid")
 
-    def test_native_xfce_app_shortcut_commands_map_to_shared_allowlisted_launch(self) -> None:
-        cases = (
-            (("thunar",), "files"),
-            (("thunar", "--bulk-rename"), "thunar-bulk-rename"),
-            (("xfce4-terminal",), "terminal"),
-            (("xfce4-terminal", "--preferences"), "xfce4-terminal-settings"),
-            (("/usr/lib/firefox-esr/firefox-esr",), "firefox"),
-            (("/usr/bin/vlc", "--started-from-file"), "vlc"),
-            (("blender",), "blender"),
-            (("pavucontrol",), "pavucontrol"),
-            (("system-config-printer",), "system-config-printer"),
-            (("thunar-settings",), "thunar-settings"),
-            (("thunar-volman-settings",), "thunar-volman-settings"),
-            (("xarchiver",), "xarchiver"),
-            (("xfce4-appfinder",), "xfce4-appfinder"),
-        )
-        for argv, app_id in cases:
-            with self.subTest(argv=argv):
-                capture = self.root / "app-launch-args"
-                script = """_TN_LIB_DIR="$LIB_DIR"
-TERNUXX_JSON=1
-nt_fail() { echo "$*" >&2; }
-nt_require_termux() { return 0; }
-nt_require_command() { return 0; }
-python3() { printf '%s\n' "$@" > "$APP_CAPTURE"; }
-source "$LIB_DIR/proot.sh"
-nt_cmd_app "$@"
-"""
-                env = {**self.env, "LIB_DIR": str(ROOT / "lib"),
-                       "APP_CAPTURE": str(capture)}
-                result = subprocess.run(
-                    [shutil.which("bash"), "-c", script, "app", "--", *argv],
-                    capture_output=True, text=True, env=env, timeout=10,
-                )
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertIn("--operation\nproot.app.launch\n--app-id\n" + app_id,
-                              capture.read_text())
-        script = """_TN_LIB_DIR="$LIB_DIR"
-nt_fail() { echo "$*" >&2; }
-nt_require_termux() { return 0; }
-nt_require_command() { return 0; }
-python3() { touch "$APP_CAPTURE"; }
-source "$LIB_DIR/proot.sh"
-nt_cmd_app "$@"
-"""
-        capture = self.root / "blocked-app-launch"
-        result = subprocess.run(
-            [shutil.which("bash"), "-c", script, "app", "--", "sh", "-c", "false"],
-            capture_output=True, text=True,
-            env={**self.env, "LIB_DIR": str(ROOT / "lib"), "APP_CAPTURE": str(capture)},
-            timeout=10,
-        )
+    def test_native_management_alias_and_guided_menu(self):
+        result = self.cli("mng", "--help")
+        self.assertIn("tx mng cron", result.stdout)
+        guide = self.cli("guides")
+        self.assertIn("Ternuxx Native Termux guide", guide.stdout)
+        self.assertIn("Preview Native package setup", guide.stdout)
+        self.assertIn("Open terminal management (TUI)", guide.stdout)
+        self.assertIn("Open authenticated Web management", guide.stdout)
+        self.assertIn("Open GTK management center", guide.stdout)
+        self.assertIn("`tx tui`, `tx web`, or `tx gui`", guide.stdout)
+
+    def test_unknown_install_guest_target_is_rejected_before_package_checks(self):
+        result = self.cli("install", "debian", "preview")
         self.assertEqual(result.returncode, 2)
-        self.assertFalse(capture.exists())
-
-    def test_help_lists_short_form_and_commands(self) -> None:
-        result = self.tx("--help")
-        self.assertIn("tx <command> [options]", result.stdout)
-        for name in ("tx db", "tx gui"):
-            self.assertIn(name, result.stdout)
-        self.assertIn("tx pgui", result.stdout)
-        self.assertIn("tx proot gui", self.cli("proot", "--help").stdout)
-        self.assertIn("--root", self.tx("db", "--help").stdout)
-        self.assertIn("virgl", result.stdout)
-        self.assertIn("tx virgl", self.cli("virgl", "--help").stdout)
-        self.assertIn("zink|virgl", self.tx("db", "--help").stdout)
-
-    def test_mng_is_canonical_and_long_management_route_is_deprecated_alias(self) -> None:
-        canonical = self.cli("mng", "bogus")
-        self.assertNotEqual(canonical.returncode, 0)
-        self.assertNotIn("deprecated", canonical.stderr)
-        legacy = self.cli("management", "bogus")
-        self.assertNotEqual(legacy.returncode, 0)
-        self.assertIn("tx management is deprecated; use tx mng", legacy.stderr)
-        help_text = self.cli("mng", "--help")
-        self.assertIn("tx mng cron status", help_text.stdout)
-        self.assertIn("tx mng proot status", help_text.stdout)
-        self.assertNotIn("tx management", help_text.stdout)
-        bad_proot = self.cli("mng", "proot", "stop")
-        self.assertEqual(bad_proot.returncode, 2)
-        self.assertIn("Usage: tx mng proot stop SESSION_ID", bad_proot.stderr)
-        proot_bad_action = self.cli("mng", "proot", "stop")
-        self.assertEqual(proot_bad_action.returncode, 2)
-        self.assertIn("Usage: tx mng proot stop SESSION_ID", proot_bad_action.stderr)
-
-    def test_short_slugs_dispatch_to_the_same_canonical_commands(self) -> None:
-        self.assertEqual(self.cli("st", "--json").returncode, 0)
-        self.assertIn("Start the native Termux XFCE session", self.cli("up", "--help").stdout)
-        self.assertIn("tx mng app launch", self.cli("--help").stdout)
-        self.assertNotEqual(self.cli("zz").returncode, 0)
+        self.assertIn("Unknown install option", result.stderr)
 
 
 if __name__ == "__main__":

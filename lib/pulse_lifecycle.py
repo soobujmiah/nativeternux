@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Identity-checked Native Termux PulseAudio service for Ternuxx/PRoot."""
+"""Identity-checked Native Termux PulseAudio service for Ternuxx."""
 from __future__ import annotations
 
 import fcntl

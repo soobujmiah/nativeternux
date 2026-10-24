@@ -46,11 +46,15 @@
     ],
     "clean_install_reproducible": false,
     "source_project": "https://github.com/lfdevs/termux-packages/pull/25",
-    "source_kind": "community-draft-pull-request-GitHub-Actions-artifact-not-official-Termux-release",
+    "source_kind": "community draft pull request; GitHub Actions artifact; not an official Termux release",
     "source_commit": "0219ff84b372c9d38aad4e40f448c20ec3d1588e",
     "workflow_run_id": "36377469447",
     "artifact_name": "debs-aarch64-0219ff84b372c9d38aad4e40f448c20ec3d1588e",
-    "artifact_distribution_url": null
+    "artifact_distribution_url": null,
+    "workflow_run_url": "https://github.com/lfdevs/termux-packages/actions/runs/36377469447",
+    "workflow_result": "success",
+    "workflow_artifact_sha256": "8493482210f9cc625f4fadb95e53cb417650c31f6e2b5a0d8725a2ef3c82ff5e",
+    "provenance_checked_on": "2026-10-24"
   },
   "private_state": {
     "provider_root": "$TERNUXX_STATE_DIR/graphics/providers/native-mesa-0219ff84",
@@ -65,8 +69,8 @@
   },
   "qualification": {
     "native_opengl": "render-verified-on-adreno-825",
-    "native_vulkan": "device-enumerated; draw-unverified",
-    "native_gles": "standalone-pbuffer-rendered; shared-manager-runner-unavailable",
+    "native_vulkan": "device-enumerated-and-bounded-X11-draw-verified-on-Adreno-825",
+    "native_gles": "bounded-shared-manager-pbuffer-draw-verified-on-Adreno-825",
     "inference": "unverified"
   }
 }

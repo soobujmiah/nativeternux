@@ -1,12 +1,12 @@
 # CPU inference baseline
 
-**Status:** `BLOCKED` for product implementation; end-to-end validation `UNKNOWN`. **Commercial class:** `FREE_CORE` target.
+**Product status:** `PARTIAL`, not release-qualified. **Device candidate:** bounded manual and shared-service workload verified on one profile. **Commercial class:** `FREE_CORE` target; not a commercial or release approval.
 
 ## Current evidence
 
-No inference engine, model, tokenizer, CPU inference API, example, correctness test, or benchmark is present in the audited repository. The project uses Bash for its CLI and PyYAML for repository state tooling. Device CPU cores existing is not Ternuxx inference support. No model/runtime was installed or downloaded during this audit.
+Ternuxx now has a pinned, bounded Native CPU model lifecycle and run path through CLI, TUI, authenticated loopback Web, and GTK. The Termux `llama-cpp` package remains externally managed. A direct manual device qualification first demonstrated the candidate Native path: Termux `llama-cpp 0.7.0` with a pinned Qwen3-0.6B Q4_0 model produced a deterministic marker on CPU and a two-repeat `llama-bench` sample. The manual runtime/model qualification is in the [P6 CPU candidate audit](../evidence/2026-10-24-native-cpu-inference-candidate-audit.md); current product behavior and device smoke are in the [CPU workflow evidence](../evidence/2026-10-24-native-cpu-inference-workflow.md). The package and 429 MB model are installed only in this owner device profile; the model is not part of the repository or a Ternuxx installer.
 
-Upstream llama.cpp documents a portable Android CLI build and a Termux build path, making it a research candidate for an offline CPU baseline. This is not a Ternuxx integration or a benchmark result: [upstream Android/Termux guide](https://github.com/ggml-org/llama.cpp/blob/master/docs/android.md). Runtime selection requires source/license/notice review, memory behavior, model-format support, update cadence, build reproducibility, and exact Termux dependencies.
+The product path verifies the local model hash before each run, bounds CPU threads/context/output/time, handles process cancellation, and serializes operations on the model. The Termux package recipe for 0.7.0 declares MIT; the upstream project documents a Native Termux CLI path. The Termux runtime lifecycle remains package-manager-owned and is not managed by Ternuxx. Remaining gates include clean-install replay, broader correctness, network-isolated offline confirmation, sustained memory/thermal behavior, and release provenance review. The observed package came from the configured Dan Yael Termux mirror, not the Termux primary host; see the exact mirror and source evidence in the [candidate audit](../evidence/2026-10-24-native-cpu-inference-candidate-audit.md). The cited package/model versions are dated candidates, not a promise that future package indexes or model refs remain unchanged.
 
 ## Free-core acceptance
 
@@ -18,6 +18,6 @@ CPU remains the dependable fallback and must not require premium entitlement or 
 4. Model/runtime errors, insufficient memory, cancellation, and unsupported formats fail clearly without leaving stale processes/files.
 5. CPU execution is explicitly selected/observed; no hidden GPU/NPU delegation contaminates the baseline.
 6. The same model/hash and inputs are measured with the protocol in [benchmark methodology](BENCHMARK-METHODOLOGY.md).
-7. Offline use works after artifacts are available locally; no telemetry or mandatory account is required.
+7. The local code path uses installed artifacts without a cloud route; device-level network isolation must still be verified before making a tested-offline claim. No telemetry or mandatory account is required.
 
-Until those pass, public status remains `NOT_IMPLEMENTED` / validation `BLOCKED`; do not publish CPU tokens/s or promise a model size.
+Ternuxx product status is `PARTIAL`. The pinned workflow and current device smoke do not satisfy broad support qualification. Do not generalize the two-run sample or publish it as a product performance promise; do not promise model quality or support for other model sizes.

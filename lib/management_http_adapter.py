@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Iterable
 import hashlib
+import hmac
 import json
 import re
 import secrets
@@ -20,18 +21,13 @@ from typing import Callable
 import management_request_policy
 import management_service
 import management_sessions
-import terminal_broker
 
 
 REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 IDEMPOTENCY_KEY_RE = re.compile(r"^[A-Za-z0-9_-]{16,96}$")
 _MISSING = object()
-_WEB_TERMINAL_OPERATIONS = frozenset({
-    "terminal.start.preview", "terminal.start", "terminal.channel.issue",
-    "terminal.attach", "terminal.input", "terminal.resize", "terminal.output",
-    "terminal.detach", "terminal.close.preview", "terminal.close",
-})
-
+SESSION_COOKIE_NAME = "ternuxx_management_session"
+SESSION_COOKIE_PATH = "/api/v1"
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
     result: dict[str, object] = {}
@@ -76,9 +72,6 @@ class ManagementHTTPAdapter:
         self._allow_mutations = (allow_mutations is True
                                  and getattr(request_store, "durable", False) is True)
         self._readiness_probe = readiness_probe
-        self._terminal_lock = threading.RLock()
-        self._terminal_tickets: dict[str, dict[str, object]] = {}
-        self._terminal_attachments: dict[tuple[str, str], dict[str, object]] = {}
 
     def set_readiness_probe(self, probe: Callable[[], bool]) -> None:
         """Attach the owning HTTP listener's lifecycle readiness check."""
@@ -152,12 +145,12 @@ class ManagementHTTPAdapter:
 
         if path == "/api/v1/session":
             return self._bootstrap(payload)
+        if path == "/api/v1/session/reconnect":
+            return self._resume(normalized_headers, payload)
         if path == "/api/v1/session/revoke":
             return self._revoke(normalized_headers, payload)
         if path == "/api/v1/operations":
             return self._operation(normalized_headers, payload)
-        if path == "/api/v1/terminal":
-            return self._terminal_operation(normalized_headers, payload)
         return self._response(404, {"ok": False, "error": "route_not_found"})
 
     def _bootstrap(self, payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:
@@ -173,17 +166,47 @@ class ManagementHTTPAdapter:
             return self._response(401, {"ok": False, "error": "authentication_failed"})
         except ValueError:
             return self._response(400, {"ok": False, "error": "invalid_capabilities"})
-        return self._response(200, {
+        response = self._response(200, {
             "ok": True,
             "session": {
                 "session_ref": issued.session_ref,
-                "bearer_token": issued.bearer_token,
                 "csrf_token": issued.csrf_token,
                 "capabilities": list(issued.capabilities),
                 "idle_ttl_seconds": issued.idle_ttl_seconds,
                 "absolute_ttl_seconds": issued.absolute_ttl_seconds,
             },
         })
+        response[1]["Set-Cookie"] = self._session_cookie(issued.bearer_token)
+        return response
+
+    def _resume(self, headers: dict[str, object], payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:
+        if payload:
+            return self._response(400, {"ok": False, "error": "invalid_request"})
+        if headers.get("origin") != self.policy.expected_origin:
+            return self._response(403, {"ok": False, "error": "origin_rejected"})
+        bearer = self._cookie_bearer(headers)
+        if not bearer:
+            response = self._response(401, {"ok": False, "error": "session_expired"})
+            response[1]["Set-Cookie"] = self._clear_session_cookie()
+            return response
+        try:
+            issued = self.sessions.resume_session(bearer)
+        except PermissionError:
+            response = self._response(401, {"ok": False, "error": "session_expired"})
+            response[1]["Set-Cookie"] = self._clear_session_cookie()
+            return response
+        response = self._response(200, {
+            "ok": True,
+            "session": {
+                "session_ref": issued.session_ref,
+                "csrf_token": issued.csrf_token,
+                "capabilities": list(issued.capabilities),
+                "idle_ttl_seconds": issued.idle_ttl_seconds,
+                "absolute_ttl_seconds": issued.absolute_ttl_seconds,
+            },
+        })
+        response[1]["Set-Cookie"] = self._session_cookie(issued.bearer_token)
+        return response
 
     def _revoke(self, headers: dict[str, object], payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:
         if payload:
@@ -195,223 +218,9 @@ class ManagementHTTPAdapter:
         auth = self.sessions.authorize_request(bearer, "management.catalog")
         if not auth.allowed or not self.sessions.revoke_session(bearer, csrf):
             return self._response(401, {"ok": False, "error": "authentication_failed"})
-        if auth.session_ref:
-            self._revoke_terminal_channels(auth.session_ref)
-        return self._response(200, {"ok": True, "revoked": True})
-
-    def _terminal_operation(self, headers: dict[str, object], payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:
-        operation = payload.get("operation")
-        bearer = self._bearer(headers)
-        csrf = headers.get("x-ternuxx-csrf")
-        if not bearer:
-            return self._response(401, {"ok": False, "error": "authentication_required"})
-        auth = self.sessions.authorize_request(bearer, operation, csrf_token=csrf)
-        if not auth.allowed:
-            code = {"unauthenticated": "authentication_required", "session_expired": "session_expired",
-                    "scope_denied": "permission_denied", "csrf_rejected": "csrf_rejected"}.get(
-                        auth.reason, "permission_denied")
-            return self._response(401 if auth.reason in {"unauthenticated", "session_expired"} else 403,
-                                  {"ok": False, "error": code})
-        request_id = payload.get("request_id")
-        if (operation not in _WEB_TERMINAL_OPERATIONS
-                or not isinstance(request_id, str) or not REQUEST_ID_RE.fullmatch(request_id)
-                or set(payload) != {"operation", "request_id", "session_id", "generation",
-                                    "attachment_id", "channel_ticket", "args"}
-                or not isinstance(payload.get("args"), dict)
-                or headers.get("origin") != self.policy.expected_origin):
-            return self._response(400, {"ok": False, "error": "invalid_terminal_request"})
-        try:
-            response = self._terminal_dispatch(headers, payload, auth.session_ref or "")
-        except (terminal_broker.BrokerError, OSError, ValueError):
-            return self._response(503, {"ok": False, "error": "terminal_broker_unavailable"})
+        response = self._response(200, {"ok": True, "revoked": True})
+        response[1]["Set-Cookie"] = self._clear_session_cookie()
         return response
-
-    def _terminal_dispatch(self, headers: dict[str, object], payload: dict[str, object],
-                           session_ref: str) -> tuple[int, dict[str, str], bytes]:
-        operation = str(payload.get("operation"))
-        request_id = str(payload.get("request_id") or "")
-        session_id = payload.get("session_id")
-        generation = payload.get("generation")
-        attachment_id = payload.get("attachment_id")
-        ticket = payload.get("channel_ticket")
-        args = payload.get("args")
-        origin = headers.get("origin")
-        if not isinstance(args, dict):
-            return self._response(400, {"ok": False, "error": "invalid_terminal_arguments"})
-        self._expire_terminal_tickets()
-        state_dir = ((self._env or {}).get("TERNUXX_STATE_DIR")
-                     or str(__import__("pathlib").Path((self._env or {}).get("HOME") or ".").expanduser()
-                            / ".local/share/ternuxx"))
-        client = terminal_broker.UnixBrokerClient(state_dir)
-
-        if operation == "terminal.start.preview":
-            if any(value is not None for value in (session_id, generation, attachment_id, ticket)) or args:
-                return self._response(400, {"ok": False, "error": "invalid_terminal_arguments"})
-            result = client.request("terminal.start.preview")
-            return self._terminal_result(request_id, result)
-        if operation == "terminal.start":
-            if (any(value is not None for value in (session_id, generation, attachment_id, ticket))
-                    or set(args) != {"confirmed", "plan_id"}
-                    or args.get("confirmed") is not True or not isinstance(args.get("plan_id"), str)):
-                return self._response(400, {"ok": False, "error": "invalid_terminal_arguments"})
-            result = client.request("terminal.start", args=args)
-            data = result.get("result") if isinstance(result, dict) else None
-            if result.get("ok") is not True or not isinstance(data, dict):
-                return self._terminal_result(request_id, result)
-            sid = data.get("session_id")
-            if not isinstance(sid, str):
-                raise terminal_broker.BrokerError("broker start returned no session identity")
-            token = secrets.token_urlsafe(32)
-            digest = hashlib.sha256(token.encode()).hexdigest()
-            with self._terminal_lock:
-                self._terminal_tickets[digest] = {
-                    "session_ref": session_ref, "session_id": sid, "origin": origin,
-                    "lease": data, "expires": time.monotonic() + 20.0,
-                }
-            return self._response(200, {"ok": True, "request_id": request_id,
-                "data": {"session_id": sid, "profile": data.get("profile"),
-                         "state": data.get("state"), "channel_ticket": token,
-                         "ticket_expires_in": 20}})
-
-        if operation == "terminal.channel.issue":
-            if (not isinstance(session_id, str) or generation is not None
-                    or attachment_id is not None or ticket is not None or args):
-                return self._response(400, {"ok": False, "error": "invalid_terminal_arguments"})
-            lease = client.request("terminal.attach", session_id=session_id)
-            if lease.get("ok") is not True:
-                return self._terminal_result(request_id, lease)
-            lease.pop("ok", None)
-            token = secrets.token_urlsafe(32)
-            digest = hashlib.sha256(token.encode()).hexdigest()
-            with self._terminal_lock:
-                self._terminal_tickets[digest] = {
-                    "session_ref": session_ref, "session_id": session_id, "origin": origin,
-                    "lease": lease, "expires": time.monotonic() + 20.0,
-                }
-            return self._response(200, {"ok": True, "request_id": request_id,
-                "data": {"session_id": session_id, "channel_ticket": token,
-                         "ticket_expires_in": 20}})
-
-        if operation == "terminal.attach":
-            if (not isinstance(session_id, str) or generation is not None
-                    or attachment_id is not None or not isinstance(ticket, str) or args):
-                return self._response(400, {"ok": False, "error": "invalid_terminal_arguments"})
-            digest = hashlib.sha256(ticket.encode()).hexdigest()
-            with self._terminal_lock:
-                grant = self._terminal_tickets.pop(digest, None)
-                if (not grant or grant["session_ref"] != session_ref
-                        or grant["session_id"] != session_id or grant["origin"] != origin
-                        or grant["expires"] <= time.monotonic()):
-                    grant = None
-                key = (session_ref, session_id)
-                if grant and key in self._terminal_attachments:
-                    grant = None
-                if grant:
-                    lease = dict(grant["lease"])
-                    self._terminal_attachments[key] = {
-                        "origin": origin, "lease": lease,
-                        "last_seen": time.monotonic(),
-                    }
-                else:
-                    lease = {}
-            if not grant:
-                return self._response(403, {"ok": False, "error": "terminal_channel_rejected"})
-            if type(lease.get("generation")) is not int or not 0 < lease["generation"] < 2**63:
-                return self._response(502, {"ok": False, "error": "invalid_terminal_generation"})
-            # JavaScript numbers cannot preserve a random 63-bit broker generation.
-            # Keep the broker value integral; encode only the HTTP wire value.
-            browser_lease = {**lease, "generation": str(lease["generation"])}
-            return self._response(200, {"ok": True, "request_id": request_id, "data": browser_lease})
-
-        if not isinstance(session_id, str):
-            return self._response(400, {"ok": False, "error": "terminal_session_required"})
-        if (not isinstance(generation, str)
-                or not re.fullmatch(r"[1-9][0-9]{0,18}", generation)
-                or int(generation) >= 2**63):
-            return self._response(400, {"ok": False, "error": "invalid_terminal_generation"})
-        broker_generation = int(generation)
-        key = (session_ref, session_id)
-        with self._terminal_lock:
-            channel = self._terminal_attachments.get(key)
-            lease = dict(channel["lease"]) if channel else {}
-            if (not channel or channel["origin"] != origin
-                    or lease.get("generation") != broker_generation
-                    or lease.get("attachment_id") != attachment_id):
-                channel = None
-            else:
-                channel["last_seen"] = time.monotonic()
-        if not channel:
-            return self._response(403, {"ok": False, "error": "terminal_channel_rejected"})
-        if operation not in {"terminal.input", "terminal.resize", "terminal.output",
-                             "terminal.detach", "terminal.close.preview", "terminal.close"}:
-            return self._response(400, {"ok": False, "error": "invalid_terminal_operation"})
-        result = client.request(operation, session_id=session_id, generation=broker_generation,
-                                attachment_id=attachment_id, args=args)
-        if operation == "terminal.detach" and result.get("ok") is True:
-            with self._terminal_lock:
-                self._terminal_attachments.pop(key, None)
-        if operation == "terminal.close" and result.get("ok") is True:
-            closed = result.get("result")
-            if isinstance(closed, dict) and closed.get("state") == "stopped":
-                with self._terminal_lock:
-                    self._terminal_attachments.pop(key, None)
-        return self._terminal_result(request_id, result)
-
-    def _terminal_result(self, request_id: str, result: object) -> tuple[int, dict[str, str], bytes]:
-        if not isinstance(result, dict):
-            return self._response(502, {"ok": False, "error": "invalid_terminal_response"})
-        if result.get("ok") is not True:
-            error = result.get("error")
-            code = error.get("code") if isinstance(error, dict) else "terminal_operation_failed"
-            return self._response(409, {"ok": False, "error": code})
-        return self._response(200, {"ok": True, "request_id": request_id, "data": result})
-
-    def _expire_terminal_tickets(self) -> None:
-        now = time.monotonic()
-        with self._terminal_lock:
-            expired = [key for key, item in self._terminal_tickets.items()
-                       if item.get("expires", 0) <= now]
-            leases = [self._terminal_tickets.pop(key).get("lease", {}) for key in expired]
-            stale = [key for key, item in self._terminal_attachments.items()
-                     if now - item.get("last_seen", now) > 90.0]
-            leases.extend(self._terminal_attachments.pop(key).get("lease", {}) for key in stale)
-        if not leases:
-            return
-        state_dir = ((self._env or {}).get("TERNUXX_STATE_DIR")
-                     or str(__import__("pathlib").Path((self._env or {}).get("HOME") or ".").expanduser()
-                            / ".local/share/ternuxx"))
-        client = terminal_broker.UnixBrokerClient(state_dir)
-        for lease in leases:
-            try:
-                client.request("terminal.detach", session_id=lease.get("session_id"),
-                    generation=lease.get("generation"), attachment_id=lease.get("attachment_id"))
-            except terminal_broker.BrokerError:
-                pass
-
-    def _revoke_terminal_channels(self, session_ref: str) -> None:
-        with self._terminal_lock:
-            items = [(key, value) for key, value in self._terminal_attachments.items()
-                     if key[0] == session_ref]
-            tickets = [value for value in self._terminal_tickets.values()
-                       if value.get("session_ref") == session_ref]
-            for key, _value in items:
-                self._terminal_attachments.pop(key, None)
-            self._terminal_tickets = {key: value for key, value in self._terminal_tickets.items()
-                                      if value.get("session_ref") != session_ref}
-        leases = [value.get("lease", {}) for _key, value in items] + [
-            value.get("lease", {}) for value in tickets]
-        if not leases:
-            return
-        state_dir = ((self._env or {}).get("TERNUXX_STATE_DIR")
-                     or str(__import__("pathlib").Path((self._env or {}).get("HOME") or ".").expanduser()
-                            / ".local/share/ternuxx"))
-        client = terminal_broker.UnixBrokerClient(state_dir)
-        for lease in leases:
-            try:
-                client.request("terminal.detach", session_id=lease.get("session_id"),
-                    generation=lease.get("generation"), attachment_id=lease.get("attachment_id"))
-            except terminal_broker.BrokerError:
-                pass
 
     def _operation(self, headers: dict[str, object], payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:
         operation = payload.get("operation")
@@ -426,26 +235,6 @@ class ManagementHTTPAdapter:
                         auth.reason, "permission_denied")
             return self._response(401 if auth.reason in {"unauthenticated", "session_expired"} else 403,
                                   {"ok": False, "error": code})
-
-        if operation in _WEB_TERMINAL_OPERATIONS:
-            return self._response(403, {"ok": False, "error": "terminal_channel_transport_required"})
-
-        # Network clients may launch only a fixed named app. Desktop-entry IDs
-        # can select a broader guest launcher surface and remain local-only.
-        if operation == "proot.app.launch":
-            args = payload.get("args")
-            if (not isinstance(args, dict) or "app_id" not in args
-                    or set(args) - {"app_id", "display"}):
-                return self._response(400, {"ok": False, "error": "named_app_only"})
-
-        # Browser sessions can run only the fixed bounded headless probe.
-        # Interactive login requires an attached terminal and is unavailable
-        # through this HTTP transport.
-        if operation == "proot.start":
-            args = payload.get("args")
-            if (not isinstance(args, dict) or args.get("profile") != "isolated-probe"
-                    or args.get("timeout_seconds") != 300):
-                return self._response(403, {"ok": False, "error": "proot_profile_restricted"})
 
         request_id = payload.get("request_id")
         if not isinstance(request_id, str) or not REQUEST_ID_RE.fullmatch(request_id):
@@ -504,15 +293,46 @@ class ManagementHTTPAdapter:
                                             "request_id": request_id})
         return response
 
-    @staticmethod
-    def _bearer(headers: dict[str, object]) -> str | None:
+    @classmethod
+    def _bearer(cls, headers: dict[str, object]) -> str | None:
         value = headers.get("authorization")
-        if not isinstance(value, str) or len(value) > management_sessions.MAX_TOKEN_LENGTH + 7:
+        authorization = None
+        if value is not None:
+            if not isinstance(value, str) or len(value) > management_sessions.MAX_TOKEN_LENGTH + 7:
+                return None
+            parts = value.split(" ")
+            if len(parts) != 2 or parts[0] != "Bearer" or not parts[1]:
+                return None
+            authorization = parts[1]
+        cookie = cls._cookie_bearer(headers)
+        if authorization is not None and cookie is not None:
+            if not hmac.compare_digest(authorization, cookie):
+                return None
+        return authorization or cookie
+
+    @staticmethod
+    def _cookie_bearer(headers: Mapping[str, object]) -> str | None:
+        value = headers.get("cookie")
+        if not isinstance(value, str) or len(value) > 4096:
             return None
-        parts = value.split(" ")
-        if len(parts) != 2 or parts[0] != "Bearer" or not parts[1]:
+        matches = []
+        for field in value.split(";"):
+            name, separator, token = field.strip().partition("=")
+            if separator and name == SESSION_COOKIE_NAME:
+                matches.append(token)
+        if len(matches) != 1 or not re.fullmatch(r"[A-Za-z0-9_-]{40,256}", matches[0]):
             return None
-        return parts[1]
+        return matches[0]
+
+    @staticmethod
+    def _session_cookie(token: str) -> str:
+        # This server binds to loopback HTTP only; SameSite and exact Origin checks
+        # provide browser CSRF boundaries while HttpOnly hides the session token.
+        return f"{SESSION_COOKIE_NAME}={token}; Path={SESSION_COOKIE_PATH}; HttpOnly; SameSite=Strict"
+
+    @staticmethod
+    def _clear_session_cookie() -> str:
+        return f"{SESSION_COOKIE_NAME}=; Path={SESSION_COOKIE_PATH}; HttpOnly; SameSite=Strict; Max-Age=0"
 
     @staticmethod
     def _response(status: int, payload: dict[str, object]) -> tuple[int, dict[str, str], bytes]:

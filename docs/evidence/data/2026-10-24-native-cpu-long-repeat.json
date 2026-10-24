@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-10-24",
+  "execution_context": "Native Termux on Android",
+  "runtime": "llama-cpp 0.7.0",
+  "model_id": "qwen3-0.6b-q4_0",
+  "backend": "CPU",
+  "gpu_layers": 0,
+  "max_output_tokens": 32,
+  "samples": [
+    {
+      "run": 1,
+      "exit_code": 0,
+      "wall_seconds": 3.187,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 45.902,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 2,
+      "exit_code": 0,
+      "wall_seconds": 3.143,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 46.392,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 3,
+      "exit_code": 0,
+      "wall_seconds": 3.139,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 46.69,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 4,
+      "exit_code": 0,
+      "wall_seconds": 3.146,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 46.942,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 5,
+      "exit_code": 0,
+      "wall_seconds": 3.216,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.028,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 6,
+      "exit_code": 0,
+      "wall_seconds": 3.134,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.079,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 7,
+      "exit_code": 0,
+      "wall_seconds": 3.224,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.213,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 8,
+      "exit_code": 0,
+      "wall_seconds": 3.216,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.25,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 9,
+      "exit_code": 0,
+      "wall_seconds": 3.15,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.257,
+        "socd": 54.0
+      }
+    },
+    {
+      "run": 10,
+      "exit_code": 0,
+      "wall_seconds": 3.198,
+      "expected_marker": true,
+      "thermal_after_c": {
+        "cpu_therm": 47.452,
+        "socd": 54.0
+      }
+    }
+  ],
+  "total_wall_seconds": 31.753,
+  "child_peak_rss_kib": 550028,
+  "thermal_final_c": {
+    "cpu_therm": 47.437,
+    "socd": 54.0
+  },
+  "limits": [
+    "Ten fresh-process calls are a bounded repeat, not prolonged burn-in or battery-life testing.",
+    "Thermal readings were collected after each call and once after the sequence; their sampling is not calibrated and does not identify throttling.",
+    "Network was not isolated; offline operation is unverified."
+  ]
+}

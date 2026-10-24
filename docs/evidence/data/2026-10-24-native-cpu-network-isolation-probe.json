@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-10-24",
+  "execution_context": "Native Termux on Android, aarch64",
+  "purpose": "Determine whether CPU inference runs when IPv4/IPv6 socket creation is denied to the process tree.",
+  "network_namespace_attempt": {
+    "command": "unshare -n",
+    "result": "denied",
+    "observed_error": "Operation not permitted"
+  },
+  "seccomp_probe": {
+    "filter": "Deny socket(AF_INET, ...) and socket(AF_INET6, ...) with EPERM; allow other syscalls.",
+    "socket_denial_probe": "passed",
+    "cli_workflow": {
+      "command": "tx ai run --max-tokens 32",
+      "result": "failed",
+      "exit_code": 2,
+      "observed_error": "CPU inference failed with exit 1: ... failed to get a free port"
+    },
+    "direct_module_workflow": {
+      "command": "python3 lib/cpu_inference.py run --stdin --max-tokens 32",
+      "result": "failed",
+      "exit_code": 2,
+      "observed_error": "CPU inference failed with exit 1: ... failed to get a free port"
+    }
+  },
+  "device_network_settings_changed": false,
+  "inference_offline_verified": false,
+  "interpretation": "The filter blocked IP socket creation, but llama-cli could not complete local port setup. The reason has not been isolated; this experiment does not establish offline functionality.",
+  "limits": [
+    "The seccomp probe did not isolate the cause of the local-port failure.",
+    "No device-wide network setting was changed.",
+    "The earlier malformed filter experiment was terminated and is excluded from these results.",
+    "An egress-filtered inference attempt exceeded 120 seconds and left a test-owned llama-cli child; that exact child was terminated and verified absent. This filter experiment does not establish offline functionality or normal-runtime timeout behavior.",
+    "A separate one-second timeout check without seccomp returned the expected timeout error and left no matching inference process. It confirms ordinary process-group cleanup for this bounded case; it does not validate cleanup under seccomp restrictions."
+  ],
+  "egress_seccomp_probe": {
+    "filter": "Deny connect, sendto, sendmsg, sendmmsg, and io_uring_setup with EPERM; permit IP socket creation and local bind.",
+    "connect_probe": "EPERM observed",
+    "sendto_probe": "EPERM observed",
+    "direct_module_workflow": {
+      "command": "python3 lib/cpu_inference.py run --stdin --max-tokens 32",
+      "result": "timed_out",
+      "timeout_seconds": 120,
+      "child_cleanup": "The module did not reap the llama-cli child under this experimental filter; the exact test-owned child PID was terminated manually and verified absent."
+    }
+  },
+  "normal_runtime_timeout_check": {
+    "command": "python3 import cpu_inference; run_inference(..., max_tokens=32, timeout=1)",
+    "result": "expected_timeout",
+    "elapsed_seconds": 4.51,
+    "message": "CPU inference timed out; its child process group was terminated",
+    "post_check": "No cpu_inference.py or llama-cli process remained after one second."
+  }
+}

@@ -39,7 +39,7 @@ It does not qualify a clean-device install, visible XFCE/Firefox rendering,
 Turnip/Vulkan runtime, audio, or another Android build. The default guest and
 active Codex PRoot session remain outside the replay target.
 
-See [the installer guide](../INSTALLATION.md) and [fresh setup implementation](../../lib/proot_fresh_setup.py).
+See [the installer guide](../INSTALLATION.md) and `fresh setup implementation`.
 
 ## Evidence
 
@@ -47,6 +47,6 @@ Phase: `P4`
 
 P4 fresh Debian Trixie setup replay on Native Termux. The installer and CLI are the implementation under review.
 
-- [Setup implementation](../../lib/proot_fresh_setup.py)
-- [CLI routing](../../lib/proot_setup.py)
+- `Setup implementation`
+- `CLI routing`
 - [Installation guide](../INSTALLATION.md)

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-24T00:59:25Z",
+  "execution_context": "Native Termux on Android",
+  "native_status": {
+    "status": "running",
+    "display": ":1",
+    "supervisor": "live",
+    "x11": "live",
+    "xfce4_session": "live",
+    "audio_owner": "ternuxx-native"
+  },
+  "retired_proot_state": {
+    "proot_package": "not installed",
+    "proot_distro_package": "not installed",
+    "proot_executable": "absent",
+    "proot_distro_executable": "absent",
+    "containers_directory_exists": true,
+    "containers_directory_entries": []
+  },
+  "side_effects": "Read-only package, executable, directory, and Native status queries."
+}

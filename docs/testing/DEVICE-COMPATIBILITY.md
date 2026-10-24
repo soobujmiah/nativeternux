@@ -1,32 +1,25 @@
 # Device and backend compatibility
 
-**Authority:** accepted reports under `reports/` and corresponding entries in [`FEATURE-MATRIX.yaml`](FEATURE-MATRIX.yaml). This page summarizes the only recorded device snapshot and clearly separates inference from desktop graphics.
+## Qualification rule
 
-## Recorded profile
+A device is a qualified Ternuxx target only for the named capabilities and exact software profile that have direct evidence. A detected device node, package, renderer name, or successful desktop launch does not establish accelerated workload support or release readiness.
 
-| Device/profile | Android / ABI | CPU | GPU | NPU silicon | Native graphics evidence | Inference evidence | Qualification |
-|---|---|---|---|---|---|---|---|
-| `[redacted device serial]` (`onyx`), owner device | Android 16 / `aarch64` (Termux `0.119.0-beta.3` in dated record) | Present; no Ternuxx inference runtime/test | Adreno 825, SoC SM8735 | Qualcomm product brief identifies Hexagon NPU for Snapdragon 8s Gen 4 / SM8735 platform; device runtime access untested | Native stock ICD probe failed with `VK_ERROR_INCOMPATIBLE_DRIVER` on recorded Mesa 26.2.4; selected experimental KGSL/Freedreno candidate later rendered 120 `vkcube` frames on `:1`; no GPU inference test | No CPU, GPU, or NPU inference test/report in this repo | `DETECTED`; no inference `WORKLOAD_VERIFIED` or `RELEASE_QUALIFIED` |
+The only current Native Termux profile directly observed in this repository is the owner's Android 16 `25053RT47C` device, ABI `arm64-v8a`, with Termux `0.119.0-beta.3`. Exact package, display, audio, graphics, and evidence limits are recorded in the [dated profile observation](reports/2026-10-24-native-profile-25053RT47C.md).
 
-The device row is based on the dated read-only observation in [`RESEARCH.md`](../RESEARCH.md), not a new physical-device session. Android/Termux version, package version, or driver may have changed since then. It must not be generalized to other Adreno/Qualcomm devices.
+## Capability stages
 
-## Separate Ternux provider evidence
+| Capability | Current evidence | Qualification |
+|---|---|---|
+| Native Termux environment | Android 16/API 36, `arm64-v8a`, Termux `0.119.0-beta.3` observed | One device/profile observed; not generalized |
+| Native desktop | Ternuxx supervisor, X11, and XFCE live on `:1` | Lifecycle live; Android GUI visibility not confirmed in this snapshot |
+| Native audio | Authenticated local PulseAudio endpoint ready; default sink `OpenSL_ES_sink` | Endpoint readiness only; physical audibility/quality not tested |
+| Native graphics | Bounded OpenGL/GLES draws and a 120-frame Vulkan `vkcube` draw use Adreno 825; llvmpipe fallback renders | Exact workloads only on the experimental candidate; see [direct P6 recheck](../evidence/2026-10-24-native-graphics-fallback-recheck.md); no general application or inference claim |
+| CPU inference | CPU available; no Ternuxx inference runtime/model/test | Not implemented |
+| NPU inference | Vendor libraries visible; usable runtime and workload absent | Unverified; not implemented |
+| Boot/recovery delivery | Termux:Boot package and receiver detected, OS delivery policy unknown | Cold-boot delivery unverified |
 
-The independent Ternux project documents CPU/Vulkan llama.cpp inference on this device through its Debian PRoot setup, plus experimental Hexagon HTP and QNN routes. This is evidence about the separate Ternux provider, not a Ternuxx adapter or a Ternuxx release qualification. The HTP record includes correctness failures and incomplete operator coverage; the QNN image record still lacks independent stage-tensor correctness. See the [master audit's external-provider matrix](../evidence/PHASE-0-MASTER-AUDIT.md#5-ai-runtime-and-provider-inventory) and [Ternux accelerator release plan](https://github.com/soobujmiah/ternux/blob/main/docs/ACCELERATOR-RELEASE-PLAN.md).
+Other devices, Android releases, ABIs, Termux channels, package sources, display servers, and audio/graphics combinations remain unqualified until separately tested. Current package versions are snapshots and can change independently of this document.
 
-## Backend stage matrix
+## Evidence requirements
 
-| Context/backend | Detected | Initialized | Workload verified | Correctness | Performance | Stability/thermal | Release qualified |
-|---|---|---|---|---|---|---|---|
-| Native Termux CPU inference | `UNKNOWN` (no inference integration) | `BLOCKED` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `NO` |
-| Native Termux GPU / recorded Vulkan Turnip probe | GPU silicon detected; tested ICD probe `FAIL` | Vulkan physical-device setup `FAIL` for recorded package/process | `UNKNOWN` for all inference workload | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `NO` |
-| Native Termux Snapdragon OpenCL inference candidate | Platform GPU detected | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `NO` |
-| Native Termux Hexagon HTP inference candidate | Platform silicon documented | `UNKNOWN` in Termux app context | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `NO` |
-| Existing Ternux PRoot Zink/Turnip desktop route | Source/configuration reviewed; live renderer not rerun in this audit | Owner reports it has worked; no fresh check in this project | No AI inference workload evidence | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | Not a Ternuxx inference release |
-| LiteRT/QAIRT Android app integration candidate | Upstream integration documentation exists | `UNKNOWN` on this device/app | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `NO` |
-
-`FAIL` above is narrowly limited to the exact native Vulkan probe described in `RESEARCH.md`; it is not a verdict on all Android GPU APIs. `DETECTED` means a platform component is identified, not that the process can access it.
-
-## Report acceptance
-
-Add a row or report only when it includes device/model identifier appropriate to privacy policy, Android build, Termux/PRoot context, runtime and driver revisions, model hash/license, exact backend logs, workload and correctness method, raw measurements, repeats, failures, and owner-operated versus automated provenance. Unknown fields stay `UNKNOWN`. See [report template](reports/REPORT-TEMPLATE.md).
+A new device or backend qualification needs the exact device/Android/ABI and Termux profile, package and driver versions, selected display/audio context, named workload, correctness method, captured results, failures, and evidence provenance. Keep unknown values explicit. A GPU or NPU claim additionally needs initialized backend access and a correct representative workload; a release claim needs repeated performance, thermal, stability, and recovery evidence.

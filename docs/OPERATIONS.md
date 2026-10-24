@@ -1,191 +1,51 @@
-# Doctor, management, and recovery
+# Native Termux operations
 
-This document defines how Ternuxx should inspect and manage the workstation after installation. These are product requirements; commands that are marked planned are not implemented yet. The current CLI reports its real limits in `tx help`.
+Ternuxx manages the Android workstation from the Native Termux app. Run `tx help` for the current command list and `tx guides` for interactive setup and recovery guidance. Historical PRoot commands return a migration message and do not launch a guest.
 
-## Operating principles
+## Core workflow
 
-- A doctor run is read-only. It reports evidence, severity, likely cause, and a suggested next action. It never installs packages, changes Android permissions, edits another project's files, kills processes, or repairs state by itself.
-- Every managed process, display, socket, package transaction, profile, and backup has an explicit owner and recorded identity. A matching process name alone is not proof that Ternuxx owns it.
-- Mutating commands preview their target and impact before asking for explicit consent. An interrupted operation leaves a journal entry for inspection. Recovery actions are operation-specific. Every current journal kind has a bounded `recovery resolve` handler; only profile-restore records support compensating `recovery rollback`. Generic task resume is not implemented.
-- Recovery works only on Ternuxx-owned data. It must refuse ambiguous targets and preserve the existing Debian rootfs, active process tree, and user data. The separately sourced Ternux CLI is not a required Ternuxx dependency; any exact installed guest helper can be retired only after Ternuxx replacement, caller/workload verification, backup, preview, and rollback.
-- Backups are local by default, integrity checked, versioned, and stored with restrictive permissions. Secrets such as tokens, private keys, and Android app data are excluded unless the owner explicitly chooses a documented, secure backup path.
-- Native Termux is the primary workstation and owns native SSH, native services, boot recovery, native lifecycle, and persistent continuity records. None may require Debian PRoot, guest systemd, or a PRoot agent. The requirements and pending acceptance tests are recorded in [ADR-0010](architecture/decisions/ADR-0010-native-termux-autonomy.md).
-- `tx db` is the canonical Ternuxx PRoot shell command. The `db`/`droot` aliases now delegate to its validated regular-user and root forms; `x`/`xgo` remain wrappers to the checked-in Ternuxx app helper. These remain user configuration, not a product compatibility promise. A normal `tx db` login may invoke the installed proot-distro hook, which can write the guest profile and container sidecar; this immediate shell command does not preview or roll back that package-owned effect. See [PRoot session boundaries](architecture/PROOT-SESSIONS.md). Any future alias change requires exact caller review, authorization, backup, and rollback; never run broad cleanup. See [ADR-0016](architecture/decisions/ADR-0016-tx-db-and-legacy-entrypoints.md).
-- Native desktop uses `:1` as its stable default, leaving `:0` for the separately managed existing Ternux PRoot on the owner device. If `:1` is occupied or ambiguous, default startup fails closed instead of silently creating another desktop display. An explicitly requested alternate display is accepted only when its socket and lock are absent.
-
-## Doctor
-
-`tx doctor` should provide a concise overall state and detailed sections for host, packages, desktop/display, audio, storage, providers, acceleration, and recovery. `--json` returns stable machine-readable codes and fields; human output explains them without requiring the user to interpret raw shell errors. It also validates Ternuxx backup archives read-only: an empty backup set is informational, valid archives pass, invalid archives warn, and unsafe/inaccessible paths warn without repair. The desktop process inventory validates recorded supervisor/X11/desktop PID identities, counts other known desktop processes in the same recorded session separately, and labels all remaining candidates as owner-unverified; a process name alone never authorizes a lifecycle action. On native Termux, Doctor also reads the fixed `ternuxx-sshd` Runit status and validates its config syntax through the existing SSH diagnostic adapter; it does not call start/stop. Doctor also compares the fixed installed unit script with the checked-out definition and warns on mismatch; this does not establish process-to-listener ownership.
-
-Each finding has an ID, severity (`pass`, `info`, `warning`, or `error`), scope, observed value, timestamp/source, and a safe suggested action. Diagnostics distinguish unavailable, unverified, and failed. A GPU device node or installed driver is not reported as a working renderer; provider checks identify whether the result came from native Termux or the existing Debian PRoot. Doctor does not test by launching a desktop or workload unless a future command explicitly says it will do so and asks first.
-
-Suggested actions link to the matching guide or an explicit command. A future `doctor --repair` may only offer a per-finding preview and must request confirmation for each state-changing repair; it is never an automatic fix-all switch.
-
-## Server and session management
-
-The optional read-only management HTTP API can be run explicitly in the foreground:
-
-```text
-tx mng http serve [--port 8765]
+```sh
+tx doctor
+tx info
+tx start
+tx status
+tx tui
+tx web
+tx mng center
 ```
 
-It binds only to `127.0.0.1`, requires an interactive terminal before it generates and displays a per-run bootstrap secret, and exits on Ctrl-C. The ordinary management API grants read-only scopes. `tx web` is a separate authenticated browser mode with its own scoped mutation allowlist; neither mode exposes off-home access. Browser choice for `tx web` is Android, Native, PRoot, or auto (Native, then PRoot, then Android); use `tx web --browser android|native|proot|auto` to select. Browser packages are detected, never installed automatically. Use `tx mng http serve --help` for the read-only API command help and `tx web --help` for Web mode.
+`tx start`, `stop`, `restart`, and `status` operate on the recorded Native desktop. The supervisor verifies process identity before sending signals and refuses ambiguous ownership. The Android Termux:X11 app's visible state is separate from server readiness.
 
-The shared typed management service currently supports fixed Native service/session actions and explicit Debian PRoot inventory, verification, terminal, shortcut, and selected configuration operations. CLI, TUI, authenticated Web, and GTK consume overlapping parts of this service; see the capability matrix for action-by-client coverage. This is not a general-purpose service manager: each operation names its provider and target, and only validated Ternuxx-owned processes may be stopped or restarted. External or uncertain processes remain read-only observations and are never killed to make an operation succeed.
+## Management clients
 
-Generic `service list`/`service inspect NAME` commands and arbitrary `reload` actions are not implemented. Lifecycle controls are operation-specific. `tx pgui start|status|stop` is the explicit full Debian XFCE route: auto selects nested Xephyr `:2` when Native `:1` is running, otherwise standalone `:0`; status is read-only, standalone stop requires verified ownership, and nested mode closes from its owning terminal. This route performs identity/capability checks but does not use a separate plan-confirmation step. Native SSH lifecycle uses its own exact preview and plan ID; other commands have their documented operation-specific interaction. Do not infer a general service manager from these bounded controls.
+The CLI, TUI, authenticated Web UI, and GTK center call the same typed management service. Implemented operations share validation, authorization, and state; each client exposes only actions supported in its context. Read the catalog and each command's `--help` output before applying a change. Mutations that affect services, packages, keys, boot state, or recovery require the exact preview and confirmation described by the command.
 
-The optional Native terminal broker service is separate from the interactive Debian guest. Inspect it with `tx terminal service status`. If it cannot start because the private socket path already exists, preview the exact socket with `tx terminal service socket preview`, then apply only that unchanged refused-socket plan with `tx terminal service socket recover --yes --plan-id ID`. Recovery requires the socket to remain owned by the Termux UID with mode 0600, its identity to match the preview, and a connection probe to remain refused. A live listener, changed socket, or unknown probe result is never removed. This repairs only the broker socket path; it does not start, stop, or signal a PRoot guest.
+## SSH and services
 
-The manager serializes Ternuxx session operations with a private lifecycle lock, reports ownership evidence, detects stale operation journals, and gives a useful conflict message. A stale native X11 lock/socket pair is reclaimed only when a stale Ternuxx session record names the same display and exact X11 PID, the PID is absent, the socket refuses connections, and artifact identities remain unchanged. Generic display inspection never removes artifacts; ambiguous artifacts remain unavailable. Closing Termux:X11 does not prove the server process exited.
+`tx ssh inspect` is read-only. Managed SSH configuration and lifecycle changes are scoped to the fixed Native Runit service and use preview/rollback flows. The service listens on loopback port 8023; port 8022 is not managed by Ternuxx. Do not infer exposure from a config file alone.
 
-## Native Runit SSH service control
+Native audio, desktop monitoring, boot profiles, and Wake Lock controls have independent owners and state. A stop operation releases only resources whose identity matches a Ternuxx record.
 
-The CLI supports `tx ssh start`, `tx ssh stop`, and `tx ssh restart` for only the fixed `ternuxx-sshd` Runit unit. Each command without `--yes` is a read-only preview. Apply requires `--yes --plan-id` copied from that exact preview. Restart always requires confirmation and warns that active port-8023 clients may disconnect. The plan binds the requested transition, observed service state, checked-out and installed run-script hashes, and native Runit command hash; apply rechecks these before journaling and action.
+## Packages and updates
 
-The action refuses missing/unsafe service paths, a different run script, an unavailable Runit command, unknown state, or an unresolved prior journal entry. It invokes `sv` only on the exact `$PREFIX/var/service/ternuxx-sshd` path. Start/stop journal `service.start`/`service.stop`; restart journals `service.restart`, then requests down followed by up and verifies the running state. Recovery observes state and never repeats the action. A timeout stays `needs_recovery` and blocks another mutation. Stop/restart previews disclose client disconnect risk. These controls do not edit SSH config, keys, boot policy, package state, PRoot, or other services.
+`tx install preview` and `tx install update preview` show the exact Native Termux package transaction. Apply only the reviewed plan ID. If a package operation fails partway, inspect APT output/history and create a fresh preview; Ternuxx does not claim an automatic package rollback.
 
-This is a fixed-unit lifecycle slice, not complete remote-access management. On 2026-10-23 the repaired wrapper was deployed with an exact plan, the fixed Runit unit was restarted after a fresh preview, and its loopback SSH banner became reachable; authenticated access after that repair and Android cold-boot delivery remain unverified. The CLI, TUI, authenticated Web, and GTK expose shared lifecycle controls; GTK restart-button manual review, listener-to-process ownership, password-recovery policy, and boot/cold-start qualification remain open. See [the 2026-10-23 service repair](evidence/2026-10-23-native-ssh-service-repair.md) and the native SSH service action schema at ../schemas/native-ssh-service-action.schema.json.
-The SSH diagnostic also compares the fixed Runit unit's reported age with Linux CLOCK_BOOTTIME and returns a sanitized startup_timing correlation. This can show that the unit began shortly after the current kernel boot, but it cannot prove which startup script or Android receiver launched it, and it never proves listener ownership or GUI visibility. Unavailable clocks or malformed service status remain unknown rather than being inferred.
+## Optional Native apps and HOME file handoff
 
-## Independent SSH services
+Use tx app list to inspect the curated htop, tmux, and tree catalog. Preview install, update, or removal before applying the saved plan. The TUI, authenticated Web UI, and GTK center use the same service.
 
-Native Termux `sshd` and Debian PRoot `sshd` are independent services with their own identity, configuration, user/keys, logs, listener, and boot setting. Ternuxx exposes Native SSH diagnostics, fixed-unit lifecycle/deployment, and shared public-key enrollment/revocation with exact preview, explicit apply, rollback, and key generation across CLI, TUI, authenticated Web, and GTK. Disposable Native OpenSSH authentication qualification passed; no production authorized-key mutation has been applied. Password-recovery policy and Android cold-boot delivery remain open; GTK dialog/viewport interaction and authenticated access after the 2026-10-23 service repair remain unverified. The managed service is loopback-only and rejects passwords. See [SSH key rollback evidence](evidence/2026-10-22-ssh-key-change-rollback.md), [disposable authentication evidence](evidence/2026-10-22-ssh-disposable-auth-qualification.md), [service repair evidence](evidence/2026-10-23-native-ssh-service-repair.md), and the [SSH lifecycle contract](architecture/SSH-LIFECYCLE.md). From inside PRoot, host-side control stays with the Native Termux manager.
+When tree is installed, tx app run directory-tree HOME_PATH passes one selected HOME-relative file or directory to the fixed tree executable. It lists names only, is limited to two levels and 32 entries per directory, and rejects paths outside Native HOME, symlinks, special files, and traversal. It does not read file contents or Android shared storage. The TUI, Web, and GTK clients expose the same bounded action.
 
-The read-only native audit dated 2026-10-17 observed an active OpenSSH service and a successful local credential-authenticated connection. The Termux sshd configuration permits public-key, password, and keyboard-interactive authentication and specifies wildcard IPv4/IPv6 bind addresses. The new adapter confirmed valid config syntax and an active daemon, but procfs did not expose TCP tables to Termux, so actual socket binding/process ownership could not be verified. The standard Termux:Boot directory and `sv` command were absent; nonstandard service/boot ownership remains unknown. Treat the existing service as externally managed until reviewed/adopted; do not change its auth or binding automatically. No key or credential files were read or stored.
+## Local CPU inference
 
-Since both providers share Android's network namespace, they require different ports and conflict checks. Default to loopback and public-key authentication; LAN exposure is an explicit, reviewed choice. Existing SSH services are detected read-only and are never stopped or adopted by matching process name alone. Missing OpenSSH disables only that provider's remote access, not the workstation UI or local CLI.
+Run `tx ai status` to inspect the Termux-owned runtime and pinned model. `tx ai setup` guides first use; it does not install Termux packages. Preview model download or removal before confirming it. TUI, Web, and GTK expose the same shared CPU inference service with separate run and model-management scopes. Prompts are handled on-device and are not written to Ternuxx logs; the Web interface is authenticated and loopback-only.
 
-Native SSH starts and recovers independently of PRoot. A PRoot-side agent may request an explicitly authorized native diagnostic through the configured SSH connection, but SSH reachability alone does not authorize arbitrary commands. The native endpoint validates a bounded operation ID and arguments, applies a timeout, and returns a structured result; unauthorized requests fail at the native execution boundary. Guest-dependent requests report PRoot unavailable without failing native SSH or other native services.
+Each run uses CPU only (`-ngl 0`), four threads, a 512-token context, at most 128 output tokens, one prompt line, and a 120-second timeout. Ctrl-C terminates only the inference process group. Ternuxx verifies the pinned model SHA-256 before each run and removes only that fixed model after confirmation. The runtime package remains owned by Termux. See the [CPU baseline](testing/CPU-BASELINE.md) and [workflow evidence](evidence/2026-10-24-native-cpu-inference-workflow.md).
 
-## Termux:Boot and Termux:API
+## Recovery and backups
 
-These integrations are optional host capabilities, not requirements for the base desktop. Termux:Boot must invoke the native orchestrator directly. Native SSH, selected native services, and continuity recording recover before any optional PRoot work; boot must not enter PRoot or wait for a guest agent. PRoot startup is an optional, independently selected workload and can fail without taking native recovery down.
+`tx backup`, `tx restore`, `tx recovery`, and `tx checkpoint` operate on the private Ternuxx Native state paths. They do not inspect Android shared storage. Recovery refuses symlinks, stale plans, ambiguous process identity, and changed targets. Keep private keys, passwords, bootstrap codes, and unredacted logs out of evidence and Git.
 
-- **Termux:Boot:** provide owner-controlled native service/desktop profiles and optional PRoot workload selection, plus CLI-only service profiles. Before enabling a profile, show the exact generated script, commands, display, wake-lock behavior, foreground/UI steps, and disable path. Never silently add or change files in `~/.termux/boot/`. A PRoot profile is subordinate to native startup and cannot make native boot contingent on guest readiness.
-- **Native profile:** start Ternuxx-owned Termux:X11, required host services, and native XFCE. Android Activity launch and focus polling remain disabled by default and are controlled through the separate GUI monitoring policy. Track server, Linux session, Android Activity availability, focus, and visible GUI separately.
-- **PRoot profile:** boot-profile integration currently fails closed; it does not launch the Debian guest at boot. Interactive PRoot GUI launch is a separate, explicit route: `tx pgui start` chooses standalone `:0` only when the managed Native GUI is stopped, or nested Xephyr `:2` inside Native `:1` when it is running. Specific Debian GUI applications can use the shared Native-display app route. Never use an interactive `~/x.sh` launcher as a boot entry or infer control of aliases/sessions it starts. Inspect the exact wrapper before any retirement; changes to user shell configuration or guest files require their own exact, reversible plan.
-- **Hybrid profile:** start one Ternuxx-owned X11 server and one native XFCE desktop, then make the existing Debian PRoot available for selected workloads on that display. Do not start a second XFCE session against the same display. A full PRoot desktop can be selected as the alternative `proot` profile or later assigned a separately validated display.
-- **GUI visibility:** when Android allows the X11 activity to appear, report it as open; if it blocks or backgrounds the request, report “desktop services running; open Termux:X11 to view” and leave a user-action route. Do not report GUI-ready merely because `am start` returned success.
-- **Scope of control:** CLI commands can manage the Termux-side services Ternuxx owns. They cannot override Android's activity/background policy, force the screen on/unlock the device, bypass app permissions, or guarantee that the OEM will keep a background process alive. Provide `boot status`, `boot profile`, `boot enable`, and `boot disable` flows with preview and explicit confirmation. The owner installs and opens the matching Termux:Boot app once and handles Android battery/background settings.
-- **Boot safety:** boot scripts must be idempotent, log to Ternuxx-owned state, avoid duplicate sessions after reboot/retry, and only manage a PRoot session that the selected Ternuxx adapter started. Keep the existing guest data and installed workloads. Do not trim or broadly replace the rootfs. An exact guest configuration/helper change requires an impact preview, preserved pre-state, explicit apply, and tested rollback; first-run session writes require opt-in.
-- **Termux:API:** expose only useful, individually selectable integrations such as share/receive a user-selected file, clipboard, notifications, battery/device status, and media controls when the matching API command exists. Check for both the Termux package and companion app at runtime. Calls that require Android permissions must explain and let Android's permission flow handle consent. API failure must leave core CLI and desktop workflows usable.
-- **Background service management:** prefer Termux's supported service tooling when present, and record whether Ternuxx or an external service manager owns a process. Do not duplicate a service already managed by another owner. Wake locks are explicit, visible, and scoped to the active workload/service that acquired them; only that owner releases its lock after completion or verified cleanup. Stopping PRoot must not release a lock belonging to an independent native workload. They are never enabled globally as a hidden performance setting.
+## Retired PRoot routes
 
-The Wake Lock status response uses `schemas/wakelock-status.schema.json`. `boot_id_relation` is `match` or `different` only when both IDs are known; otherwise it is `unknown`. The platform lock remains app-global and is never inferred from Ternuxx owner leases.
-
-
-### Continuity and reboot recovery
-
-Write native boot and task-continuity records to Ternuxx-owned Termux private storage. Persist only sanitized operation identity, provider, checkpoint/status, timestamps, and recovery metadata; exclude credentials, private keys, and unnecessary personal paths. Make updates atomic and versioned so an interrupted write is detectable. Reboot evidence records what native services recovered without assuming the current agent survived. PRoot-dependent work remains pending until a fresh PRoot session is running and the owner requests verification or continuation. Stopping or restarting one provider may affect only processes/resources recorded as owned by that provider.
-
-**Current implementation slice:** `tx checkpoint prepare|verify` now writes private, atomic native continuity records and compares boot IDs without auto-resuming tasks. Host-side tests exercise reboot detection and a platform-neutral owner-scoped resource lease model. These do not yet verify Android reboot recovery, Termux:Boot, service readiness, or actual Wake Lock API semantics; see [continuity implementation status](architecture/CONTINUITY-IMPLEMENTATION.md).
-
-Required acceptance evidence (not yet passed): native SSH and continuity recording with PRoot stopped; `db` enters the guest without starting a GUI; `xgo` matches its pre-change graphical workflow; an authorized PRoot agent can run a bounded native diagnostic over configured SSH and an unauthorized request is rejected; stopping PRoot leaves native services healthy; restarting native services preserves PRoot state; and a reboot can be prepared/verified from native records without a surviving agent. Wake-lock ownership also needs a test proving one service cannot release another workload's lock. See [ADR-0010](architecture/decisions/ADR-0010-native-termux-autonomy.md).
-- **Version and signing:** Termux add-on apps need a compatible signing source with the main Termux app. Doctor should report missing/mismatched companion capability without attempting to uninstall or replace apps.
-
-Official references: [Termux:Boot](https://github.com/termux/termux-boot) and [Termux:API](https://github.com/termux/termux-api).
-
-## Optimization controls
-
-`optimize status`, workload profiles, storage analysis, and profile restore are planned under [Workload optimization](OPTIMIZATION.md). The optimizer is inspect-first. It changes only declared, per-job application settings after preview and consent; automatic thermal response is opt-in and can only reduce the selected workload. System governors, GPU clocks, thermal protections, and unrelated services remain outside its control.
-
-## Dependency and APK fallback rules
-
-The manager checks each profile's dependencies before enabling or starting it and reports the exact missing item. Fallback stays within the same capability boundary; it never silently changes provider or renderer.
-
-| Missing capability | Safe fallback |
-|---|---|
-| Termux:Boot APK absent, disabled, or not initialized | Boot automation is unavailable. Keep manual `tx start`/CLI controls available and show the official add-on setup guide; do not pretend boot is enabled. |
-| `termux-services`/runit package absent | A Termux:Boot script may perform one-shot startup for selected owned services. Mark watchdog/restart supervision unavailable; do not silently install a manager. |
-| Termux:X11 APK or companion package unavailable | CLI services may still start, but report no visible desktop and show the specific setup route. Do not report GUI-ready. |
-| Native desktop packages unavailable | Keep CLI-only mode available; show a preview for the native package profile. Do not silently switch to the PRoot desktop. |
-| Existing Debian PRoot or GPU path unavailable | Use native profile if its own prerequisites pass, otherwise CLI-only. Never silently fall back from hardware rendering to software or alter the guest. |
-| Shizuku APK/server/watchdog unavailable | Continue with unprivileged Termux and PRoot features. Any ADB Wi-Fi setting control remains unavailable and requires a user action through Android settings or Shizuku's own app. |
-| Termux:API companion or a particular API command unavailable | Hide/disable only that integration; keep the rest of the workstation usable. |
-
-An APK being installed is not sufficient proof that its service, permission, signature compatibility, or requested capability is ready. Doctor reports app presence, companion command, permission/provider state, and live service readiness separately.
-
-## Optional wireless ADB and Shizuku provider
-
-Wireless ADB is separate from starting the workstation. Ternuxx desktop boot does not need Shizuku. A lower-dependency setup uses Termux:Boot to start selected Termux user services and, if installed, Termux's runit-based `termux-services` to supervise/restart those processes. This cannot grant Android shell identity or turn on protected ADB settings.
-
-An advanced, separately enabled Shizuku provider may expose ADB-shell-level actions when the owner has installed/configured Shizuku and granted the required capability. The owner's [ADT forensic audit](https://github.com/soobujmiah/adt/blob/abece9e714a3bcb24d4a8dcc9f001feb421c1411/docs/ON_DEVICE_ADB_SHIZUKU_OPERATIONAL_DEPENDENCY.md) details the custom fork's boot receiver, WorkManager start flow, foreground watchdog, and its relationship to the PRoot `adb -L tcp:5037` relay and Android-side `:5555` bridge. That is a dated device-specific snapshot, not a feature guaranteed by upstream Shizuku or Ternuxx. Upstream Shizuku documentation says non-root mode must be started again with ADB after each reboot. Ternuxx must detect and report the actual provider instead of assuming that Shizuku or its watchdog is present.
-
-Native Doctor now performs a bounded ADB protocol `host:version` query only to `127.0.0.1:5037`. It does not invoke the `adb` executable (which could start a server), request a device list, send a device command, or infer the listener owner/bind scope. A response proves only that a local ADB server answered; Wireless Debugging, device authorization, Shizuku service state, and remote reachability remain separate findings/unknowns.
-Doctor reports Shizuku package versionCode and whether the rish command is present as discovery hints. Neither establishes signing identity, a running Shizuku server, permission granted to Ternuxx, or watchdog health. The current shell-only integration has no approved Shizuku API client or rish health probe, so live permission remains unknown until an Android-side client or separately reviewed rish probe is added. Mere rish presence is not proof of service or authorization.
-
-Before supporting any automatic ADB-over-Wi-Fi action, distinguish Android's paired Wireless debugging transport from a fixed `adbd` TCP port such as 5555. Do not infer one is active from a setting/property or open port alone. Report transport, listener, pairing/authorization, and Shizuku bridge as separate facts. Enabling a listener can expose a powerful shell interface on the local network; it must be off by default, show its bind/port and security impact, require explicit consent, and provide an immediate disable action. Never scan LAN ports, store pairing codes/ADB keys, or disable debugging that the user enabled outside Ternuxx.
-
-The watchdog is owned by the Shizuku provider, not Ternuxx. Ternuxx may inspect provider health and show logs/status if available, but must not install a custom Shizuku APK, grant `WRITE_SECURE_SETTINGS`, change Android debugging settings, or keep restarting a failed provider without an explicit owner-approved operation. A restart loop needs a bounded retry count, backoff, and a visible failure state.
-
-Official references: [Shizuku API requirements](https://github.com/RikkaApps/Shizuku-API#requirements), [Shizuku setup guide](https://shizuku.rikka.app/guide/setup/), and [Termux services](https://github.com/termux/termux-services).
-
-## Recovery
-
-Recovery has four distinct jobs:
-
-1. **Operation journal:** record the planned operation, exact owned targets, completed steps, and rollback actions before the first mutation. On startup, show interrupted operations instead of silently replaying them.
-2. **Configuration backup:** create a timestamped archive of Ternuxx configuration, manifests, and state metadata. Include schema and software version, checksums, and a clear list of included/excluded paths. Do not package rootfs images, shared storage, or secrets by default.
-3. **Previewed restore:** `backup list`, `backup inspect`, and `restore --preview BACKUP` show archive integrity, version compatibility, files that would be added/replaced, and conflicts. Restore requires a separate explicit confirmation and writes only to Ternuxx-owned paths. Preserve the current state as a rollback snapshot before replacement.
-4. **Repair and rollback:** support operation-specific compensation, such as removing a partially created Ternuxx state directory or restoring a known-good Ternuxx configuration snapshot. Never run generic `rm -rf`, package autoremove, rootfs pruning, or broad process cleanup as recovery.
-
-A recovery command should fail closed when checksums fail, ownership cannot be established, the archive schema is newer or unknown, or a path resolves outside the Ternuxx state root. It should emit a recovery report with the chosen backup, affected paths, result, and any manual steps left.
-
-Planned interface:
-
-```text
-tx recovery status
-tx mng proot status                        # distro inventory + readable host PRoot process candidates; never enters Debian
-tx proot verify --distro debian --guest-user USER --display :N --backend zink|virgl
-tx proot verify --distro debian --guest-user-from ternux-state --display :N --backend zink|virgl
-# Ternuxx reports its own bounded host/guest evidence; no separate Ternux CLI is required
-# status response: schemas/proot-distribution-inventory.schema.json
-# verify response: schemas/ternux-guest-diagnostics.schema.json
-
-PRoot-Distro guest diagnostics use `login --isolated`, which disables its broad default host mounts. Zink verification binds only Termux's X11 socket directory and the explicit KGSL/DRI device paths. VirGL verification also enables shared temporary storage for its server socket, while keeping the default host home and shared-storage mounts disabled. The fixed guest probe uses bounded allowlisted diagnostics and does not invoke the separate Ternux CLI or enable arbitrary guest command execution. Guest account discovery reads the selected rootfs `/etc/passwd` with path, ownership, size, and account-shape checks; it does not require Ternux-private state. An explicit non-root guest user remains available when discovery is ambiguous. When guest X11 fails, diagnostics compare the requested display with the visible Termux:X11 process arguments and add a bounded blocker if the display is not observed; this does not prove ownership or server absence, and PID/argv are not returned. See `docs/evidence/2026-10-18-p3-display-process-diagnostic-0206.json` for the live result and limitations.
-# native Ternux fields are self-reported and identity/ownership-unverified; its running/X11 status is process-presence only and does not correlate the process to Ternux or its configured display. Its PulseAudio field is process status; a separate read-only native_pulseaudio_endpoint uses pactl info, and neither proves audible output. Configured backend/host renderer do not prove the selected guest workload. See docs/evidence/2026-10-18-p3-ternux-x11-presence-correlation-0202.json.
-tx backup create --name NAME                 # preview and print PLAN_ID
-tx backup create --name NAME --yes --plan-id PLAN_ID
-tx backup list
-tx backup inspect BACKUP_ID
-tx restore --preview BACKUP_ID                # preview and print PLAN_ID
-tx restore BACKUP_ID --yes --plan-id PLAN_ID
-tx recovery inspect OPERATION_ID
-tx recovery resolve OPERATION_ID              # preview supported operation-journal reconciliation
-tx recovery resolve OPERATION_ID --yes --plan-id PLAN_ID
-tx recovery rollback OPERATION_ID                 # preview only
-tx recovery rollback OPERATION_ID --yes --plan-id PLAN_ID
-# `recovery resolve` supports the journal kinds listed below; unsupported future kinds remain inspect-only. Generic task resume is not implemented.
-```
-
-Rollback currently applies only to a journaled configuration-profile restore (including a restore marked `needs_recovery`) with an intact rollback snapshot. It previews the fixed affected path and requires the exact plan ID before applying. Interrupted SSH service start/stop, native boot-profile enable/disable, native desktop start/stop, backup create, and profile restore/rollback records can be reconciled with `recovery resolve OPERATION_ID`. Each supported resolver lists the exact journal record path or paths that confirmation may update; service definitions, boot files, session/process state, profile files, and backup archives are inspection-only. Restore recovery compares the current profile only with the verified restore archive and deterministic pre-restore snapshot; it marks `complete` when the archive target is present, `failed` when the unchanged pre-restore state is present, and leaves ambiguous or unsafe states unresolved. When a completed rollback compensates a `needs_recovery` parent, the same preview lists both journal records. Exact confirmation never applies a restore, calls `sv up/down`, signals desktop processes, edits session/boot/profile files, or changes an archive. A corrupt/unsafe archive, existing desktop lifecycle lock, active/ambiguous process state, unsafe session file, stale plan, or unrelated unresolved operation fails closed. `complete` means the recorded target state was observed; it does not prove authenticated SSH health, GUI visibility, or Termux:Boot delivery. Other unsupported operation kinds remain inspect-only; generic resume is not available.
-
-## Optional software catalog and website
-
-The project website should be a maintained catalog and guide, not a remote shell installer. Each entry identifies the software, official publisher/project page, official package or download page, supported execution layer (Termux, existing Ternux PRoot, or both), architecture/runtime constraints, display/audio requirements, verification date, and known limitations. Installation links point to upstream documentation or let the local CLI create a verified package preview. The website must not ask visitors to paste an opaque `curl | sh` command.
-
-Catalog entries are optional and cannot silently expand the base install. Package availability and links expire; a release workflow must re-check them against official sources before labeling an entry supported. Multiple distributions and display systems are compatibility candidates, not blanket guarantees. Termux:X11 is the initial display target; VNC or Wayland can be advertised only after a separate compatibility gate and evidence for the exact provider/device combination.
-
-## Choosing GUI startup after reboot
-
-The default `cli-only` profile keeps GUI startup off after reboot while leaving separately configured CLI services alone. Use `tx start` to start native X11/XFCE. Run `tx gui` from Native Termux to open the GTK management center on the verified session display; if `DISPLAY` is unset, Ternuxx derives it from the session record, and a conflicting display is refused. Use `tx boot gui on` to preview native X11/XFCE startup and `tx boot gui on --yes` to apply it. Use `tx boot gui off` to preview GUI-off and `tx boot gui off --yes` to apply it. These shortcuts use the existing preview-first profile manager and preserve unrelated Termux:Boot scripts. `tx boot disable --yes` removes only the recognized Ternuxx boot profile. The native boot profile calls the same desktop manager as an interactive start. That manager does not launch the Termux:X11 Activity. The opt-in monitoring service is installed and running idle on the current device. Monitoring, focus checks, and Activity launch remain disabled. Isolated replay ticks passed; live foreground detection and Android Activity launch are not qualified. Unknown focus never triggers a launch.
-
-## Current boot-profile implementation status
-
-The current CLI exposes profile status/preview plus preview-first boot enable/disable through the shared allowlisted management API. Profile status validates only the fixed Ternuxx boot entry and reports `managed_script_identity` as match, recognized legacy match, missing, mismatch, unsafe, not configured, or not checked (preview); it never reads unrelated boot scripts or repairs files. Enable requires an explicit --yes, a positively detected Termux:Boot app, and all native command prerequisites; it writes one Ternuxx-marked startup file and a private profile record. Disable removes only the exact recognized Ternuxx startup file and profile record, preserving unrelated boot scripts. Both mutations are journaled before file changes and roll back on ordinary failures. PRoot and hybrid boot profiles currently fail closed because boot-profile integration does not yet establish ownership for those startup workloads; this does not mean the interactive Debian PRoot adapter is absent. Termux:Boot must also be opened once by its owner; profile readiness does not prove Android delivery, background policy, or visible GUI activity. Device enable/disable was not run; see docs/evidence/P3-doctor-progress.md.
-
-## Acceptance gates
-
-- Doctor output is read-only, useful without root, stable in JSON, and distinguishes Ternuxx from external/Ternux-owned state.
-- Manager status is accurate when processes exit unexpectedly, PIDs are reused, or another desktop is active. Conflicts fail closed.
-- Native, PRoot, hybrid, and CLI-only boot profiles are separately selectable, idempotent, observable, and can be disabled from the CLI. A blocked Android activity is reported as a fallback state, never as a successful visible desktop. PRoot profile does not call the current broad-cleanup `~/x.sh`, and hybrid never starts a second XFCE on the same display.
-- Every mutation has a preview, exact ownership boundary, explicit consent, journal, and documented rollback or recovery result.
-- Backup/restore preserves permissions and metadata needed by Ternuxx, rejects path traversal and corrupt archives, and never modifies Ternux or shared user data.
-- Catalog links resolve to official publishers, each listing has a review date and compatibility scope, and the CLI remains the trusted local installation path.
-
-## Current configuration backup implementation
-
-The local CLI and allowlisted management API now support recovery status/inspect and explicit rollback of profile restore operations, plus backup create/list/inspect and restore preview/apply. Create defaults to preview and binds confirmation to the exact configuration bytes by a SHA-256 plan ID. Restore requires a separate preview and plan ID bound to both archive integrity and the current destination hash; it writes a rollback snapshot before the atomic replacement and journals the operation. An interrupted backup-create record can be reconciled after validating its exact named archive: a valid archive resolves complete, an absent archive resolves failed, and an invalid/unsafe archive remains unresolved for manual inspection. Confirmation updates only the journal record; it does not modify the backup.
-
-The first allowlist contains only the validated native boot profile at state/boot/profile.json, including an explicit absent marker so restore can remove the owned profile when the snapshot recorded its absence. It excludes SSH configuration and keys, logs, runtime session data, operation journals, continuity/reboot nonces, Termux:Boot scripts, PRoot/rootfs, shared storage, and other home files. Archives use a versioned JSON manifest with per-entry and whole-archive checksums and private 0700/0600 storage. Restore refuses unknown schema/version, corrupt checksums, unsupported paths, path traversal, symlinks, oversized data, and changed destinations. A restore operation records its pre-change snapshot under a deterministic operation-linked ID. `recovery rollback OPERATION_ID` previews applying that snapshot and requires `--yes --plan-id`; it can compensate a completed or `needs_recovery` profile restore, records the parent/child journal link, and resolves that interrupted restore as failed after successful compensation. Rollback itself creates another rollback snapshot, so a rollback operation can itself be reversed through the same mechanism. Only profile-restore operations support compensating rollback; other current journal kinds use operation-specific `recovery resolve`, and unsupported future kinds remain inspect-only. Generic task resume is not implemented. See lib/config_recovery.py, schemas/config-backup.schema.json, and fixture tests.
+Ternuxx no longer supports `tx db`, `tx pgui`, `tx proot`, Debian app launch, guest terminal, guest setup, or guest graphics handoff. The owner authorized removal of the installed guest containers and PRoot packages; the live retirement and verification are recorded in the [migration evidence](evidence/2026-10-24-native-only-proot-removal-audit.md). Historical dated reports do not describe the current supported product.

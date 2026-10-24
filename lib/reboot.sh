@@ -75,7 +75,7 @@ nt_cmd_boot() {
           *) nt_fail "Unknown boot enable option: $1"; return 2 ;;
         esac
       done
-      [ -n "$profile" ] || { nt_fail "Usage: tx boot enable --profile <cli-only|native|proot|hybrid> [--yes]"; return 2; }
+      [ -n "$profile" ] || { nt_fail "Usage: tx boot enable --profile <cli-only|native> [--yes]"; return 2; }
       local enable_args=(--operation boot.enable --profile "$profile")
       [ "$confirmed" -eq 1 ] && enable_args+=(--yes)
       _nt_management_call "${enable_args[@]}" ;;
@@ -97,10 +97,10 @@ nt_cmd_boot() {
           [ "$#" -le 2 ] || { nt_fail "Usage: tx boot profile status"; return 2; }
           _nt_management_call --operation boot.profile.status ;;
         preview)
-          [ "$#" -eq 3 ] || { nt_fail "Usage: tx boot profile preview <cli-only|native|proot|hybrid>"; return 2; }
+          [ "$#" -eq 3 ] || { nt_fail "Usage: tx boot profile preview <cli-only|native>"; return 2; }
           _nt_management_call --operation boot.profile.preview --profile "$3" ;;
         *)
-          nt_fail "Usage: tx boot profile status | preview <cli-only|native|proot|hybrid>"
+          nt_fail "Usage: tx boot profile status | preview <cli-only|native>"
           return 2 ;;
       esac ;;
     *)

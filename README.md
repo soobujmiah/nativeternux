@@ -4,89 +4,56 @@
 
 # Ternuxx
 
-**Native Termux workstation management with an optional Debian PRoot provider.** Ternuxx brings desktop lifecycle, health checks, service management, SSH, and shared CLI/TUI/Web/GTK controls together under the `tx` command. Debian remains an explicitly selected workload environment.
+Ternuxx is a Native Termux workstation manager for Android. It manages the Termux:X11 desktop, Native services, SSH, diagnostics, recovery, and CLI, TUI, Web, and GTK interfaces through `tx`.
 
-[বাংলা পরিচিতি](bn/README.md) · [বাংলা ইনস্টল গাইড](bn/INSTALLATION.md) · [Product vision](docs/PRODUCT-VISION.md) · [Roadmap](docs/ROADMAP.md) · [Architecture](docs/ARCHITECTURE.md) · [Documentation index](docs/README.md)
+The owner selected a Native Termux-only product on 2026-10-24. PRoot guest support was retired, all six installed guests were removed, and the `proot` and `proot-distro` packages were uninstalled. Historical reports remain under `docs/` as dated records; they do not describe current supported behavior. See the [migration audit](docs/evidence/2026-10-24-native-only-proot-removal-audit.md), [ADR-0017](docs/architecture/decisions/ADR-0017-native-only-product-and-proot-retirement.md), and [current state](CURRENT_STATE.md).
+
+## Start here
+
+Run Ternuxx directly in Native Termux:
+
+```sh
+./tx help
+./tx guides
+./tx doctor
+./tx install preview
+./tx ai status
+./tx start
+```
+
+Install Termux:X11 separately from a trusted source before starting the desktop. `tx install preview` shows the exact Native Termux packages and changes; installation requires reviewing that plan and confirming its plan ID. See the [installation guide](docs/INSTALLATION.md) and [operations guide](docs/OPERATIONS.md).
+
+## Interfaces
+
+- `tx` — command line
+- `tx tui` — interactive terminal management
+- `tx web` — authenticated loopback Web UI
+- `tx gui` — Native GTK management center, attached to the verified Ternuxx desktop
+
+All interfaces run on Native Termux and use the shared management service for supported operations. Unsupported historical guest commands return a retirement message.
 
 ## Project status
 
 <!-- generated:phase-status:start -->
-**Current phase:** P4 — Existing Ternux PRoot feature-parity provider
+**Current phase:** All required roadmap phases are resolved.
 
-**Progress:** 4/11 phases resolved (4 completed, 0 skipped)
+**Progress:** 11/11 phases resolved (10 completed, 1 skipped)
 
-Disposable Debian migration interruption recovery and exact retire/restore now pass with inode/hash preservation; active default Debian remains untouched.
-
-**Next action:** Reconcile remaining P4 config/package lifecycle and CLI/TUI/Web/GTK action parity against current source; then collect current isolated GUI/audio/workload evidence without stopping the active default Debian session.
-
-[Phase status and evidence](docs/PHASE-STATUS.md)
+[Roadmap and active work](docs/ROADMAP.md) · [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
 
-## Quick start
+PRoot support and its installed guests were retired from the current product scope on 2026-10-24. The [migration audit](docs/evidence/2026-10-24-native-only-proot-removal-audit.md) records the implementation and live verification; dated guest documentation remains historical.
 
-This one-line command enables the Termux X11 package repository, installs Git, clones Ternuxx, and prints a reviewable Native package preview:
+Ternuxx remains under active development. Device-specific graphics, workload performance, broad Android compatibility, and public release are not implied by passing repository tests. The project has no selected license yet.
 
-```sh
-pkg update && pkg install x11-repo git && pkg update && git clone https://github.com/soobujmiah/ternuxx.git "$HOME/ternuxx" && cd "$HOME/ternuxx" && ./tx install --preview
-```
+## Development
 
-Review the complete package and dependency plan. Apply only the exact saved plan ID shown by your preview:
+Run the repository test harness from Native Termux:
 
 ```sh
-./tx install --yes --plan-id PLAN_ID
+env -u LD_LIBRARY_PATH bash scripts/repo_test.sh
 ```
 
-This Native transaction refuses removals and upgrades, and does not create or replace a Debian rootfs. Install the matching **Termux:X11 Android app** separately if you want a desktop. For a complete manual walkthrough, existing Debian guest setup, fresh disposable Debian setup, verification, and recovery, follow the [installation guide](docs/INSTALLATION.md).
+The Node runtime in some Termux sessions may inherit an incompatible `LD_LIBRARY_PATH`; the test harness clears it for its own Node invocation. Do not close the active Termux desktop or Native services during development.
 
-## First commands
-
-Run these from the repository directory:
-
-```sh
-./tx help                 # command reference
-./tx doctor               # health checks
-./tx info                 # detected runtime capabilities
-./tx start                # start the Native desktop
-./tx tui                  # terminal management interface
-./tx web                  # authenticated local Web interface
-./tx mng center           # Native GTK management center
-./tx db                   # Ternuxx-managed Debian guest shell
-```
-
-The CLI, TUI, authenticated Web UI, and GTK app use shared typed management services for supported operations. Their action coverage is still different; check the [capability matrix](docs/architecture/CAPABILITY-MATRIX.md) before relying on a specific control. Managed SSH listens on loopback port 8023; port 8022 is the separately owner-operated development channel used for repository work.
-
-## What works today
-
-The following are implemented, with acceptance limited to the cited target and evidence:
-
-- **Native Termux workstation:** preview-first package installation, desktop start/stop/status, health and capability reporting, service/boot controls, management clients, and managed SSH.
-- **Debian PRoot integration:** `tx install debian` previews and records the existing Ternux Debian Trixie guest in Native Ternuxx state, preserving its rootfs and guest files. This initial route does not install missing packages; that migration and package lifecycle remains open.
-- **Fresh Debian Trixie setup:** a separate explicitly named guest can be created from a pinned image and Debian APT snapshot. Package groups can be selected for a preview; `base` is required. The exact package-version inventory is recorded, and a matching failed package stage can be resumed through a new exact preview. A 2026-10-23 disposable replay completed while preserving the existing default Debian guest; see [replay evidence](docs/evidence/2026-10-23-disposable-debian-replay.md).
-- **Cross-client management:** supported lifecycle and terminal operations share a typed service across CLI, TUI, authenticated Web, and GTK. Full action parity remains open.
-- **GPU and audio routes:** provider-specific detection and selected guest paths exist, but a route or installed driver alone does not prove that every GUI application is accelerated. See [GPU qualification](docs/testing/GPU-ACCELERATION.md) and [PRoot graphics](docs/PROOT-GPU.md).
-
-## What is not complete yet
-
-- **Clean-device reproduction:** the current evidence comes from an already-configured Native Termux device and a new Debian guest on that device. It does not certify a clean Android/Termux installation.
-- **Native package version lock:** `tx install --preview` checks the constrained transaction and refuses upgrades. It is not a permanent package lock and does not promise the same repository candidates across dates. On 2026-10-23, 4 of 16 direct/dependency package versions differed from current signed Termux candidates; upgrades were not applied. See [Native version-drift evidence](docs/evidence/2026-10-23-native-package-version-drift.md).
-- **Existing Debian migration:** adoption is available, but a general package/configuration migration of an existing guest is not complete. Guest changes need an exact target, preview, preserved state, explicit apply, and tested rollback.
-- **Workload selection:** fresh Debian setup has package groups; provider-scoped optional software catalogs and matching install flows across Native and Debian, including Web/TUI/GTK, remain unfinished.
-- **Hardware and release acceptance:** clean-device, complete rollback, GPU/Vulkan rendering, audio, NPU, supported-device matrix, and license/release readiness all need their own evidence. No stable-release or open-source license claim is made.
-
-## After the remaining work is complete
-
-The product goal is a reproducible mobile workstation with independent Native and Debian workloads; clear provider-specific installation and rollback; the same safe management actions in CLI, TUI, Web, and GTK; and verified CPU/GPU/NPU execution for specifically tested workloads. These are goals, not current claims. The [roadmap](docs/ROADMAP.md) and [product vision](docs/PRODUCT-VISION.md) describe the intended end state and remaining gates.
-
-## Documentation
-
-- [Manual installation, existing Debian setup, and fresh Debian setup](docs/INSTALLATION.md)
-- [Operations and command reference](docs/OPERATIONS.md)
-- [Architecture and shared services](docs/ARCHITECTURE.md)
-- [Testing and evidence](docs/testing/README.md)
-- [Repository audit worklist](docs/audit/REPOSITORY-AUDIT.md)
-- [Security policy](SECURITY.md)
-- [License and release readiness](docs/readiness/README.md)
-
-## License
-
-This repository does not currently contain a `LICENSE` file. Do not assume or apply an unstated license. See [release readiness](docs/readiness/README.md).
+See [architecture](docs/ARCHITECTURE.md), [capability matrix](docs/architecture/CAPABILITY-MATRIX.md), [security](SECURITY.md), and the [documentation index](docs/README.md).

@@ -15,10 +15,7 @@ class ManagementCatalogTests(unittest.TestCase):
         catalog = management_catalog.build_catalog(set(management_service.OPERATIONS))
         domains = {domain["id"]: domain for domain in catalog["domains"]}
         self.assertIn("doctor.report", domains["doctor-diagnostics"]["available_operations"])
-        proot = domains["proot-runtime"]
-        self.assertEqual(proot["status"], "partial-installed-debian-first")
-        self.assertIn("guest.install", proot["planned"])
-        self.assertIn("desktop.select", proot["planned"])
+        self.assertNotIn("proot-runtime", domains)
         cloud = next(provider for provider in catalog["providers"] if provider["id"] == "cloud-api")
         self.assertEqual(cloud["status"], "planned-disabled")
         self.assertFalse(catalog["policy"]["external_cloud_calls_enabled"])
@@ -53,11 +50,17 @@ class ManagementCatalogTests(unittest.TestCase):
         self.assertEqual(audio["supported_operations"], ["doctor.report"])
         self.assertIn("audible output remain unqualified", audio["description"])
         self.assertEqual(by_id["server.generic-deployment"]["status"], "planned")
+        graphics = by_id["graphics.native"]
+        self.assertIn("KGSL candidate is experimental", graphics["description"])
+        self.assertIn("no Ternuxx installer", graphics["description"])
+        inference = by_id["inference.cpu.local"]
+        self.assertEqual(inference["state"]["desired"], "bounded-local-cpu")
+        self.assertIn("offline execution has not been verified", inference["description"])
         accelerator = by_id["native.acceleration.qualification"]
         self.assertEqual(accelerator["status"], "partial")
         self.assertEqual(accelerator["supported_operations"], ["doctor.report"])
         self.assertTrue(accelerator["security"]["read_only"])
-        self.assertIn("Native Termux and Debian PRoot remain separate", accelerator["description"])
+        self.assertIn("Native Termux", accelerator["description"])
         boot_profile = by_id["boot.termux.profile"]
         self.assertEqual(boot_profile["ownership"]["status"], "managed-generated-script-identity-queried")
         self.assertEqual(boot_profile["identity"]["installed"], "live-query-required")
@@ -66,23 +69,11 @@ class ManagementCatalogTests(unittest.TestCase):
             self.assertTrue(set(resource["supported_operations"]).issubset(management_service.OPERATIONS))
             self.assertEqual(set(resource["operation_capabilities"]), set(resource["supported_operations"]))
 
-    def test_replay_guest_lifecycle_is_separate_from_existing_debian(self):
+    def test_catalog_excludes_retired_proot_providers_and_resources(self):
         catalog = management_catalog.build_catalog(set(management_service.OPERATIONS))
-        resources = {item["id"]: item for item in catalog["resources"]}
-        replay = resources["proot.replay-guests"]
-        existing = resources["proot.debian.workloads"]
-        self.assertIn("proot.setup.retire.preview", replay["supported_operations"])
-        self.assertIn("proot.setup.restore.apply", replay["supported_operations"])
-        self.assertNotIn("proot.setup.retire.apply", existing["supported_operations"])
-        self.assertNotIn("proot.setup.restore.apply", existing["supported_operations"])
-        self.assertTrue(replay["security"]["disruptive_operations"])
-
-    def test_proot_session_health_is_catalogued_as_read_only(self):
-        catalog = management_catalog.build_catalog(set(management_service.OPERATIONS))
-        resource = next(item for item in catalog["resources"] if item["id"] == "proot.debian.workloads")
-        self.assertIn("proot.sessions.health", resource["supported_operations"])
-        self.assertEqual(resource["operation_capabilities"]["proot.sessions.health"], "diagnostics.read")
-        self.assertFalse(resource["security"]["read_only"])
+        self.assertNotIn("proot-runtime", {item["id"] for item in catalog["domains"]})
+        self.assertFalse(any(item["id"].startswith("proot.") for item in catalog["resources"]))
+        self.assertFalse(any(item["id"] == "proot-debian" for item in catalog["providers"]))
 
     def test_catalog_category_query_and_status_filters(self):
         operations = set(management_service.OPERATIONS)
@@ -100,15 +91,7 @@ class ManagementCatalogTests(unittest.TestCase):
 
     def test_catalog_api_accepts_filters_without_live_probes(self):
         env = {"TERMUX_VERSION":"test", "PREFIX":"/data/data/com.termux/files/usr", "HOME":"/tmp", "TERNUXX_STATE_DIR":"/tmp/state"}
-        # Native clients share this static discovery operation. A missing or
-        # broken PRoot installation must not be consulted on this path.
-        with patch.object(
-                management_service.proot_diagnostics, "inspect_installed",
-                side_effect=AssertionError("catalog must not probe PRoot")), \
-             patch.object(
-                management_service.proot_sessions, "list_sessions",
-                side_effect=AssertionError("catalog must not inspect PRoot sessions")):
-            response = management_service.dispatch({"api_version":1,"request_id":"catalog-filter-1234","operation":"management.catalog","args":{"category":"networking"}}, env=env)
+        response = management_service.dispatch({"api_version":1,"request_id":"catalog-filter-1234","operation":"management.catalog","args":{"category":"networking"}}, env=env)
         self.assertTrue(response["ok"])
         self.assertEqual(response["data"]["filters"]["category"], "networking")
         self.assertTrue(all(item["category_id"] == "networking" for item in response["data"]["resources"]))
@@ -116,22 +99,6 @@ class ManagementCatalogTests(unittest.TestCase):
         self.assertFalse(bad["ok"])
         self.assertEqual(bad["error"]["code"], "invalid_arguments")
 
-    def test_catalog_labels_proot_as_optional_and_unprobed(self):
-        catalog = management_catalog.build_catalog(set(management_service.OPERATIONS))
-        provider = next(item for item in catalog["providers"] if item["id"] == "proot-debian")
-        self.assertEqual(provider["kind"], "optional-unprobed-guest-runtime")
-        self.assertEqual(provider["status"], "availability-requires-explicit-probe")
-        terminal = next(item for item in catalog["resources"]
-                        if item["id"] == "proot.interactive-terminal-broker")
-        self.assertEqual(terminal["supported_operations"], [
-            "terminal.broker.status", "terminal.start.preview", "terminal.start",
-            "terminal.attach", "terminal.input", "terminal.resize", "terminal.output",
-            "terminal.detach", "terminal.close.preview", "terminal.close",
-        ])
-        self.assertEqual(terminal["operation_capabilities"]["terminal.broker.status"],
-                         "diagnostics.read")
-        self.assertEqual(terminal["operation_capabilities"]["terminal.start"],
-                         "proot.session.manage")
 
 
 if __name__ == "__main__":

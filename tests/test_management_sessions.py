@@ -50,6 +50,28 @@ class ManagementSessionTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             self.issue(authority, {"diagnostics.read"})
 
+    def test_resume_restores_same_live_session_and_csrf_without_reusing_bootstrap(self) -> None:
+        authority = self.make_authority()
+        issued = self.issue(authority, {"diagnostics.read", "ssh.managed.lifecycle"})
+        resumed = authority.resume_session(issued.bearer_token)
+        self.assertEqual(resumed.session_ref, issued.session_ref)
+        self.assertEqual(resumed.bearer_token, issued.bearer_token)
+        self.assertEqual(resumed.csrf_token, issued.csrf_token)
+        self.assertEqual(resumed.capabilities, issued.capabilities)
+        self.assertTrue(authority.authorize_request(
+            resumed.bearer_token, "ssh.service.restart", csrf_token=resumed.csrf_token).allowed)
+        with self.assertRaises(PermissionError):
+            self.issue(authority, {"diagnostics.read"})
+
+    def test_resume_refuses_and_prunes_expired_session(self) -> None:
+        clock = FakeClock()
+        authority = self.make_authority(clock=clock, idle_ttl=30)
+        issued = self.issue(authority, {"diagnostics.read"})
+        clock.advance(30)
+        with self.assertRaises(PermissionError):
+            authority.resume_session(issued.bearer_token)
+        self.assertEqual(authority.active_session_count(), 0)
+
     def test_concurrent_bootstrap_exchange_issues_at_most_one_session(self) -> None:
         authority = self.make_authority()
         def exchange():
@@ -94,14 +116,14 @@ class ManagementSessionTests(unittest.TestCase):
             services_only.bearer_token, "ssh.service.stop", csrf_token=services_only.csrf_token).reason,
             "scope_denied")
 
-    def test_graphics_and_guest_execution_require_control_scope_and_csrf(self):
+    def test_graphics_verification_requires_control_scope_and_csrf(self):
         control = self.make_authority(grants={"graphics.manage"})
         issued = self.issue(control, {"graphics.manage"})
         with self.assertRaises(ValueError):
             self.make_authority(grants={"guest.diagnostics.read"})
         reader = self.make_authority(grants={"diagnostics.read"})
         read_session = self.issue(reader, {"diagnostics.read"})
-        for operation in ("graphics.provider.verify", "proot.guest.verify"):
+        for operation in ("graphics.provider.verify",):
             with self.subTest(operation=operation):
                 self.assertEqual(reader.authorize_request(
                     read_session.bearer_token, operation,

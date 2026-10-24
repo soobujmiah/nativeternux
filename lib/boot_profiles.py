@@ -10,7 +10,7 @@ import tempfile
 import operation_journal
 
 
-PROFILES = ("cli-only", "native", "proot", "hybrid")
+PROFILES = ("cli-only", "native")
 BOOT_SCRIPT_NAME = "10-ternuxx-profile"
 SCRIPT_MARKER = "# Ternuxx-managed boot profile v2"
 
@@ -92,11 +92,6 @@ def preview(
             f'export PREFIX="{prefix}"\n'
             f'exec "{prefix}/bin/tx" start\n'
         )
-    else:
-        ready = False
-        provider = "Ternux Debian ownership-aware adapter" if profile == "proot" else "native XFCE plus Ternux workload-routing adapter"
-        blockers = [f"{provider} is not implemented; no provider fallback will run"]
-        command = ""
     return {
         "component": "boot_profile_preview",
         "schema_version": 2,
@@ -120,7 +115,6 @@ def preview(
             "read_only": True,
             "script_installed": False,
             "boot_config_changed": False,
-            "existing_proot_touched": False,
             "silent_provider_fallback": False,
         },
     }
@@ -362,7 +356,7 @@ def enable(*, profile: str, home: str | os.PathLike[str], state_dir: str | os.Pa
         "operation_id": operation_id,
         "safety": {
             "read_only": False, "script_installed": True, "boot_config_changed": True,
-            "existing_proot_touched": False, "silent_provider_fallback": False,
+            "silent_provider_fallback": False,
         },
     }
 
@@ -396,7 +390,6 @@ def disable(*, home: str | os.PathLike[str], state_dir: str | os.PathLike[str],
             "read_only": not confirmed,
             "script_removed": False,
             "only_owned_paths": True,
-            "existing_proot_touched": False,
         },
     }
     if not confirmed or (old_script is None and old_config is None):

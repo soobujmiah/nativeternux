@@ -329,8 +329,8 @@ def resolve_boot_profile_record(
     if (not operation_id.isalnum() or len(operation_id) != 32
             or expected_kind not in {"boot.enable", "boot.disable"}
             or result not in TERMINAL
-            or requested_profile not in {"cli-only", "native", "proot", "hybrid", "absent"}
-            or observed_profile not in {"cli-only", "native", "proot", "hybrid", "absent"}
+            or requested_profile not in {"cli-only", "native", "absent"}
+            or observed_profile not in {"cli-only", "native", "absent"}
             or type(state_matches_target) is not bool):
         raise ValueError("invalid boot-profile recovery resolution")
     if ((expected_kind == "boot.disable") != (requested_profile == "absent")

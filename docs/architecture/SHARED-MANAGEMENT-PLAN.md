@@ -2,7 +2,8 @@
 
 **Owner direction recorded:** 2026-10-18
 **Architecture:** [ADR-0004](decisions/ADR-0004-three-interfaces-shared-management.md)
-**Current project phase:** P4 - Existing Ternux PRoot feature-parity provider — Doctor, management, and recovery
+**Status:** Historical implementation plan, superseded by the Native-only decision on 2026-10-24. The former PRoot actions and multi-provider requirement below are retired and are not current product guidance. For current implementation use [the Native API contract](MANAGEMENT-API.md), [client capability matrix](CAPABILITY-MATRIX.md), and [phase status](../PHASE-STATUS.md).
+
 
 ## Product requirement
 

@@ -21,6 +21,17 @@ def _run(argv: list[str], env: dict[str, str], timeout: int = 20) -> tuple[int, 
     return result.returncode, result.stdout[-12000:]
 
 
+def _failure_detail(output: str) -> str | None:
+    """Return one bounded failure line without copying arbitrary tool output into API results."""
+    for line in output.splitlines():
+        candidate = line.strip()
+        upper = candidate.upper()
+        if ("CANNOT LINK EXECUTABLE" in upper or upper.startswith(("ERROR:", "ERROR "))
+                or upper.startswith(("FATAL:", "FATAL "))):
+            return candidate[:512]
+    return None
+
+
 def _candidate_hashes(repo_root: str) -> dict[str, str]:
     manifest = Path(repo_root) / "config/graphics/native-kgsl.json"
     try:
@@ -63,8 +74,20 @@ def _native_env(*, home: str, state_dir: str, process_env: dict[str, str]) -> di
                 and os.path.isdir(prefix) and not os.path.islink(prefix)
                 and os.path.isfile(os.path.join(prefix, "lib/dri/libdril_dri.so"))
                 and os.path.isfile(os.path.join(prefix, "lib/libgallium-26.3.0-devel.so"))):
+            # Keep the selected Mesa payload first, then the active Termux
+            # runtime libraries, before inherited tool-specific paths. Codex and
+            # other launchers may inject an incompatible libc++_shared.so into
+            # LD_LIBRARY_PATH; placing that ahead of $PREFIX/lib breaks native
+            # tools such as vulkaninfo even when the selected ICD is valid.
+            library_paths = [prefix + "/lib"]
+            termux_prefix = process_env.get("PREFIX")
+            if termux_prefix and os.path.isabs(termux_prefix):
+                library_paths.append(os.path.join(termux_prefix, "lib"))
+            library_paths.extend(env.get("LD_LIBRARY_PATH", "").split(os.pathsep))
+            env["LD_LIBRARY_PATH"] = os.pathsep.join(
+                path for index, path in enumerate(library_paths) if path and path not in library_paths[:index]
+            )
             env.update({
-                "LD_LIBRARY_PATH": prefix + "/lib:" + env.get("LD_LIBRARY_PATH", ""),
                 "LIBGL_DRIVERS_PATH": prefix + "/lib/dri",
                 "MESA_LOADER_DRIVER_OVERRIDE": "kgsl",
                 "__EGL_VENDOR_LIBRARY_FILENAMES": prefix + "/share/glvnd/egl_vendor.d/50_mesa.json",
@@ -141,15 +164,9 @@ def status(provider: str, *, home: str, state_dir: str, process_env: dict[str, s
         return {"provider": provider, "display": display, "opengl": gl, "gles": gles, "vulkan": vk,
                 "saved_candidate": os.path.isfile(os.path.join(state_dir, "native-graphics-prefix")),
                 "provider_boundary": "native Termux/Bionic"}
-    if provider == "debian":
-        import proot_diagnostics
-        inventory = proot_diagnostics.inspect_installed()
-        return {"provider": provider, "provider_boundary": "existing Debian PRoot/glibc",
-                "status": inventory["status"],
-                "installed_distributions": inventory["installed_distributions"],
-                "guest_entered": False, "read_only": True, "verification": "not_run",
-                "reason": "Use explicit OpenGL verification for guest display, audio and renderer checks; login may write its generated profile."}
-    raise ValueError("provider must be native or debian")
+    if provider != "native":
+        raise ValueError("Ternuxx supports Native Termux graphics only")
+    raise ValueError("only the Native Termux provider is supported")
 
 
 def _gles_draw(env: dict[str, str], *, repo_root: str, state_dir: str) -> dict[str, object]:
@@ -211,18 +228,8 @@ def _gles_draw(env: dict[str, str], *, repo_root: str, state_dir: str) -> dict[s
 
 def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: dict[str, str], prefix: str,
            repo_root: str) -> dict[str, object]:
-    if provider == "debian":
-        if api != "opengl":
-            return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
-                    "reason": "current Debian adapter verifies OpenGL/Zink only; it does not run an OpenGL ES workload"}
-        import proot_diagnostics
-        user = proot_diagnostics.resolve_proot_guest_user(distro="debian", prefix=prefix)
-        result = proot_diagnostics.verify_proot_guest(
-            distro="debian", user=user, display=process_env.get("TERNUXX_GRAPHICS_DISPLAY", ":1"),
-            backend="zink", prefix=prefix)
-        result["provider"] = provider
-        result["provider_boundary"] = "existing Debian PRoot/glibc"
-        return result
+    if provider != "native":
+        raise ValueError("Ternuxx supports Native Termux graphics only")
     env = _native_env(home=home, state_dir=state_dir, process_env=process_env)
     if api == "gles":
         result = _gles_draw(env, repo_root=repo_root, state_dir=state_dir)
@@ -286,6 +293,7 @@ def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: d
         if code != 0 or not device:
             return {"provider": provider, "api": api, "status": "unavailable", "render_verified": False,
                     "device": device, "enumeration_exit_code": code,
+                    "diagnostic": _failure_detail(output),
                     "proof": "Vulkan device enumeration failed; no draw was attempted"}
         cube = shutil.which("vkcube", path=env.get("PATH"))
         if not cube:
@@ -304,6 +312,7 @@ def verify(provider: str, api: str, *, home: str, state_dir: str, process_env: d
                 "render_verified": rendered, "device": device, "draw_renderer": selected,
                 "draw_frames": 120 if rendered else None, "display": env["DISPLAY"],
                 "enumeration_exit_code": code, "draw_exit_code": draw_code,
+                "diagnostic": None if rendered else _failure_detail(draw_output),
                 "proof": "bounded vkcube X11 draw; selected GPU must match vulkaninfo device" if rendered
                          else "vkcube draw failed or selected a different device; no Vulkan success claimed"}
     raise ValueError("api must be opengl, gles, or vulkan")

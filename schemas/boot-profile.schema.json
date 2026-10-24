@@ -4,11 +4,27 @@
   "title": "Ternuxx boot profile selection",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "owner", "provider", "profile"],
+  "required": [
+    "schema_version",
+    "owner",
+    "provider",
+    "profile"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "owner": {"const": "ternuxx"},
-    "provider": {"const": "native"},
-    "profile": {"enum": ["cli-only", "native", "proot", "hybrid"]}
+    "schema_version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "ternuxx"
+    },
+    "provider": {
+      "const": "native"
+    },
+    "profile": {
+      "enum": [
+        "cli-only",
+        "native"
+      ]
+    }
   }
 }

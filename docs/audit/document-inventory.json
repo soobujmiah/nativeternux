@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 451,
-  "read_count": 117,
+  "document_count": 484,
+  "read_count": 105,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -27,50 +27,50 @@
     {
       "path": "AI_ASSISTANT.md",
       "kind": "narrative",
-      "sha256": "7932b32daf90dd17eed5bcf240c5457099f13a5c34b4c4710533833886c41ca0",
-      "lines": 70,
-      "read_status": "read",
-      "read_sha256": "7932b32daf90dd17eed5bcf240c5457099f13a5c34b4c4710533833886c41ca0"
-    },
-    {
-      "path": "CURRENT_STATE.md",
-      "kind": "narrative",
-      "sha256": "33ee110dfb6c9df3b9d97e66df0bfa11c6469f44208a4e8283a96db769a38b38",
-      "lines": 69,
+      "sha256": "a5507c4cb52d4142227200255f92de4f19099e7ffb360a00df2ac749afa98f02",
+      "lines": 37,
       "read_status": "pending",
       "read_sha256": null
     },
     {
+      "path": "CURRENT_STATE.md",
+      "kind": "narrative",
+      "sha256": "52d567331c9a787ab8f0d9752648a0bafabb3ffd66152e01dc4133b2f7065196",
+      "lines": 11,
+      "read_status": "read",
+      "read_sha256": "52d567331c9a787ab8f0d9752648a0bafabb3ffd66152e01dc4133b2f7065196"
+    },
+    {
       "path": "PROJECT_CLASSIFICATION.yaml",
       "kind": "structured",
-      "sha256": "0a958ab4224d2924da40ae490b9abeb401dc32e728b0bb76bd8e39e077000e32",
-      "lines": 54,
-      "read_status": "read",
-      "read_sha256": "0a958ab4224d2924da40ae490b9abeb401dc32e728b0bb76bd8e39e077000e32"
+      "sha256": "12f0b9d3347fbf9e6c502bc66a3438c866a0c816883b0d03368aa60c2e6cb9d9",
+      "lines": 53,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "PROJECT_MANIFEST.yaml",
       "kind": "structured",
-      "sha256": "c91a44061af13c1292c6ef7bdcb289627e4b05b74d5869839c2f2dd81913d4d8",
-      "lines": 75,
-      "read_status": "read",
-      "read_sha256": "c91a44061af13c1292c6ef7bdcb289627e4b05b74d5869839c2f2dd81913d4d8"
+      "sha256": "9b3aec1c145a2e7224f9f0346fbead12f1cf5d7945b2410faffbf0caebc78cf6",
+      "lines": 73,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "2b50e73278889d858e7698ff716cb65bd4aa6af686bcdb4f189d440d75788f84",
-      "lines": 92,
+      "sha256": "6685f46773a308c555c9df3ff1e606ebb3aa5606a8aac76082aa6f24671d6ab3",
+      "lines": 59,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "SECURITY.md",
       "kind": "narrative",
-      "sha256": "9d341f725da51074752c8d7629d8d66c8f704fd030f22c604ad10e16b613abe6",
-      "lines": 61,
-      "read_status": "read",
-      "read_sha256": "9d341f725da51074752c8d7629d8d66c8f704fd030f22c604ad10e16b613abe6"
+      "sha256": "972bf0985dfa941a1f0c734c5214b0d1ccb5c92efbdf8858641efb68406d263c",
+      "lines": 60,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "SKB_KNOWLEDGE_SYNC.md",
@@ -83,64 +83,56 @@
     {
       "path": "bn/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "1dacbb09eabc388d9cd87987cbeac4901e3dcf9cf1138d4fdf3b67b574a58ff3",
-      "lines": 132,
+      "sha256": "14eaa57185527c5a98215063d6925e50368a1711ee396f0523029d6ae0b4ca62",
+      "lines": 60,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "bn/README.md",
       "kind": "narrative",
-      "sha256": "736ac28edfee123d8773f46045394278709a6cad46e116f4a19813b68f3dcf8c",
-      "lines": 71,
-      "read_status": "read",
-      "read_sha256": "736ac28edfee123d8773f46045394278709a6cad46e116f4a19813b68f3dcf8c"
-    },
-    {
-      "path": "config/graphics/native-kgsl.json",
-      "kind": "structured",
-      "sha256": "4e2a66cf3d06a38918eadd5c2be42f48f795303e1293a1f789c53e9eee3d1f99",
-      "lines": 72,
+      "sha256": "999105726665dcc98a31c466ba0ad38e65a275f41b7b7479164dd0daadc2d763",
+      "lines": 33,
       "read_status": "pending",
       "read_sha256": null
     },
     {
-      "path": "config/proot/debian-trixie.json",
+      "path": "config/graphics/native-kgsl.json",
       "kind": "structured",
-      "sha256": "94209faa6ba1773ff0410256189f1d0064736bd3c44193f88815c5d7a1351b95",
-      "lines": 151,
+      "sha256": "25787157706507aca7c98a664a163188527a97bc2a8d3ae8359323077efda121",
+      "lines": 76,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/ARCHITECTURE.md",
       "kind": "narrative",
-      "sha256": "f0c583a5fad4b54b2ed97decaad2632b6869f8901b64c84e09b215f8e7543ec8",
-      "lines": 43,
-      "read_status": "read",
-      "read_sha256": "f0c583a5fad4b54b2ed97decaad2632b6869f8901b64c84e09b215f8e7543ec8"
+      "sha256": "734e2f21369b1a364c6c8b6d85be7aa07c27024a7aa65f6ae01f83c06ffd60c9",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/DEPENDENCY-FALLBACK-MATRIX.md",
       "kind": "narrative",
-      "sha256": "c5e62286ea9963e54b1a18b5cda3df4b1705f70887ab4f9998959b9789fc9fb8",
-      "lines": 35,
-      "read_status": "read",
-      "read_sha256": "c5e62286ea9963e54b1a18b5cda3df4b1705f70887ab4f9998959b9789fc9fb8"
+      "sha256": "5bc836c37d927aefa3bd6776c14daaf563ef3b7ab91e8a9cd2403a888620f100",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/HYBRID-INTEGRATION.md",
       "kind": "narrative",
-      "sha256": "68ed4b69628a2191b64ee02dfc4bb985ad2af53e6d63f9e6dd0f9cfda6214dec",
-      "lines": 98,
-      "read_status": "read",
-      "read_sha256": "68ed4b69628a2191b64ee02dfc4bb985ad2af53e6d63f9e6dd0f9cfda6214dec"
+      "sha256": "8f1cdabe8c15b2d5acbbe48cd96b6fe359aaec27d8feeda1d68c74add82a8332",
+      "lines": 100,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/INSTALLATION.md",
       "kind": "narrative",
-      "sha256": "f35009fb206553e8c85aef2de3044480a4ce36f7f1b2eb44bc75ba926765e4b6",
-      "lines": 132,
+      "sha256": "f68a07e645579ce7fa742588c1bf3a4667e6cc8c45569f8060d8d15c3b7aff7b",
+      "lines": 71,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -155,103 +147,103 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "324a9b2901ccd081041028c95e11f8df1ea53ebe41aee0534d6a01c71bc42e54",
-      "lines": 191,
+      "sha256": "5e06f9807b1220d7fdd2ec037ab9b13b66cc0c99e64ab74eb34830c639649a2b",
+      "lines": 51,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/OPTIMIZATION.md",
       "kind": "narrative",
-      "sha256": "3a73d06060072ad5ee6b6a353b30ef423bdae4b37d1bef1781ea553929923ad7",
-      "lines": 51,
-      "read_status": "read",
-      "read_sha256": "3a73d06060072ad5ee6b6a353b30ef423bdae4b37d1bef1781ea553929923ad7"
+      "sha256": "61ea29abc8fa5832efa07b841537c77e808eb689edef71c7301ae405e27e4fac",
+      "lines": 20,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "93b45ffe0e4a4c6425a4253aabd9129ddb13d9ee829a40ee12df0c4f36098f38",
-      "lines": 196,
+      "sha256": "02f699940dea7beb02238aa064a370a565008523b140abfc07d6927c48d6d052",
+      "lines": 122,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/PRODUCT-VISION.md",
       "kind": "narrative",
-      "sha256": "5d5ff16d1fb8720f85e037569b7a3a085f44dc679ef297934eb7baa5c4476e06",
-      "lines": 15,
-      "read_status": "read",
-      "read_sha256": "5d5ff16d1fb8720f85e037569b7a3a085f44dc679ef297934eb7baa5c4476e06"
+      "sha256": "0026986a8f45e409c0a541f960e2b874afb3b755987f194b7098d02bee1b8892",
+      "lines": 9,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/PROOT-GPU.md",
       "kind": "narrative",
-      "sha256": "850aee7347e35109983726746d7d464498d89edd23597b9d8f97f54cc0e39294",
-      "lines": 52,
+      "sha256": "01de86c0c28907dbcdb56524af0b3baa8bb54ac3cce7e9692a9d069329e7298d",
+      "lines": 7,
       "read_status": "read",
-      "read_sha256": "850aee7347e35109983726746d7d464498d89edd23597b9d8f97f54cc0e39294"
+      "read_sha256": "01de86c0c28907dbcdb56524af0b3baa8bb54ac3cce7e9692a9d069329e7298d"
     },
     {
       "path": "docs/PROOT-GUI-DISPLAY0.md",
       "kind": "narrative",
-      "sha256": "20fccb23e5ed65521ad1034664c06c418581cc30fd595045155d9b391a6c0fc8",
-      "lines": 25,
+      "sha256": "47c7f294ceae4987083b40657f0ce6b3b9ba4805f719b7616876d73653b327ed",
+      "lines": 7,
       "read_status": "read",
-      "read_sha256": "20fccb23e5ed65521ad1034664c06c418581cc30fd595045155d9b391a6c0fc8"
+      "read_sha256": "47c7f294ceae4987083b40657f0ce6b3b9ba4805f719b7616876d73653b327ed"
     },
     {
       "path": "docs/PROOT-SHARED-X11.md",
       "kind": "narrative",
-      "sha256": "7788aa8a0071d8a27711e82c6bafb06130c9dc67caa4282dd433b0dece1697b0",
-      "lines": 112,
+      "sha256": "a667b48518b592ee9c6a83420a1fde02ab7ebd69e1546fade18898e203a14bdd",
+      "lines": 7,
       "read_status": "read",
-      "read_sha256": "7788aa8a0071d8a27711e82c6bafb06130c9dc67caa4282dd433b0dece1697b0"
+      "read_sha256": "a667b48518b592ee9c6a83420a1fde02ab7ebd69e1546fade18898e203a14bdd"
     },
     {
       "path": "docs/README.md",
       "kind": "narrative",
-      "sha256": "42b44b35b25cf708df435c44b352485a25c59d55eb15dfba950bfb28805e444e",
-      "lines": 50,
+      "sha256": "b1aef4548917e2ed10af6c883345e8990760de722bb358052f91532799bc9243",
+      "lines": 54,
       "read_status": "read",
-      "read_sha256": "42b44b35b25cf708df435c44b352485a25c59d55eb15dfba950bfb28805e444e"
+      "read_sha256": "b1aef4548917e2ed10af6c883345e8990760de722bb358052f91532799bc9243"
     },
     {
       "path": "docs/RESEARCH.md",
       "kind": "narrative",
-      "sha256": "27802f3928cb0f6ee3952e4cf4549ea9d537852af172e5ea7dfb2b146a277425",
-      "lines": 328,
+      "sha256": "fa38f1fcc0af71cd3ea4ea37e2ee26d8f1519336a32e9107653a15afb2ae98b6",
+      "lines": 332,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/ROADMAP.md",
       "kind": "narrative",
-      "sha256": "10eec8a27e89da2596614475018027f8ba612fc62992a6c7d36be9ae0df7c13b",
-      "lines": 314,
+      "sha256": "a7fb366b9753673f53253109f8fc5529236e41d0220ecaa0e18492269693fa65",
+      "lines": 43,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/SOFTWARE-CATALOG.md",
       "kind": "narrative",
-      "sha256": "53ba6ed3e036312c72dc1e3170e5936ef576921a48c842b6c406344a31a3dc04",
-      "lines": 107,
-      "read_status": "read",
-      "read_sha256": "53ba6ed3e036312c72dc1e3170e5936ef576921a48c842b6c406344a31a3dc04"
+      "sha256": "a489f1450e34b323ac9efb1cfc06f764989bf13172212c8135ffd71545ca577d",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/WINE-NATIVE.md",
       "kind": "narrative",
-      "sha256": "0b3f38af6ce5f9157641af4ed971d463d1d20ec536952e0a11768f9447aadf3a",
-      "lines": 55,
+      "sha256": "927f4dc4fe40c6f60e413d29b77879019ccbb6a76089a27eba2da36526e58718",
+      "lines": 46,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/WORKSTATION-EXTENSIONS.md",
       "kind": "narrative",
-      "sha256": "2da7ba5ea368a60071915d3518a13fc578514c23868ae347464b3e4e34f1b238",
+      "sha256": "0ba8b7737e2e44a2a73a9e22cf3692b7ff2e8aa46d2d0464a51473099954ba17",
       "lines": 31,
       "read_status": "pending",
       "read_sha256": null
@@ -259,23 +251,23 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "6e35a80c8af62d7f4ee71a67520c44ded15c855135011456eb7438d1102b9726",
-      "lines": 25,
-      "read_status": "read",
-      "read_sha256": "6e35a80c8af62d7f4ee71a67520c44ded15c855135011456eb7438d1102b9726"
+      "sha256": "8db4a5c7e7b64dfa8f37f12dae03a49eb855c6b9f44bdeaef60b97c038e953d9",
+      "lines": 20,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
       "kind": "narrative",
-      "sha256": "452a578642d64698a6814616206e43e15ceb1dbe69c95717ed67db870e66dae4",
+      "sha256": "e54ed4f5f1b2326a4bbcf9deb4a313f8984a71a7a13afca34b0492cf6eb5e76e",
       "lines": 35,
-      "read_status": "read",
-      "read_sha256": "452a578642d64698a6814616206e43e15ceb1dbe69c95717ed67db870e66dae4"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/CRON-JOBS.md",
       "kind": "narrative",
-      "sha256": "9e1fc60885e9d74ebbbe8e4aab6d0e714ece07bb8af6a92a2dfc7638172172c5",
+      "sha256": "9a6a0719edffe99bc6bb68d91536ff87e36256e42f22e5c050fe7081766880f8",
       "lines": 126,
       "read_status": "pending",
       "read_sha256": null
@@ -291,7 +283,7 @@
     {
       "path": "docs/architecture/GUI-SESSION-LIFECYCLE.md",
       "kind": "narrative",
-      "sha256": "bd0bf155e84b0d07612c63083081937477abeef72b7fe5a93ad7a6a628d9b12d",
+      "sha256": "ea80f2d7d7c6363c19ad3c958349efd8da1ff91a827ada13bde6533cd1d9318e",
       "lines": 39,
       "read_status": "pending",
       "read_sha256": null
@@ -307,47 +299,47 @@
     {
       "path": "docs/architecture/INTERACTIVE-PROOT-TERMINALS.md",
       "kind": "narrative",
-      "sha256": "4374ede89c3e816a4d9772df58c54f16e4dbeb3e7f98e6061dca2188daec1b5d",
-      "lines": 49,
+      "sha256": "32e8195826c8d6eb177933280719d966353576cd393b072c930bf3d15d52c4c6",
+      "lines": 7,
       "read_status": "read",
-      "read_sha256": "4374ede89c3e816a4d9772df58c54f16e4dbeb3e7f98e6061dca2188daec1b5d"
+      "read_sha256": "32e8195826c8d6eb177933280719d966353576cd393b072c930bf3d15d52c4c6"
     },
     {
       "path": "docs/architecture/MANAGEMENT-API.md",
       "kind": "narrative",
-      "sha256": "9c4b9b7f595bcbda36293f059d3ac63bd4e58da2ab28b50a9b2e0b0ac84499e1",
-      "lines": 56,
-      "read_status": "read",
-      "read_sha256": "9c4b9b7f595bcbda36293f059d3ac63bd4e58da2ab28b50a9b2e0b0ac84499e1"
+      "sha256": "06c8ea48c0da7a48119161acbbc650f8ab924e43944dee85512726256293b82a",
+      "lines": 9,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/NATIVE-GRAPHICS-AUDIO.md",
       "kind": "narrative",
-      "sha256": "5f04ab97c6811ce79e2dd3fe06d1fa71f65de06018db8ffdc465d9f62f39b9a0",
-      "lines": 58,
+      "sha256": "f74467a36c1f3eeff63d9e9a73929cb3f926347396686c905b0c2c5a75e4f9dd",
+      "lines": 27,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/architecture/PROOT-SESSIONS.md",
       "kind": "narrative",
-      "sha256": "2881077d1ef7cceaecf1c7c376359e15e15fc5a6e50e34eda51d3422ea443121",
-      "lines": 58,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "074270948c8d922afadfd4864c920e94639a77e5cf8ce17ffbd0cba810bd4ab6",
+      "lines": 7,
+      "read_status": "read",
+      "read_sha256": "074270948c8d922afadfd4864c920e94639a77e5cf8ce17ffbd0cba810bd4ab6"
     },
     {
       "path": "docs/architecture/SHARED-MANAGEMENT-PLAN.md",
       "kind": "narrative",
-      "sha256": "ca9b90252423360f7b3039ccc32ac11d078a1334cf3411d89de358f4eb47c3f2",
-      "lines": 69,
-      "read_status": "read",
-      "read_sha256": "ca9b90252423360f7b3039ccc32ac11d078a1334cf3411d89de358f4eb47c3f2"
+      "sha256": "c20df5f1f640aeca00aa45f75e8479a7b3f4294aeeeb7c3e3a3a9f14c6a58ce3",
+      "lines": 70,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/SSH-LIFECYCLE.md",
       "kind": "narrative",
-      "sha256": "18d9b640fb84f858a213b49ada31c881504a5a4920e933762be866f9ee42e79d",
+      "sha256": "2bea28e3287fd52e031d6bdd86c7a907408b7f7f3a5c78215c604866bfb74136",
       "lines": 55,
       "read_status": "pending",
       "read_sha256": null
@@ -355,138 +347,146 @@
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",
       "kind": "narrative",
-      "sha256": "ba7e89aa5cb6a95a78db4475b2a77da7dd6df46fb75c8bca052939960b36c9ac",
+      "sha256": "c3ca1c879bf4694c12dbe5db20af79fa2bc2b0808a4d3fbe2849a6754ad90ad0",
       "lines": 251,
-      "read_status": "read",
-      "read_sha256": "ba7e89aa5cb6a95a78db4475b2a77da7dd6df46fb75c8bca052939960b36c9ac"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0001-native-proot-providers.md",
       "kind": "narrative",
-      "sha256": "c58cf61dc533ec847530e38efcb7ace61f20156a241f6eb7fed7715964c91ac2",
-      "lines": 41,
-      "read_status": "read",
-      "read_sha256": "c58cf61dc533ec847530e38efcb7ace61f20156a241f6eb7fed7715964c91ac2"
+      "sha256": "effbb1319058ce7eb5283e1dcd28c35df4d5b3c140ccf3afe9f1d9fcc5199fd3",
+      "lines": 42,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0002-workload-verified-acceleration.md",
       "kind": "narrative",
-      "sha256": "c3d76a4207c43d943c794ca294888f9ffb9d178e31cdbf00db1ef9c20d98d7d7",
-      "lines": 37,
+      "sha256": "d828bd6cf71b0aad684b87b385257ded59a3f3e4fe596fbf9fc4c29ebccc3390",
+      "lines": 38,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0003-deterministic-state-and-skb-return.md",
       "kind": "narrative",
-      "sha256": "cd32b552375d0e1e0ce134d77380803f83365c02f21145742ff5a38df18cab28",
-      "lines": 39,
+      "sha256": "55a3b0b52d72ea8eff809f38019632c3665d52f23eda09b55f9d5ba0ce2182a5",
+      "lines": 40,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0004-three-interfaces-shared-management.md",
       "kind": "narrative",
-      "sha256": "c9e12d05da0be449193b2feeffbe5c986d9b6b511af1ce98df527a6b76a4a1fa",
-      "lines": 57,
-      "read_status": "read",
-      "read_sha256": "c9e12d05da0be449193b2feeffbe5c986d9b6b511af1ce98df527a6b76a4a1fa"
+      "sha256": "dccde5d7e54ecd9008a4c672a415391e2cf614c80ea15b3124c6ed252692acd4",
+      "lines": 58,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0005-capability-permission-and-task-model.md",
       "kind": "narrative",
-      "sha256": "c649a1a9084dc08ee2abaabc73877a08ae519c3abafa55349fea8be244b5354d",
-      "lines": 65,
-      "read_status": "read",
-      "read_sha256": "c649a1a9084dc08ee2abaabc73877a08ae519c3abafa55349fea8be244b5354d"
+      "sha256": "4b4aa1506cce8124801f850f458ee0a2260f5ec09ee57caed6be4a3dc4a7910e",
+      "lines": 66,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0006-adapt-existing-ternux-provider.md",
       "kind": "narrative",
-      "sha256": "b16ca8e0ec905c85edcedbfcb3d1e9324dbc3adc8c11783c6a62201680b1b99d",
-      "lines": 55,
-      "read_status": "read",
-      "read_sha256": "b16ca8e0ec905c85edcedbfcb3d1e9324dbc3adc8c11783c6a62201680b1b99d"
+      "sha256": "7c86936692e8823e73235de685d0e257dce6cda6c15a275f4a5d85274218cb10",
+      "lines": 56,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0007-launch-manager-and-display-ownership.md",
       "kind": "narrative",
-      "sha256": "bfd37e250aa0cc96f7f93ec72d980e7fb569f0a80e8463bf3536921d85bd300e",
-      "lines": 97,
-      "read_status": "read",
-      "read_sha256": "bfd37e250aa0cc96f7f93ec72d980e7fb569f0a80e8463bf3536921d85bd300e"
+      "sha256": "8b1058f80cf920af1e1abb14f73af6b8361ae3cb72fb7dc064329576e6cc714a",
+      "lines": 98,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0008-shell-profiles-and-managed-configuration.md",
       "kind": "narrative",
-      "sha256": "219f328bbaf9d0f19565d092950bc14c9b581ce513772bed1eadbcab63a36842",
-      "lines": 58,
-      "read_status": "read",
-      "read_sha256": "219f328bbaf9d0f19565d092950bc14c9b581ce513772bed1eadbcab63a36842"
+      "sha256": "89809827980567c0a2af7e68e3f4f9d069702b4aaf4d8735bd274224a0c764a3",
+      "lines": 59,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0009-provider-scoped-optional-software.md",
       "kind": "narrative",
-      "sha256": "e76aae28adef386be2c14ca33681d8c13658ace4a17034ef5aa44ea13a38d729",
-      "lines": 43,
-      "read_status": "read",
-      "read_sha256": "e76aae28adef386be2c14ca33681d8c13658ace4a17034ef5aa44ea13a38d729"
+      "sha256": "467d45102946c9dc6cf7a7a2c56a4dcf19363cf7b8602171d7bddeac5b05b2e4",
+      "lines": 44,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0010-native-termux-autonomy.md",
       "kind": "narrative",
-      "sha256": "e60ab237862919e008eb5f63eaa1e22a5313b1cb9c500730fdf4c89a54774167",
-      "lines": 55,
-      "read_status": "read",
-      "read_sha256": "e60ab237862919e008eb5f63eaa1e22a5313b1cb9c500730fdf4c89a54774167"
+      "sha256": "0fb8b3476992b639ad2c656660f6767eb54eaec1eaaa0ded61a98857b5fb3580",
+      "lines": 56,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0011-unified-ssh-lifecycle.md",
       "kind": "narrative",
-      "sha256": "9b9683f08a556ea59fba025756ad34940b6a08f5bfba62383f56e61dd5ea8c72",
-      "lines": 36,
-      "read_status": "read",
-      "read_sha256": "9b9683f08a556ea59fba025756ad34940b6a08f5bfba62383f56e61dd5ea8c72"
+      "sha256": "63da5cb1da14bd2d2842957432747aeae109260be4bd171fec9fb0da91f0c1a9",
+      "lines": 37,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0012-native-owned-shared-dependencies.md",
       "kind": "narrative",
-      "sha256": "d9b1a6737f3e29fe02d00e60459dcb584ca25dace33b5673136df460bc8e0d7e",
-      "lines": 85,
-      "read_status": "read",
-      "read_sha256": "d9b1a6737f3e29fe02d00e60459dcb584ca25dace33b5673136df460bc8e0d7e"
+      "sha256": "d418aacf131f3f687a04477c5fab90eb6fd44acb781483e4d82e8a354e9741cd",
+      "lines": 86,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0013-owner-controlled-remote-access.md",
       "kind": "narrative",
-      "sha256": "c4ce6da50eaed21e7460cf6fbb86ba38123a84cc8695fd5c206821f509c49f38",
-      "lines": 117,
-      "read_status": "read",
-      "read_sha256": "c4ce6da50eaed21e7460cf6fbb86ba38123a84cc8695fd5c206821f509c49f38"
+      "sha256": "535b770e722a08f9003bf1305e9a3f54d71c7dbf293c420fed174586d8fa612c",
+      "lines": 118,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0014-proot-adb-and-management-tcp.md",
       "kind": "narrative",
-      "sha256": "058d726e595d6faa0d2ab92685657f0769ad2fb7c1541f15eb5d16d6332bf7d7",
-      "lines": 217,
-      "read_status": "read",
-      "read_sha256": "058d726e595d6faa0d2ab92685657f0769ad2fb7c1541f15eb5d16d6332bf7d7"
+      "sha256": "364d1ae14cff60510949f450e0c1f89868762e6473162a00e1113d1f90516ca6",
+      "lines": 218,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0015-ternuxx-owned-existing-proot.md",
       "kind": "narrative",
-      "sha256": "84b867ae50553dcb54d70ab89394919b68be672686c262f56193a28a7f1b5fa2",
-      "lines": 35,
-      "read_status": "read",
-      "read_sha256": "84b867ae50553dcb54d70ab89394919b68be672686c262f56193a28a7f1b5fa2"
+      "sha256": "fdacb024381143f9fc0b26a051cfac56fd1517cdcada6f1bacbdb3ff61c41aba",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/decisions/ADR-0016-tx-db-and-legacy-entrypoints.md",
       "kind": "narrative",
-      "sha256": "2edbbc49aabf6a931e6cf42df0a0486881f328acb5f133b3bf4b46c0268bef7d",
-      "lines": 45,
+      "sha256": "af9bfd6d9b0c3a37491c5d21cb33c45c99587e1c06326c94005dc5520222059b",
+      "lines": 46,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-0017-native-only-product-and-proot-retirement.md",
+      "kind": "narrative",
+      "sha256": "eedd39778b0fde512c799ac8a3dbef46514f2ebd7e9d69cf5aa3b044c10beb51",
+      "lines": 28,
       "read_status": "read",
-      "read_sha256": "2edbbc49aabf6a931e6cf42df0a0486881f328acb5f133b3bf4b46c0268bef7d"
+      "read_sha256": "eedd39778b0fde512c799ac8a3dbef46514f2ebd7e9d69cf5aa3b044c10beb51"
     },
     {
       "path": "docs/architecture/history/2026-10-22-capability-matrix.md",
@@ -507,10 +507,10 @@
     {
       "path": "docs/architecture/history/2026-10-22-management-api.md",
       "kind": "narrative",
-      "sha256": "53c6ab3f28817d6d7e115041d417130588b09a63eab21a6d28511e34aacda102",
+      "sha256": "7c5ed4f22ede249d615b7c845319b0f29d935418d6b846604190fd056e8964ea",
       "lines": 229,
-      "read_status": "read",
-      "read_sha256": "53c6ab3f28817d6d7e115041d417130588b09a63eab21a6d28511e34aacda102"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/architecture/history/2026-10-22-ssh-lifecycle.md",
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "9e7cc5218844e5e88dc35f200ad9d1e5f79e0c17684c5772caed35c588a732fb",
-      "lines": 160,
-      "read_status": "pending",
-      "read_sha256": null
+      "sha256": "d39c8f3cd5bd685b60a09271725ea99e45ca8af065bde20182a89380fadb598f",
+      "lines": 44,
+      "read_status": "read",
+      "read_sha256": "d39c8f3cd5bd685b60a09271725ea99e45ca8af065bde20182a89380fadb598f"
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -1587,7 +1587,7 @@
     {
       "path": "docs/evidence/2026-10-18-shared-management-repo-audit.md",
       "kind": "narrative",
-      "sha256": "7b90f0f7a8220bc4b346dbb966beaa16b9c638634efda7dcc7df9e668a498784",
+      "sha256": "c123703abeaab77d28666a7d7e7fce0b3f119045fbae7209c7857ca1932b04df",
       "lines": 59,
       "read_status": "pending",
       "read_sha256": null
@@ -2755,7 +2755,7 @@
     {
       "path": "docs/evidence/2026-10-23-disposable-debian-replay.md",
       "kind": "narrative",
-      "sha256": "774a87017759002fef4d243c3309bdb26cc678dc075f5f7aace03e676c88b58d",
+      "sha256": "7bb011d972d776f143b100fbdf3626fc06f01cfef7065f2f62b2c059891b2d37",
       "lines": 52,
       "read_status": "pending",
       "read_sha256": null
@@ -2905,12 +2905,52 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-24-native-cpu-inference-candidate-audit.md",
+      "kind": "narrative",
+      "sha256": "21899789bb5fadbe7e2e152c414c5c96e211649e50e574c5b685aa923720e68c",
+      "lines": 33,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-native-cpu-inference-workflow.md",
+      "kind": "narrative",
+      "sha256": "dfe6c1cee08a4a36469185de4b2434e093495880f7bedda0cf1c80cf4398b9e5",
+      "lines": 30,
+      "read_status": "read",
+      "read_sha256": "dfe6c1cee08a4a36469185de4b2434e093495880f7bedda0cf1c80cf4398b9e5"
+    },
+    {
+      "path": "docs/evidence/2026-10-24-native-graphics-fallback-recheck.md",
+      "kind": "narrative",
+      "sha256": "0a4865e867942358437ae1281ed2474a9f0d88d5b3b2a9541be9a722e8c2f0da",
+      "lines": 70,
+      "read_status": "read",
+      "read_sha256": "0a4865e867942358437ae1281ed2474a9f0d88d5b3b2a9541be9a722e8c2f0da"
+    },
+    {
+      "path": "docs/evidence/2026-10-24-native-only-proot-removal-audit.md",
+      "kind": "narrative",
+      "sha256": "b94518b2c495bd6bef46dfed389f115a3cde658ab946a94a7a413c834456790e",
+      "lines": 107,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-24-native-package-candidate-recheck.md",
       "kind": "narrative",
       "sha256": "5fbafcba3bd400776a77b1d226b155b8d3ce11d5712f85bc8977c8e13c8ddad0",
       "lines": 48,
       "read_status": "pending",
       "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-native-stock-mesa-recheck.md",
+      "kind": "narrative",
+      "sha256": "e9af112cf2315ae6b81d0b36811374a0bd7cb5cfab559d1d0187eb3e7997a546",
+      "lines": 25,
+      "read_status": "read",
+      "read_sha256": "e9af112cf2315ae6b81d0b36811374a0bd7cb5cfab559d1d0187eb3e7997a546"
     },
     {
       "path": "docs/evidence/2026-10-24-native-suite-and-url-verification.md",
@@ -2929,10 +2969,82 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/2026-10-24-p10-internal-hardening-review.md",
+      "kind": "narrative",
+      "sha256": "96e512a58854c35db263647e963d6fca5d6ef17470a91d1faa5d45afb74b21d6",
+      "lines": 24,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p4-managed-icd-migration.md",
+      "kind": "narrative",
+      "sha256": "f2b3db3490e32425c3d0fb888bce2cb813bb1f492fd895dcaeabefdab52f9c2d",
+      "lines": 33,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p4-replay-retire-restore-recheck.md",
+      "kind": "narrative",
+      "sha256": "a99f89ac7fabe1a79e4183e0ea72143d8af8489269ba0f4292154b943874c6a8",
+      "lines": 23,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-24-p4-terminal-broker-and-install-preview.md",
       "kind": "narrative",
-      "sha256": "eaf9e822cf095e4db4b010ff1893a5fd1fc1027d0b8c86e5e2758c59d22a10c3",
-      "lines": 46,
+      "sha256": "dab49562b7b95161039fab3e35783dbe9ac373640cc1cea086e8d7f8e5deafbd",
+      "lines": 51,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p6-client-capability-copy-audit.md",
+      "kind": "narrative",
+      "sha256": "185483baa94f616b9f23355aa7ef2b70c5cac547488b0898d72a9011858809cf",
+      "lines": 23,
+      "read_status": "read",
+      "read_sha256": "185483baa94f616b9f23355aa7ef2b70c5cac547488b0898d72a9011858809cf"
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p6-completion-review.md",
+      "kind": "narrative",
+      "sha256": "a872842c7f2d7250ee5bad74b7289b94349482ed6cf69794fc7529535014b880",
+      "lines": 32,
+      "read_status": "read",
+      "read_sha256": "a872842c7f2d7250ee5bad74b7289b94349482ed6cf69794fc7529535014b880"
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p7-native-catalog-implementation.md",
+      "kind": "narrative",
+      "sha256": "5e7b1462343a7d1aca6a287397c9d0a63827d50b4454ec256d14fd307aaa75bf",
+      "lines": 32,
+      "read_status": "read",
+      "read_sha256": "5e7b1462343a7d1aca6a287397c9d0a63827d50b4454ec256d14fd307aaa75bf"
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p7-native-catalog-scope.md",
+      "kind": "narrative",
+      "sha256": "6cd28a0cfbc01ea2151dbc28ae85db2f52563cf97fd7306b20b29b403e584670",
+      "lines": 31,
+      "read_status": "read",
+      "read_sha256": "6cd28a0cfbc01ea2151dbc28ae85db2f52563cf97fd7306b20b29b403e584670"
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p8-native-readiness-audit.md",
+      "kind": "narrative",
+      "sha256": "4939cb397666f1e3ec81008b2757ac612aa0697365d7a3bb9f9a3f8a16f80c4d",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-p9-native-only-scope-decision.md",
+      "kind": "narrative",
+      "sha256": "48200573084f474bb31ba7c2da7164be6022f9defeb67fb68f3b0afd8fccf043",
+      "lines": 16,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2941,6 +3053,22 @@
       "kind": "narrative",
       "sha256": "5ec560ffee7664c3f3ff3115bf060e6335a4bf9dfd9ba8b328c51a4a8fa7fb7c",
       "lines": 27,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-web-session-reload-reconnect-screenshots/sha256sums.txt",
+      "kind": "narrative",
+      "sha256": "f17be7dcd37b3814d60e92a48fcb6a393206291b47e4c555e2ae900ecf172dc3",
+      "lines": 4,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-web-session-reload-reconnect.md",
+      "kind": "narrative",
+      "sha256": "a744d1d6cb47bc5dbdaeaa145d66e103a0c6fb9336e8333f88df20b1a28bc80a",
+      "lines": 40,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3033,6 +3161,70 @@
       "read_sha256": null
     },
     {
+      "path": "docs/evidence/data/2026-10-24-native-cpu-20-run-thermal.json",
+      "kind": "structured",
+      "sha256": "25419a876d1cfd6f90ebe77d714a43ac82de0053120cdcfec130fe195cc586e0",
+      "lines": 232,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/data/2026-10-24-native-cpu-baseline-qwen3-0.6b.json",
+      "kind": "structured",
+      "sha256": "0028752f52c5d6d321f372e8ee3e36403ebbfa2137bc05e390d8ea0167a7e305",
+      "lines": 94,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/data/2026-10-24-native-cpu-inference-smoke.txt",
+      "kind": "narrative",
+      "sha256": "49e2758f813782192a63580ea6e8af3808509adcc8f519014fe74420fde52573",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/data/2026-10-24-native-cpu-long-repeat.json",
+      "kind": "structured",
+      "sha256": "62fedb4890f9c15c92e50c5f992a2104d3d68acccc9b20dd85a41deb4538710b",
+      "lines": 123,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/data/2026-10-24-native-cpu-network-isolation-probe.json",
+      "kind": "structured",
+      "sha256": "9744f54e2f4ec4d8a881213f5b6841619ff77ff1e97ed2c4ad79fe6f2d767a7f",
+      "lines": 55,
+      "read_status": "read",
+      "read_sha256": "9744f54e2f4ec4d8a881213f5b6841619ff77ff1e97ed2c4ad79fe6f2d767a7f"
+    },
+    {
+      "path": "docs/evidence/data/2026-10-24-native-cpu-repeat-smoke.json",
+      "kind": "structured",
+      "sha256": "4b2235cffb35752e1dd55798b00d808b98960fcda55449d3ecd0dd1d14055245",
+      "lines": 28,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/data/2026-10-24-native-runtime-post-qualification.json",
+      "kind": "structured",
+      "sha256": "f7db84269e51dc37e27a1a1c05da90735e29a88a8326ec53cfa7bf5adeb3b30a",
+      "lines": 22,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/data/2026-10-24-native-stock-mesa-recheck.json",
+      "kind": "structured",
+      "sha256": "74c5fdf3453becdb0e22147a6076f2d53eb60882283a140c10385c9d5c1ef358",
+      "lines": 50,
+      "read_status": "read",
+      "read_sha256": "74c5fdf3453becdb0e22147a6076f2d53eb60882283a140c10385c9d5c1ef358"
+    },
+    {
       "path": "docs/evidence/web-reconcile-visual/report.json",
       "kind": "structured",
       "sha256": "2a42a42798c32c63dca32aa7f6a99eebbf8d7bd74cc3b79e7294e9c6eecb83d4",
@@ -3065,17 +3257,113 @@
       "read_sha256": null
     },
     {
-      "path": "docs/readiness/DECISIONS-AND-PLAN.md",
+      "path": "docs/handoff/2026-10-24-pre-native-only-handoff-snapshot.md",
       "kind": "narrative",
-      "sha256": "3a5b582a088386985ed5c763a0b2a0d356cd04c09a17b43c5c39b7679c60d592",
+      "sha256": "062eeaf777d94573e50bcb558d65c97c20117ee60cb0c93a5795bef59b1bac2e",
+      "lines": 6,
+      "read_status": "read",
+      "read_sha256": "062eeaf777d94573e50bcb558d65c97c20117ee60cb0c93a5795bef59b1bac2e"
+    },
+    {
+      "path": "docs/history/FEATURE-MATRIX-pre-native-only-2026-10-17.yaml",
+      "kind": "structured",
+      "sha256": "7895d5784cd9829d84a648a58dc08db6c4ebdda34951e22bdb44a551afd5d7ea",
+      "lines": 744,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/history/INTERACTIVE-PROOT-TERMINALS-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "24f421b5ab4b80025ff9ebecc62681a1668b6823ce37c9c5396bde6869bdfd41",
+      "lines": 51,
+      "read_status": "read",
+      "read_sha256": "24f421b5ab4b80025ff9ebecc62681a1668b6823ce37c9c5396bde6869bdfd41"
+    },
+    {
+      "path": "docs/history/MANAGEMENT-API-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "e6668b20a59d3f1cd0ece818a4ce48cda923211beb99bf587281c7a39bc8f94f",
+      "lines": 56,
+      "read_status": "read",
+      "read_sha256": "e6668b20a59d3f1cd0ece818a4ce48cda923211beb99bf587281c7a39bc8f94f"
+    },
+    {
+      "path": "docs/history/PROOT-GPU-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "993aff3d683f691ef303cdffede91272bc17e203e5ea9340a3013cc6fb59a8d0",
+      "lines": 54,
+      "read_status": "read",
+      "read_sha256": "993aff3d683f691ef303cdffede91272bc17e203e5ea9340a3013cc6fb59a8d0"
+    },
+    {
+      "path": "docs/history/PROOT-GUI-DISPLAY0-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "bd347e52d37a94c954d5a0fc562f496a8cd16f10d98246d49c7703027e929edc",
+      "lines": 27,
+      "read_status": "read",
+      "read_sha256": "bd347e52d37a94c954d5a0fc562f496a8cd16f10d98246d49c7703027e929edc"
+    },
+    {
+      "path": "docs/history/PROOT-SESSIONS-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "9021bf83283983269dedd4804550598e5c0c919216ae60ce136372632e81cf52",
       "lines": 60,
       "read_status": "read",
-      "read_sha256": "3a5b582a088386985ed5c763a0b2a0d356cd04c09a17b43c5c39b7679c60d592"
+      "read_sha256": "9021bf83283983269dedd4804550598e5c0c919216ae60ce136372632e81cf52"
+    },
+    {
+      "path": "docs/history/PROOT-SHARED-X11-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "ab1a018faed1729dfb909ac88210788eff3a3abd7f0137deb45d839f7f0534e7",
+      "lines": 114,
+      "read_status": "read",
+      "read_sha256": "ab1a018faed1729dfb909ac88210788eff3a3abd7f0137deb45d839f7f0534e7"
+    },
+    {
+      "path": "docs/history/REBOOT-RECOVERY-GUIDE-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "51efddc295803adfb90bd165c3c551995260dce31e1428d2343dc22b68e1b7f8",
+      "lines": 227,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/history/REPOSITORY-AUDIT-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "1a635183053527f701f9b823070a9d41ad4b8abbf2d0b14b41983864e50f0e26",
+      "lines": 160,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/history/ROADMAP-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "a3f8c477ec20daff521952c2c9b930fdf643ab1db5a1236659cb7b820d2d9b0d",
+      "lines": 314,
+      "read_status": "read",
+      "read_sha256": "a3f8c477ec20daff521952c2c9b930fdf643ab1db5a1236659cb7b820d2d9b0d"
+    },
+    {
+      "path": "docs/history/SOFTWARE-CATALOG-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "e3f2de7da6892ad0ff799537c08dac9c304ffbd406fd2c617864fc27ff1a5724",
+      "lines": 109,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/readiness/DECISIONS-AND-PLAN.md",
+      "kind": "narrative",
+      "sha256": "9ef95cf9b3e24b5b067d91d8c6bc9079a1e04590c39124d5c013ea4ebaddf160",
+      "lines": 62,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/readiness/LEGAL-IP.md",
       "kind": "narrative",
-      "sha256": "3c2bc1b266a2df82cc017d983f65b249342b5f9b6ac75535e92f68ef033c6fab",
+      "sha256": "97564a7d09dc65c446c8437f6d3e7ad85884ffef5f59c2c40784dfea352509fc",
       "lines": 58,
       "read_status": "pending",
       "read_sha256": null
@@ -3083,16 +3371,16 @@
     {
       "path": "docs/readiness/PREMIUM-DISTRIBUTION.md",
       "kind": "narrative",
-      "sha256": "d159edffc00c83389251fd1e04f3459d7bbfaefee8dab8a6d7b00c23ca0cda97",
+      "sha256": "fab091203f95f32c49a18944a1a94f057663dea85ad29bf42b3efb3024c0026d",
       "lines": 103,
-      "read_status": "read",
-      "read_sha256": "d159edffc00c83389251fd1e04f3459d7bbfaefee8dab8a6d7b00c23ca0cda97"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/readiness/PRODUCT-MARKET-COMMERCIAL.md",
       "kind": "narrative",
-      "sha256": "e4ceee6c873431c920c39212584f54fb2e3925f47c586b6903eb45cf6735a48b",
-      "lines": 101,
+      "sha256": "799bc0e0135117245e7834e79c4b05e85ace151fa1d6c57e419e06212cf2fe8b",
+      "lines": 100,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3121,18 +3409,26 @@
       "read_sha256": null
     },
     {
+      "path": "docs/readiness/THIRD-PARTY-NOTICES.md",
+      "kind": "narrative",
+      "sha256": "408045749123771b363d3dfd6bf51e296be281b570955110971e3dfa12125597",
+      "lines": 16,
+      "read_status": "read",
+      "read_sha256": "408045749123771b363d3dfd6bf51e296be281b570955110971e3dfa12125597"
+    },
+    {
       "path": "docs/readiness/THREAT-MODEL.md",
       "kind": "narrative",
-      "sha256": "26c87ecdea2528dfa39500e3db9572be05130d861d6654c6ad661b023847e8a4",
-      "lines": 86,
+      "sha256": "bca8b09e018b374767ea39f9f66fd6301cbe3b0004a3c27052df9033283bbb3d",
+      "lines": 83,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/readiness/WEBSITE-SEO-OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "d55b63cbbd1471e35139b7610c7c855a1b8e39ba48dc024500e546a41910b4e1",
-      "lines": 117,
+      "sha256": "c34d0020f8b76da1fd1a96d01a831ff75ca4051266b55138e8d2e588a8f2580c",
+      "lines": 119,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3163,7 +3459,7 @@
     {
       "path": "docs/testing/CPU-BASELINE.md",
       "kind": "narrative",
-      "sha256": "55fb6058f9c9fe88a6720aa27beec1db5921b028c0cdf9acd970c368299ef3e1",
+      "sha256": "ad515e301b87bcc7fb025ad310f6dc990a8597b0682929865ab68ec79777c4eb",
       "lines": 23,
       "read_status": "pending",
       "read_sha256": null
@@ -3171,63 +3467,71 @@
     {
       "path": "docs/testing/DEVICE-COMPATIBILITY.md",
       "kind": "narrative",
-      "sha256": "4e3526639bd99c16890fab0c2bd70f680a78e6a43eb6f7365cb551f88f443e90",
-      "lines": 32,
+      "sha256": "5b8722b760faee356bdf13faa708533aaa6f8a47e2422b7f4da0a9ff4dbbf9c7",
+      "lines": 25,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/testing/FEATURE-MATRIX.yaml",
       "kind": "structured",
-      "sha256": "62ce6afbe9d901ec08f7d13811874263f43c992dc1dfc41638af53981f82adea",
-      "lines": 743,
-      "read_status": "read",
-      "read_sha256": "62ce6afbe9d901ec08f7d13811874263f43c992dc1dfc41638af53981f82adea"
-    },
-    {
-      "path": "docs/testing/GPU-ACCELERATION.md",
-      "kind": "narrative",
-      "sha256": "c74570a3191bc7f8b4f2313d333ae4a30b2836cb22cc7436aac720f9729f611e",
-      "lines": 52,
+      "sha256": "2677c3ef7b9d1c68e2aac2b3f6395a6b74e8f90fad461218b49bc3ad83d575f8",
+      "lines": 209,
       "read_status": "pending",
       "read_sha256": null
     },
     {
+      "path": "docs/testing/GPU-ACCELERATION.md",
+      "kind": "narrative",
+      "sha256": "f37cff93ca22ff9b34258459f055be545b6af9dc25e559e8b2659cbc9a2f9b3e",
+      "lines": 33,
+      "read_status": "read",
+      "read_sha256": "f37cff93ca22ff9b34258459f055be545b6af9dc25e559e8b2659cbc9a2f9b3e"
+    },
+    {
       "path": "docs/testing/KNOWN-LIMITATIONS.md",
       "kind": "narrative",
-      "sha256": "d573b90cebeb7367a5b85604499795e7e05db96db5e5c6d91df6e49b49f837de",
-      "lines": 16,
+      "sha256": "2b92a494a22771bf97c6259932ba4b4da271330052ebbd42b4f0ecd8bce83141",
+      "lines": 26,
       "read_status": "read",
-      "read_sha256": "d573b90cebeb7367a5b85604499795e7e05db96db5e5c6d91df6e49b49f837de"
+      "read_sha256": "2b92a494a22771bf97c6259932ba4b4da271330052ebbd42b4f0ecd8bce83141"
     },
     {
       "path": "docs/testing/NPU-ACCELERATION.md",
       "kind": "narrative",
-      "sha256": "08debdd49aad8811eb72b9a0a2d5b2f8e166b1e7bee5f4aca1ecc45a9cc66ce9",
-      "lines": 23,
+      "sha256": "90fd8aac59582f45bc142ded7b1f86ca98ed3486737fb866e6218841e2ef2eb1",
+      "lines": 19,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/testing/README.md",
       "kind": "narrative",
-      "sha256": "0bde0aab303a03859570231128c0012d501d39f5662d4e10f60768540d24f56d",
-      "lines": 87,
-      "read_status": "read",
-      "read_sha256": "0bde0aab303a03859570231128c0012d501d39f5662d4e10f60768540d24f56d"
+      "sha256": "fa578edcd1c060962d8b18a3d545c76a9f937dc2bfedaaac9d229fb1900e5bae",
+      "lines": 36,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/testing/REBOOT-RECOVERY-GUIDE.md",
       "kind": "narrative",
-      "sha256": "51efddc295803adfb90bd165c3c551995260dce31e1428d2343dc22b68e1b7f8",
-      "lines": 227,
+      "sha256": "1d2250149e32858195145ee59c5687d4e6962f1a0d5dde6c9e008e0862f85dde",
+      "lines": 41,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/testing/reports/2026-10-24-native-profile-25053RT47C.md",
+      "kind": "narrative",
+      "sha256": "c442c5bc7af735728326bccee752776b1c328d1047587439309b4d190dd48a8c",
+      "lines": 76,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "docs/testing/reports/README.md",
       "kind": "narrative",
-      "sha256": "a3320d166a250f98b4fa4f5d15754288b64e66402885483ed326caeca66c8457",
+      "sha256": "96960dc224c0602e85fbb9fedd50c74753b436f8bf0e048fb572f5aef7ad30df",
       "lines": 5,
       "read_status": "pending",
       "read_sha256": null
@@ -3235,7 +3539,7 @@
     {
       "path": "docs/testing/reports/REPORT-TEMPLATE.md",
       "kind": "narrative",
-      "sha256": "11f9ebf40a1cfbc7c5187720e65060610c80a2fe8074cbd279d66af1e3e415b5",
+      "sha256": "64a4b83ca238834920aa938dfa052ace7696997a835a9f66e9fbcf44817f36fc",
       "lines": 64,
       "read_status": "pending",
       "read_sha256": null
@@ -3243,8 +3547,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "f281286994073a25c7eebef987ba47de0689e757744cdd779661336e26e7395e",
-      "lines": 211,
+      "sha256": "b47f7e3d2c0d974ab28b1b8044ee778a8285b0ebed0c892258783241d8d9089d",
+      "lines": 164,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3275,32 +3579,32 @@
     {
       "path": "schemas/boot-profile-action.schema.json",
       "kind": "structured",
-      "sha256": "e846ee418e133f558e0c2c7245e7b6107450e3b70fcf5479e5ccba3d3983b07c",
-      "lines": 217,
+      "sha256": "cbaa423adb5039202745ff23f3271ab5c8d63b54111ef7754cec56b4adc6eda8",
+      "lines": 203,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "schemas/boot-profile-preview.schema.json",
       "kind": "structured",
-      "sha256": "ac9dcc93e4e01d4e6b814ab13212e953f4e3b3a3ad5b95d665a15ba33021000f",
-      "lines": 117,
+      "sha256": "46c3bb5124ac2b76cb44e6ad66dc50425678f9a945e4909cc8a21302302b0319",
+      "lines": 109,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "schemas/boot-profile-recovery.schema.json",
       "kind": "structured",
-      "sha256": "5230045bb9cff70bf0a0e6d11eff3a59421a0950d38318ff5fd49788156164bd",
-      "lines": 45,
+      "sha256": "d278d10fec35e28d0f63a853c849862d4edd27cb7d9774ae0f465c70e58fec12",
+      "lines": 172,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "schemas/boot-profile.schema.json",
       "kind": "structured",
-      "sha256": "507a9ad636ffe8bbd04a19d77d2c053566dd53527d4238ab308a7c265665c441",
-      "lines": 14,
+      "sha256": "ec4537bc3a8b6d29950d53208628de1d68bf3aed7c04e679d09fbcaaab5c7feb",
+      "lines": 30,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3315,8 +3619,8 @@
     {
       "path": "schemas/continuity-checkpoint.schema.json",
       "kind": "structured",
-      "sha256": "9c1ed09936fc96c6732a63045fcd760a4bbefea77ecdc948e90e0d9a47664120",
-      "lines": 37,
+      "sha256": "1cd5d2698d009d6e812c39c614c6520eac3cd28fefebaef54dc32892dbc3156e",
+      "lines": 116,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3371,8 +3675,8 @@
     {
       "path": "schemas/launch-registry.schema.json",
       "kind": "structured",
-      "sha256": "139adc45371dae076ccb168853b2405b8f2f2c556090703e9a27a6af90a0a4ae",
-      "lines": 179,
+      "sha256": "26ff794edf88f5fca647240a39f3b17df3960ebd18d0741a990e454edbc68faf",
+      "lines": 337,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3435,8 +3739,8 @@
     {
       "path": "schemas/optional-software-catalog.schema.json",
       "kind": "structured",
-      "sha256": "422db75bbf2548e4ddcf4d1dfc409728a99fd631f6acb01be79eb22aecb5969e",
-      "lines": 86,
+      "sha256": "91d797d333377f63841d0e21f0726a12b11e017b87bd928ccca318ac6b6ca9af",
+      "lines": 241,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3465,50 +3769,18 @@
       "read_sha256": null
     },
     {
-      "path": "schemas/proot-distribution-inventory.schema.json",
-      "kind": "structured",
-      "sha256": "4bbce10cb723f9f11c441c86d3c56b29c04fa896b74b740ddb8e4d6c399f7897",
-      "lines": 53,
-      "read_status": "pending",
-      "read_sha256": null
-    },
-    {
-      "path": "schemas/proot-guest-diagnostics.schema.json",
-      "kind": "structured",
-      "sha256": "26f70e9db9cacc6a9840ba7123eb53b8bb3744b71f34b6e2773ee45fd9fcf481",
-      "lines": 334,
-      "read_status": "pending",
-      "read_sha256": null
-    },
-    {
-      "path": "schemas/proot-session-registry.schema.json",
-      "kind": "structured",
-      "sha256": "790c251b453c17171687f5ce9278edef196be17b764513e5a6312c176a8a20ab",
-      "lines": 198,
-      "read_status": "pending",
-      "read_sha256": null
-    },
-    {
-      "path": "schemas/proot-x11-shortcuts.schema.json",
-      "kind": "structured",
-      "sha256": "d2f9e7804cc06c1d3420d5c330b9dc050fdb3bf4611e9272c4222ea7fd3d42f2",
-      "lines": 281,
-      "read_status": "pending",
-      "read_sha256": null
-    },
-    {
       "path": "schemas/reboot-test-checkpoint.schema.json",
       "kind": "structured",
-      "sha256": "60f4cd40cf68ca06f5fb41dc0f9db4439efa548363c22d73ba0dfb67390ef9c1",
-      "lines": 559,
+      "sha256": "afd0715eb7dfb8411e55d670484626f91b2af770d139cf7b355e763fb8cf6b6c",
+      "lines": 554,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "schemas/remote-access-config.schema.json",
       "kind": "structured",
-      "sha256": "c8cc9a91d65795d2657ef7bbb4776a9384f78bc16f1f0fd3eb980535469f1245",
-      "lines": 72,
+      "sha256": "6e1fefa4c2d1959b996e1d84636f6887a7760c52963708b4998b76ee3aec86d1",
+      "lines": 152,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3523,8 +3795,8 @@
     {
       "path": "schemas/shell-profile.schema.json",
       "kind": "structured",
-      "sha256": "5b63d670e1cdfb1d4d4efb81183f1df94c7220a89731d02d7f5d9cbca01d5159",
-      "lines": 59,
+      "sha256": "699276fdec2ef2506ed51822eb99d8621cb58acee2f209aaa7ce71b7fd50c925",
+      "lines": 114,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3549,14 +3821,6 @@
       "kind": "structured",
       "sha256": "50c668b433c51b52c91b9f4077ae954908b3cfb6c31193f15ebf3c19e4ef1dd3",
       "lines": 95,
-      "read_status": "pending",
-      "read_sha256": null
-    },
-    {
-      "path": "schemas/ternux-guest-diagnostics.schema.json",
-      "kind": "structured",
-      "sha256": "a92378c4377c56d868b74d9c7c97a1fb7d2e5b760ee057eb459128f7548556ce",
-      "lines": 332,
       "read_status": "pending",
       "read_sha256": null
     },
