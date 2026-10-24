@@ -940,6 +940,7 @@ def _recovery_action(screen: "curses._CursesWindow") -> dict[str, object]:
         ("backup", "Inspect a backup"), ("create", "Create configuration backup"),
         ("restore", "Preview a restore"), ("apply-restore", "Restore from a backup"),
         ("operation", "Inspect a recovery operation"), ("rollback", "Preview restore rollback"),
+        ("apply-rollback", "Apply restore rollback"), ("resolve", "Reconcile unresolved operation"),
         ("continuity", "Check reboot-continuity status"),
     ])
     if choice == "status":
@@ -988,20 +989,38 @@ def _recovery_action(screen: "curses._CursesWindow") -> dict[str, object]:
         if _prompt(screen, "Type RESTORE to apply this exact profile restore").strip() != "RESTORE":
             return {"ok": False, "error": {"code": "cancelled"}}
         return _call("restore.apply", {"backup_id": backup_id, "confirmed": True, "plan_id": plan_id})
-    if choice in {"operation", "rollback"}:
+    if choice in {"operation", "rollback", "apply-rollback", "resolve"}:
         status = _call("recovery.status")
         if not status.get("ok"):
             return status
         records = status.get("data", {}).get("operations", [])
+        candidates = [item for item in records if isinstance(item, dict)
+                      and isinstance(item.get("operation_id"), str)
+                      and (choice != "resolve" or item.get("status") in {"starting", "stopping", "needs_recovery"})]
         choices = [(str(item.get("operation_id")), f"{item.get('kind')} · {item.get('status')} · {item.get('operation_id')}")
-                   for item in records if isinstance(item, dict) and isinstance(item.get("operation_id"), str)]
+                   for item in candidates]
         if not choices:
             return {"ok": False, "error": {"code": "no_recovery_operations"}}
         operation_id = _choose(screen, "Select a recovery operation", choices)
         if not operation_id:
             return {"ok": False, "error": {"code": "cancelled"}}
-        operation = "recovery.inspect" if choice == "operation" else "recovery.rollback.preview"
-        return _call(operation, {"operation_id": operation_id})
+        if choice == "operation":
+            return _call("recovery.inspect", {"operation_id": operation_id})
+        if choice == "rollback":
+            return _call("recovery.rollback.preview", {"operation_id": operation_id})
+        operation = "recovery.resolve" if choice == "resolve" else "recovery.rollback.apply"
+        preview = _call(operation, {"operation_id": operation_id})
+        if not preview.get("ok"):
+            return preview
+        plan = preview.get("data", {})
+        plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
+        if not isinstance(plan_id, str):
+            return {"ok": False, "error": {"code": "invalid_recovery_preview"}}
+        _show_details(screen, preview)
+        confirmation = "RESOLVE" if choice == "resolve" else "ROLLBACK"
+        if _prompt(screen, f"Type {confirmation} to apply this exact recovery plan").strip() != confirmation:
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call(operation, {"operation_id": operation_id, "confirmed": True, "plan_id": plan_id})
     return {"ok": False, "error": {"code": "cancelled"}}
 
 

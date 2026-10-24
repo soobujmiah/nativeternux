@@ -63,12 +63,16 @@ class ManagementCenterNativeUiContractTests(unittest.TestCase):
 
     def test_gtk_recovery_create_and_restore_use_confirmed_plan_dialogs(self):
         for contract in ("backup-create-preview", "backup-create-apply", "restore-apply-preview",
-                         "restore-apply", "ask_recovery_confirmation", "Create backup from name above",
-                         "Restore from backup ID above", "Review this exact %s plan"):
+                         "restore-apply", "recovery-resolve-preview", "recovery-resolve-apply",
+                         "recovery-rollback-apply-preview", "recovery-rollback-apply", "ask_recovery_confirmation",
+                         "Create backup from name above", "Restore from backup ID above", "Apply restore rollback",
+                         "Reconcile unresolved operation", "Review this exact %s plan"):
             with self.subTest(contract=contract):
                 self.assertIn(contract, SOURCE)
         for contract in ('action == "backup-create-preview"', 'action == "backup-create-apply"',
-                         'action in {"restore-apply-preview", "restore-apply"}'):
+                         'action in {"restore-apply-preview", "restore-apply"}',
+                         'recovery_preview_actions = {"recovery-resolve-preview"',
+                         'action in {"recovery-resolve-apply", "recovery-rollback-apply"}'):
             with self.subTest(contract=contract):
                 self.assertIn(contract, BRIDGE)
 

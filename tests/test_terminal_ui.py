@@ -192,6 +192,26 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             self.assertEqual(terminal_ui._recovery_action(object())["data"]["action"], "restore_preview")
         self.assertEqual(dispatch.call_args_list, [mock.call("backup.list"), mock.call("restore.preview", {"backup_id": backup_id})])
 
+    def test_recovery_apply_actions_review_exact_plan_and_select_only_unresolved_for_resolution(self) -> None:
+        operation = {"operation_id": "c" * 32, "kind": "service.start", "status": "needs_recovery"}
+        plan = {"plan_id": "d" * 64, "resolution": "complete"}
+        for choice, operation_name, confirm in (("resolve", "recovery.resolve", "RESOLVE"),
+                                                ("apply-rollback", "recovery.rollback.apply", "ROLLBACK")):
+            with self.subTest(choice=choice), \
+                    mock.patch.object(terminal_ui, "_choose", side_effect=[choice, operation["operation_id"]]), \
+                    mock.patch.object(terminal_ui, "_call", side_effect=[
+                        {"ok": True, "data": {"operations": [operation]}},
+                        {"ok": True, "data": plan}, {"ok": True, "data": {"applied": True}},
+                    ]) as dispatch, \
+                    mock.patch.object(terminal_ui, "_prompt", return_value=confirm), \
+                    mock.patch.object(terminal_ui, "_show_details"):
+                result = terminal_ui._recovery_action(object())
+            self.assertTrue(result["ok"])
+            self.assertEqual(dispatch.call_args_list, [
+                mock.call("recovery.status"), mock.call(operation_name, {"operation_id": operation["operation_id"]}),
+                mock.call(operation_name, {"operation_id": operation["operation_id"], "confirmed": True, "plan_id": plan["plan_id"]}),
+            ])
+
     def test_cron_guided_create_supports_all_schedule_types_through_shared_preview(self) -> None:
         cases = [
             (["create", "job", "diagnostics.doctor", "cron", "0 8 * * *", "Asia/Dhaka", "yes"],

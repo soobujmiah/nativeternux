@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 488,
-  "read_count": 99,
+  "document_count": 489,
+  "read_count": 100,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "f53648ec416160cd843277bff21544bc418800a7176248130022e3b84745fcd6",
+      "sha256": "47f5eb091d3a7bc0407ff682a1e29de7568dc89063928348e7fbd1aa1e837208",
       "lines": 21,
       "read_status": "read",
-      "read_sha256": "f53648ec416160cd843277bff21544bc418800a7176248130022e3b84745fcd6"
+      "read_sha256": "47f5eb091d3a7bc0407ff682a1e29de7568dc89063928348e7fbd1aa1e837208"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -251,10 +251,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "cce749d7a4a06059c38db8dd742dbb36c558d8be728e3a7f566feeaf88e92832",
+      "sha256": "77d52c45a707e42742abe89c79fce691871c76fba5e0804840c0d809228e7a13",
       "lines": 21,
       "read_status": "read",
-      "read_sha256": "cce749d7a4a06059c38db8dd742dbb36c558d8be728e3a7f566feeaf88e92832"
+      "read_sha256": "77d52c45a707e42742abe89c79fce691871c76fba5e0804840c0d809228e7a13"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -3071,6 +3071,14 @@
       "lines": 20,
       "read_status": "pending",
       "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-recovery-resolution-client-parity.md",
+      "kind": "narrative",
+      "sha256": "2b6994284d09976f29faec41aaadc9dc8d541b480c2456e00964d5767a5b0c83",
+      "lines": 16,
+      "read_status": "read",
+      "read_sha256": "2b6994284d09976f29faec41aaadc9dc8d541b480c2456e00964d5767a5b0c83"
     },
     {
       "path": "docs/evidence/2026-10-24-virgl-stopped-status-correction.md",

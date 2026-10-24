@@ -94,6 +94,29 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
             self.assertEqual(bridge.main(["restore-apply", "daily", "bad", "confirmed"]), 2)
         dispatch.assert_not_called()
 
+    def test_recovery_resolution_and_rollback_apply_use_exact_preview_plans(self):
+        operation_id = "c" * 32
+        plan_id = "d" * 64
+        for action, service_operation in (("recovery-resolve-preview", "recovery.resolve"),
+                                         ("recovery-rollback-apply-preview", "recovery.rollback.preview")):
+            with self.subTest(action=action), mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"plan_id": plan_id}}) as dispatch, redirect_stdout(StringIO()) as output:
+                self.assertEqual(bridge.main([action, operation_id]), 0)
+            dispatch.assert_called_once_with(service_operation, {"operation_id": operation_id})
+            self.assertEqual(output.getvalue().strip().split("\t", 3)[:3], ["P", plan_id, operation_id])
+        for action, service_operation in (("recovery-resolve-apply", "recovery.resolve"),
+                                         ("recovery-rollback-apply", "recovery.rollback.apply")):
+            with self.subTest(action=action), mock.patch.object(bridge, "call", return_value={"ok": True, "data": {}}) as dispatch, redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main([action, operation_id, plan_id, "confirmed"]), 0)
+            dispatch.assert_called_once_with(service_operation, {"operation_id": operation_id, "confirmed": True, "plan_id": plan_id})
+
+    def test_recovery_apply_bridge_rejects_malformed_operation_and_plan_ids(self):
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["recovery-resolve-preview", "../bad"]), 2)
+            self.assertEqual(bridge.main(["recovery-rollback-apply-preview", "../bad"]), 2)
+            self.assertEqual(bridge.main(["recovery-resolve-apply", "a" * 32, "bad", "confirmed"]), 2)
+            self.assertEqual(bridge.main(["recovery-rollback-apply", "bad", "b" * 64, "confirmed"]), 2)
+        dispatch.assert_not_called()
+
     def test_cron_inspection_bridge_allows_only_typed_read_operations(self):
         job_id = "job-" + "a" * 32
         execution_id = "exec-" + "b" * 32
