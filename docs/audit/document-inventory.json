@@ -4,7 +4,7 @@
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
   "document_count": 484,
-  "read_count": 105,
+  "read_count": 99,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -2907,7 +2907,7 @@
     {
       "path": "docs/evidence/2026-10-24-native-cpu-inference-candidate-audit.md",
       "kind": "narrative",
-      "sha256": "21899789bb5fadbe7e2e152c414c5c96e211649e50e574c5b685aa923720e68c",
+      "sha256": "d04c58fb01f811f7d1e342d68595e5e597121fc5476162d62d79c996ba8dd63a",
       "lines": 33,
       "read_status": "pending",
       "read_sha256": null
@@ -2915,10 +2915,10 @@
     {
       "path": "docs/evidence/2026-10-24-native-cpu-inference-workflow.md",
       "kind": "narrative",
-      "sha256": "dfe6c1cee08a4a36469185de4b2434e093495880f7bedda0cf1c80cf4398b9e5",
+      "sha256": "b837fe342655580c4b82498171163996a420ce987b264b6302fdc21230c53312",
       "lines": 30,
-      "read_status": "read",
-      "read_sha256": "dfe6c1cee08a4a36469185de4b2434e093495880f7bedda0cf1c80cf4398b9e5"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-24-native-graphics-fallback-recheck.md",
@@ -2947,10 +2947,10 @@
     {
       "path": "docs/evidence/2026-10-24-native-stock-mesa-recheck.md",
       "kind": "narrative",
-      "sha256": "e9af112cf2315ae6b81d0b36811374a0bd7cb5cfab559d1d0187eb3e7997a546",
+      "sha256": "82209feb7656be82898c9091b0b1360f5130b823f11211aac54956a1e9134966",
       "lines": 25,
-      "read_status": "read",
-      "read_sha256": "e9af112cf2315ae6b81d0b36811374a0bd7cb5cfab559d1d0187eb3e7997a546"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-24-native-suite-and-url-verification.md",
@@ -3003,18 +3003,18 @@
     {
       "path": "docs/evidence/2026-10-24-p6-client-capability-copy-audit.md",
       "kind": "narrative",
-      "sha256": "185483baa94f616b9f23355aa7ef2b70c5cac547488b0898d72a9011858809cf",
+      "sha256": "73c5e10e73ae24b967a55dbc033be3be47b5a1f0596f1bfb1002414d964785e6",
       "lines": 23,
-      "read_status": "read",
-      "read_sha256": "185483baa94f616b9f23355aa7ef2b70c5cac547488b0898d72a9011858809cf"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-24-p6-completion-review.md",
       "kind": "narrative",
-      "sha256": "a872842c7f2d7250ee5bad74b7289b94349482ed6cf69794fc7529535014b880",
+      "sha256": "2dfe1b713ab08729ecf32f794e71f3f80db2e7613e6bd078740e8e76febb1b32",
       "lines": 32,
-      "read_status": "read",
-      "read_sha256": "a872842c7f2d7250ee5bad74b7289b94349482ed6cf69794fc7529535014b880"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-24-p7-native-catalog-implementation.md",
@@ -3027,10 +3027,10 @@
     {
       "path": "docs/evidence/2026-10-24-p7-native-catalog-scope.md",
       "kind": "narrative",
-      "sha256": "6cd28a0cfbc01ea2151dbc28ae85db2f52563cf97fd7306b20b29b403e584670",
+      "sha256": "07c51913f30cbaafafcc2b74e76b7a44f9e96c749f1ca36c116baf7feca74d0e",
       "lines": 31,
-      "read_status": "read",
-      "read_sha256": "6cd28a0cfbc01ea2151dbc28ae85db2f52563cf97fd7306b20b29b403e584670"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-24-p8-native-readiness-audit.md",
@@ -3067,7 +3067,7 @@
     {
       "path": "docs/evidence/2026-10-24-web-session-reload-reconnect.md",
       "kind": "narrative",
-      "sha256": "a744d1d6cb47bc5dbdaeaa145d66e103a0c6fb9336e8333f88df20b1a28bc80a",
+      "sha256": "b41002252d9e64a9ac78b1d94afa5787e76c64abfadbf31baefb3427f9b177c0",
       "lines": 40,
       "read_status": "pending",
       "read_sha256": null
@@ -3411,10 +3411,10 @@
     {
       "path": "docs/readiness/THIRD-PARTY-NOTICES.md",
       "kind": "narrative",
-      "sha256": "408045749123771b363d3dfd6bf51e296be281b570955110971e3dfa12125597",
+      "sha256": "f7cbfb1aebb6c66e6e0443e9f34a81438f5ac85b287457e8adfc89d895c58b86",
       "lines": 16,
-      "read_status": "read",
-      "read_sha256": "408045749123771b363d3dfd6bf51e296be281b570955110971e3dfa12125597"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/readiness/THREAT-MODEL.md",
@@ -3523,7 +3523,7 @@
     {
       "path": "docs/testing/reports/2026-10-24-native-profile-25053RT47C.md",
       "kind": "narrative",
-      "sha256": "c442c5bc7af735728326bccee752776b1c328d1047587439309b4d190dd48a8c",
+      "sha256": "36bc6a9d62b8877b92ddf976746c78c3192d64fa93a7b20d70e2f74925bde5b4",
       "lines": 76,
       "read_status": "pending",
       "read_sha256": null
