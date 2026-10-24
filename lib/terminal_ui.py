@@ -808,20 +808,43 @@ def _cron_mutation(screen: "curses._CursesWindow") -> dict[str, object]:
         return {"ok": False, "error": {"code": "cancelled"}}
     if action == "create":
         name = _prompt(screen, "Job name")
-        action_id = _prompt(screen, "Safe action ID: diagnostics.doctor, management.catalog.refresh, hermes.status, scheduler.self_test")
-        expression = _prompt(screen, "Five-field cron expression (minute hour day month weekday)")
-        if not name or action_id not in management_service.cron_registry._ALLOWED_ACTIONS or not expression:
+        action_id = _prompt(screen, "Registered safe action ID (doctor, catalog refresh, Hermes status, self-test)")
+        schedule_type = _prompt(screen, "Schedule type: cron, interval, calendar, one_time").lower()
+        if not name or schedule_type not in {"cron", "interval", "calendar", "one_time"}:
             return {"ok": False, "error": {"code": "invalid_cron_input"}}
-        timezone_name = management_service.timezone_support.current_timezone(
-            os.environ.get("TERNUXX_STATE_DIR") or os.path.join(os.environ.get("HOME", ""), ".local/share/ternuxx"),
-            installation_timezone=os.environ.get("TERNUXX_INSTALL_TIMEZONE"))
-        try:
-            job = management_service.cron_registry.new_job(
-                name=name, description="Scheduled Ternuxx action", action_id=action_id,
-                schedule_type="cron", schedule={"expression": expression, "timezone": timezone_name})
-        except ValueError:
-            return {"ok": False, "error": {"code": "invalid_cron_input"}}
-        args = {"action": "create", "job": job}
+        schedule: dict[str, object]
+        if schedule_type == "cron":
+            expression = _prompt(screen, "Five-field Cron expression (minute hour day month weekday)")
+            if not expression: return {"ok": False, "error": {"code": "invalid_cron_input"}}
+            schedule = {"expression": expression}
+            timezone_name = _prompt(screen, "IANA timezone (blank uses Ternuxx preference)")
+            if timezone_name: schedule["timezone"] = timezone_name
+        elif schedule_type == "interval":
+            raw_interval = _prompt(screen, "Interval seconds (1–31536000)")
+            anchor = _prompt(screen, "Anchor ISO-8601 datetime with UTC offset")
+            if not raw_interval.isdigit() or not anchor:
+                return {"ok": False, "error": {"code": "invalid_cron_input"}}
+            schedule = {"interval_seconds": int(raw_interval), "anchor_at": anchor}
+        elif schedule_type == "calendar":
+            mode = _prompt(screen, "Calendar mode: daily or specific").lower()
+            if mode == "daily":
+                value = _prompt(screen, "Local time HH:MM (24-hour)")
+                timezone_name = _prompt(screen, "IANA timezone (blank uses Ternuxx preference)")
+                if not value: return {"ok": False, "error": {"code": "invalid_cron_input"}}
+                schedule = {"mode": "daily", "time": value}
+                if timezone_name: schedule["timezone"] = timezone_name
+            elif mode == "specific":
+                value = _prompt(screen, "Future ISO-8601 datetime with UTC offset")
+                if not value: return {"ok": False, "error": {"code": "invalid_cron_input"}}
+                schedule = {"mode": "specific", "datetime": value}
+            else:
+                return {"ok": False, "error": {"code": "invalid_cron_input"}}
+        else:
+            value = _prompt(screen, "Future ISO-8601 datetime with UTC offset")
+            if not value: return {"ok": False, "error": {"code": "invalid_cron_input"}}
+            schedule = {"at": value}
+        args = {"action": "create", "name": name, "action_id": action_id,
+                "schedule_type": schedule_type, "schedule": schedule}
     else:
         listing = _cron_jobs()
         if not listing.get("ok"):

@@ -42,6 +42,16 @@ class ManagementCenterNativeUiContractTests(unittest.TestCase):
             with self.subTest(contract=contract):
                 self.assertIn(contract, SOURCE)
 
+    def test_gtk_cron_create_supports_every_schedule_type_via_typed_bridge(self):
+        for contract in ("cron-schedule-type", "cron-schedule-extra", "cron-timezone",
+                         'g_strcmp0(type_value, "cron")', 'g_strcmp0(type_value, "interval")',
+                         'g_strcmp0(type_value, "calendar")', 'g_strcmp0(type_value, "one_time")',
+                         'run_bridge_full(c, "cron-preview", "create"',
+                         '"Optional IANA timezone for cron/daily; blank uses preference"',
+                         '"Cron expression, interval seconds, HH:MM or ISO datetime"'):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, SOURCE)
+
     def test_cron_scheduler_controls_use_explicit_confirmation_and_shared_bridge(self):
         for contract in ("cron_start_button", "cron_stop_button", "ask_cron_scheduler_confirmation",
                          "cron-scheduler-start", "cron-scheduler-stop", '"cron-scheduler", "start", "10"',

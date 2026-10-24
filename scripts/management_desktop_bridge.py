@@ -292,20 +292,36 @@ def main(argv: list[str]) -> int:
         result = call(operation, operation_args) if operation_args else call(operation)
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
-    if action == "cron-preview" and len(argv) in {3, 5}:
-        import cron_registry
-        import timezone_support
+    if action == "cron-preview" and len(argv) in {3, 5, 7, 8}:
         kind = argv[1]
-        if kind == "create" and len(argv) == 5:
-            name, action_id, expression = argv[2:]
-            if action_id not in cron_registry._ALLOWED_ACTIONS:
-                print(json.dumps({"ok": False, "error": {"code": "invalid_action"}}))
+        if kind == "create" and len(argv) in {5, 7, 8}:
+            if len(argv) == 5:
+                name, action_id, expression = argv[2:]
+                schedule_type, value, extra, timezone_name = "cron", expression, "", ""
+            else:
+                name, action_id, schedule_type, value, extra = argv[2:7]
+                timezone_name = argv[7] if len(argv) == 8 else ""
+            schedule: dict[str, object]
+            if schedule_type == "cron" and not extra:
+                schedule = {"expression": value}
+                if timezone_name: schedule["timezone"] = timezone_name
+            elif schedule_type == "interval" and extra and not timezone_name:
+                if not value.isdigit():
+                    print(json.dumps({"ok": False, "error": {"code": "invalid_interval"}}))
+                    return 2
+                schedule = {"interval_seconds": int(value), "anchor_at": extra}
+            elif schedule_type == "calendar" and extra == "daily":
+                schedule = {"mode": "daily", "time": value}
+                if timezone_name: schedule["timezone"] = timezone_name
+            elif schedule_type == "calendar" and extra == "specific" and not timezone_name:
+                schedule = {"mode": "specific", "datetime": value}
+            elif schedule_type == "one_time" and not timezone_name and not extra:
+                schedule = {"at": value}
+            else:
+                print(json.dumps({"ok": False, "error": {"code": "invalid_schedule"}}))
                 return 2
-            state = os.environ.get("TERNUXX_STATE_DIR") or str(Path.home() / ".local/share/ternuxx")
-            zone = timezone_support.current_timezone(state, installation_timezone=os.environ.get("TERNUXX_INSTALL_TIMEZONE"))
-            job = cron_registry.new_job(name=name, description="Scheduled Ternuxx action",
-                action_id=action_id, schedule_type="cron", schedule={"expression": expression, "timezone": zone})
-            args = {"action": "create", "job": job}
+            args = {"action": "create", "name": name, "action_id": action_id,
+                    "schedule_type": schedule_type, "schedule": schedule}
         elif kind == "update" and len(argv) == 5:
             job_id, field, value = argv[2:]
             if field not in {"name", "enabled"}:

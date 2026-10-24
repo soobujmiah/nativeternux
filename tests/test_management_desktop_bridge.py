@@ -22,6 +22,27 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("inference.cpu.run", {"prompt": "one line", "max_tokens": 64})
         self.assertIn("ok", output.getvalue().casefold())
 
+    def test_cron_create_bridge_encodes_all_supported_schedule_types_as_typed_service_args(self):
+        cases = [
+            (["cron", "0 8 * * *", "", "Asia/Dhaka"],
+             {"expression": "0 8 * * *", "timezone": "Asia/Dhaka"}),
+            (["interval", "3600", "2026-10-24T00:00:00Z"],
+             {"interval_seconds": 3600, "anchor_at": "2026-10-24T00:00:00Z"}),
+            (["calendar", "08:30", "daily", "Asia/Dhaka"],
+             {"mode": "daily", "time": "08:30", "timezone": "Asia/Dhaka"}),
+            (["calendar", "2099-01-01T08:30:00+06:00", "specific"],
+             {"mode": "specific", "datetime": "2099-01-01T08:30:00+06:00"}),
+            (["one_time", "2099-01-01T08:30:00+06:00", ""],
+             {"at": "2099-01-01T08:30:00+06:00"}),
+        ]
+        for fields, schedule in cases:
+            with self.subTest(schedule=schedule), \
+                    mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"plan": {"plan_id": "a" * 32}}}) as dispatch, \
+                    redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(["cron-preview", "create", "job", "diagnostics.doctor", *fields]), 0)
+                self.assertEqual(dispatch.call_args.args[1]["schedule"], schedule)
+                self.assertEqual(dispatch.call_args.args[1]["schedule_type"], fields[0])
+
     def test_cron_scheduler_actions_use_shared_operations_and_bounded_interval(self):
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"state": "running"}}) as dispatch, \
                 redirect_stdout(StringIO()):
@@ -259,11 +280,13 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         with mock.patch.object(bridge, "call", return_value=preview_result) as dispatch:
             output = StringIO()
             with redirect_stdout(output):
-                self.assertEqual(bridge.main(["cron-preview", "create", "daily", "diagnostics.doctor", "0 8 * * *"]), 0)
+                self.assertEqual(bridge.main(["cron-preview", "create", "daily", "diagnostics.doctor",
+                                             "cron", "0 8 * * *", "", "Asia/Dhaka"]), 0)
         request = dispatch.call_args.args[0]
         self.assertEqual(request, "cron.jobs.mutation.preview")
-        self.assertEqual(dispatch.call_args.args[1]["action"], "create")
-        self.assertEqual(dispatch.call_args.args[1]["job"]["action_id"], "diagnostics.doctor")
+        self.assertEqual(dispatch.call_args.args[1], {
+            "action": "create", "name": "daily", "action_id": "diagnostics.doctor",
+            "schedule_type": "cron", "schedule": {"expression": "0 8 * * *", "timezone": "Asia/Dhaka"}})
         self.assertIn("P" + chr(9) + "a" * 32, output.getvalue())
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"applied": True}}) as dispatch:
             output = StringIO()

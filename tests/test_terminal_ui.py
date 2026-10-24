@@ -150,6 +150,31 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             self.assertIs(terminal_ui._cron_executions(), history)
         dispatch.assert_called_once_with("cron.executions.list", {"limit": 20})
 
+    def test_cron_guided_create_supports_all_schedule_types_through_shared_preview(self) -> None:
+        cases = [
+            (["create", "job", "diagnostics.doctor", "cron", "0 8 * * *", "Asia/Dhaka", "yes"],
+             "cron", {"expression": "0 8 * * *", "timezone": "Asia/Dhaka"}),
+            (["create", "job", "diagnostics.doctor", "interval", "3600", "2026-10-24T00:00:00Z", "yes"],
+             "interval", {"interval_seconds": 3600, "anchor_at": "2026-10-24T00:00:00Z"}),
+            (["create", "job", "diagnostics.doctor", "calendar", "daily", "08:30", "Asia/Dhaka", "yes"],
+             "calendar", {"mode": "daily", "time": "08:30", "timezone": "Asia/Dhaka"}),
+            (["create", "job", "diagnostics.doctor", "calendar", "specific", "2099-01-01T08:30:00+06:00", "yes"],
+             "calendar", {"mode": "specific", "datetime": "2099-01-01T08:30:00+06:00"}),
+            (["create", "job", "diagnostics.doctor", "one_time", "2099-01-01T08:30:00+06:00", "yes"],
+             "one_time", {"at": "2099-01-01T08:30:00+06:00"}),
+        ]
+        preview = {"ok": True, "data": {"plan": {"plan_id": "a" * 32}}}
+        applied = {"ok": True, "data": {"applied": True}}
+        for prompts, schedule_type, schedule in cases:
+            with self.subTest(schedule_type=schedule_type, schedule=schedule), \
+                    mock.patch.object(terminal_ui, "_prompt", side_effect=prompts), \
+                    mock.patch.object(terminal_ui, "_call", side_effect=[preview, applied]) as dispatch, \
+                    mock.patch.object(terminal_ui, "_show_details"):
+                self.assertIs(terminal_ui._cron_mutation(object()), applied)
+                self.assertEqual(dispatch.call_args_list[0], mock.call("cron.jobs.mutation.preview", {
+                    "action": "create", "name": "job", "action_id": "diagnostics.doctor",
+                    "schedule_type": schedule_type, "schedule": schedule}))
+
     def test_timezone_action_checks_available_zones_and_confirms_before_saving(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES
                         if item["id"] == "native.timezone")

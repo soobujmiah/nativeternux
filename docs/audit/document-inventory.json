@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "38b71821253e6fa15a94af9359f58edbdd846c9adc9d9863e4386c2eefe2531f",
+      "sha256": "b41e4ebdb8e2fe9f0851a7166abe2ba87ab0716e280cf7b1b17d3070773f8b57",
       "lines": 21,
       "read_status": "pending",
       "read_sha256": null
@@ -43,7 +43,7 @@
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
       "kind": "structured",
-      "sha256": "12f0b9d3347fbf9e6c502bc66a3438c866a0c816883b0d03368aa60c2e6cb9d9",
+      "sha256": "d343c7463ade1290fd918cd57dcb3b5eaf80f5cb80e3c33ab9a3ff3fd18607c3",
       "lines": 53,
       "read_status": "pending",
       "read_sha256": null
@@ -163,7 +163,7 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "b054163877d8f0d54d0660e43fe3040bccab0a47d9fdcde11eaed9d0e764cc18",
+      "sha256": "d4c02a3fd19a404d2c792bc9330f5ebfbc4f9c9e6b780f0c11d59a43dfe8b54c",
       "lines": 122,
       "read_status": "pending",
       "read_sha256": null
@@ -251,7 +251,7 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "6be320065ce0bd2a17681916b46ab3fc175187f241276d8751d46227ab9193ff",
+      "sha256": "3e3e9d50c7fb324964a1966ac09ecc086d7fb0234989b473f0dcc689c23e7444",
       "lines": 20,
       "read_status": "pending",
       "read_sha256": null
@@ -267,8 +267,8 @@
     {
       "path": "docs/architecture/CRON-JOBS.md",
       "kind": "narrative",
-      "sha256": "f4b77969d3e5fef3238f43b93261b812b16963a3c67d95ead99d8da2338845d3",
-      "lines": 126,
+      "sha256": "bfe1a8ca46e29a88bf6fd9e98ed86ebc560a762449934f626b482e1f091d13b0",
+      "lines": 130,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -307,8 +307,8 @@
     {
       "path": "docs/architecture/MANAGEMENT-API.md",
       "kind": "narrative",
-      "sha256": "06c8ea48c0da7a48119161acbbc650f8ab924e43944dee85512726256293b82a",
-      "lines": 9,
+      "sha256": "4913eead3d10810ebc7d3e3838b5fdaf2135f931dfa341dbbccf2b3eef30d271",
+      "lines": 11,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -347,7 +347,7 @@
     {
       "path": "docs/architecture/UNIFIED-WORKSTATION.md",
       "kind": "narrative",
-      "sha256": "c3ca1c879bf4694c12dbe5db20af79fa2bc2b0808a4d3fbe2849a6754ad90ad0",
+      "sha256": "5ad9070107c113c8a35422c1edfdbbbb8ecb15178dc353000d9c852ac9363487",
       "lines": 251,
       "read_status": "pending",
       "read_sha256": null
@@ -531,7 +531,7 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "3982ac37e63ac180ad573b5caf66d509b2c9065b31ba36ce9fcfcf1367d5abee",
+      "sha256": "ea21fc77602b449aac49720ef0b8e4af46aa01100b0bc861f868d91682d5c1aa",
       "lines": 25,
       "read_status": "pending",
       "read_sha256": null
@@ -2971,7 +2971,7 @@
     {
       "path": "docs/evidence/2026-10-24-p10-internal-hardening-review.md",
       "kind": "narrative",
-      "sha256": "77e02391c7bb9075cee8e424ee14fdcaf83d2e27635c7bb733feba76cd128cb6",
+      "sha256": "dba4a5948fe0d568d3414e5ab8d64e56d7079d683e6ccd4cc2cd54718f849c62",
       "lines": 24,
       "read_status": "pending",
       "read_sha256": null
@@ -3035,7 +3035,7 @@
     {
       "path": "docs/evidence/2026-10-24-p8-native-readiness-audit.md",
       "kind": "narrative",
-      "sha256": "8dfa503e9b97843a00a9429d55bc2869e492361995e12fa7ab84d1ee2b376640",
+      "sha256": "9dd6462d40a8a8fddd1dde9e9903a5420b8c17de1d4a8e2cde35dd048b6a9887",
       "lines": 28,
       "read_status": "pending",
       "read_sha256": null
@@ -3499,7 +3499,7 @@
     {
       "path": "docs/testing/KNOWN-LIMITATIONS.md",
       "kind": "narrative",
-      "sha256": "635e70e15186ea5368954b009899a7a4810f9d8ecb9801c1d0bca3e0142b8806",
+      "sha256": "b4aaebcc7c941baf8a6e3301c73b4241992d70b5d042ec02a65138d51f2957da",
       "lines": 26,
       "read_status": "pending",
       "read_sha256": null
@@ -3555,8 +3555,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "bf3b097b1d534bdc2ad595f10abc2b864f818cefbe9274189633fddb32e5086e",
-      "lines": 190,
+      "sha256": "1551f306c8ae13c68d777620e7b8e10a250035e3cc4b26b0158dd90da7514b97",
+      "lines": 194,
       "read_status": "pending",
       "read_sha256": null
     },

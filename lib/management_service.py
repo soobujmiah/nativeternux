@@ -75,7 +75,7 @@ OPERATIONS = {
     "cron.jobs.show": {"args": {"job_id"}},
     "cron.jobs.validate": {"args": {"job", "job_id"}},
     "cron.jobs.next_runs": {"args": {"job_id", "count"}},
-    "cron.jobs.mutation.preview": {"args": {"action", "job", "job_id", "changes"}},
+    "cron.jobs.mutation.preview": {"args": {"action", "job_id", "changes", "name", "description", "action_id", "schedule_type", "schedule", "enabled", "run_after_device_boot", "run_after_scheduler_recovery", "timeout_seconds", "retry_policy", "missed_run_policy", "concurrency_policy", "environment", "output_policy"}},
     "cron.jobs.mutation.apply": {"args": {"plan_id", "confirmed"}},
     "cron.executions.list": {"args": {"job_id", "limit"}},
     "cron.executions.show": {"args": {"execution_id"}},
@@ -226,8 +226,14 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
         return _error(request_id, "invalid_arguments", "job ID and bounded run count are required")
     if operation == "cron.jobs.mutation.preview":
         action = args.get("action")
+        create_required = {"action", "name", "action_id", "schedule_type", "schedule"}
+        create_optional = {"description", "enabled", "run_after_device_boot", "run_after_scheduler_recovery",
+                           "timeout_seconds", "retry_policy", "missed_run_policy", "concurrency_policy",
+                           "environment", "output_policy"}
         valid = (
-            (action == "create" and set(args) == {"action", "job"} and isinstance(args.get("job"), dict))
+            (action == "create" and create_required <= set(args) <= create_required | create_optional
+                and isinstance(args.get("name"), str) and isinstance(args.get("action_id"), str)
+                and isinstance(args.get("schedule_type"), str) and isinstance(args.get("schedule"), dict))
             or (action == "update" and set(args) == {"action", "job_id", "changes"}
                 and isinstance(args.get("job_id"), str) and isinstance(args.get("changes"), dict))
             or (action == "remove" and set(args) == {"action", "job_id"}
@@ -303,7 +309,20 @@ def dispatch(request: object, *, caller: str = "local_cli", env: dict[str, str] 
             job = cron_registry.show_job(state_dir or os.path.join(home, ".local/share/ternuxx"), args["job_id"])
             data = {"job_id": args["job_id"], "runs": cron_registry.next_runs(job, count=count)}
         elif operation == "cron.jobs.mutation.preview":
-            plan_args = {key: args[key] for key in ("job_id", "job", "changes") if key in args}
+            plan_args = {key: args[key] for key in ("job_id", "changes") if key in args}
+            if args["action"] == "create":
+                schedule_type = args["schedule_type"]
+                schedule = _cron_schedule_with_timezone(
+                    schedule_type, args["schedule"],
+                    state_dir=state_dir or os.path.join(home, ".local/share/ternuxx"),
+                    installation_timezone=process_env.get("TERNUXX_INSTALL_TIMEZONE"))
+                create_kwargs = {key: args[key] for key in (
+                    "description", "enabled", "run_after_device_boot", "run_after_scheduler_recovery",
+                    "timeout_seconds", "retry_policy", "missed_run_policy", "concurrency_policy",
+                    "environment", "output_policy") if key in args}
+                plan_args["job"] = cron_registry.new_job(
+                    name=args["name"], action_id=args["action_id"],
+                    schedule_type=schedule_type, schedule=schedule, **create_kwargs)
             data = cron_registry.preview_job_mutation(
                 state_dir or os.path.join(home, ".local/share/ternuxx"),
                 action=args["action"], **plan_args)
@@ -874,7 +893,16 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _cli_job(args: argparse.Namespace) -> dict[str, object] | None:
+def _cron_schedule_with_timezone(schedule_type: str, schedule: dict[str, object], *,
+                                 state_dir: str, installation_timezone: str | None) -> dict[str, object]:
+    normalized = dict(schedule)
+    if schedule_type == "cron" or (schedule_type == "calendar" and normalized.get("mode") == "daily"):
+        normalized.setdefault("timezone", timezone_support.current_timezone(
+            state_dir, installation_timezone=installation_timezone))
+    return normalized
+
+
+def _cli_job_values(args: argparse.Namespace) -> dict[str, object] | None:
     if not all((args.job_name, args.job_action, args.schedule_type)):
         return None
     if args.timezone is not None and args.schedule_type not in {"cron", "calendar"}:
@@ -885,40 +913,42 @@ def _cli_job(args: argparse.Namespace) -> dict[str, object] | None:
     if args.schedule_type == "cron":
         if not args.cron_expression: return None
         schedule = {"expression": args.cron_expression}
-        if args.timezone is not None:
-            schedule["timezone"] = args.timezone
+        if args.timezone is not None: schedule["timezone"] = args.timezone
     elif args.schedule_type == "interval":
         if args.interval_seconds is None or not args.anchor_at: return None
         schedule = {"interval_seconds": args.interval_seconds, "anchor_at": args.anchor_at}
     elif args.schedule_type == "calendar":
         if args.calendar_mode == "daily" and args.calendar_time:
             schedule = {"mode": "daily", "time": args.calendar_time}
-            if args.timezone is not None:
-                schedule["timezone"] = args.timezone
+            if args.timezone is not None: schedule["timezone"] = args.timezone
         elif args.calendar_mode == "specific" and args.datetime:
             schedule = {"mode": "specific", "datetime": args.datetime}
         else: return None
     else:
         if not args.at: return None
         schedule = {"at": args.at}
+    return {
+        "name": args.job_name, "description": args.job_description,
+        "action_id": args.job_action, "schedule_type": args.schedule_type, "schedule": schedule,
+        "enabled": bool(args.job_enabled), "run_after_device_boot": bool(args.device_boot),
+        "run_after_scheduler_recovery": bool(args.scheduler_recovery), "timeout_seconds": args.timeout_seconds,
+        "retry_policy": {"max_attempts": args.max_attempts, "delay_seconds": args.retry_delay_seconds,
+                         "backoff": args.retry_backoff},
+        "missed_run_policy": args.missed_run_policy, "concurrency_policy": args.concurrency_policy,
+        "environment": args.job_environment,
+    }
+
+
+def _cli_job(args: argparse.Namespace) -> dict[str, object] | None:
+    values = _cli_job_values(args)
+    if values is None:
+        return None
     try:
-        timezone_name = args.timezone
-        if timezone_name is None and args.schedule_type in {"cron", "calendar"}:
-            home = os.environ.get("HOME", "")
-            state_dir = os.environ.get("TERNUXX_STATE_DIR") or os.path.join(home, ".local/share/ternuxx")
-            timezone_name = timezone_support.current_timezone(
-                state_dir, installation_timezone=os.environ.get("TERNUXX_INSTALL_TIMEZONE"))
-        if args.schedule_type == "cron" and schedule.get("timezone") is None:
-            schedule["timezone"] = timezone_name
-        if args.schedule_type == "calendar" and schedule.get("mode") == "daily" and schedule.get("timezone") is None:
-            schedule["timezone"] = timezone_name
-        return cron_registry.new_job(name=args.job_name, description=args.job_description,
-            action_id=args.job_action, schedule_type=args.schedule_type, schedule=schedule,
-            enabled=bool(args.job_enabled), run_after_device_boot=bool(args.device_boot),
-            run_after_scheduler_recovery=bool(args.scheduler_recovery), timeout_seconds=args.timeout_seconds,
-            retry_policy={"max_attempts": args.max_attempts, "delay_seconds": args.retry_delay_seconds,
-                          "backoff": args.retry_backoff}, missed_run_policy=args.missed_run_policy,
-            concurrency_policy=args.concurrency_policy, environment=args.job_environment)
+        values["schedule"] = _cron_schedule_with_timezone(
+            values["schedule_type"], values["schedule"],
+            state_dir=os.environ.get("TERNUXX_STATE_DIR") or os.path.join(os.environ.get("HOME", ""), ".local/share/ternuxx"),
+            installation_timezone=os.environ.get("TERNUXX_INSTALL_TIMEZONE"))
+        return cron_registry.new_job(**values)
     except ValueError:
         return None
 
@@ -1078,13 +1108,13 @@ def main(argv: list[str] | None = None) -> int:
         if args.operation == "cron.jobs.mutation.preview":
             action = args.mutation_action
             if action == "create":
-                job = _cli_job(args)
-                if job is None:
+                values = _cli_job_values(args)
+                if values is None:
                     response = _error(request_id, "invalid_arguments", "typed job fields are incomplete or invalid")
                     if args.json: print(json.dumps(response, sort_keys=True))
                     else: print("Provide the documented typed job fields and schedule options.", file=sys.stderr)
                     return 1
-                payload = {"action": action, "job": job}
+                payload = {"action": action, **values}
             elif action == "update":
                 changes = _cli_job_changes(args)
                 if not args.job_id or not changes:

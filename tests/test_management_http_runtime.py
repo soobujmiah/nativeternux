@@ -340,10 +340,22 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 self.assertEqual(json.loads(response)["operation"], "cron.scheduler.start")
                 self.assertEqual(dispatch.call_count, 5)
 
+                dispatch.return_value = {"api_version": 1, "request_id": "web-cron-create-result-01",
+                    "ok": True, "operation": "cron.jobs.mutation.preview", "data": {"plan": {"plan_id": "a" * 32}}}
+                typed_cron = {"action": "create", "name": "web job", "action_id": "diagnostics.doctor",
+                    "schedule_type": "one_time", "schedule": {"at": "2099-01-01T08:30:00+06:00"}}
+                status, _headers, response = post("cron.jobs.mutation.preview", "web-cron-create-request-01",
+                    "web-cron-create-key-0001", typed_cron)
+                self.assertEqual(status, 200, response)
+                dispatched = dispatch.call_args.args[0]
+                self.assertEqual(dispatched["operation"], "cron.jobs.mutation.preview")
+                self.assertEqual(dispatched["args"], typed_cron)
+                self.assertEqual(dispatch.call_count, 6)
+
                 status, _headers, response = post("proot.app.launch", "web-proot-launch-01",
                     "web-proot-launch-key1", {"app_id": "files"})
                 self.assertEqual(status, 403)
-                self.assertEqual(dispatch.call_count, 5)
+                self.assertEqual(dispatch.call_count, 6)
 
                 dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
                     "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
@@ -414,6 +426,9 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('b.onclick=()=>run("timezone.list")', page)
         self.assertIn("timezone.status", page)
         self.assertIn("timezone.set", page)
+        self.assertIn('schedule_type:scheduleType,schedule', page)
+        self.assertIn("Schedule type: cron, interval, calendar, one_time", page)
+        self.assertNotIn('job_id:"job-"', page)
         self.assertIn("timezone.manage", management_http_runtime.WEB_CAPABILITIES)
         self.assertIn("cron.scheduler.start", page)
         self.assertIn("cron.scheduler.stop", page)

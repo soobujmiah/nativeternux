@@ -33,6 +33,44 @@ def request(operation: object, args: object = None, api_version: int = 1) -> dic
 
 
 class ManagementServiceTests(unittest.TestCase):
+    def test_typed_cron_create_builds_canonical_jobs_for_every_schedule_in_service(self) -> None:
+        cases = [
+            ("cron", {"expression": "0 8 * * *"}, {"expression": "0 8 * * *", "timezone": "Asia/Dhaka"}),
+            ("interval", {"interval_seconds": 3600, "anchor_at": "2026-10-24T00:00:00Z"},
+             {"interval_seconds": 3600, "anchor_at": "2026-10-24T00:00:00Z"}),
+            ("calendar", {"mode": "daily", "time": "08:30"},
+             {"mode": "daily", "time": "08:30", "timezone": "Asia/Dhaka"}),
+            ("calendar", {"mode": "specific", "datetime": "2099-01-01T08:30:00+06:00"},
+             {"mode": "specific", "datetime": "2099-01-01T08:30:00+06:00"}),
+            ("one_time", {"at": "2099-01-01T08:30:00+06:00"},
+             {"at": "2099-01-01T08:30:00+06:00"}),
+        ]
+        with tempfile.TemporaryDirectory() as temp:
+            env = {**NATIVE_ENV, "HOME": temp, "TERNUXX_STATE_DIR": str(Path(temp) / "state")}
+            for index, (schedule_type, schedule, expected_schedule) in enumerate(cases):
+                with self.subTest(schedule_type=schedule_type, schedule=schedule),                         patch.object(management_service.timezone_support, "current_timezone", return_value="Asia/Dhaka"),                         patch.object(management_service.cron_registry, "preview_job_mutation",
+                                     return_value={"plan_id": "a" * 32, "action": "create"}) as preview:
+                    payload = {"action": "create", "name": f"job {index}",
+                               "action_id": "diagnostics.doctor", "schedule_type": schedule_type,
+                               "schedule": schedule}
+                    result = management_service.dispatch(request("cron.jobs.mutation.preview", payload), env=env)
+                    self.assertTrue(result["ok"])
+                    job = preview.call_args.kwargs["job"]
+                    self.assertEqual(job["schedule_type"], schedule_type)
+                    self.assertEqual(job["schedule"], expected_schedule)
+                    self.assertEqual(job["owner"], "ternuxx")
+                    self.assertEqual(job["enabled"], False)
+
+    def test_typed_cron_create_rejects_invalid_schedule_before_preview(self) -> None:
+        with patch.object(management_service.cron_registry, "preview_job_mutation") as preview:
+            result = management_service.dispatch(request("cron.jobs.mutation.preview", {
+                "action": "create", "name": "bad", "action_id": "diagnostics.doctor",
+                "schedule_type": "interval", "schedule": {"interval_seconds": "60", "anchor_at": "bad"}}),
+                env=NATIVE_ENV)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "cron_registry_error")
+        preview.assert_not_called()
+
     def test_cpu_inference_is_a_shared_native_management_resource(self) -> None:
         status = {"runtime": {"available": True}, "model": {"state": "present-unverified"}}
         with patch.object(management_service.cpu_inference, "status", return_value=status) as probe:

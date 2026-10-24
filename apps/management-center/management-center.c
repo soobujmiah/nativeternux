@@ -10,6 +10,9 @@ typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detai
 static Center *app_center;
 static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
                        const gchar *arg3, const gchar *arg4, const gchar *arg5);
+static void run_bridge_full(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
+                            const gchar *arg3, const gchar *arg4, const gchar *arg5,
+                            const gchar *arg6, const gchar *arg7);
 static void ask_ssh_confirmation(Center *c, const gchar *preview_action, const gchar *plan_id, const gchar *impact);
 static void ask_ssh_rollback_confirmation(Center *c, const gchar *rollback_id, const gchar *plan_id, const gchar *effect);
 static void choose_graphics_api(GtkButton *button, gpointer data);
@@ -268,8 +271,9 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
     }
     g_free(stdout_text); g_free(stderr_text); g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
 }
-static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
-                       const gchar *arg3, const gchar *arg4, const gchar *arg5) {
+static void run_bridge_full(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
+                            const gchar *arg3, const gchar *arg4, const gchar *arg5,
+                            const gchar *arg6, const gchar *arg7) {
     gchar *script = bridge_path(), *python = python_path();
     if (!script || !g_file_test(script, G_FILE_TEST_IS_REGULAR)) {
         gtk_label_set_text(GTK_LABEL(c->notice), "Management bridge is unavailable; check TERNUXX_CHECKOUT.");
@@ -282,6 +286,7 @@ static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const 
     g_ptr_array_add(argv, (gpointer)action);
     if (arg1) g_ptr_array_add(argv, (gpointer)arg1); if (arg2) g_ptr_array_add(argv, (gpointer)arg2);
     if (arg3) g_ptr_array_add(argv, (gpointer)arg3); if (arg4) g_ptr_array_add(argv, (gpointer)arg4); if (arg5) g_ptr_array_add(argv, (gpointer)arg5);
+    if (arg6) g_ptr_array_add(argv, (gpointer)arg6); if (arg7) g_ptr_array_add(argv, (gpointer)arg7);
     g_ptr_array_add(argv, NULL);
     GError *error = NULL;
     GSubprocess *process = g_subprocess_newv((const gchar * const *)argv->pdata,
@@ -297,6 +302,10 @@ static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const 
         g_object_unref(process);
     }
     g_ptr_array_unref(argv); g_free(script); g_free(python);
+}
+static void run_bridge(Center *c, const gchar *action, const gchar *arg1, const gchar *arg2,
+                       const gchar *arg3, const gchar *arg4, const gchar *arg5) {
+    run_bridge_full(c, action, arg1, arg2, arg3, arg4, arg5, NULL, NULL);
 }
 static void run_bridge_input(Center *c, const gchar *action, const gchar *input) {
     gchar *script = bridge_path(), *python = python_path();
@@ -712,19 +721,38 @@ static void cron_form_submit(GtkButton *button, gpointer data) {
     GtkWidget *name = g_object_get_data(G_OBJECT(button), "cron-name");
     GtkWidget *update_field = g_object_get_data(G_OBJECT(button), "cron-update-field");
     GtkWidget *action = g_object_get_data(G_OBJECT(button), "cron-action");
+    GtkWidget *schedule_type = g_object_get_data(G_OBJECT(button), "cron-schedule-type");
+    GtkWidget *schedule_extra = g_object_get_data(G_OBJECT(button), "cron-schedule-extra");
+    GtkWidget *timezone = g_object_get_data(G_OBJECT(button), "cron-timezone");
     GtkWidget *expr = g_object_get_data(G_OBJECT(button), "cron-expr");
     const gchar *kind = gtk_editable_get_text(GTK_EDITABLE(mode));
     const gchar *job_id = gtk_editable_get_text(GTK_EDITABLE(id));
     const gchar *name_value = gtk_editable_get_text(GTK_EDITABLE(name));
     const gchar *field_value = gtk_editable_get_text(GTK_EDITABLE(update_field));
     const gchar *action_id = gtk_editable_get_text(GTK_EDITABLE(action));
+    const gchar *type_value = gtk_editable_get_text(GTK_EDITABLE(schedule_type));
+    const gchar *extra_value = gtk_editable_get_text(GTK_EDITABLE(schedule_extra));
+    const gchar *timezone_value = gtk_editable_get_text(GTK_EDITABLE(timezone));
     const gchar *cron_expr = gtk_editable_get_text(GTK_EDITABLE(expr));
     if (g_strcmp0(kind, "create") == 0) {
-        if (!*name_value || !*action_id || !*cron_expr) {
-            gtk_label_set_text(GTK_LABEL(c->notice), "Create needs a name, safe action ID and five-field cron expression.");
+        gboolean supported_type = g_strcmp0(type_value, "cron") == 0 || g_strcmp0(type_value, "interval") == 0
+            || g_strcmp0(type_value, "calendar") == 0 || g_strcmp0(type_value, "one_time") == 0;
+        gboolean interval = g_strcmp0(type_value, "interval") == 0;
+        gboolean calendar = g_strcmp0(type_value, "calendar") == 0;
+        gboolean daily_calendar = calendar && g_strcmp0(extra_value, "daily") == 0;
+        gboolean specific_calendar = calendar && g_strcmp0(extra_value, "specific") == 0;
+        gboolean needs_extra = interval || calendar;
+        gboolean bad_extra = (g_strcmp0(type_value, "cron") == 0 && *extra_value)
+            || (calendar && !daily_calendar && !specific_calendar)
+            || (g_strcmp0(type_value, "one_time") == 0 && *extra_value);
+        gboolean bad_timezone = *timezone_value && g_strcmp0(type_value, "cron") != 0 && !daily_calendar;
+        if (!*name_value || !*action_id || !*cron_expr || !supported_type
+            || (needs_extra && !*extra_value) || bad_extra || bad_timezone) {
+            gtk_label_set_text(GTK_LABEL(c->notice), "Check the schedule type, value, optional anchor/calendar mode, and timezone fields.");
             return;
         }
-        run_bridge(c, "cron-preview", "create", name_value, action_id, cron_expr, NULL);
+        run_bridge_full(c, "cron-preview", "create", name_value, action_id, type_value,
+                        cron_expr, extra_value, timezone_value);
     } else if (g_strcmp0(kind, "update") == 0) {
         if (!*job_id || !*name_value
             || (g_strcmp0(field_value, "enabled") == 0
@@ -777,9 +805,19 @@ static void show_cron_form(GtkButton *button, gpointer data) {
     gtk_editable_set_text(GTK_EDITABLE(action), "diagnostics.doctor");
     gtk_entry_set_placeholder_text(GTK_ENTRY(action), "Registered safe action ID");
     gtk_box_append(GTK_BOX(box), action);
+    GtkWidget *schedule_type = gtk_entry_new();
+    gtk_editable_set_text(GTK_EDITABLE(schedule_type), "cron");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(schedule_type), "Schedule type: cron, interval, calendar, one_time");
+    gtk_box_append(GTK_BOX(box), schedule_type);
     GtkWidget *expr = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(expr), "Five-field cron expression");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(expr), "Cron expression, interval seconds, HH:MM or ISO datetime");
     gtk_box_append(GTK_BOX(box), expr);
+    GtkWidget *schedule_extra = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(schedule_extra), "Interval anchor ISO datetime, or calendar mode daily/specific");
+    gtk_box_append(GTK_BOX(box), schedule_extra);
+    GtkWidget *timezone = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(timezone), "Optional IANA timezone for cron/daily; blank uses preference");
+    gtk_box_append(GTK_BOX(box), timezone);
     GtkWidget *submit = gtk_button_new_with_label("Preview Cron change");
     g_object_set_data(G_OBJECT(submit), "cron-center", c);
     g_object_set_data(G_OBJECT(submit), "cron-mode", mode);
@@ -787,6 +825,9 @@ static void show_cron_form(GtkButton *button, gpointer data) {
     g_object_set_data(G_OBJECT(submit), "cron-name", name);
     g_object_set_data(G_OBJECT(submit), "cron-update-field", update_field);
     g_object_set_data(G_OBJECT(submit), "cron-action", action);
+    g_object_set_data(G_OBJECT(submit), "cron-schedule-type", schedule_type);
+    g_object_set_data(G_OBJECT(submit), "cron-schedule-extra", schedule_extra);
+    g_object_set_data(G_OBJECT(submit), "cron-timezone", timezone);
     g_object_set_data(G_OBJECT(submit), "cron-expr", expr);
     g_signal_connect(submit, "clicked", G_CALLBACK(cron_form_submit), NULL);
     gtk_box_append(GTK_BOX(box), submit);

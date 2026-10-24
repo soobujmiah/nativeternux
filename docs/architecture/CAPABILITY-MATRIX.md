@@ -11,7 +11,7 @@ Current supported scope is Native Termux-only. PRoot and interactive guest-termi
 | GTK | Native GTK4 management center and typed service bridge, including shared CPU model preview/apply/run | Complete broader action parity and visual acceptance |
 | SSH | Managed product SSH on 8023 and separate development SSH on 8022 | Cold-boot delivery verification and remaining bounded credential recovery decision |
 | Boot/Wake Lock | Native helper/profile controls, scoped leases and diagnostics | Android-global lock state and next-boot verification remain unobserved |
-| Cron | Persistent definitions, previewed mutations, execution history, and confirmed scheduler start/stop controls across CLI/TUI/Web/GTK | UI create forms still expose Cron-expression schedules only; production recovery and execution lifecycle remain limited |
+| Cron | Persistent definitions, all four schedule types, previewed mutations, execution history, and confirmed scheduler start/stop controls across CLI/TUI/Web/GTK | Production recovery, cancellation, retry, boot delivery, and broader live client acceptance remain limited |
 | GUI monitoring | Shared policy status/configuration and Native service | Android Activity/focus and later cold-boot qualification |
 | Timezone | CLI/TUI/GTK/Web scheduling preference through shared `timezone.set` | No Android system-time mutation |
 | Graphics/audio | Native status/draw probes and backend preference controls; the system path is CPU `llvmpipe` on the observed device, while KGSL remains experimental and device-local | Workload-specific graphics/audio qualification; candidate distribution remains unsupported |

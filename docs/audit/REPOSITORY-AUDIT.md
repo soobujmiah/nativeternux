@@ -10,7 +10,7 @@ The Native optional catalog provides htop, tmux, and tree through exact package 
 
 ## Verification evidence
 
-- `bash scripts/repo_test.sh`: 719 tests passed in 93.753 seconds on Native Termux. The suite validates repository behavior through fixtures and mocks; it does not prove Android window visibility, physical audio output, clean-device installation, or cold boot.
+- `bash scripts/repo_test.sh`: 724 tests passed in 91.761 seconds on Native Termux. The suite validates repository behavior through fixtures and mocks; it does not prove Android window visibility, physical audio output, clean-device installation, or cold boot.
 - `python3 -m tools.repo_knowledge verify`: zero findings.
 - `python3 tools/audit_documents.py --check`: current document path/hash coverage; latest inventory has zero broken local links. The read count is not a claim that every historical document was reviewed.
 - Strict README state-bridge validation and `git diff --check` passed.

@@ -245,27 +245,32 @@ class CronRegistryTests(unittest.TestCase):
         self.assertEqual(management_authorization.required_capability("cron.jobs.mutation.apply"), "cron.manage")
         self.assertTrue(management_authorization.authorize("cron.jobs.list", ["diagnostics.read"]))
         self.assertFalse(management_authorization.authorize("cron.jobs.mutation.apply", ["diagnostics.read"]))
-        job = self.job()
+        raw_create = management_service.dispatch(request("cron.jobs.mutation.preview", {
+            "action": "create", "job": self.job()}), env=env)
+        self.assertFalse(raw_create["ok"])
+        self.assertEqual(raw_create["error"]["code"], "invalid_arguments")
         preview = management_service.dispatch(request("cron.jobs.mutation.preview", {
-            "action": "create", "job": job}), env=env)
+            "action": "create", "name": "sample", "action_id": "diagnostics.doctor",
+            "schedule_type": "cron", "schedule": {"expression": "*/15 * * * *", "timezone": "UTC"}}), env=env)
         self.assertTrue(preview["ok"], preview)
         self.assertEqual(cron_registry.list_jobs(self.state), [])
-        direct = management_service.dispatch(request("cron.jobs.create", {"job": job}), env=env)
+        direct = management_service.dispatch(request("cron.jobs.create", {"job": preview["data"]["plan"]["after"]}), env=env)
         self.assertFalse(direct["ok"])
+        plan_job = preview["data"]["plan"]["after"]
         created = management_service.dispatch(request("cron.jobs.mutation.apply", {
             "plan_id": preview["data"]["plan"]["plan_id"], "confirmed": True}), env=env)
         self.assertTrue(created["ok"], created)
-        shown = management_service.dispatch(request("cron.jobs.show", {"job_id": job["job_id"]}), env=env)
-        self.assertEqual(shown["data"]["job"], job)
-        preview = management_service.dispatch(request("cron.jobs.next_runs", {"job_id": job["job_id"], "count": 2}), env=env)
+        shown = management_service.dispatch(request("cron.jobs.show", {"job_id": plan_job["job_id"]}), env=env)
+        self.assertEqual(shown["data"]["job"], plan_job)
+        preview = management_service.dispatch(request("cron.jobs.next_runs", {"job_id": plan_job["job_id"], "count": 2}), env=env)
         self.assertEqual(len(preview["data"]["runs"]), 2)
         remove_preview = management_service.dispatch(request("cron.jobs.mutation.preview", {
-            "action": "remove", "job_id": job["job_id"]}), env=env)
+            "action": "remove", "job_id": plan_job["job_id"]}), env=env)
         self.assertTrue(remove_preview["ok"], remove_preview)
         removed = management_service.dispatch(request("cron.jobs.mutation.apply", {
             "plan_id": remove_preview["data"]["plan"]["plan_id"], "confirmed": True}), env=env)
         self.assertTrue(removed["ok"], removed)
-        self.assertFalse(management_service.dispatch(request("cron.jobs.show", {"job_id": job["job_id"]}), env=env)["ok"])
+        self.assertFalse(management_service.dispatch(request("cron.jobs.show", {"job_id": plan_job["job_id"]}), env=env)["ok"])
 
     def test_cli_typed_create_and_preview_do_not_execute_jobs(self) -> None:
         from contextlib import redirect_stdout

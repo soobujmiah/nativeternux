@@ -105,13 +105,32 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   let args, jobId;
   if(action==="create"){
    const name=window.prompt("Cron job name");if(name===null||!name.trim())return;
-   const actionId=window.prompt("Safe action ID: diagnostics.doctor, management.catalog.refresh, hermes.status, scheduler.self_test","diagnostics.doctor");if(actionId===null)return;
-   if(!["diagnostics.doctor","management.catalog.refresh","hermes.status","scheduler.self_test"].includes(actionId)){notice.textContent="That action is not in the safe registry.";return}
-   const expression=window.prompt("Five-field cron expression (minute hour day month weekday)");if(expression===null||!expression.trim())return;
-   const zoneResult=await run("timezone.status");if(!zoneResult?.ok)return;
-   const now=new Date().toISOString();
-   const job={schema_version:1,job_id:"job-"+Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join(""),name:name.trim(),description:"Scheduled Ternuxx action",action_id:actionId,owner:"ternuxx",provider:"ternuxx",source:"tx-mng-cron",schedule_type:"cron",schedule:{expression:expression.trim(),timezone:zoneResult.data.timezone},enabled:false,run_after_device_boot:false,run_after_scheduler_recovery:false,timeout_seconds:300,retry_policy:{max_attempts:1,delay_seconds:0,backoff:"fixed"},missed_run_policy:"skip",concurrency_policy:"skip_overlap",environment:"native-termux",required_capabilities:[],output_policy:"discard",created_at:now,updated_at:now,last_execution:null};
-   args={action:"create",job};
+   const actionId=window.prompt("Registered safe action ID: diagnostics.doctor, management.catalog.refresh, hermes.status, scheduler.self_test","diagnostics.doctor");if(actionId===null||!actionId.trim())return;
+   const scheduleType=window.prompt("Schedule type: cron, interval, calendar, one_time","cron");if(scheduleType===null)return;
+   let schedule={};
+   if(scheduleType==="cron"){
+    const expression=window.prompt("Five-field Cron expression (minute hour day month weekday)");if(expression===null||!expression.trim())return;
+    schedule.expression=expression.trim();
+    const timezone=window.prompt("IANA timezone; leave blank to use the Ternuxx preference","");if(timezone===null)return;if(timezone.trim())schedule.timezone=timezone.trim();
+   }else if(scheduleType==="interval"){
+    const raw=window.prompt("Interval seconds (1–31536000)");if(raw===null||!/^[0-9]+$/.test(raw.trim())||Number(raw)<1||Number(raw)>31536000){notice.textContent="Enter interval seconds from 1 to 31536000.";return}
+    const anchor=window.prompt("Anchor ISO-8601 datetime with UTC offset");if(anchor===null||!anchor.trim())return;
+    schedule={interval_seconds:Number(raw),anchor_at:anchor.trim()};
+   }else if(scheduleType==="calendar"){
+    const mode=window.prompt("Calendar mode: daily or specific","daily");if(mode===null)return;
+    if(mode==="daily"){
+     const time=window.prompt("Local time HH:MM (24-hour)");if(time===null||!time.trim())return;
+     schedule={mode:"daily",time:time.trim()};
+     const timezone=window.prompt("IANA timezone; leave blank to use the Ternuxx preference","");if(timezone===null)return;if(timezone.trim())schedule.timezone=timezone.trim();
+    }else if(mode==="specific"){
+     const datetime=window.prompt("Future ISO-8601 datetime with UTC offset");if(datetime===null||!datetime.trim())return;
+     schedule={mode:"specific",datetime:datetime.trim()};
+    }else{notice.textContent="Choose daily or specific.";return}
+   }else if(scheduleType==="one_time"){
+    const at=window.prompt("Future ISO-8601 datetime with UTC offset");if(at===null||!at.trim())return;
+    schedule={at:at.trim()};
+   }else{notice.textContent="Choose cron, interval, calendar, or one_time.";return}
+   args={action:"create",name:name.trim(),action_id:actionId.trim(),schedule_type:scheduleType,schedule};
   } else {
    const listed=await run("cron.jobs.list");if(!listed?.ok)return;
    const jobs=listed.data?.jobs||[];if(!jobs.length){notice.textContent="No saved Cron jobs.";return}
