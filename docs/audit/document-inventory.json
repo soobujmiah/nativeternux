@@ -2931,8 +2931,8 @@
     {
       "path": "docs/evidence/2026-10-24-native-only-proot-removal-audit.md",
       "kind": "narrative",
-      "sha256": "be199095c84f5ea6148d541e67de9eeeac960191679619a9b2038448bf7e2727",
-      "lines": 107,
+      "sha256": "1d4f89049334bd90c9062f75e366dd8d549489af82090f34be5dfecb56583afd",
+      "lines": 112,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2971,7 +2971,7 @@
     {
       "path": "docs/evidence/2026-10-24-p10-internal-hardening-review.md",
       "kind": "narrative",
-      "sha256": "cfcec455509d989aead08b3fe02d337960d12e7b24b23b7980ade793fc0b4cc6",
+      "sha256": "47e0130bc4a96b79ad4133b538ece8955b6f6c0a1d021ca62611504625f21a72",
       "lines": 24,
       "read_status": "pending",
       "read_sha256": null
