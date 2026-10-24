@@ -372,6 +372,20 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.list")
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action == "cron-inspect" and len(argv) == 3:
+        kind, item_id = argv[1:]
+        if kind == "job" and re.fullmatch(r"job-[0-9a-f]{32}", item_id):
+            operation, args = "cron.jobs.show", {"job_id": item_id}
+        elif kind == "next" and re.fullmatch(r"job-[0-9a-f]{32}", item_id):
+            operation, args = "cron.jobs.next_runs", {"job_id": item_id, "count": 5}
+        elif kind == "execution" and re.fullmatch(r"exec-[0-9a-f]{32}", item_id):
+            operation, args = "cron.executions.show", {"execution_id": item_id}
+        else:
+            print(json.dumps({"ok": False, "error": {"code": "invalid_cron_reference"}}))
+            return 2
+        result = call(operation, args)
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action.startswith(("proot-", "guest-lifecycle-", "shortcut-", "terminal-session-")):
         print(json.dumps({"ok": False, "error": {"code": "feature_removed",
             "message": "PRoot guest management has been retired; use Native Termux controls."}}))

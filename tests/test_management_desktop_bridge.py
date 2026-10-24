@@ -43,6 +43,21 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                 self.assertEqual(dispatch.call_args.args[1]["schedule"], schedule)
                 self.assertEqual(dispatch.call_args.args[1]["schedule_type"], fields[0])
 
+    def test_cron_inspection_bridge_allows_only_typed_read_operations(self):
+        job_id = "job-" + "a" * 32
+        execution_id = "exec-" + "b" * 32
+        for args, operation, payload in (
+            (["cron-inspect", "job", job_id], "cron.jobs.show", {"job_id": job_id}),
+            (["cron-inspect", "next", job_id], "cron.jobs.next_runs", {"job_id": job_id, "count": 5}),
+            (["cron-inspect", "execution", execution_id], "cron.executions.show", {"execution_id": execution_id}),
+        ):
+            with self.subTest(args=args), mock.patch.object(bridge, "call", return_value={"ok": True, "data": {}}) as dispatch, redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(args), 0)
+            dispatch.assert_called_once_with(operation, payload)
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["cron-inspect", "job", "../../state"]), 2)
+        dispatch.assert_not_called()
+
     def test_cron_scheduler_actions_use_shared_operations_and_bounded_interval(self):
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"state": "running"}}) as dispatch, \
                 redirect_stdout(StringIO()):

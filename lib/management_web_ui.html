@@ -146,6 +146,27 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   const applied=await run("cron.jobs.mutation.apply",{plan_id:plan.plan_id,confirmed:true});
   if(applied?.ok)await run("cron.jobs.list");
  }
+ async function inspectCronItem(kind){
+  const execution=kind==="execution";
+  const listed=await run(execution?"cron.executions.list":"cron.jobs.list",execution?{limit:20}:{});
+  if(!listed?.ok)return;
+  const rows=execution?(listed.data?.executions||[]):(listed.data?.jobs||[]);
+  if(!rows.length){notice.textContent=execution?"No Cron execution records are available.":"No saved Cron jobs are available.";return}
+  const field=execution?"execution_id":"job_id";
+  const choices=rows.map(item=>`${item[field]} · ${item.name||item.status||"Cron item"}`).join("\n");
+  const id=window.prompt(`Enter the exact ${execution?"execution":"job"} ID:\n${choices}`);
+  if(id===null)return;
+  if(!rows.some(item=>item[field]===id)){notice.textContent=`Unknown Cron ${execution?"execution":"job"} ID.`;return}
+  await run(execution?"cron.executions.show":"cron.jobs.show",{[field]:id});
+ }
+ async function previewCronRuns(){
+  const listed=await run("cron.jobs.list");if(!listed?.ok)return;
+  const jobs=listed.data?.jobs||[];if(!jobs.length){notice.textContent="No saved Cron jobs.";return}
+  const id=window.prompt("Enter a job ID to preview its next five runs:\n"+jobs.map(job=>`${job.job_id} · ${job.name}`).join("\n"));
+  if(id===null)return;
+  if(!jobs.some(job=>job.job_id===id)){notice.textContent="Unknown Cron job ID.";return}
+  await run("cron.jobs.next_runs",{job_id:id,count:5});
+ }
  async function sshKeyPlan(operation,args){
   const h=headers();h["Idempotency-Key"]=reqid();
   const response=await post("/api/v1/operations",{api_version:1,request_id:reqid(),operation,args},h);
@@ -320,8 +341,11 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
    if(operations.includes("cron.scheduler.start")){const b=document.createElement("button");b.textContent="Start Cron scheduler…";b.onclick=()=>cronScheduler("start");actions.append(b)}
    if(operations.includes("cron.scheduler.stop")){const b=document.createElement("button");b.textContent="Stop Cron scheduler…";b.onclick=()=>cronScheduler("stop");actions.append(b)}
    if(operations.includes("cron.jobs.list")){const b=document.createElement("button");b.textContent="List saved jobs";b.onclick=()=>run("cron.jobs.list");actions.append(b)}
+   if(operations.includes("cron.jobs.show")){const b=document.createElement("button");b.textContent="Inspect a saved job…";b.onclick=()=>inspectCronItem("job");actions.append(b)}
+   if(operations.includes("cron.jobs.next_runs")){const b=document.createElement("button");b.textContent="Preview upcoming runs…";b.onclick=previewCronRuns;actions.append(b)}
    if(operations.includes("cron.jobs.mutation.preview")&&operations.includes("cron.jobs.mutation.apply")){const b=document.createElement("button");b.textContent="Create Cron job…";b.onclick=()=>cronChange("create");actions.append(b);const u=document.createElement("button");u.textContent="Update Cron job…";u.onclick=()=>cronChange("update");actions.append(u);const d=document.createElement("button");d.textContent="Remove Cron job…";d.onclick=()=>cronChange("remove");actions.append(d)}
    if(operations.includes("cron.executions.list")){const b=document.createElement("button");b.textContent="View execution history";b.onclick=()=>run("cron.executions.list",{limit:20});actions.append(b)}
+   if(operations.includes("cron.executions.show")){const b=document.createElement("button");b.textContent="Inspect an execution…";b.onclick=()=>inspectCronItem("execution");actions.append(b)}
   }
   syncQuickActions();
  }

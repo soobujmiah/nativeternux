@@ -139,8 +139,11 @@ class TerminalUISharedServiceTests(unittest.TestCase):
                         if item["id"] == "automation.cron-registry")
         self.assertIn("check status", terminal_ui._available_action_labels(resource))
         self.assertIn("list persisted job definitions", terminal_ui._available_action_labels(resource))
+        self.assertIn("inspect a saved job", terminal_ui._available_action_labels(resource))
+        self.assertIn("preview upcoming job runs", terminal_ui._available_action_labels(resource))
         self.assertIn("preview and apply Cron job changes", terminal_ui._available_action_labels(resource))
         self.assertIn("view Cron execution history", terminal_ui._available_action_labels(resource))
+        self.assertIn("inspect an execution record", terminal_ui._available_action_labels(resource))
         result = {"ok": True, "data": {"jobs": []}}
         with mock.patch.object(terminal_ui, "_call", return_value=result) as dispatch:
             self.assertIs(terminal_ui._cron_jobs(), result)
@@ -149,6 +152,25 @@ class TerminalUISharedServiceTests(unittest.TestCase):
         with mock.patch.object(terminal_ui, "_call", return_value=history) as dispatch:
             self.assertIs(terminal_ui._cron_executions(), history)
         dispatch.assert_called_once_with("cron.executions.list", {"limit": 20})
+
+    def test_cron_inspection_and_next_runs_use_selected_ids_via_shared_service(self) -> None:
+        job = {"job_id": "job-" + "a" * 32, "name": "daily"}
+        execution = {"execution_id": "exec-" + "b" * 32, "status": "succeeded"}
+        with mock.patch.object(terminal_ui, "_cron_jobs", return_value={"ok": True, "data": {"jobs": [job]}}), \
+                mock.patch.object(terminal_ui, "_choose", return_value=job["job_id"]), \
+                mock.patch.object(terminal_ui, "_call", return_value={"ok": True, "data": {"job": job}}) as dispatch:
+            terminal_ui._cron_inspect(object())
+        dispatch.assert_called_once_with("cron.jobs.show", {"job_id": job["job_id"]})
+        with mock.patch.object(terminal_ui, "_cron_jobs", return_value={"ok": True, "data": {"jobs": [job]}}), \
+                mock.patch.object(terminal_ui, "_choose", return_value=job["job_id"]), \
+                mock.patch.object(terminal_ui, "_call", return_value={"ok": True}) as dispatch:
+            terminal_ui._cron_next_runs(object())
+        dispatch.assert_called_once_with("cron.jobs.next_runs", {"job_id": job["job_id"], "count": 5})
+        with mock.patch.object(terminal_ui, "_cron_executions", return_value={"ok": True, "data": {"executions": [execution]}}), \
+                mock.patch.object(terminal_ui, "_choose", return_value=execution["execution_id"]), \
+                mock.patch.object(terminal_ui, "_call", return_value={"ok": True}) as dispatch:
+            terminal_ui._cron_inspect(object(), executions=True)
+        dispatch.assert_called_once_with("cron.executions.show", {"execution_id": execution["execution_id"]})
 
     def test_cron_guided_create_supports_all_schedule_types_through_shared_preview(self) -> None:
         cases = [

@@ -3,6 +3,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "apps/management-center/management-center.c").read_text()
+BRIDGE = (ROOT / "scripts/management_desktop_bridge.py").read_text()
 
 
 class ManagementCenterNativeUiContractTests(unittest.TestCase):
@@ -51,6 +52,14 @@ class ManagementCenterNativeUiContractTests(unittest.TestCase):
                          '"Cron expression, interval seconds, HH:MM or ISO datetime"'):
             with self.subTest(contract=contract):
                 self.assertIn(contract, SOURCE)
+
+    def test_gtk_cron_read_details_use_typed_bridge_references(self):
+        for contract in ("cron_target_entry", "Inspect saved job", "Preview next five runs",
+                         "Inspect execution record", "inspect_cron_reference", "cron-inspect-kind"):
+            self.assertIn(contract, SOURCE)
+        for contract in ('action == "cron-inspect" and len(argv) == 3', 'job-[0-9a-f]{32}',
+                         'exec-[0-9a-f]{32}', '"cron.jobs.next_runs"'):
+            self.assertIn(contract, BRIDGE)
 
     def test_cron_scheduler_controls_use_explicit_confirmation_and_shared_bridge(self):
         for contract in ("cron_start_button", "cron_stop_button", "ask_cron_scheduler_confirmation",

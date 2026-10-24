@@ -553,10 +553,16 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
             labels.append("check, start, or stop Cron scheduler")
         if "cron.jobs.list" in operations:
             labels.append("list persisted job definitions")
+        if "cron.jobs.show" in operations:
+            labels.append("inspect a saved job")
+        if "cron.jobs.next_runs" in operations:
+            labels.append("preview upcoming job runs")
         if {"cron.jobs.mutation.preview", "cron.jobs.mutation.apply"} <= operations:
             labels.append("preview and apply Cron job changes")
         if "cron.executions.list" in operations:
             labels.append("view Cron execution history")
+        if "cron.executions.show" in operations:
+            labels.append("inspect an execution record")
     return labels
 
 
@@ -889,6 +895,43 @@ def _cron_executions() -> dict[str, object]:
     return _call("cron.executions.list", {"limit": 20})
 
 
+def _cron_inspect(screen: "curses._CursesWindow", *, executions: bool = False) -> dict[str, object]:
+    """Choose a saved Cron item and inspect it through the shared service."""
+    if executions:
+        listing = _cron_executions()
+        entries = listing.get("data", {}).get("executions", []) if listing.get("ok") else []
+        id_field, operation, label = "execution_id", "cron.executions.show", "execution"
+    else:
+        listing = _cron_jobs()
+        entries = listing.get("data", {}).get("jobs", []) if listing.get("ok") else []
+        id_field, operation, label = "job_id", "cron.jobs.show", "job"
+    if not listing.get("ok"):
+        return listing
+    choices = [(str(item.get(id_field)), f"{item.get('name', item.get('status', 'Cron item'))} · {item.get(id_field)}")
+               for item in entries if isinstance(item, dict) and isinstance(item.get(id_field), str)]
+    if not choices:
+        return {"ok": False, "error": {"code": "no_cron_executions" if executions else "no_cron_jobs"}}
+    selected = _choose(screen, f"Select a Cron {label} to inspect", choices)
+    if not selected:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call(operation, {id_field: selected})
+
+
+def _cron_next_runs(screen: "curses._CursesWindow") -> dict[str, object]:
+    listing = _cron_jobs()
+    if not listing.get("ok"):
+        return listing
+    jobs = listing.get("data", {}).get("jobs", [])
+    choices = [(str(item.get("job_id")), f"{item.get('name', 'Cron job')} · {item.get('job_id')}")
+               for item in jobs if isinstance(item, dict) and isinstance(item.get("job_id"), str)]
+    if not choices:
+        return {"ok": False, "error": {"code": "no_cron_jobs"}}
+    selected = _choose(screen, "Select a Cron job to preview upcoming runs", choices)
+    if not selected:
+        return {"ok": False, "error": {"code": "cancelled"}}
+    return _call("cron.jobs.next_runs", {"job_id": selected, "count": 5})
+
+
 def _operation_history(resource: dict[str, Any]) -> dict[str, object]:
     if resource.get("id") != "recovery.native-state" or "recovery.status" not in resource.get("supported_operations", []):
         return {"ok": False, "error": {"code": "history_unavailable"}}
@@ -1067,11 +1110,16 @@ def _run(screen: "curses._CursesWindow") -> int:
             elif resource["id"] == "automation.cron-registry":
                 choice = _choose(screen, "Cron automation", [("status", "Check scheduler status"),
                     ("service", "Start or stop scheduler"), ("jobs", "List saved jobs"),
-                    ("change", "Create, edit, or remove a job"), ("history", "View recent runs")]).lower()
+                    ("change", "Create, edit, or remove a job"), ("inspect", "Inspect a saved job"),
+                    ("next", "Preview upcoming runs"), ("history", "View recent runs"),
+                    ("execution", "Inspect an execution record")]).lower()
                 report = (_call("cron.status") if choice == "status" else
                           _cron_jobs() if choice == "jobs" else
                           _cron_mutation(screen) if choice == "change" else
                           _cron_executions() if choice == "history" else
+                          _cron_inspect(screen) if choice == "inspect" else
+                          _cron_next_runs(screen) if choice == "next" else
+                          _cron_inspect(screen, executions=True) if choice == "execution" else
                           _cron_scheduler_action(screen) if choice == "service" else
                           {"ok": False, "error": {"code": "cancelled"}})
             elif resource["id"] == "boot.termux.profile":

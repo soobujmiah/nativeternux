@@ -26,3 +26,6 @@ Read-only log inventory reports the Native desktop, Cron scheduler, and manageme
 The full repository suite passes: 724 tests in 91.761 seconds. `python3 -m tools.repo_knowledge verify` reports zero findings. Live Native status confirms XFCE/X11 remains running on `:1`, audio ownership matches, OpenGL is verified, GLES is context-only, and Vulkan is enumeration-only. `htop` 3.5.3, `tmux` 3.8, and `tree` 2.3.2 are installed at their indexed candidates; `dpkg --audit` and `apt-get check` are clean. The `proot` and `proot-distro` commands and PRoot-Distro rootfs are absent. PRoot routes fail closed with `feature_removed`.
 
 P8 is complete for the selected Native-only product. The two historical reboot checkpoints remain `NOT_READY` with automatic resume disabled and were preserved; this gate does not claim a new cold-boot test or authorize recovery mutation. Shared-storage access remains outside scope. Do not infer graphics rendering or application presentation from status metadata alone.
+
+
+Post-closure Cron job/execution inspection parity was completed and reverified in the [Cron inspection client-parity follow-up](2026-10-24-cron-inspection-client-parity.md). The original P8 gate evidence above remains a dated snapshot.

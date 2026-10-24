@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 485,
+  "document_count": 486,
   "read_count": 96,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "b41e4ebdb8e2fe9f0851a7166abe2ba87ab0716e280cf7b1b17d3070773f8b57",
+      "sha256": "22f914203944e156ea0f7a3706228d14ff59365f075e0a27ea6b7f4044455929",
       "lines": 21,
       "read_status": "pending",
       "read_sha256": null
@@ -163,7 +163,7 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "d4c02a3fd19a404d2c792bc9330f5ebfbc4f9c9e6b780f0c11d59a43dfe8b54c",
+      "sha256": "bd50aa9e89d0e7477b06d5212408c24bed34a04c700aaa49f0c7439674f49c8a",
       "lines": 122,
       "read_status": "pending",
       "read_sha256": null
@@ -251,7 +251,7 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "3e3e9d50c7fb324964a1966ac09ecc086d7fb0234989b473f0dcc689c23e7444",
+      "sha256": "e986ab8cd430d43e92c53ef1f4780ad2beaf4bc3696bdb7446b2b45ea777e266",
       "lines": 20,
       "read_status": "pending",
       "read_sha256": null
@@ -2881,6 +2881,14 @@
       "read_sha256": "be9a5d59fa8bfbbae4a78fe81f76931573b7d73c0b27f4648ec6a2f4098ddd93"
     },
     {
+      "path": "docs/evidence/2026-10-24-cron-inspection-client-parity.md",
+      "kind": "narrative",
+      "sha256": "885125d13a41d26d84a629aa0571d3271829524b905b3a1722b98a8a85351c8a",
+      "lines": 18,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/evidence/2026-10-24-debian-profile-state-audit.md",
       "kind": "narrative",
       "sha256": "dadd6ff150419f6af8ae24857cb70b171446bfd2138ce5d64d90687f52a76269",
@@ -3035,8 +3043,8 @@
     {
       "path": "docs/evidence/2026-10-24-p8-native-readiness-audit.md",
       "kind": "narrative",
-      "sha256": "9dd6462d40a8a8fddd1dde9e9903a5420b8c17de1d4a8e2cde35dd048b6a9887",
-      "lines": 28,
+      "sha256": "ccecadef1c9ecd49b4906ace85401ef6bc6f64e3829f3281d0d73c28b3176b98",
+      "lines": 31,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3555,8 +3563,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "1551f306c8ae13c68d777620e7b8e10a250035e3cc4b26b0158dd90da7514b97",
-      "lines": 194,
+      "sha256": "8b1052c3d24b7647523eb86180a389d83fe4d3e99c514c916d88514ab41e4f48",
+      "lines": 198,
       "read_status": "pending",
       "read_sha256": null
     },

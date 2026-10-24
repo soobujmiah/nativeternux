@@ -97,7 +97,7 @@ Evidence:
 **Status:** completed
 **Completed:** 2026-10-24
 
-Native workload checks, HOME-scoped name handoff, interactive guidance, and all four Cron schedule types across CLI/TUI/Web/GTK are covered; 724 tests pass. Historical reboot checkpoints and accelerator proof limits remain explicit.
+Native workload checks, HOME-scoped name handoff, interactive guidance, all four Cron schedule types, and Cron job/execution inspection across CLI/TUI/Web/GTK are covered; the latest full suite passes 727 tests. Historical reboot checkpoints and accelerator proof limits remain explicit.
 
 Evidence:
 - [docs/evidence/2026-10-24-p8-native-readiness-audit.md](evidence/2026-10-24-p8-native-readiness-audit.md)
