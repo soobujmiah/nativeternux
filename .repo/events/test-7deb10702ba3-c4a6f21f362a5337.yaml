@@ -1,0 +1,8 @@
+event_id: test-7deb10702ba3-c4a6f21f362a5337
+repository: soobujmiah/ternuxx
+commit: 7deb10702ba30242d6f82c65d3eb8252ab340622
+kind: test
+occurred_at: '2026-10-24T03:40:09Z'
+status: passed
+summary: 738 full-suite tests passed; focused TUI/Web/GTK suite 126 tests and 102
+  subtests passed after guide wording update
