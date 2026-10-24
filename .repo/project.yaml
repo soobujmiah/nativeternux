@@ -1,13 +1,13 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-24T03:24:38Z'
+generated_at: '2026-10-24T03:25:50Z'
 generated_by: tools/repo_knowledge collect
-version: 441e8b3
+version: 1d00c9c
 head:
-  commit: 441e8b39b5d2ee42379aa318c357fbca441a3b7d
+  commit: 1d00c9c2128202213298cbec6e54b83fe5f53cc6
   branch: main
-  committed_at: '2026-10-24T03:24:38Z'
+  committed_at: '2026-10-24T03:24:43Z'
 phases:
   source: not_configured
   completed: []
@@ -15,24 +15,27 @@ phases:
   next: null
 build:
   status: unknown
-  run_id: '40056143739'
-  commit: 547aa356a0a7c1825db0f7feb75247ffa1670ed8
+  run_id: '40058191890'
+  commit: 1d00c9c2128202213298cbec6e54b83fe5f53cc6
   run_attempt: '1'
-  at: '2026-10-24T02:55:54Z'
+  at: '2026-10-24T03:25:50Z'
   timestamp_source: observed
   workflow_name: Repository Knowledge Sync
   event_type: push
   actor: soobujmiah
-  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/40056143739
+  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/40058191890
 test:
-  status: passed
-  run_id: null
-  commit: 441e8b39b5d2ee42379aa318c357fbca441a3b7d
+  status: failed
+  run_id: '40058191890'
+  commit: 1d00c9c2128202213298cbec6e54b83fe5f53cc6
   run_attempt: '1'
-  at: '2026-10-24T03:24:38Z'
-  timestamp_source: commit
-  summary: 'Native Termux repo_test.sh: 730 tests passed in 93.780 seconds; GTK4 C
-    syntax check passed.'
+  at: '2026-10-24T03:25:50Z'
+  timestamp_source: observed
+  workflow_name: Repository Knowledge Sync
+  event_type: push
+  actor: soobujmiah
+  run_url: https://github.com/soobujmiah/ternuxx/actions/runs/40058191890
+  summary: null
 last_successful_build: null
 last_failed_build:
   commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
@@ -40,5 +43,5 @@ last_failed_build:
   run_id: '39159994935'
 sync:
   status: ok
-  last_synced_at: '2026-10-24T03:24:38Z'
-  source: local
+  last_synced_at: '2026-10-24T03:25:50Z'
+  source: ci
