@@ -255,6 +255,15 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn("View shared SSH key fingerprints", ui)
         self.assertIn('b.onclick=()=>run("ssh.keys.list")', ui)
 
+    def test_web_ui_requests_authorized_backup_restore_and_curated_software_capabilities(self) -> None:
+        ui = (ROOT / "lib" / "management_web_ui.html").read_text(encoding="utf-8")
+        for capability in ("state.backup", "state.restore", "software.manage"):
+            with self.subTest(capability=capability):
+                self.assertIn('"' + capability + '"', ui)
+                self.assertIn(capability, management_http_runtime.WEB_CAPABILITIES)
+        self.assertIn('"backup.create"', ui)
+        self.assertIn('"restore.apply"', ui)
+
     def test_web_mode_exposes_scoped_desktop_monitoring_and_managed_ssh_8023_mutations(self) -> None:
         env = dict(self.env, TERNUXX_WEB_MODE="1")
         Path(env["TERNUXX_STATE_DIR"]).mkdir(parents=True, mode=0o700)

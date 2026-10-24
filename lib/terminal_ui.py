@@ -937,7 +937,8 @@ def _recovery_action(screen: "curses._CursesWindow") -> dict[str, object]:
     choice = _choose(screen, "Native backup & recovery", [
         ("status", "View operation history and unresolved count"),
         ("backups", "List verified configuration backups"),
-        ("backup", "Inspect a backup"), ("restore", "Preview a restore"),
+        ("backup", "Inspect a backup"), ("create", "Create configuration backup"),
+        ("restore", "Preview a restore"), ("apply-restore", "Restore from a backup"),
         ("operation", "Inspect a recovery operation"), ("rollback", "Preview restore rollback"),
         ("continuity", "Check reboot-continuity status"),
     ])
@@ -947,7 +948,22 @@ def _recovery_action(screen: "curses._CursesWindow") -> dict[str, object]:
         return _call("backup.list")
     if choice == "continuity":
         return _call("continuity.status")
-    if choice in {"backup", "restore"}:
+    if choice == "create":
+        name = _prompt(screen, "Backup name (letters, numbers, dot, dash, underscore; max 64)")
+        if not name:
+            return {"ok": False, "error": {"code": "cancelled"}}
+        preview = _call("backup.create", {"name": name})
+        if not preview.get("ok"):
+            return preview
+        plan = preview.get("data", {})
+        plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
+        if not isinstance(plan_id, str):
+            return {"ok": False, "error": {"code": "invalid_backup_preview"}}
+        _show_details(screen, preview)
+        if _prompt(screen, "Type CREATE to save this exact backup plan").strip() != "CREATE":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("backup.create", {"name": name, "confirmed": True, "plan_id": plan_id})
+    if choice in {"backup", "restore", "apply-restore"}:
         listed = _call("backup.list")
         if not listed.get("ok"):
             return listed
@@ -959,7 +975,19 @@ def _recovery_action(screen: "curses._CursesWindow") -> dict[str, object]:
         backup_id = _choose(screen, "Select a backup", choices)
         if not backup_id:
             return {"ok": False, "error": {"code": "cancelled"}}
-        return _call("backup.inspect" if choice == "backup" else "restore.preview", {"backup_id": backup_id})
+        if choice == "backup":
+            return _call("backup.inspect", {"backup_id": backup_id})
+        preview = _call("restore.preview", {"backup_id": backup_id})
+        if not preview.get("ok") or choice == "restore":
+            return preview
+        plan = preview.get("data", {})
+        plan_id = plan.get("plan_id") if isinstance(plan, dict) else None
+        if not isinstance(plan_id, str):
+            return {"ok": False, "error": {"code": "invalid_restore_preview"}}
+        _show_details(screen, preview)
+        if _prompt(screen, "Type RESTORE to apply this exact profile restore").strip() != "RESTORE":
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("restore.apply", {"backup_id": backup_id, "confirmed": True, "plan_id": plan_id})
     if choice in {"operation", "rollback"}:
         status = _call("recovery.status")
         if not status.get("ok"):

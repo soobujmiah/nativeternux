@@ -66,6 +66,34 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                 self.assertEqual(bridge.main(argv), 2)
             dispatch.assert_not_called()
 
+    def test_backup_create_preview_and_apply_use_exact_saved_plan(self):
+        plan = {"plan_id": "a" * 64, "entries": [{"path": "profile", "present": True}]}
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": plan}) as dispatch, redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["backup-create-preview", "daily"]), 0)
+        dispatch.assert_called_once_with("backup.create", {"name": "daily"})
+        self.assertEqual(output.getvalue().strip().split("\t", 2)[:2], ["P", "a" * 64])
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"created": True}}) as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["backup-create-apply", "daily", "a" * 64, "confirmed"]), 0)
+        dispatch.assert_called_once_with("backup.create", {"name": "daily", "confirmed": True, "plan_id": "a" * 64})
+
+    def test_restore_apply_preview_and_apply_use_exact_saved_plan(self):
+        plan = {"plan_id": "b" * 64, "entries": [{"path": "profile", "action": "replace"}]}
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": plan}) as dispatch, redirect_stdout(StringIO()) as output:
+            self.assertEqual(bridge.main(["restore-apply-preview", "daily"]), 0)
+        dispatch.assert_called_once_with("restore.preview", {"backup_id": "daily"})
+        self.assertEqual(output.getvalue().strip().split("\t", 2)[:2], ["P", "b" * 64])
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"restored": True}}) as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["restore-apply", "daily", "b" * 64, "confirmed"]), 0)
+        dispatch.assert_called_once_with("restore.apply", {"backup_id": "daily", "confirmed": True, "plan_id": "b" * 64})
+
+    def test_backup_restore_bridge_rejects_bad_ids_and_plan_ids(self):
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["backup-create-preview", "../bad"]), 2)
+            self.assertEqual(bridge.main(["backup-create-apply", "daily", "bad", "confirmed"]), 2)
+            self.assertEqual(bridge.main(["restore-apply-preview", "../bad"]), 2)
+            self.assertEqual(bridge.main(["restore-apply", "daily", "bad", "confirmed"]), 2)
+        dispatch.assert_not_called()
+
     def test_cron_inspection_bridge_allows_only_typed_read_operations(self):
         job_id = "job-" + "a" * 32
         execution_id = "exec-" + "b" * 32

@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 487,
-  "read_count": 96,
+  "document_count": 488,
+  "read_count": 99,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "cdca7141ba6b7a1262b2e5486cedb88bebe3043dacd7a601d67d710bcb4e97b8",
+      "sha256": "f53648ec416160cd843277bff21544bc418800a7176248130022e3b84745fcd6",
       "lines": 21,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "f53648ec416160cd843277bff21544bc418800a7176248130022e3b84745fcd6"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -251,10 +251,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "a4449afe7c638e0183c4eb669daab2d48944eec2aea7bd52ac22295108d66153",
+      "sha256": "cce749d7a4a06059c38db8dd742dbb36c558d8be728e3a7f566feeaf88e92832",
       "lines": 21,
-      "read_status": "pending",
-      "read_sha256": null
+      "read_status": "read",
+      "read_sha256": "cce749d7a4a06059c38db8dd742dbb36c558d8be728e3a7f566feeaf88e92832"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",
@@ -2871,6 +2871,14 @@
       "lines": 22,
       "read_status": "pending",
       "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-backup-create-restore-client-parity.md",
+      "kind": "narrative",
+      "sha256": "3a75d2ac3bcc8fa27394ea7de2f906f55f4dec93d675b3faea40fd2e6c830bbb",
+      "lines": 18,
+      "read_status": "read",
+      "read_sha256": "3a75d2ac3bcc8fa27394ea7de2f906f55f4dec93d675b3faea40fd2e6c830bbb"
     },
     {
       "path": "docs/evidence/2026-10-24-boot-profile-catalog-reconciliation.md",

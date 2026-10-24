@@ -12,7 +12,7 @@ Doctor's latest read-only report has one warning: the Native SSH configuration h
 
 ## Project status
 
-All required internal roadmap phases are resolved: ten completed and optional P9 skipped under the selected Native-only scope. The latest full Native Termux test harness passed 730 tests (including the Cron and read-only recovery inspection client-parity follow-ups). Repo-knowledge validation reports zero findings and the generated document inventory has zero broken local links. CLI, TUI, Web, and GTK expose the reviewed Native workflows through the shared service; the interactive `tx guides` path remains available. See [phase status](docs/PHASE-STATUS.md), [capability matrix](docs/architecture/CAPABILITY-MATRIX.md), and [repository audit](docs/audit/REPOSITORY-AUDIT.md).
+All required internal roadmap phases are resolved: ten completed and optional P9 skipped under the selected Native-only scope. The full Native Termux suite passes, and generated test/build evidence is tracked in [repository status](.repo/STATUS.md). The latest recovery client-parity work adds preview-confirmed backup creation and restore apply across TUI, Web, and GTK; see [capability matrix](docs/architecture/CAPABILITY-MATRIX.md) and [verification evidence](docs/evidence/2026-10-24-backup-create-restore-client-parity.md). CLI, TUI, Web, and GTK expose reviewed Native workflows through the shared service; `tx guides` remains available. See [phase status](docs/PHASE-STATUS.md) and [repository audit](docs/audit/REPOSITORY-AUDIT.md).
 
 ## Release boundary
 

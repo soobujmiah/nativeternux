@@ -61,6 +61,17 @@ class ManagementCenterNativeUiContractTests(unittest.TestCase):
                          'exec-[0-9a-f]{32}', '"cron.jobs.next_runs"'):
             self.assertIn(contract, BRIDGE)
 
+    def test_gtk_recovery_create_and_restore_use_confirmed_plan_dialogs(self):
+        for contract in ("backup-create-preview", "backup-create-apply", "restore-apply-preview",
+                         "restore-apply", "ask_recovery_confirmation", "Create backup from name above",
+                         "Restore from backup ID above", "Review this exact %s plan"):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, SOURCE)
+        for contract in ('action == "backup-create-preview"', 'action == "backup-create-apply"',
+                         'action in {"restore-apply-preview", "restore-apply"}'):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, BRIDGE)
+
     def test_gtk_recovery_controls_are_read_only_and_bridge_ids_are_typed(self):
         for contract in ("List verified configuration backups", "Preview restore (read-only)",
                          "Preview restore rollback (read-only)", "inspect_recovery_reference",

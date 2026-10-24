@@ -3,7 +3,7 @@
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search, *action_scroll;
-                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *cron_start_button, *cron_stop_button, *cron_target_entry, *cron_inspect_button, *cron_next_button, *cron_execution_button, *recovery_target_entry, *backup_list_button, *recovery_status_button, *continuity_status_button, *backup_inspect_button, *restore_preview_button, *operation_inspect_button, *rollback_preview_button, *timezone_set_button, *software_button, *ai_model_install_button, *ai_model_remove_button, *ai_run_button, *monitor_box, *monitor_enabled,
+                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *cron_start_button, *cron_stop_button, *cron_target_entry, *cron_inspect_button, *cron_next_button, *cron_execution_button, *recovery_target_entry, *backup_list_button, *recovery_status_button, *continuity_status_button, *backup_inspect_button, *restore_preview_button, *backup_create_button, *restore_apply_button, *operation_inspect_button, *rollback_preview_button, *timezone_set_button, *software_button, *ai_model_install_button, *ai_model_remove_button, *ai_run_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; guint category_count; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
@@ -20,6 +20,7 @@ static void ask_shortcut_confirmation(Center *c, const gchar *action, const gcha
 static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *summary);
 static void ask_cron_scheduler_confirmation(Center *c, gboolean start);
 static void confirmed_action(GObject *source, GAsyncResult *result, gpointer user_data);
+static void ask_recovery_confirmation(Center *c, const gchar *action, const gchar *resource_id, const gchar *plan_id, const gchar *summary);
 static void ask_cpu_model_confirmation(Center *c, const gchar *action, const gchar *plan_id, const gchar *summary);
 static void show_management_log(GtkButton *button, gpointer data);
 static void show_ssh_keys(GtkButton *button, gpointer data);
@@ -89,7 +90,16 @@ static void request_done(GObject *source, GAsyncResult *result, gpointer user_da
         g_clear_error(&error);
     } else {
         gboolean success = g_subprocess_get_successful(G_SUBPROCESS(source));
-        if (g_strcmp0(request->action, "software-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+        if ((g_strcmp0(request->action, "backup-create-preview") == 0 || g_strcmp0(request->action, "restore-apply-preview") == 0)
+                && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
+            gchar **f = g_strsplit(stdout_text, "\t", 3);
+            if (f[1] && g_regex_match_simple("^[0-9a-f]{64}$", f[1], 0, 0) && f[2]) {
+                g_strchomp(f[2]);
+                ask_recovery_confirmation(c, g_strcmp0(request->action, "backup-create-preview") == 0 ? "backup-create-apply" : "restore-apply",
+                    request->resource_id, f[1], f[2]);
+            } else gtk_label_set_text(GTK_LABEL(c->notice), "Backup or restore preview was invalid; no change was made.");
+            g_strfreev(f);
+        } else if (g_strcmp0(request->action, "software-preview") == 0 && stdout_text && g_str_has_prefix(stdout_text, "P\t")) {
             gchar **f = g_strsplit(stdout_text, "\t", 6);
             if (f[1] && g_regex_match_simple("^[0-9a-f]{64}$", f[1], 0, 0) && f[2] && f[3] && f[4]) {
                 g_strchomp(f[4]);
@@ -360,7 +370,7 @@ static void show_resource(Center *c, Resource *r) {
     else if (g_strcmp0(r->id, "native.gui.activity-monitor") == 0)
         gui_actions = "Review or update monitoring settings";
     else if (g_strcmp0(r->id, "recovery.native-state") == 0)
-        gui_actions = "View operation history";
+        gui_actions = "View operation history · Create verified backups · Preview and apply Native profile restores";
     else if (g_strcmp0(r->id, "automation.cron-registry") == 0)
         gui_actions = "Manage scheduler and jobs · View run history";
     else if (g_strcmp0(r->id, "native.timezone") == 0)
@@ -404,6 +414,8 @@ static void show_resource(Center *c, Resource *r) {
     gtk_widget_set_visible(c->recovery_target_entry, recovery);
     gtk_widget_set_visible(c->backup_inspect_button, recovery);
     gtk_widget_set_visible(c->restore_preview_button, recovery);
+    gtk_widget_set_visible(c->backup_create_button, recovery);
+    gtk_widget_set_visible(c->restore_apply_button, recovery);
     gtk_widget_set_visible(c->operation_inspect_button, recovery);
     gtk_widget_set_visible(c->rollback_preview_button, recovery);
     gtk_widget_set_visible(c->timezone_set_button, timezone);
@@ -541,6 +553,10 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
             run_bridge(request->center, "cron-scheduler", "stop", NULL, NULL, NULL, NULL);
         else if (g_strcmp0(request->action, "cpu-model-apply") == 0)
             run_bridge(request->center, "cpu-model-apply", request->resource_id, request->plan_id, "confirmed", NULL, NULL);
+        else if (g_strcmp0(request->action, "backup-create-apply") == 0)
+            run_bridge(request->center, "backup-create-apply", request->resource_id, request->plan_id, "confirmed", NULL, NULL);
+        else if (g_strcmp0(request->action, "restore-apply") == 0)
+            run_bridge(request->center, "restore-apply", request->resource_id, request->plan_id, "confirmed", NULL, NULL);
         else if (g_strcmp0(request->action, "software-apply") == 0) {
             gchar *confirmation = g_ascii_strup(request->detail_id, -1);
             run_bridge(request->center, "software-apply", request->resource_id, request->detail_id,
@@ -554,6 +570,22 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
     else gtk_label_set_text(GTK_LABEL(request->center->notice), "Action cancelled");
     g_free(request->action); g_free(request->resource_id); g_free(request->detail_id); g_free(request->plan_id); g_free(request);
 }
+static void ask_recovery_confirmation(Center *c, const gchar *action, const gchar *resource_id,
+                                      const gchar *plan_id, const gchar *summary) {
+    gboolean backup = g_strcmp0(action, "backup-create-apply") == 0;
+    gchar *message = g_strdup_printf("Review this exact %s plan:\n\n%s\n\n%s?",
+        backup ? "Native configuration backup" : "Native boot-profile restore", summary,
+        backup ? "Create this backup" : "Apply this restore and create its rollback snapshot");
+    GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", message);
+    const char *choices[] = {"Cancel", backup ? "Create backup" : "Restore profile", NULL};
+    gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
+    Request *request = g_new0(Request, 1); request->center = c; request->action = g_strdup(action);
+    request->resource_id = g_strdup(resource_id); request->plan_id = g_strdup(plan_id);
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
+    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing exact Native backup or restore plan");
+    g_object_unref(dialog); g_free(message);
+}
+
 static void ask_cpu_model_confirmation(Center *c, const gchar *action,
                                         const gchar *plan_id, const gchar *summary) {
     gboolean install = g_strcmp0(action, "install") == 0;
@@ -1075,13 +1107,17 @@ static void inspect_recovery_reference(GtkButton *button, gpointer data) {
     const gchar *action = g_object_get_data(G_OBJECT(button), "recovery-action");
     const gchar *reference = gtk_editable_get_text(GTK_EDITABLE(c->recovery_target_entry));
     if (!action) return;
+    if (g_strcmp0(action, "backup-create-preview") == 0) {
+        if (!reference || !*reference) { gtk_label_set_text(GTK_LABEL(c->notice), "Enter a backup name first."); return; }
+        run_bridge(c, action, reference, NULL, NULL, NULL, NULL); return;
+    }
     if (g_strcmp0(action, "backup-list") == 0 || g_strcmp0(action, "recovery-status") == 0
             || g_strcmp0(action, "continuity-status") == 0) {
         run_bridge(c, action, NULL, NULL, NULL, NULL, NULL);
         return;
     }
     if (!reference || !*reference) {
-        gtk_label_set_text(GTK_LABEL(c->notice), "Enter the backup or operation ID from the list first.");
+        gtk_label_set_text(GTK_LABEL(c->notice), "Enter a backup name, backup ID, or operation ID first.");
         return;
     }
     run_bridge(c, action, reference, NULL, NULL, NULL, NULL);
@@ -1193,9 +1229,11 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->recovery_status_button=gtk_button_new_with_label("View recovery operation history"); gtk_widget_set_visible(c->recovery_status_button,FALSE); gtk_box_append(GTK_BOX(actions),c->recovery_status_button); g_object_set_data(G_OBJECT(c->recovery_status_button), "recovery-action", "recovery-status");
     c->backup_list_button=gtk_button_new_with_label("List verified configuration backups"); gtk_widget_set_visible(c->backup_list_button,FALSE); gtk_box_append(GTK_BOX(actions),c->backup_list_button); g_object_set_data(G_OBJECT(c->backup_list_button), "recovery-action", "backup-list");
     c->continuity_status_button=gtk_button_new_with_label("Check reboot-continuity status"); gtk_widget_set_visible(c->continuity_status_button,FALSE); gtk_box_append(GTK_BOX(actions),c->continuity_status_button); g_object_set_data(G_OBJECT(c->continuity_status_button), "recovery-action", "continuity-status");
-    c->recovery_target_entry=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(c->recovery_target_entry), "Paste backup ID or 32-character operation ID"); gtk_widget_set_visible(c->recovery_target_entry,FALSE); gtk_box_append(GTK_BOX(actions),c->recovery_target_entry);
+    c->recovery_target_entry=gtk_entry_new(); gtk_entry_set_placeholder_text(GTK_ENTRY(c->recovery_target_entry), "Backup name for create, backup ID, or 32-character operation ID"); gtk_widget_set_visible(c->recovery_target_entry,FALSE); gtk_box_append(GTK_BOX(actions),c->recovery_target_entry);
     c->backup_inspect_button=gtk_button_new_with_label("Inspect backup"); gtk_widget_set_visible(c->backup_inspect_button,FALSE); gtk_box_append(GTK_BOX(actions),c->backup_inspect_button); g_object_set_data(G_OBJECT(c->backup_inspect_button), "recovery-action", "backup-inspect");
     c->restore_preview_button=gtk_button_new_with_label("Preview restore (read-only)"); gtk_widget_set_visible(c->restore_preview_button,FALSE); gtk_box_append(GTK_BOX(actions),c->restore_preview_button); g_object_set_data(G_OBJECT(c->restore_preview_button), "recovery-action", "restore-preview");
+    c->backup_create_button=gtk_button_new_with_label("Create backup from name above…"); gtk_widget_set_visible(c->backup_create_button,FALSE); gtk_box_append(GTK_BOX(actions),c->backup_create_button); g_object_set_data(G_OBJECT(c->backup_create_button), "recovery-action", "backup-create-preview");
+    c->restore_apply_button=gtk_button_new_with_label("Restore from backup ID above…"); gtk_widget_set_visible(c->restore_apply_button,FALSE); gtk_box_append(GTK_BOX(actions),c->restore_apply_button); g_object_set_data(G_OBJECT(c->restore_apply_button), "recovery-action", "restore-apply-preview");
     c->operation_inspect_button=gtk_button_new_with_label("Inspect operation record"); gtk_widget_set_visible(c->operation_inspect_button,FALSE); gtk_box_append(GTK_BOX(actions),c->operation_inspect_button); g_object_set_data(G_OBJECT(c->operation_inspect_button), "recovery-action", "recovery-inspect");
     c->rollback_preview_button=gtk_button_new_with_label("Preview restore rollback (read-only)"); gtk_widget_set_visible(c->rollback_preview_button,FALSE); gtk_box_append(GTK_BOX(actions),c->rollback_preview_button); g_object_set_data(G_OBJECT(c->rollback_preview_button), "recovery-action", "recovery-rollback-preview");
     c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button);
@@ -1212,7 +1250,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
     g_signal_connect(c->software_button,"clicked",G_CALLBACK(software_apps),c); g_signal_connect(c->ai_model_install_button,"clicked",G_CALLBACK(cpu_model_install),c); g_signal_connect(c->ai_model_remove_button,"clicked",G_CALLBACK(cpu_model_remove),c); g_signal_connect(c->ai_run_button,"clicked",G_CALLBACK(cpu_prompt_dialog),c);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->cron_start_button,"clicked",G_CALLBACK(cron_scheduler_start),c); g_signal_connect(c->cron_stop_button,"clicked",G_CALLBACK(cron_scheduler_stop),c); g_signal_connect(c->cron_inspect_button,"clicked",G_CALLBACK(inspect_cron_reference),c); g_signal_connect(c->cron_next_button,"clicked",G_CALLBACK(inspect_cron_reference),c); g_signal_connect(c->cron_execution_button,"clicked",G_CALLBACK(inspect_cron_reference),c); g_signal_connect(c->recovery_status_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->backup_list_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->continuity_status_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->backup_inspect_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->restore_preview_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->operation_inspect_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->rollback_preview_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->cron_start_button,"clicked",G_CALLBACK(cron_scheduler_start),c); g_signal_connect(c->cron_stop_button,"clicked",G_CALLBACK(cron_scheduler_stop),c); g_signal_connect(c->cron_inspect_button,"clicked",G_CALLBACK(inspect_cron_reference),c); g_signal_connect(c->cron_next_button,"clicked",G_CALLBACK(inspect_cron_reference),c); g_signal_connect(c->cron_execution_button,"clicked",G_CALLBACK(inspect_cron_reference),c); g_signal_connect(c->recovery_status_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->backup_list_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->continuity_status_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->backup_inspect_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->backup_create_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->restore_apply_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->restore_preview_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->operation_inspect_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->rollback_preview_button,"clicked",G_CALLBACK(inspect_recovery_reference),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window));
     return TRUE;
 }

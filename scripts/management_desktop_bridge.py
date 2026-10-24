@@ -378,6 +378,36 @@ def main(argv: list[str]) -> int:
         result = call(operation)
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action == "backup-create-preview" and len(argv) == 2 and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", argv[1]):
+        result = call("backup.create", {"name": argv[1]})
+        if not result.get("ok"):
+            print(management_presentation.format_report(result)); return 1
+        data = result.get("data", {}); plan_id = data.get("plan_id")
+        if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+            print("Backup preview returned an invalid plan."); return 1
+        print("P\t" + plan_id + "\t" + clean(json.dumps(data, sort_keys=True)))
+        return 0
+    if action == "backup-create-apply" and len(argv) == 4 and argv[3] == "confirmed":
+        name, plan_id = argv[1], argv[2]
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", name) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+            print("Backup preview is invalid; create a new preview."); return 2
+        result = call("backup.create", {"name": name, "confirmed": True, "plan_id": plan_id})
+        print(management_presentation.format_report(result)); return 0 if result.get("ok") else 1
+    if action in {"restore-apply-preview", "restore-apply"} and len(argv) in {2, 4}:
+        backup_id = argv[1]
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", backup_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_backup_id"}})); return 2
+        if action == "restore-apply-preview" and len(argv) == 2:
+            result = call("restore.preview", {"backup_id": backup_id})
+            if not result.get("ok"):
+                print(management_presentation.format_report(result)); return 1
+            data = result.get("data", {}); plan_id = data.get("plan_id")
+            if not isinstance(plan_id, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_id):
+                print("Restore preview returned an invalid plan."); return 1
+            print("P\t" + plan_id + "\t" + clean(json.dumps(data, sort_keys=True))); return 0
+        if action == "restore-apply" and len(argv) == 4 and argv[3] == "confirmed" and re.fullmatch(r"[0-9a-f]{64}", argv[2]):
+            result = call("restore.apply", {"backup_id": backup_id, "confirmed": True, "plan_id": argv[2]})
+            print(management_presentation.format_report(result)); return 0 if result.get("ok") else 1
     if action in {"backup-inspect", "restore-preview"} and len(argv) == 2:
         backup_id = argv[1]
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", backup_id):
