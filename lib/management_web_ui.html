@@ -146,6 +146,23 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   const applied=await run("cron.jobs.mutation.apply",{plan_id:plan.plan_id,confirmed:true});
   if(applied?.ok)await run("cron.jobs.list");
  }
+ async function inspectRecovery(kind){
+  if(kind==="status"){await run("recovery.status");return}
+  if(kind==="backups"){await run("backup.list");return}
+  if(kind==="continuity"){await run("continuity.status");return}
+  if(kind==="backup"||kind==="restore"){
+   const listed=await run("backup.list");if(!listed?.ok)return;
+   const rows=listed.data?.backups||[];if(!rows.length){notice.textContent="No configuration backups are available.";return}
+   const id=window.prompt("Enter a backup ID to inspect or preview a restore:\n"+rows.map(item=>`${item.backup_id} · ${item.integrity}`).join("\n"));
+   if(id===null)return;if(!rows.some(item=>item.backup_id===id)){notice.textContent="Unknown backup ID.";return}
+   await run(kind==="backup"?"backup.inspect":"restore.preview",{backup_id:id});return;
+  }
+  const status=await run("recovery.status");if(!status?.ok)return;
+  const rows=status.data?.operations||[];if(!rows.length){notice.textContent="No recovery operations are recorded.";return}
+  const id=window.prompt("Enter an operation ID:\n"+rows.map(item=>`${item.operation_id} · ${item.kind} · ${item.status}`).join("\n"));
+  if(id===null)return;if(!rows.some(item=>item.operation_id===id)){notice.textContent="Unknown operation ID.";return}
+  await run(kind==="operation"?"recovery.inspect":"recovery.rollback.preview",{operation_id:id});
+ }
  async function inspectCronItem(kind){
   const execution=kind==="execution";
   const listed=await run(execution?"cron.executions.list":"cron.jobs.list",execution?{limit:20}:{});
@@ -335,6 +352,11 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;background:#0a12
   if(r.id==="native.timezone"){
    if(operations.includes("timezone.list")){const b=document.createElement("button");b.textContent="List available timezones";b.onclick=()=>run("timezone.list");actions.append(b)}
    if(operations.includes("timezone.set")){const b=document.createElement("button");b.textContent="Set Ternuxx timezone preference…";b.onclick=()=>setTimezonePreference();actions.append(b)}
+  }
+  if(r.id==="recovery.native-state"){
+   for(const [kind,label,operation] of [["status","View operation history","recovery.status"],["backups","List configuration backups","backup.list"],["backup","Inspect a backup…","backup.inspect"],["restore","Preview a restore…","restore.preview"],["operation","Inspect an operation…","recovery.inspect"],["rollback","Preview restore rollback…","recovery.rollback.preview"],["continuity","Check reboot continuity","continuity.status"]]){
+    if(!operations.includes(operation))continue;const b=document.createElement("button");b.textContent=label;b.onclick=()=>["status","backups","continuity"].includes(kind)?run(operation):inspectRecovery(kind);actions.append(b)
+   }
   }
   if(r.id==="automation.cron-registry"){
    if(operations.includes("cron.status")){const b=document.createElement("button");b.textContent="Refresh Cron scheduler status";b.onclick=()=>run("cron.status");actions.append(b)}

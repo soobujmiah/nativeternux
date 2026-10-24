@@ -43,6 +43,29 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
                 self.assertEqual(dispatch.call_args.args[1]["schedule"], schedule)
                 self.assertEqual(dispatch.call_args.args[1]["schedule_type"], fields[0])
 
+    def test_recovery_inspection_bridge_uses_only_allowlisted_read_operations(self):
+        operation_id = "a" * 32
+        cases = [
+            (["recovery-status"], "recovery.status", None),
+            (["backup-list"], "backup.list", None),
+            (["backup-inspect", "daily"], "backup.inspect", {"backup_id": "daily"}),
+            (["restore-preview", "daily"], "restore.preview", {"backup_id": "daily"}),
+            (["recovery-inspect", operation_id], "recovery.inspect", {"operation_id": operation_id}),
+            (["recovery-rollback-preview", operation_id], "recovery.rollback.preview", {"operation_id": operation_id}),
+            (["continuity-status"], "continuity.status", None),
+        ]
+        for argv, operation, payload in cases:
+            with self.subTest(argv=argv), mock.patch.object(bridge, "call", return_value={"ok": True, "data": {}}) as dispatch, redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(argv), 0)
+            if payload is None:
+                dispatch.assert_called_once_with(operation)
+            else:
+                dispatch.assert_called_once_with(operation, payload)
+        for argv in (["backup-inspect", "../secret"], ["recovery-inspect", "../" + operation_id]):
+            with self.subTest(argv=argv), mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+                self.assertEqual(bridge.main(argv), 2)
+            dispatch.assert_not_called()
+
     def test_cron_inspection_bridge_allows_only_typed_read_operations(self):
         job_id = "job-" + "a" * 32
         execution_id = "exec-" + "b" * 32

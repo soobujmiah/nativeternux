@@ -3,7 +3,7 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 486,
+  "document_count": 487,
   "read_count": 96,
   "reading_complete": false,
   "broken_local_links": [],
@@ -35,7 +35,7 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "22f914203944e156ea0f7a3706228d14ff59365f075e0a27ea6b7f4044455929",
+      "sha256": "cdca7141ba6b7a1262b2e5486cedb88bebe3043dacd7a601d67d710bcb4e97b8",
       "lines": 21,
       "read_status": "pending",
       "read_sha256": null
@@ -163,7 +163,7 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "bd50aa9e89d0e7477b06d5212408c24bed34a04c700aaa49f0c7439674f49c8a",
+      "sha256": "be1efdd559173b635eaf57dcb149ec2019fa6903607e4eb61f2e7e7b225d575c",
       "lines": 122,
       "read_status": "pending",
       "read_sha256": null
@@ -251,8 +251,8 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "e986ab8cd430d43e92c53ef1f4780ad2beaf4bc3696bdb7446b2b45ea777e266",
-      "lines": 20,
+      "sha256": "a4449afe7c638e0183c4eb669daab2d48944eec2aea7bd52ac22295108d66153",
+      "lines": 21,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -2979,8 +2979,8 @@
     {
       "path": "docs/evidence/2026-10-24-p10-internal-hardening-review.md",
       "kind": "narrative",
-      "sha256": "dba4a5948fe0d568d3414e5ab8d64e56d7079d683e6ccd4cc2cd54718f849c62",
-      "lines": 24,
+      "sha256": "ba193f44b40852e3bbfe8b70a81d85146072df984a9c3728328652240b9955e3",
+      "lines": 27,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3053,6 +3053,14 @@
       "kind": "narrative",
       "sha256": "48200573084f474bb31ba7c2da7164be6022f9defeb67fb68f3b0afd8fccf043",
       "lines": 16,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
+      "path": "docs/evidence/2026-10-24-recovery-inspection-client-parity.md",
+      "kind": "narrative",
+      "sha256": "427837bd7525e3c10609227cedf192c475e317a900ebe1c893868b3cac737c09",
+      "lines": 20,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -3563,8 +3571,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "8b1052c3d24b7647523eb86180a389d83fe4d3e99c514c916d88514ab41e4f48",
-      "lines": 198,
+      "sha256": "d4f28f75f965e0c918ee5ea00229ef8a9ea49f2bdca5581564ee89a4d2f1549e",
+      "lines": 202,
       "read_status": "pending",
       "read_sha256": null
     },

@@ -172,6 +172,26 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             terminal_ui._cron_inspect(object(), executions=True)
         dispatch.assert_called_once_with("cron.executions.show", {"execution_id": execution["execution_id"]})
 
+    def test_recovery_resource_exposes_only_typed_read_and_preview_actions(self) -> None:
+        resource = next(item for item in management_service.management_catalog.RESOURCES
+                        if item["id"] == "recovery.native-state")
+        labels = terminal_ui._available_action_labels(resource)
+        self.assertIn("list/inspect backups", labels)
+        self.assertIn("preview restore/rollback", labels)
+        self.assertIn("check reboot continuity", labels)
+        with mock.patch.object(terminal_ui, "_choose", return_value="continuity"), \
+                mock.patch.object(terminal_ui, "_call", return_value={"ok": True}) as dispatch:
+            self.assertEqual(terminal_ui._recovery_action(object()), {"ok": True})
+        dispatch.assert_called_once_with("continuity.status")
+        backup_id = "daily"
+        with mock.patch.object(terminal_ui, "_choose", side_effect=["restore", backup_id]), \
+                mock.patch.object(terminal_ui, "_call", side_effect=[
+                    {"ok": True, "data": {"backups": [{"backup_id": backup_id, "integrity": "valid"}]}},
+                    {"ok": True, "data": {"action": "restore_preview"}},
+                ]) as dispatch:
+            self.assertEqual(terminal_ui._recovery_action(object())["data"]["action"], "restore_preview")
+        self.assertEqual(dispatch.call_args_list, [mock.call("backup.list"), mock.call("restore.preview", {"backup_id": backup_id})])
+
     def test_cron_guided_create_supports_all_schedule_types_through_shared_preview(self) -> None:
         cases = [
             (["create", "job", "diagnostics.doctor", "cron", "0 8 * * *", "Asia/Dhaka", "yes"],

@@ -116,7 +116,7 @@ Evidence:
 **Status:** completed
 **Completed:** 2026-10-24
 
-Internal Native-only hardening passes; public release remains blocked by unresolved license/provenance, owner-managed SSH exposure, and clean-device qualification.
+Internal Native-only hardening includes read-only backup/recovery inspection across TUI/Web/GTK; the latest full suite passes 730 tests. Public release remains blocked by unresolved license/provenance, owner-managed SSH exposure, and clean-device qualification.
 
 Evidence:
 - [docs/evidence/2026-10-24-p10-internal-hardening-review.md](evidence/2026-10-24-p10-internal-hardening-review.md)

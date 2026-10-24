@@ -547,7 +547,7 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
                                             ("boot.enable", "enable startup profile"),
                                             ("boot.disable", "disable startup profile")) if op in operations)
     elif resource_id == "recovery.native-state" and "recovery.status" in operations:
-        labels.append("view operation history")
+        labels.extend(("view operation history", "list/inspect backups", "preview restore/rollback", "check reboot continuity"))
     elif resource_id == "automation.cron-registry":
         if {"cron.scheduler.start", "cron.scheduler.stop"} <= operations:
             labels.append("check, start, or stop Cron scheduler")
@@ -932,6 +932,51 @@ def _cron_next_runs(screen: "curses._CursesWindow") -> dict[str, object]:
     return _call("cron.jobs.next_runs", {"job_id": selected, "count": 5})
 
 
+def _recovery_action(screen: "curses._CursesWindow") -> dict[str, object]:
+    """Guide read-only backup, recovery and continuity inspection."""
+    choice = _choose(screen, "Native backup & recovery", [
+        ("status", "View operation history and unresolved count"),
+        ("backups", "List verified configuration backups"),
+        ("backup", "Inspect a backup"), ("restore", "Preview a restore"),
+        ("operation", "Inspect a recovery operation"), ("rollback", "Preview restore rollback"),
+        ("continuity", "Check reboot-continuity status"),
+    ])
+    if choice == "status":
+        return _call("recovery.status")
+    if choice == "backups":
+        return _call("backup.list")
+    if choice == "continuity":
+        return _call("continuity.status")
+    if choice in {"backup", "restore"}:
+        listed = _call("backup.list")
+        if not listed.get("ok"):
+            return listed
+        rows = listed.get("data", {}).get("backups", [])
+        choices = [(str(item.get("backup_id")), f"{item.get('backup_id')} · {item.get('integrity', 'unknown')} · {item.get('created_at_utc', '')}")
+                   for item in rows if isinstance(item, dict) and isinstance(item.get("backup_id"), str)]
+        if not choices:
+            return {"ok": False, "error": {"code": "no_backups"}}
+        backup_id = _choose(screen, "Select a backup", choices)
+        if not backup_id:
+            return {"ok": False, "error": {"code": "cancelled"}}
+        return _call("backup.inspect" if choice == "backup" else "restore.preview", {"backup_id": backup_id})
+    if choice in {"operation", "rollback"}:
+        status = _call("recovery.status")
+        if not status.get("ok"):
+            return status
+        records = status.get("data", {}).get("operations", [])
+        choices = [(str(item.get("operation_id")), f"{item.get('kind')} · {item.get('status')} · {item.get('operation_id')}")
+                   for item in records if isinstance(item, dict) and isinstance(item.get("operation_id"), str)]
+        if not choices:
+            return {"ok": False, "error": {"code": "no_recovery_operations"}}
+        operation_id = _choose(screen, "Select a recovery operation", choices)
+        if not operation_id:
+            return {"ok": False, "error": {"code": "cancelled"}}
+        operation = "recovery.inspect" if choice == "operation" else "recovery.rollback.preview"
+        return _call(operation, {"operation_id": operation_id})
+    return {"ok": False, "error": {"code": "cancelled"}}
+
+
 def _operation_history(resource: dict[str, Any]) -> dict[str, object]:
     if resource.get("id") != "recovery.native-state" or "recovery.status" not in resource.get("supported_operations", []):
         return {"ok": False, "error": {"code": "history_unavailable"}}
@@ -1126,6 +1171,8 @@ def _run(screen: "curses._CursesWindow") -> int:
                 report = _boot_action(screen)
             elif resource["id"] == "native.wakelock":
                 report = _wakelock_action(screen)
+            elif resource["id"] == "recovery.native-state":
+                report = _recovery_action(screen)
             else:
                 report = {"ok": False, "error": {"code": "guided_action_unavailable"}}
 

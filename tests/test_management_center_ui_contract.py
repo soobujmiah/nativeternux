@@ -61,6 +61,16 @@ class ManagementCenterNativeUiContractTests(unittest.TestCase):
                          'exec-[0-9a-f]{32}', '"cron.jobs.next_runs"'):
             self.assertIn(contract, BRIDGE)
 
+    def test_gtk_recovery_controls_are_read_only_and_bridge_ids_are_typed(self):
+        for contract in ("List verified configuration backups", "Preview restore (read-only)",
+                         "Preview restore rollback (read-only)", "inspect_recovery_reference",
+                         "recovery_target_entry", "recovery-action"):
+            self.assertIn(contract, SOURCE)
+        for contract in ('action in {"recovery-status", "backup-list", "continuity-status"}',
+                         '"restore-preview"', '"recovery-rollback-preview"',
+                         '"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}"'):
+            self.assertIn(contract, BRIDGE)
+
     def test_cron_scheduler_controls_use_explicit_confirmation_and_shared_bridge(self):
         for contract in ("cron_start_button", "cron_stop_button", "ask_cron_scheduler_confirmation",
                          "cron-scheduler-start", "cron-scheduler-stop", '"cron-scheduler", "start", "10"',

@@ -372,6 +372,30 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.list")
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action in {"recovery-status", "backup-list", "continuity-status"} and len(argv) == 1:
+        operation = {"recovery-status": "recovery.status", "backup-list": "backup.list",
+                     "continuity-status": "continuity.status"}[action]
+        result = call(operation)
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
+    if action in {"backup-inspect", "restore-preview"} and len(argv) == 2:
+        backup_id = argv[1]
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", backup_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_backup_id"}}))
+            return 2
+        operation = "backup.inspect" if action == "backup-inspect" else "restore.preview"
+        result = call(operation, {"backup_id": backup_id})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
+    if action in {"recovery-inspect", "recovery-rollback-preview"} and len(argv) == 2:
+        operation_id = argv[1]
+        if not re.fullmatch(r"[A-Za-z0-9]{32}", operation_id):
+            print(json.dumps({"ok": False, "error": {"code": "invalid_operation_id"}}))
+            return 2
+        operation = "recovery.inspect" if action == "recovery-inspect" else "recovery.rollback.preview"
+        result = call(operation, {"operation_id": operation_id})
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "cron-inspect" and len(argv) == 3:
         kind, item_id = argv[1:]
         if kind == "job" and re.fullmatch(r"job-[0-9a-f]{32}", item_id):

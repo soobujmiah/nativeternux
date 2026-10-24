@@ -179,7 +179,7 @@
       "title": "Hardening, release, and support",
       "status": "completed",
       "completed_on": "2026-10-24",
-      "summary": "Internal Native-only hardening passes; public release remains blocked by unresolved license/provenance, owner-managed SSH exposure, and clean-device qualification.",
+      "summary": "Internal Native-only hardening includes read-only backup/recovery inspection across TUI/Web/GTK; the latest full suite passes 730 tests. Public release remains blocked by unresolved license/provenance, owner-managed SSH exposure, and clean-device qualification.",
       "evidence": [
         "docs/evidence/2026-10-24-p10-internal-hardening-review.md"
       ],
@@ -191,6 +191,10 @@
         {
           "date": "2026-10-24",
           "reason": "The SSH diagnostic identified the exact owner-managed 8022 configuration; distinguish it from Ternuxx-managed 8023."
+        },
+        {
+          "date": "2026-10-24",
+          "reason": "Record the verified post-closure read-only recovery-client follow-up in P10 descriptive metadata without reopening the original internal-hardening gate."
         }
       ]
     }
