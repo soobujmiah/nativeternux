@@ -547,7 +547,8 @@ def _available_action_labels(resource: dict[str, Any]) -> list[str]:
                                             ("boot.enable", "enable startup profile"),
                                             ("boot.disable", "disable startup profile")) if op in operations)
     elif resource_id == "recovery.native-state" and "recovery.status" in operations:
-        labels.extend(("view operation history", "list/inspect backups", "preview restore/rollback", "check reboot continuity"))
+        labels.extend(("view operation history", "list/inspect backups", "create backup", "preview/apply restore and rollback",
+                       "reconcile unresolved operations", "check reboot continuity"))
     elif resource_id == "automation.cron-registry":
         if {"cron.scheduler.start", "cron.scheduler.stop"} <= operations:
             labels.append("check, start, or stop Cron scheduler")

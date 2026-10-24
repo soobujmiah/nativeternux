@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "47f5eb091d3a7bc0407ff682a1e29de7568dc89063928348e7fbd1aa1e837208",
+      "sha256": "f74596f60fb8788f5e7ee27a5db32a434c27b513159436c9ec0351abdf177ac4",
       "lines": 21,
       "read_status": "read",
-      "read_sha256": "47f5eb091d3a7bc0407ff682a1e29de7568dc89063928348e7fbd1aa1e837208"
+      "read_sha256": "f74596f60fb8788f5e7ee27a5db32a434c27b513159436c9ec0351abdf177ac4"
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -251,10 +251,10 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "77d52c45a707e42742abe89c79fce691871c76fba5e0804840c0d809228e7a13",
+      "sha256": "7348ebec1ddd2daf75c0e28f4179c1c5b55204ce36e072a8d850a7ec69abad9a",
       "lines": 21,
       "read_status": "read",
-      "read_sha256": "77d52c45a707e42742abe89c79fce691871c76fba5e0804840c0d809228e7a13"
+      "read_sha256": "7348ebec1ddd2daf75c0e28f4179c1c5b55204ce36e072a8d850a7ec69abad9a"
     },
     {
       "path": "docs/architecture/CONTINUITY-IMPLEMENTATION.md",

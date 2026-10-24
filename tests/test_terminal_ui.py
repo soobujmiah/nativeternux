@@ -172,12 +172,14 @@ class TerminalUISharedServiceTests(unittest.TestCase):
             terminal_ui._cron_inspect(object(), executions=True)
         dispatch.assert_called_once_with("cron.executions.show", {"execution_id": execution["execution_id"]})
 
-    def test_recovery_resource_exposes_only_typed_read_and_preview_actions(self) -> None:
+    def test_recovery_resource_exposes_typed_inspection_and_confirmed_apply_actions(self) -> None:
         resource = next(item for item in management_service.management_catalog.RESOURCES
                         if item["id"] == "recovery.native-state")
         labels = terminal_ui._available_action_labels(resource)
         self.assertIn("list/inspect backups", labels)
-        self.assertIn("preview restore/rollback", labels)
+        self.assertIn("create backup", labels)
+        self.assertIn("preview/apply restore and rollback", labels)
+        self.assertIn("reconcile unresolved operations", labels)
         self.assertIn("check reboot continuity", labels)
         with mock.patch.object(terminal_ui, "_choose", return_value="continuity"), \
                 mock.patch.object(terminal_ui, "_call", return_value={"ok": True}) as dispatch:
