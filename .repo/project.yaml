@@ -1,13 +1,13 @@
 schema_version: 1
 project_id: ternuxx
 repository: soobujmiah/ternuxx
-generated_at: '2026-10-24T02:38:56Z'
+generated_at: '2026-10-24T02:39:30Z'
 generated_by: tools/repo_knowledge collect
-version: b95e1cf
+version: 20712d9
 head:
-  commit: b95e1cfa5162d89bd2e0ed6dc72b43ae97567adf
+  commit: 20712d9df7747831de1a54ca4131d56f8e284287
   branch: main
-  committed_at: '2026-10-24T02:38:56Z'
+  committed_at: '2026-10-24T02:39:30Z'
 phases:
   source: not_configured
   completed: []
@@ -27,12 +27,12 @@ build:
 test:
   status: passed
   run_id: null
-  commit: b95e1cfa5162d89bd2e0ed6dc72b43ae97567adf
+  commit: 20712d9df7747831de1a54ca4131d56f8e284287
   run_attempt: '1'
-  at: '2026-10-24T02:38:56Z'
+  at: '2026-10-24T02:39:30Z'
   timestamp_source: commit
   summary: 'scripts/repo_test.sh: 714 tests passed in 100.844 seconds on Native Termux;
-    final retirement evidence updated.'
+    exact stale PRoot archive removed.'
 last_successful_build: null
 last_failed_build:
   commit: 69e378eb33247678437bda4b2de9ab25f6bcb91d
@@ -40,5 +40,5 @@ last_failed_build:
   run_id: '39159994935'
 sync:
   status: ok
-  last_synced_at: '2026-10-24T02:38:56Z'
+  last_synced_at: '2026-10-24T02:39:30Z'
   source: local
