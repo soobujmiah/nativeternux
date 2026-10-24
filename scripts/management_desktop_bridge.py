@@ -339,6 +339,19 @@ def main(argv: list[str]) -> int:
         result = call("cron.jobs.mutation.apply", {"plan_id": plan_id, "confirmed": True})
         print(management_presentation.format_report(result))
         return 0 if result.get("ok") else 1
+    if action == "cron-scheduler" and len(argv) in {2, 3}:
+        choice = argv[1]
+        if choice == "status" and len(argv) == 2:
+            result = call("cron.status")
+        elif choice == "start" and len(argv) == 3 and argv[2].isdigit() and 1 <= int(argv[2]) <= 60:
+            result = call("cron.scheduler.start", {"poll_seconds": int(argv[2]), "confirmed": True})
+        elif choice == "stop" and len(argv) == 2:
+            result = call("cron.scheduler.stop", {"confirmed": True})
+        else:
+            print(json.dumps({"ok": False, "error": {"code": "invalid_arguments"}}))
+            return 2
+        print(management_presentation.format_report(result))
+        return 0 if result.get("ok") else 1
     if action == "cron-jobs" and len(argv) == 1:
         result = call("cron.jobs.list")
         print(management_presentation.format_report(result))

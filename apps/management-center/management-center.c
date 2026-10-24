@@ -3,7 +3,7 @@
 
 typedef struct { gchar *id, *category, *name, *status, *availability, *description, *operations; } Resource;
 typedef struct { GtkWidget *window, *category_list, *resource_list, *details, *notice, *search, *action_scroll;
-                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *timezone_set_button, *software_button, *ai_model_install_button, *ai_model_remove_button, *ai_run_button, *monitor_box, *monitor_enabled,
+                 GtkWidget *start_button, *stop_button, *ssh_restart_button, *ssh_keys_button, *ssh_enroll_button, *ssh_revoke_button, *ssh_rollback_button, *ssh_generate_button, *ssh_autostart_button, *ssh_wakelock_button, *graphics_select_button, *graphics_api_button, *history_button, *logs_button, *audit_logs_button, *desktop_log_button, *cron_button, *cron_history_button, *cron_manage_button, *cron_start_button, *cron_stop_button, *timezone_set_button, *software_button, *ai_model_install_button, *ai_model_remove_button, *ai_run_button, *monitor_box, *monitor_enabled,
                  *monitor_interval, *monitor_unit, *monitor_focus, *monitor_launch; GPtrArray *categories,
                  *resources; gchar *selected_category, *selected_resource_id; guint category_count; } Center;
 typedef struct { Center *center; gchar *action; gchar *resource_id; gchar *detail_id; gchar *plan_id; } Request;
@@ -15,6 +15,7 @@ static void ask_ssh_rollback_confirmation(Center *c, const gchar *rollback_id, c
 static void choose_graphics_api(GtkButton *button, gpointer data);
 static void ask_shortcut_confirmation(Center *c, const gchar *action, const gchar *app_id, const gchar *plan_id, const gchar *target, const gchar *transition);
 static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *summary);
+static void ask_cron_scheduler_confirmation(Center *c, gboolean start);
 static void confirmed_action(GObject *source, GAsyncResult *result, gpointer user_data);
 static void ask_cpu_model_confirmation(Center *c, const gchar *action, const gchar *plan_id, const gchar *summary);
 static void show_management_log(GtkButton *button, gpointer data);
@@ -381,6 +382,8 @@ static void show_resource(Center *c, Resource *r) {
     gtk_widget_set_visible(c->cron_button, cron);
     gtk_widget_set_visible(c->cron_history_button, cron);
     gtk_widget_set_visible(c->cron_manage_button, cron);
+    gtk_widget_set_visible(c->cron_start_button, cron);
+    gtk_widget_set_visible(c->cron_stop_button, cron);
     gtk_widget_set_visible(c->timezone_set_button, timezone);
     gboolean curated_software = g_strcmp0(r->id, "software.curated-apps") == 0;
     gtk_widget_set_visible(c->software_button, curated_software);
@@ -407,7 +410,7 @@ static void show_resource(Center *c, Resource *r) {
     GtkWidget *action_buttons[] = {c->start_button, c->stop_button, c->ssh_restart_button, c->ssh_keys_button, c->ssh_enroll_button, c->ssh_revoke_button, c->ssh_rollback_button, c->ssh_generate_button, c->ssh_autostart_button, c->ssh_wakelock_button, c->graphics_select_button,
         c->graphics_api_button, c->history_button, c->desktop_log_button, c->logs_button,
         c->audit_logs_button, c->cron_button, c->cron_history_button, c->cron_manage_button,
-        c->timezone_set_button, c->software_button, c->ai_model_install_button, c->ai_model_remove_button, c->ai_run_button};
+        c->cron_start_button, c->cron_stop_button, c->timezone_set_button, c->software_button, c->ai_model_install_button, c->ai_model_remove_button, c->ai_run_button};
     gboolean has_actions = FALSE;
     for (guint i = 0; i < G_N_ELEMENTS(action_buttons); i++)
         has_actions = has_actions || gtk_widget_get_visible(action_buttons[i]);
@@ -510,6 +513,10 @@ static void confirmed_action(GObject *source, GAsyncResult *result, gpointer use
             run_bridge(request->center, "shortcut-apply", request->resource_id, request->detail_id, request->plan_id, NULL, NULL);
         else if (g_strcmp0(request->action, "cron-apply") == 0)
             run_bridge(request->center, "cron-apply", request->plan_id, NULL, NULL, NULL, NULL);
+        else if (g_strcmp0(request->action, "cron-scheduler-start") == 0)
+            run_bridge(request->center, "cron-scheduler", "start", "10", NULL, NULL, NULL);
+        else if (g_strcmp0(request->action, "cron-scheduler-stop") == 0)
+            run_bridge(request->center, "cron-scheduler", "stop", NULL, NULL, NULL, NULL);
         else if (g_strcmp0(request->action, "cpu-model-apply") == 0)
             run_bridge(request->center, "cpu-model-apply", request->resource_id, request->plan_id, "confirmed", NULL, NULL);
         else if (g_strcmp0(request->action, "software-apply") == 0) {
@@ -703,11 +710,13 @@ static void cron_form_submit(GtkButton *button, gpointer data) {
     GtkWidget *mode = g_object_get_data(G_OBJECT(button), "cron-mode");
     GtkWidget *id = g_object_get_data(G_OBJECT(button), "cron-id");
     GtkWidget *name = g_object_get_data(G_OBJECT(button), "cron-name");
+    GtkWidget *update_field = g_object_get_data(G_OBJECT(button), "cron-update-field");
     GtkWidget *action = g_object_get_data(G_OBJECT(button), "cron-action");
     GtkWidget *expr = g_object_get_data(G_OBJECT(button), "cron-expr");
     const gchar *kind = gtk_editable_get_text(GTK_EDITABLE(mode));
     const gchar *job_id = gtk_editable_get_text(GTK_EDITABLE(id));
     const gchar *name_value = gtk_editable_get_text(GTK_EDITABLE(name));
+    const gchar *field_value = gtk_editable_get_text(GTK_EDITABLE(update_field));
     const gchar *action_id = gtk_editable_get_text(GTK_EDITABLE(action));
     const gchar *cron_expr = gtk_editable_get_text(GTK_EDITABLE(expr));
     if (g_strcmp0(kind, "create") == 0) {
@@ -717,11 +726,14 @@ static void cron_form_submit(GtkButton *button, gpointer data) {
         }
         run_bridge(c, "cron-preview", "create", name_value, action_id, cron_expr, NULL);
     } else if (g_strcmp0(kind, "update") == 0) {
-        if (!*job_id || !*name_value) {
-            gtk_label_set_text(GTK_LABEL(c->notice), "Update needs a saved job ID and new name.");
+        if (!*job_id || !*name_value
+            || (g_strcmp0(field_value, "enabled") == 0
+                && g_strcmp0(name_value, "true") != 0 && g_strcmp0(name_value, "false") != 0)
+            || (g_strcmp0(field_value, "name") != 0 && g_strcmp0(field_value, "enabled") != 0)) {
+            gtk_label_set_text(GTK_LABEL(c->notice), "Update needs a saved job ID and a valid name or true/false enabled value.");
             return;
         }
-        run_bridge(c, "cron-preview", "update", job_id, "name", name_value, NULL);
+        run_bridge(c, "cron-preview", "update", job_id, field_value, name_value, NULL);
     } else if (g_strcmp0(kind, "remove") == 0) {
         if (!*job_id) {
             gtk_label_set_text(GTK_LABEL(c->notice), "Remove needs a saved job ID.");
@@ -755,8 +767,12 @@ static void show_cron_form(GtkButton *button, gpointer data) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(id), "Saved job ID (update/remove)");
     gtk_box_append(GTK_BOX(box), id);
     GtkWidget *name = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(name), "Job name (create/update)");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(name), "Job name; for enabled updates use true or false");
     gtk_box_append(GTK_BOX(box), name);
+    GtkWidget *update_field = gtk_entry_new();
+    gtk_editable_set_text(GTK_EDITABLE(update_field), "name");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(update_field), "Update field: name or enabled");
+    gtk_box_append(GTK_BOX(box), update_field);
     GtkWidget *action = gtk_entry_new();
     gtk_editable_set_text(GTK_EDITABLE(action), "diagnostics.doctor");
     gtk_entry_set_placeholder_text(GTK_ENTRY(action), "Registered safe action ID");
@@ -769,6 +785,7 @@ static void show_cron_form(GtkButton *button, gpointer data) {
     g_object_set_data(G_OBJECT(submit), "cron-mode", mode);
     g_object_set_data(G_OBJECT(submit), "cron-id", id);
     g_object_set_data(G_OBJECT(submit), "cron-name", name);
+    g_object_set_data(G_OBJECT(submit), "cron-update-field", update_field);
     g_object_set_data(G_OBJECT(submit), "cron-action", action);
     g_object_set_data(G_OBJECT(submit), "cron-expr", expr);
     g_signal_connect(submit, "clicked", G_CALLBACK(cron_form_submit), NULL);
@@ -789,6 +806,24 @@ static void ask_cron_confirmation(Center *c, const gchar *plan_id, const gchar *
     gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
     g_object_unref(dialog);
     g_free(message);
+}
+static void ask_cron_scheduler_confirmation(Center *c, gboolean start) {
+    GtkAlertDialog *dialog = gtk_alert_dialog_new(start
+        ? "Start the Ternuxx Cron scheduler with a 10-second poll? It may run enabled registered actions; shell commands are not accepted."
+        : "Stop only the Ternuxx Cron scheduler? Other services will remain unchanged.");
+    const char *choices[] = {"Cancel", start ? "Start scheduler" : "Stop scheduler", NULL};
+    gtk_alert_dialog_set_buttons(dialog, choices); gtk_alert_dialog_set_default_button(dialog, 0);
+    Request *request = g_new0(Request, 1); request->center = c;
+    request->action = g_strdup(start ? "cron-scheduler-start" : "cron-scheduler-stop");
+    gtk_alert_dialog_choose(dialog, GTK_WINDOW(c->window), NULL, confirmed_action, request);
+    gtk_label_set_text(GTK_LABEL(c->notice), "Reviewing Ternuxx Cron scheduler action");
+    g_object_unref(dialog);
+}
+static void cron_scheduler_start(GtkButton *button, gpointer data) {
+    (void)button; ask_cron_scheduler_confirmation(data, TRUE);
+}
+static void cron_scheduler_stop(GtkButton *button, gpointer data) {
+    (void)button; ask_cron_scheduler_confirmation(data, FALSE);
 }
 static void show_cron_jobs(GtkButton *button, gpointer data) {
     (void)button; run_bridge(data, "cron-jobs", NULL, NULL, NULL, NULL, NULL);
@@ -1069,6 +1104,8 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     c->cron_button=gtk_button_new_with_label("View saved Cron jobs"); gtk_widget_set_visible(c->cron_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_button);
     c->cron_history_button=gtk_button_new_with_label("View Cron execution history"); gtk_widget_set_visible(c->cron_history_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_history_button);
     c->cron_manage_button=gtk_button_new_with_label("Manage Cron jobs…"); gtk_widget_set_visible(c->cron_manage_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_manage_button);
+    c->cron_start_button=gtk_button_new_with_label("Start Cron scheduler…"); gtk_widget_set_visible(c->cron_start_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_start_button);
+    c->cron_stop_button=gtk_button_new_with_label("Stop Cron scheduler…"); gtk_widget_set_visible(c->cron_stop_button,FALSE); gtk_box_append(GTK_BOX(actions),c->cron_stop_button);
     c->timezone_set_button=gtk_button_new_with_label("Set Ternuxx timezone preference…"); gtk_widget_set_visible(c->timezone_set_button,FALSE); gtk_box_append(GTK_BOX(actions),c->timezone_set_button);
     c->software_button=gtk_button_new_with_label("Browse Native Termux apps…"); gtk_widget_set_visible(c->software_button,FALSE); gtk_box_append(GTK_BOX(actions),c->software_button);
     c->ai_model_install_button=gtk_button_new_with_label("Preview or download pinned CPU model…"); gtk_widget_set_visible(c->ai_model_install_button,FALSE); gtk_box_append(GTK_BOX(actions),c->ai_model_install_button);
@@ -1083,7 +1120,7 @@ static gboolean active(GtkApplication *app, gpointer user_data) {
     GtkWidget *portfolio=gtk_link_button_new_with_label("https://soobujmiah.github.io/","soobujmiah.github.io");
     gtk_box_append(GTK_BOX(brand),tagline); gtk_box_append(GTK_BOX(brand),portfolio); gtk_box_append(GTK_BOX(root),brand);
     g_signal_connect(c->software_button,"clicked",G_CALLBACK(software_apps),c); g_signal_connect(c->ai_model_install_button,"clicked",G_CALLBACK(cpu_model_install),c); g_signal_connect(c->ai_model_remove_button,"clicked",G_CALLBACK(cpu_model_remove),c); g_signal_connect(c->ai_run_button,"clicked",G_CALLBACK(cpu_prompt_dialog),c);
-    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
+    g_signal_connect(c->category_list,"row-selected",G_CALLBACK(category_selected),c); g_signal_connect(c->resource_list,"row-selected",G_CALLBACK(resource_selected),c); g_signal_connect(c->search,"search-changed",G_CALLBACK(search_changed),c); g_signal_connect(c->start_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->stop_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_restart_button,"clicked",G_CALLBACK(confirm_action),c); g_signal_connect(c->ssh_keys_button,"clicked",G_CALLBACK(show_ssh_keys),c); g_signal_connect(c->ssh_enroll_button,"clicked",G_CALLBACK(enroll_ssh_key),c); g_signal_connect(c->ssh_revoke_button,"clicked",G_CALLBACK(revoke_ssh_key),c); g_signal_connect(c->ssh_rollback_button,"clicked",G_CALLBACK(restore_ssh_key),c); g_signal_connect(c->ssh_generate_button,"clicked",G_CALLBACK(generate_ssh_key),c); g_signal_connect(c->ssh_autostart_button,"clicked",G_CALLBACK(change_ssh_autostart),c); g_signal_connect(c->ssh_wakelock_button,"clicked",G_CALLBACK(change_ssh_wakelock),c); g_signal_connect(c->graphics_select_button,"clicked",G_CALLBACK(select_graphics),c); g_signal_connect(c->graphics_api_button,"clicked",G_CALLBACK(choose_graphics_api),c); g_signal_connect(c->history_button,"clicked",G_CALLBACK(show_history),c); g_signal_connect(c->desktop_log_button,"clicked",G_CALLBACK(show_desktop_log),c); g_signal_connect(c->logs_button,"clicked",G_CALLBACK(show_cron_log),c); g_signal_connect(c->audit_logs_button,"clicked",G_CALLBACK(show_management_log),c); g_signal_connect(c->cron_button,"clicked",G_CALLBACK(show_cron_jobs),c); g_signal_connect(c->cron_history_button,"clicked",G_CALLBACK(show_cron_history),c); g_signal_connect(c->cron_manage_button,"clicked",G_CALLBACK(show_cron_form),c); g_signal_connect(c->cron_start_button,"clicked",G_CALLBACK(cron_scheduler_start),c); g_signal_connect(c->cron_stop_button,"clicked",G_CALLBACK(cron_scheduler_stop),c); g_signal_connect(c->timezone_set_button,"clicked",G_CALLBACK(set_timezone),c); g_signal_connect(save,"clicked",G_CALLBACK(save_monitor),c);
     load_catalog(c); gtk_window_present(GTK_WINDOW(c->window));
     return TRUE;
 }

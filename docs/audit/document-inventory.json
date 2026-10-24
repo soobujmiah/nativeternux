@@ -3,8 +3,8 @@
   "scope": "Git tracked/non-ignored narrative docs, docs/schema/config/workflow contracts, root manifests and phase state; .repo generated state excluded",
   "semantics": "Hashing/indexing is not review. Read marks are explicit agent records; claim acceptance remains in the worklist. Changed hashes invalidate previous read marks.",
   "generated_state_scope": ".repo generated status/events use tools.repo_knowledge; exclude their volatile hashes to avoid CI/inventory loops",
-  "document_count": 484,
-  "read_count": 99,
+  "document_count": 485,
+  "read_count": 96,
   "reading_complete": false,
   "broken_local_links": [],
   "documents": [
@@ -35,10 +35,10 @@
     {
       "path": "CURRENT_STATE.md",
       "kind": "narrative",
-      "sha256": "52d567331c9a787ab8f0d9752648a0bafabb3ffd66152e01dc4133b2f7065196",
-      "lines": 11,
-      "read_status": "read",
-      "read_sha256": "52d567331c9a787ab8f0d9752648a0bafabb3ffd66152e01dc4133b2f7065196"
+      "sha256": "38b71821253e6fa15a94af9359f58edbdd846c9adc9d9863e4386c2eefe2531f",
+      "lines": 21,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "PROJECT_CLASSIFICATION.yaml",
@@ -59,16 +59,16 @@
     {
       "path": "README.md",
       "kind": "narrative",
-      "sha256": "6685f46773a308c555c9df3ff1e606ebb3aa5606a8aac76082aa6f24671d6ab3",
-      "lines": 59,
+      "sha256": "bd597594f140ee0ca5e380035b45368cf4b8fc2bb5f93e5298d8f8a6aa8f4da6",
+      "lines": 58,
       "read_status": "pending",
       "read_sha256": null
     },
     {
       "path": "SECURITY.md",
       "kind": "narrative",
-      "sha256": "972bf0985dfa941a1f0c734c5214b0d1ccb5c92efbdf8858641efb68406d263c",
-      "lines": 60,
+      "sha256": "bd98784f9f94ffe0b23c8f187ccf76303a96ead5fd1039503ab7b39446d2297c",
+      "lines": 64,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -123,8 +123,8 @@
     {
       "path": "docs/HYBRID-INTEGRATION.md",
       "kind": "narrative",
-      "sha256": "8f1cdabe8c15b2d5acbbe48cd96b6fe359aaec27d8feeda1d68c74add82a8332",
-      "lines": 100,
+      "sha256": "67b5dd6140a2d8a751ebe0b93e0b675c795aaa7ee991a5e0270ffc4b066c2709",
+      "lines": 7,
       "read_status": "pending",
       "read_sha256": null
     },
@@ -147,7 +147,7 @@
     {
       "path": "docs/OPERATIONS.md",
       "kind": "narrative",
-      "sha256": "5e06f9807b1220d7fdd2ec037ab9b13b66cc0c99e64ab74eb34830c639649a2b",
+      "sha256": "ee0a3b9b9f3184533d09eafb7c914c7b877346f863fbff9748a0c05808aeb1cb",
       "lines": 51,
       "read_status": "pending",
       "read_sha256": null
@@ -163,7 +163,7 @@
     {
       "path": "docs/PHASE-STATUS.md",
       "kind": "narrative",
-      "sha256": "02f699940dea7beb02238aa064a370a565008523b140abfc07d6927c48d6d052",
+      "sha256": "b054163877d8f0d54d0660e43fe3040bccab0a47d9fdcde11eaed9d0e764cc18",
       "lines": 122,
       "read_status": "pending",
       "read_sha256": null
@@ -251,7 +251,7 @@
     {
       "path": "docs/architecture/CAPABILITY-MATRIX.md",
       "kind": "narrative",
-      "sha256": "8db4a5c7e7b64dfa8f37f12dae03a49eb855c6b9f44bdeaef60b97c038e953d9",
+      "sha256": "6be320065ce0bd2a17681916b46ab3fc175187f241276d8751d46227ab9193ff",
       "lines": 20,
       "read_status": "pending",
       "read_sha256": null
@@ -267,7 +267,7 @@
     {
       "path": "docs/architecture/CRON-JOBS.md",
       "kind": "narrative",
-      "sha256": "9a6a0719edffe99bc6bb68d91536ff87e36256e42f22e5c050fe7081766880f8",
+      "sha256": "f4b77969d3e5fef3238f43b93261b812b16963a3c67d95ead99d8da2338845d3",
       "lines": 126,
       "read_status": "pending",
       "read_sha256": null
@@ -531,10 +531,10 @@
     {
       "path": "docs/audit/REPOSITORY-AUDIT.md",
       "kind": "narrative",
-      "sha256": "d39c8f3cd5bd685b60a09271725ea99e45ca8af065bde20182a89380fadb598f",
-      "lines": 44,
-      "read_status": "read",
-      "read_sha256": "d39c8f3cd5bd685b60a09271725ea99e45ca8af065bde20182a89380fadb598f"
+      "sha256": "3982ac37e63ac180ad573b5caf66d509b2c9065b31ba36ce9fcfcf1367d5abee",
+      "lines": 25,
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/evidence/2026-10-17-native-access-wakelock-baseline.json",
@@ -2971,7 +2971,7 @@
     {
       "path": "docs/evidence/2026-10-24-p10-internal-hardening-review.md",
       "kind": "narrative",
-      "sha256": "47e0130bc4a96b79ad4133b538ece8955b6f6c0a1d021ca62611504625f21a72",
+      "sha256": "77e02391c7bb9075cee8e424ee14fdcaf83d2e27635c7bb733feba76cd128cb6",
       "lines": 24,
       "read_status": "pending",
       "read_sha256": null
@@ -3035,7 +3035,7 @@
     {
       "path": "docs/evidence/2026-10-24-p8-native-readiness-audit.md",
       "kind": "narrative",
-      "sha256": "4939cb397666f1e3ec81008b2757ac612aa0697365d7a3bb9f9a3f8a16f80c4d",
+      "sha256": "8dfa503e9b97843a00a9429d55bc2869e492361995e12fa7ab84d1ee2b376640",
       "lines": 28,
       "read_status": "pending",
       "read_sha256": null
@@ -3273,6 +3273,14 @@
       "read_sha256": null
     },
     {
+      "path": "docs/history/HYBRID-INTEGRATION-pre-native-only-2026-10-24.md",
+      "kind": "narrative",
+      "sha256": "b5115d533a9f67a0575a957bcce3d8f6ed6ef9b24b34ebb21c0c12671fd50759",
+      "lines": 100,
+      "read_status": "pending",
+      "read_sha256": null
+    },
+    {
       "path": "docs/history/INTERACTIVE-PROOT-TERMINALS-pre-native-only-2026-10-24.md",
       "kind": "narrative",
       "sha256": "24f421b5ab4b80025ff9ebecc62681a1668b6823ce37c9c5396bde6869bdfd41",
@@ -3491,10 +3499,10 @@
     {
       "path": "docs/testing/KNOWN-LIMITATIONS.md",
       "kind": "narrative",
-      "sha256": "2b92a494a22771bf97c6259932ba4b4da271330052ebbd42b4f0ecd8bce83141",
+      "sha256": "635e70e15186ea5368954b009899a7a4810f9d8ecb9801c1d0bca3e0142b8806",
       "lines": 26,
-      "read_status": "read",
-      "read_sha256": "2b92a494a22771bf97c6259932ba4b4da271330052ebbd42b4f0ecd8bce83141"
+      "read_status": "pending",
+      "read_sha256": null
     },
     {
       "path": "docs/testing/NPU-ACCELERATION.md",
@@ -3547,8 +3555,8 @@
     {
       "path": "project/phase-state.json",
       "kind": "structured",
-      "sha256": "b47f7e3d2c0d974ab28b1b8044ee778a8285b0ebed0c892258783241d8d9089d",
-      "lines": 164,
+      "sha256": "bf3b097b1d534bdc2ad595f10abc2b864f818cefbe9274189633fddb32e5086e",
+      "lines": 190,
       "read_status": "pending",
       "read_sha256": null
     },

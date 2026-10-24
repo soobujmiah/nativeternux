@@ -97,7 +97,7 @@ Evidence:
 **Status:** completed
 **Completed:** 2026-10-24
 
-Native workload checks and HOME-scoped file-name handoff pass across the shared service and clients; 714 tests pass. Historical NOT_READY checkpoints and accelerator proof limits remain explicit.
+Native workload checks, HOME-scoped name handoff, and the interactive setup guide pass across the supported clients; 719 tests pass. Historical reboot checkpoints and accelerator proof limits remain explicit.
 
 Evidence:
 - [docs/evidence/2026-10-24-p8-native-readiness-audit.md](evidence/2026-10-24-p8-native-readiness-audit.md)
@@ -116,7 +116,7 @@ Evidence:
 **Status:** completed
 **Completed:** 2026-10-24
 
-Internal Native-only hardening and support review passes; public release remains blocked by unresolved license/provenance, SSH exposure, and clean-device qualification.
+Internal Native-only hardening passes; public release remains blocked by unresolved license/provenance, owner-managed SSH exposure, and clean-device qualification.
 
 Evidence:
 - [docs/evidence/2026-10-24-p10-internal-hardening-review.md](evidence/2026-10-24-p10-internal-hardening-review.md)

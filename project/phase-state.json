@@ -130,11 +130,28 @@
       "title": "Native workload and accelerator routing",
       "status": "completed",
       "completed_on": "2026-10-24",
-      "summary": "Native workload checks and HOME-scoped file-name handoff pass across the shared service and clients; 714 tests pass. Historical NOT_READY checkpoints and accelerator proof limits remain explicit.",
+      "summary": "Native workload checks, HOME-scoped name handoff, and the interactive setup guide pass across the supported clients; 719 tests pass. Historical reboot checkpoints and accelerator proof limits remain explicit.",
       "evidence": [
         "docs/evidence/2026-10-24-p8-native-readiness-audit.md"
       ],
-      "next_action": "Design a safe HOME-scoped file/argv handoff or formally defer it; fixture-test failure behavior, then continue bounded recovery review without rebooting or altering shared storage."
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "P8 completed with reviewed acceptance evidence; remove the obsolete active work instruction."
+        },
+        {
+          "date": "2026-10-24",
+          "reason": "A verified interactive-guide PTY contract was added after P8; update its test count without changing the accepted gate."
+        },
+        {
+          "date": "2026-10-24",
+          "reason": "The complete suite now includes the verified interactive-guide PTY and non-TTY contracts."
+        },
+        {
+          "date": "2026-10-24",
+          "reason": "Refresh completed-suite evidence after Cron Web/GTK parity and form coverage changes; no gate status change."
+        }
+      ]
     },
     {
       "id": "P9",
@@ -154,11 +171,20 @@
       "title": "Hardening, release, and support",
       "status": "completed",
       "completed_on": "2026-10-24",
-      "summary": "Internal Native-only hardening and support review passes; public release remains blocked by unresolved license/provenance, SSH exposure, and clean-device qualification.",
+      "summary": "Internal Native-only hardening passes; public release remains blocked by unresolved license/provenance, owner-managed SSH exposure, and clean-device qualification.",
       "evidence": [
         "docs/evidence/2026-10-24-p10-internal-hardening-review.md"
       ],
-      "next_action": "After required phases, run reproducibility and support checks, update handoff/state, and keep public release blocked until license and provenance are resolved."
+      "revision_notes": [
+        {
+          "date": "2026-10-24",
+          "reason": "P10 internal review completed; public release blockers are documented separately and no phase action remains."
+        },
+        {
+          "date": "2026-10-24",
+          "reason": "The SSH diagnostic identified the exact owner-managed 8022 configuration; distinguish it from Ternuxx-managed 8023."
+        }
+      ]
     }
   ]
 }

@@ -42,7 +42,6 @@ All interfaces run on Native Termux and use the shared management service for su
 [Roadmap and active work](docs/ROADMAP.md) · [Phase status and evidence](docs/PHASE-STATUS.md)
 <!-- generated:phase-status:end -->
 
-PRoot support and its installed guests were retired from the current product scope on 2026-10-24. The [migration audit](docs/evidence/2026-10-24-native-only-proot-removal-audit.md) records the implementation and live verification; dated guest documentation remains historical.
 
 Ternuxx remains under active development. Device-specific graphics, workload performance, broad Android compatibility, and public release are not implied by passing repository tests. The project has no selected license yet.
 

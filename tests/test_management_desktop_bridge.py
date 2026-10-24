@@ -22,6 +22,19 @@ class ManagementDesktopBridgeTests(unittest.TestCase):
         dispatch.assert_called_once_with("inference.cpu.run", {"prompt": "one line", "max_tokens": 64})
         self.assertIn("ok", output.getvalue().casefold())
 
+    def test_cron_scheduler_actions_use_shared_operations_and_bounded_interval(self):
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"state": "running"}}) as dispatch, \
+                redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["cron-scheduler", "start", "10"]), 0)
+        dispatch.assert_called_once_with("cron.scheduler.start", {"poll_seconds": 10, "confirmed": True})
+        with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {"state": "stopped"}}) as dispatch, \
+                redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["cron-scheduler", "stop"]), 0)
+        dispatch.assert_called_once_with("cron.scheduler.stop", {"confirmed": True})
+        with mock.patch.object(bridge, "call") as dispatch, redirect_stdout(StringIO()):
+            self.assertEqual(bridge.main(["cron-scheduler", "start", "0"]), 2)
+        dispatch.assert_not_called()
+
     def test_directory_tree_file_handoff_uses_fixed_shared_operation(self):
         with mock.patch.object(bridge, "call", return_value={"ok": True, "data": {
                 "path": "~/Documents", "output": "notes.txt", "read_only": True}}) as dispatch, \

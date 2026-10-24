@@ -7,7 +7,7 @@ This file records current Native Termux limits. The full phase ledger is in [pha
 - Direct evidence covers one Android 16/API 36, aarch64, Termux 0.119.0-beta.3 device. It does not establish support for other phones, Android versions, or Termux builds.
 - The current Native desktop reports `:1`, live supervisor/X11/XFCE, and Native audio owner. Android window visibility is still `unknown`; no cold-boot delivery is claimed from the current live check.
 - A read-only post-qualification check found both PRoot packages and executables absent and an empty PRoot-Distro containers directory. Ternuxx has no supported guest workflow.
-- The full fixture suite passed 690 tests in 110.249 seconds on 2026-10-24. Doctor reports runtime availability and model state, but its read-only status does not verify the model hash; inference verifies the hash before execution. Fixture coverage does not prove Android boot delivery, clean installation, visible GUI acceptance, physical audio behavior, or complete live client parity.
+- The complete Native Termux fixture suite passed 719 tests in 93.753 seconds on 2026-10-24. The suite does not prove Android boot delivery, clean installation, visible GUI acceptance, or physical audio output. Doctor reports runtime availability and model state, but its read-only status does not verify the model hash; inference verifies the hash before execution. Fixture coverage does not prove Android boot delivery, clean installation, visible GUI acceptance, physical audio behavior, or complete live client parity.
 
 ## CPU, graphics, and inference
 

@@ -35,6 +35,20 @@ class ManagementCenterNativeUiContractTests(unittest.TestCase):
             with self.subTest(contract=contract):
                 self.assertIn(contract, SOURCE)
 
+    def test_gtk_cron_update_form_supports_name_and_enabled_fields(self):
+        for contract in ('cron-update-field', '"name"', '"enabled"',
+                         'g_strcmp0(name_value, "true")', 'g_strcmp0(name_value, "false")',
+                         'run_bridge(c, "cron-preview", "update", job_id, field_value, name_value, NULL)'):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, SOURCE)
+
+    def test_cron_scheduler_controls_use_explicit_confirmation_and_shared_bridge(self):
+        for contract in ("cron_start_button", "cron_stop_button", "ask_cron_scheduler_confirmation",
+                         "cron-scheduler-start", "cron-scheduler-stop", '"cron-scheduler", "start", "10"',
+                         '"cron-scheduler", "stop"'):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, SOURCE)
+
     def test_catalog_is_the_source_for_visible_resources(self):
         self.assertIn('script, "catalog", NULL', SOURCE)
         self.assertIn('Connected to Native Termux shared management service', SOURCE)

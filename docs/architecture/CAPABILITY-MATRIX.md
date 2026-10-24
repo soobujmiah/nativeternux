@@ -11,9 +11,9 @@ Current supported scope is Native Termux-only. PRoot and interactive guest-termi
 | GTK | Native GTK4 management center and typed service bridge, including shared CPU model preview/apply/run | Complete broader action parity and visual acceptance |
 | SSH | Managed product SSH on 8023 and separate development SSH on 8022 | Cold-boot delivery verification and remaining bounded credential recovery decision |
 | Boot/Wake Lock | Native helper/profile controls, scoped leases and diagnostics | Android-global lock state and next-boot verification remain unobserved |
-| Cron | Persistent definitions, previewed mutations and execution history | Web/GTK scheduler lifecycle and production recovery |
+| Cron | Persistent definitions, previewed mutations, execution history, and confirmed scheduler start/stop controls across CLI/TUI/Web/GTK | UI create forms still expose Cron-expression schedules only; production recovery and execution lifecycle remain limited |
 | GUI monitoring | Shared policy status/configuration and Native service | Android Activity/focus and later cold-boot qualification |
-| Timezone | CLI/TUI/GTK scheduling preference; Web reads | No Android system-time mutation |
+| Timezone | CLI/TUI/GTK/Web scheduling preference through shared `timezone.set` | No Android system-time mutation |
 | Graphics/audio | Native status/draw probes and backend preference controls; the system path is CPU `llvmpipe` on the observed device, while KGSL remains experimental and device-local | Workload-specific graphics/audio qualification; candidate distribution remains unsupported |
 | Software/AI | Curated htop/tmux/tree lifecycle and HOME-scoped tree name listing across CLI/TUI/Web/GTK; pinned bounded CPU model lifecycle and inference across all four clients | File-content handoff and Android shared-storage access are unsupported; Wine, model-quality, sustained-resource, and offline qualification remain open; GPU/NPU inference is unavailable |
 

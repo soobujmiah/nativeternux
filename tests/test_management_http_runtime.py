@@ -324,10 +324,26 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
                 self.assertEqual(json.loads(response)["operation"], "recovery.status")
                 self.assertEqual(dispatch.call_count, 3)
 
+                dispatch.return_value = {"api_version": 1, "request_id": "web-timezone-result-001",
+                    "ok": True, "operation": "timezone.set", "data": {"timezone": "UTC"}}
+                status, _headers, response = post("timezone.set", "web-timezone-request-001",
+                    "web-timezone-key-00001", {"timezone": "UTC"})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "timezone.set")
+                self.assertEqual(dispatch.call_count, 4)
+
+                dispatch.return_value = {"api_version": 1, "request_id": "web-cron-start-result-01",
+                    "ok": True, "operation": "cron.scheduler.start", "data": {"status": "running"}}
+                status, _headers, response = post("cron.scheduler.start", "web-cron-start-request-01",
+                    "web-cron-start-key-0001", {"poll_seconds": 10, "confirmed": True})
+                self.assertEqual(status, 200, response)
+                self.assertEqual(json.loads(response)["operation"], "cron.scheduler.start")
+                self.assertEqual(dispatch.call_count, 5)
+
                 status, _headers, response = post("proot.app.launch", "web-proot-launch-01",
                     "web-proot-launch-key1", {"app_id": "files"})
                 self.assertEqual(status, 403)
-                self.assertEqual(dispatch.call_count, 3)
+                self.assertEqual(dispatch.call_count, 5)
 
                 dispatch.return_value = {"api_version": 1, "request_id": "web-failure-result-1",
                     "ok": False, "error": {"code": "desktop_operation_failed", "message": "redacted"}}
@@ -397,7 +413,11 @@ class TernuxxManagementHTTPRuntimeTests(unittest.TestCase):
         self.assertIn('b.onclick=()=>run("cron.executions.list",{limit:20})', page)
         self.assertIn('b.onclick=()=>run("timezone.list")', page)
         self.assertIn("timezone.status", page)
-        self.assertNotIn("timezone.set", page)
+        self.assertIn("timezone.set", page)
+        self.assertIn("timezone.manage", management_http_runtime.WEB_CAPABILITIES)
+        self.assertIn("cron.scheduler.start", page)
+        self.assertIn("cron.scheduler.stop", page)
+        self.assertIn("cron.scheduler.manage", management_http_runtime.WEB_CAPABILITIES)
 
     def test_liveness_and_readiness_are_distinct_and_readiness_tracks_listener(self) -> None:
         server = management_http_runtime.build_server(
