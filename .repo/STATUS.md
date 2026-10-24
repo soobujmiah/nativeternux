@@ -2,14 +2,14 @@
 # ternuxx -- deterministic status
 
 - Repository: `soobujmiah/ternuxx`
-- Generated at: 2026-10-24T02:55:54Z (by `tools/repo_knowledge collect`)
-- Version: `547aa35`
-- Head: `547aa356a0a7c1825db0f7feb75247ffa1670ed8` on `main` (2026-10-24T02:54:36Z)
+- Generated at: 2026-10-24T03:19:14Z (by `tools/repo_knowledge collect`)
+- Version: `7c43798`
+- Head: `7c437980f560c224844050b4d6baf905bbaefa36` on `main` (2026-10-24T03:19:14Z)
 
 ## Build / test
 
 - Build: **unknown** (run `40056143739`)
-- Test: **failed**
+- Test: **passed** -- Native Termux repo_test.sh: 727 tests passed in 93.409 seconds; GTK4 C syntax check passed.
 - Last failed build: `69e378eb33247678437bda4b2de9ab25f6bcb91d` at 2026-10-18T19:42:44Z
 
 ## Phases
@@ -18,5 +18,5 @@
 ## Sync
 
 - Status: ok
-- Source: ci
-- Last synced at: 2026-10-24T02:55:54Z
+- Source: local
+- Last synced at: 2026-10-24T03:19:14Z
